@@ -10573,7 +10573,7 @@ if (!empty($media_upload_data["doc_type"])) {
         // ✅ Prepare any required data (if needed in view)
         $data = [];
         $data["id"] = $id;
-        $data["country"] = $this->s_db->query("SELECT co.name,c.country_name,c.id country_id FROM course co left join countries c ON (co.id = c.segment_id) where co.id=7")->result_array();
+        $data["country"] = $this->s_db->query("SELECT co.name,c.country_name,c.id country_id FROM course co left join countries c ON (co.id = c.segment_id) group by country_name order by country_name asc")->result_array();
         $data["visaData"] = $this->db->where('id', $id)->get(db_prefix() . 'external_visa_data')->row();
         // ✅ Set correct view page
         $view_page = 'admin/clients/external_visa'; // Example path for view file
@@ -10764,7 +10764,7 @@ if (!empty($media_upload_data["doc_type"])) {
         // ✅ Prepare any required data (if needed in view)
         $data = [];
         $data["id"] = $id;
-        $data["country"] = $this->s_db->query("SELECT co.name,c.country_name,c.id country_id FROM course co left join countries c ON (co.id = c.segment_id) where co.id=7")->result_array();
+        $data["country"] = $this->s_db->query("SELECT co.name,c.country_name,c.id country_id FROM course co left join countries c ON (co.id = c.segment_id) group by country_name order by country_name asc")->result_array();
         $data["ticketData"] = $this->db->where('id', $id)->get(db_prefix() . 'external_ticket_data')->row();
         // ✅ Set correct view page
         $view_page = 'admin/clients/external_ticket'; // Example path for view file
@@ -10877,13 +10877,6 @@ if (!empty($media_upload_data["doc_type"])) {
                 // Update existing record
                 $this->db->where('id', $data['id']);
                 $this->db->update(db_prefix() . 'external_ticket_data', $save_data);
-                             $db_error = $this->db->error();
-    if ($db_error['code'] != 0) {
-        echo json_encode([
-                'resp_code' => 'ERR',
-                'resp_desc' => "Failed Data update"
-            ]);
-    }
                 $record_id = $data['id'];
             } else {
                 $save_data['created_date'] = date('Y-m-d H:i:s');
@@ -10892,13 +10885,7 @@ if (!empty($media_upload_data["doc_type"])) {
                 $this->db->insert(db_prefix() . 'external_ticket_data', $save_data);
                 $record_id = $this->db->insert_id();
                 
-                  $db_error = $this->db->error();
-    if ($db_error['code'] != 0) {
-        echo json_encode([
-                'resp_code' => 'ERR',
-                'resp_desc' => "Failed Data update"
-            ]);
-    }
+            }
 
     // SUCCESS RESPONSE
     echo json_encode([
@@ -10911,19 +10898,9 @@ if (!empty($media_upload_data["doc_type"])) {
             'ticket_type'   => $data['ticket_type']
         ]
     ]);
-            }
+            
 
-            // Return structured response
-            echo json_encode([
-                'resp_code' => 'RCS',
-                'resp_desc' => 'Ticket details saved successfully.',
-                'data'      => [
-                    'id' => $record_id,
-                    'name' => $data['name'],
-                    'ticket_vendor' => $data['ticket_vendor'],
-                    'ticket_type' => $data['ticket_type']
-                ]
-            ]);
+           
         } catch (Exception $e) {
             echo json_encode([
                 'resp_code' => 'ERR',
