@@ -434,4 +434,72 @@ class Fly_batch extends AdminController
         $data['title'] = "Fly Departure Location Management";
         $this->load->view('admin/fly_ticket/departure_manage', $data);
     }
+
+    public function save_departure()
+    {
+        $departure_id = $this->input->post("departure_id", true);
+        $name         = $this->input->post("name", true);
+
+        // Validate
+        if (empty(trim($name))) {
+            echo json_encode([
+                'resp_code' => 'ERR',
+                'resp_desc' => "Departure name is required.",
+            ]);
+            return;
+        }
+
+        // Check if departure name already exists, excluding current record if updating
+        $existing = $this->db->where("name", $name)
+            ->where("id !=", $departure_id ?? 0) // exclude current ID if updating
+            ->get(db_prefix() . "departure_location")
+            ->row_array();
+
+        // If exists → return error
+        if (!empty($existing)) {
+            echo json_encode([
+                'resp_code' => 'ERR',
+                'resp_desc' => "Location Name already used. Please choose another name.",
+            ]);
+            return; // stop further execution
+        }
+
+
+        // Prepare data
+        $postData = [
+            'id'   => !empty($departure_id) ? $departure_id : null,
+            'name' => trim($name)
+        ];
+
+        // Add created/updated tracking
+        if (empty($departure_id)) {
+            $postData['created_by'] = get_staff_user_id();
+            $postData['created_date'] = date('Y-m-d H:i:s');
+        } else {
+            $postData['updated_by'] = get_staff_user_id();
+            $postData['updated_date'] = date('Y-m-d H:i:s');
+        }
+
+        // Call model
+        $result = $this->fly_model->insert_update_departure($postData);
+
+        // Handle Response
+        if ($result["status"] === true) {
+
+            $message = empty($departure_id)
+                ? "Departure location created successfully."
+                : "Departure location updated successfully.";
+
+            echo json_encode([
+                'resp_code' => 'RCS',
+                'resp_desc' => $message,
+                'id'        => $result["id"] ?? $departure_id
+            ]);
+        } else {
+            echo json_encode([
+                'resp_code' => 'ERR',
+                'resp_desc' => $result["message"] ?? "Failed to save departure location.",
+            ]);
+        }
+    }
 }
