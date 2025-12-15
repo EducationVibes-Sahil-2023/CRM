@@ -1162,10 +1162,10 @@ class Reports extends AdminController
             $_POST["assigned"][] = get_staff_user_id();
         }
 
-   if(is_seoTeam())
+        if(is_seoTeam())
         {
-             $_POST["assigned"] = [];
-          $_POST["show_data"] =1;
+        $_POST["assigned"] = [];
+        $_POST["show_data"] =1;
         
         }
         if (!empty($_POST["location"]) && !empty($_POST["department"]) && empty($_POST["assigned"])) {
@@ -1315,9 +1315,6 @@ class Reports extends AdminController
             $update_count_array_label = [];
             $update_count_array_min = [];
             $update_count_array_max = [];
-
-
-
             $index = 0;
             $max_count = [];
             $staff_html = '';
@@ -2997,4 +2994,41 @@ class Reports extends AdminController
         $data['leadType']  = $this->leads_model->get_type();
         $this->load->view('admin/reports/lead_connect', $data);
     }
+    
+ public function search_by_tags()
+{
+    $tags = $this->input->post('tags'); // array OR string
+
+    if (empty($tags)) {
+        echo json_encode([
+            'status'  => false,
+            'message' => 'Tags required'
+        ]);
+        return;
+    }
+
+    $this->db->select('*');
+    $this->db->from(db_prefix() . 'tags');
+
+    // 🔥 LIKE for multiple tags
+    if (is_array($tags)) {
+        $this->db->group_start();
+        foreach ($tags as $tag) {
+            $this->db->or_like('name', trim($tag));
+        }
+        $this->db->group_end();
+    } else {
+        // Single search keyword
+        $this->db->like('name', trim($tags));
+    }
+
+    $result = $this->db->get()->result_array();
+
+    echo json_encode([
+        'status' => true,
+        'data'   => $result
+    ]);
+}
+
+
 }

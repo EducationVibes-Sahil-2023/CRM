@@ -811,6 +811,8 @@ function syncExcel_new($id = "")
 
 function syncExcel_neww($id = "")
 {
+    
+   
 
     $CI = &get_instance();
 
@@ -833,6 +835,7 @@ function syncExcel_neww($id = "")
 
     $dataArray = [];
 
+
     foreach ($sheetData as $sheet) {
         // Excel type handling
         if ((int) $sheet['excel_type'] === 2) {
@@ -846,7 +849,6 @@ function syncExcel_neww($id = "")
         if ((int) $sheet['excel_type'] === 4) {
 
             $dataArray[] = fly_excel_sync($id);
-
             continue;
             // die;
         }
@@ -854,14 +856,12 @@ function syncExcel_neww($id = "")
         if ((int) $sheet['excel_type'] === 5) {
 
             $dataArray[] = visa_excel_sync($id);
-
             continue;
             // die;
         }
         if ((int) $sheet['excel_type'] === 6) {
 
             $dataArray[] = payment_quotations($id);
-
             continue;
             // die;
         }
@@ -869,7 +869,6 @@ function syncExcel_neww($id = "")
         if ((int) $sheet['excel_type'] === 7) {
 
             $dataArray[] = ex_visa_data($id);
-
             continue;
             // die;
         }
@@ -877,7 +876,6 @@ function syncExcel_neww($id = "")
         if ((int) $sheet['excel_type'] === 8) {
 
             $dataArray[] = ex_ticket_data($id);
-
             continue;
             // die;
         }
@@ -1419,10 +1417,10 @@ function fly_excel_sync($id = "")
         $sql = "SELECT {$selectColumnName}
 FROM " . db_prefix() . "clients c
 
- LEFT JOIN " . db_prefix() . "ticket_data td ON td.client_id = c.userid
- LEFT JOIN " . db_prefix() . "ev_partner evp ON evp.id = c.agent_id
-  LEFT JOIN " . db_prefix() . "applicant_status s ON c.active = s.id
-LEFT JOIN " . db_prefix() . "basic_details b ON b.userid = c.userid
+LEFT JOIN " . db_prefix() . "ticket_data td ON td.client_id = c.userid
+LEFT JOIN " . db_prefix() . "ev_partner evp ON evp.id = c.agent_id
+LEFT JOIN " . db_prefix() . "applicant_status s ON c.active = s.id
+ JOIN " . db_prefix() . "basic_details b ON b.userid = c.userid
 LEFT JOIN " . db_prefix() . "applicant_status aps ON aps.id = c.active
 LEFT JOIN " . db_prefix() . "leads l ON (l.id = c.leadid AND l.type = 2)
 LEFT JOIN " . db_prefix() . "staff st ON l.assigned = st.staffid
@@ -2763,6 +2761,8 @@ WHERE ho.status = 1";
 
 function ex_visa_data()
 {
+    
+
     $CI = &get_instance();
 
     $CI->db->query("SET SESSION group_concat_max_len = 10000000000");
@@ -2770,7 +2770,7 @@ function ex_visa_data()
     // Fetch sheet config(s)
     $sheetData = $CI->db->select("id, spreadsheetId, fromDate, toDate, autoSync, sheet_name, sql_condition, column_ids")
         ->from(db_prefix() . "excel_data_update")
-        ->where("excel_type", 3)
+        ->where("excel_type", 7)
         ->where("autoSync", 1)
         ->order_by("id", "asc")
         ->get()
@@ -2820,12 +2820,10 @@ function ex_visa_data()
         ON vd.visa_type = vt.id
     LEFT JOIN `" . db_prefix() . "external_visa_status` vs 
         ON vd.visa_status = vs.id
-    LEFT JOIN `" . db_prefix() . "external_ticket_vendor` v 
+    LEFT JOIN `" . db_prefix() . "external_visa_vendor` v 
         ON vd.visa_vendor = v.id
     LEFT JOIN `" . db_prefix() . "external_payment_mode` m 
-        ON vd.payment_mode = m.id
-    LEFT JOIN `" . db_prefix() . "clients` c 
-        ON vd.client_id = c.userid
+    on m.id = vd.payment_mode
     WHERE 1=1 {$condition_sql}
     GROUP BY vd.id
     ORDER BY vd.id DESC
@@ -2849,15 +2847,141 @@ function ex_visa_data()
                 'lastSync' => date('Y-m-d H:i:s')
             ]);
         // Add to final array
-        $dataArray[] = [
+        
+                $arrayDataValues = [];
+        foreach ($arrayData as $row) {
+            $valuesOnly = [];
+            foreach ($row as $v) {
+                $valuesOnly[] = $v === null ? '' : $v; // Replace null with blank
+            }
+            $arrayDataValues[] = $valuesOnly;
+        }
+       return  $dataArray[] = [
             "columnName"    => $columns,
             "workSheetName" => $sheet_name,
-            "rowData"       => $arrayData
+            "rowData"       => $arrayDataValues
         ];
     }
-    header('Content-Type: application/json');
-    echo json_encode($dataArray);
-    exit;
+    // header('Content-Type: application/json');
+    // echo json_encode($dataArray);
+    // exit;
+}
+
+
+function ex_ticket_data()
+{
+    
+
+    $CI = &get_instance();
+
+    $CI->db->query("SET SESSION group_concat_max_len = 10000000000");
+
+    // Fetch sheet config(s)
+    $sheetData = $CI->db->select("id, spreadsheetId, fromDate, toDate, autoSync, sheet_name, sql_condition, column_ids")
+        ->from(db_prefix() . "excel_data_update")
+        ->where("excel_type", 8)
+        ->where("autoSync", 1)
+        ->order_by("id", "asc")
+        ->get()
+        ->result_array();
+
+    $dataArray = [];
+
+    foreach ($sheetData as $sheet) {
+        $currentId     = $sheet['id'] ?? null;
+        $fromDate      = $sheet['fromDate'] ?? null;
+        $toDate        = $sheet['toDate'] ?? null;
+        $spreadsheetId = $sheet['spreadsheetId'] ?? null;
+        $sheet_name    = $sheet['sheet_name'] ?? null;
+
+        // Parse column IDs
+        $column_ids_raw = $sheet['column_ids'] ?? '';
+        $column_ids = (is_string($column_ids_raw) && trim($column_ids_raw) !== '')
+            ? array_map('intval', explode(",", $column_ids_raw))
+            : [];
+
+        if (empty($column_ids)) {
+            continue; // skip if no columns configured
+        }
+        $orderColumns = implode(',', $column_ids);
+        // Fetch column names in correct order
+
+        $selectColumnName = $CI->db
+            ->select("GROUP_CONCAT(fetch_column_name ORDER BY FIELD(id, $orderColumns)) AS fetch_column_name", false)
+            ->from(db_prefix() . "excel_column_update")
+            ->where_in("id", $column_ids)
+            ->get()
+            ->row()
+            ->fetch_column_name ?? '';
+        if (empty($selectColumnName)) {
+            continue;
+        }
+        // Build conditions
+        $condition_sql = "";
+        if (!empty($fromDate) && !empty($toDate)) {
+            $condition_sql .= " AND (vd.created_at BETWEEN " . $CI->db->escape($fromDate) . " AND " . $CI->db->escape($toDate) . ")";
+        }
+        $sql = "
+    SELECT 
+        {$selectColumnName}
+    FROM `" . db_prefix() . "external_ticket_data` vd
+    LEFT JOIN `" . db_prefix() . "external_ticket_vendor` v 
+        ON vd.ticket_vendor = v.id
+    LEFT JOIN `" . db_prefix() . "external_payment_mode` m 
+    on m.id = vd.payment_mode
+    LEFT JOIN `" . db_prefix() . "airline` a 
+    on a.id = vd.airline
+     LEFT JOIN `" . db_prefix() . "flight_type` ft
+    on ft.id = vd.flight_type
+    LEFT JOIN `" . db_prefix() . "departure_location` dl
+    on dl.id = vd.departure_id
+     LEFT JOIN `" . db_prefix() . "departure_location` ddl
+    on ddl.id = vd.destination_id
+    LEFT JOIN `" . db_prefix() . "external_visa_type` tt
+    on tt.id = vd.ticket_type
+    
+    
+    
+    WHERE 1=1 {$condition_sql}
+    GROUP BY vd.id
+    ORDER BY vd.id DESC
+";
+        $arrayData = $CI->db->query($sql)->result_array();
+
+        // Get column names
+        $sheetColumnName = $CI->db->select("name")
+            ->from(db_prefix() . "excel_column_update")
+            ->where_in("id", $column_ids)
+            ->order_by("FIELD(id, {$orderColumns})", "", false)
+            ->get()
+            ->result_array();
+        $columns = array_column($sheetColumnName, "name");
+
+
+        // Update last sync
+        $CI->db->where('id', $currentId)
+            ->update(db_prefix() . "excel_data_update", [
+                'lastSync' => date('Y-m-d H:i:s')
+            ]);
+        // Add to final array
+        
+                $arrayDataValues = [];
+        foreach ($arrayData as $row) {
+            $valuesOnly = [];
+            foreach ($row as $v) {
+                $valuesOnly[] = $v === null ? '' : $v; // Replace null with blank
+            }
+            $arrayDataValues[] = $valuesOnly;
+        }
+        return $dataArray[] = [
+            "columnName"    => $columns,
+            "workSheetName" => $sheet_name,
+            "rowData"       => $arrayDataValues
+        ];
+    }
+    // header('Content-Type: application/json');
+    // echo json_encode($dataArray);
+    // exit;
 }
 
 

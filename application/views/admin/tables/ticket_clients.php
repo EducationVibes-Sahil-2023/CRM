@@ -48,6 +48,12 @@ $where[] = " AND " . db_prefix() . 'external_ticket_data.status = 1 ';
 // Group by ID to prevent duplicates
 $group_by = 'GROUP BY ' . db_prefix() . 'external_ticket_data.id';
 
+$search_column = [];
+// Define search and group-by clauses
+if (!empty($_POST["search"]["value"])) {
+    $search_column = [$sTable . ".name"];
+}
+
 // Execute DataTables query
 $result = data_tables_init(
     $aColumns,
@@ -55,8 +61,12 @@ $result = data_tables_init(
     $sTable,
     $join,
     $where,
-    [db_prefix() . 'external_ticket_data.id'], // Select ID explicitly
-    $group_by
+    [],
+    // [db_prefix() . 'external_ticket_data.id'], // Select ID explicitly
+    $group_by,
+    "",
+    "",
+    $search_column
 );
 
 $output  = $result['output'];
