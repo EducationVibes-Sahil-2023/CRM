@@ -5,8 +5,8 @@ $has_permission_delete = has_permission('client_visa_delete', '', 'delete');
 
 // Columns for DataTables
 $aColumns = [
-    db_prefix() . 'external_visa_data.id as id',
     db_prefix() . 'external_visa_data.name as name',
+     db_prefix() . 'external_visa_data.id as id',
     db_prefix() . 'external_visa_vendor.name as visa_vendor',
     db_prefix() . 'external_visa_type.name as visa_type',
     db_prefix() . 'external_visa_data.visa_app_date as visa_app_date',
@@ -23,8 +23,9 @@ $aColumns = [
     db_prefix() . 'external_visa_data.remark as remark',
 ];
 
-$sIndexColumn = 'id';
+
 $sTable       = db_prefix() . 'external_visa_data';
+$sIndexColumn = 'id';
 
 // Joins with aliases for payment modes
 $join = [
@@ -47,6 +48,11 @@ $where[] = " AND " . db_prefix() . 'external_visa_data.status = 1 ';
 // Group by ID to prevent duplicates
 $group_by = 'GROUP BY ' . db_prefix() . 'external_visa_data.id';
 
+$search_column = [];
+// Define search and group-by clauses
+if (!empty($_POST["search"]["value"])) {
+    $search_column = [$sTable . ".name"];
+}
 // Execute DataTables query
 $result = data_tables_init(
     $aColumns,
@@ -54,8 +60,10 @@ $result = data_tables_init(
     $sTable,
     $join,
     $where,
-    [db_prefix() . 'external_visa_data.id'], // Select ID explicitly
-    $group_by
+    [],
+    // [db_prefix() . 'external_visa_data.id'], // Select ID explicitly
+    $group_by,
+    "","",$search_column
 );
 
 $output  = $result['output'];

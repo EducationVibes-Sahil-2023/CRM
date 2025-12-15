@@ -1782,6 +1782,19 @@ function get_leads_summary_filter_report($params, $all_status = 0)
         }
     }
     $sql .= ' LEFT JOIN ' . db_prefix() . 'leads_status ON ' . db_prefix() . 'leads.status = ' . db_prefix() . 'leads_status.id';
+    
+    if (!empty($params['tags'])) {
+
+    $sql .= "
+        INNER JOIN tbltaggables tg 
+            ON tg.rel_id = " . db_prefix() . "leads.id 
+            AND tg.rel_type = 'lead'
+    ";
+
+    $escapedTags = array_map([$CI->db, 'escape'], $params['tags']);
+
+    $sql .= " AND tg.tag_id IN (" . implode(',', $escapedTags) . ")";
+}
     if (!empty($_POST["status"])) {
         $sql .= ' AND ' . db_prefix() . 'leads_status.id IN (' . implode(',', $params['status']) . ') ';
     }
@@ -2042,6 +2055,22 @@ function get_leads_summary_filter_report_($params)
     if (!empty($params['followup_to_date'])) {
         $sql .= ' JOIN ' . db_prefix() . 'reminders ON ' . db_prefix() . 'reminders.rel_id = ' . db_prefix() . 'leads.id';
     }
+    
+    
+if (!empty($params['tags'])) {
+
+    $sql .= "
+        INNER JOIN tbltaggables tg 
+            ON tg.rel_id = ".db_prefix()."leads.id 
+            AND tg.rel_type = 'lead'
+           ";
+
+    $escapedTags = array_map([$CI->db, 'escape'], $params['tags']);
+
+    $sql .= " AND  tg.tag_id IN (" . implode(',', $escapedTags) . ")";
+}
+
+
     if (isset($status['lost'])) {
         $sql .= ' WHERE lost = 1';
     } elseif (isset($status['junk'])) {
@@ -2507,6 +2536,22 @@ function get_leads_report_($params, $export = 0)
         } else  if (!empty($export) && $export == 1) {
             $sql .= "JOIN " . db_prefix() . "staff as staff ON (staff.staffid = l.assigned) ";
         }
+        
+        
+if (!empty($params['tags'])) {
+
+    $sql .= "
+        INNER JOIN tbltaggables tg 
+            ON tg.rel_id = l.id 
+            AND tg.rel_type = 'lead'
+           ";
+
+    $escapedTags = array_map([$CI->db, 'escape'], $params['tags']);
+
+    $sql .= " AND  tg.tag_id IN (" . implode(',', $escapedTags) . ")";
+}
+
+
 
         $sql .= "WHERE 1=1 ";
 
@@ -2671,6 +2716,22 @@ function get_leads_report_conversion($params)
 
         $sql .= "JOIN " . db_prefix() . "leads_status as status ON (status.id = l.status) ";
         $sql .= "JOIN " . db_prefix() . "lead_conversion_type as c ON (c.id = status.conversion_type AND c.status = 1) ";
+        
+        
+if (!empty($params['tags'])) {
+
+    $sql .= "
+        INNER JOIN tbltaggables tg 
+            ON tg.rel_id = l.id 
+            AND tg.rel_type = 'lead'
+           ";
+
+    $escapedTags = array_map([$CI->db, 'escape'], $params['tags']);
+
+    $sql .= " AND  tg.tag_id IN (" . implode(',', $escapedTags) . ")";
+}
+
+
         $sql .= "WHERE 1=1 ";
 
         if (!empty($params['source'])) {
@@ -2778,6 +2839,22 @@ function get_leads_report_marketing($params)
 
         $sql .= "JOIN " . db_prefix() . "leads_sources as source ON (source.id = l.source) ";
         $sql .= "JOIN " . db_prefix() . "lead_marketing as m ON (m.id = source.marketing_type AND m.status = 1) ";
+        
+        
+if (!empty($params['tags'])) {
+
+    $sql .= "
+        INNER JOIN tbltaggables tg 
+            ON tg.rel_id = l.id 
+            AND tg.rel_type = 'lead'
+           ";
+
+    $escapedTags = array_map([$CI->db, 'escape'], $params['tags']);
+
+    $sql .= " AND  tg.tag_id IN (" . implode(',', $escapedTags) . ")";
+}
+
+
         $sql .= "WHERE 1=1 ";
 
         if (!empty($params['source'])) {
@@ -3079,6 +3156,21 @@ function get_status_summary_filter_report($params)
     } else {
         $sql .= ' FROM ' . db_prefix() . 'leads l  left join  ' . db_prefix() . 'leads_status ls ON  ls.id = l.status  left join ' . db_prefix() . 'leads_sources s ON s.id = l.source left join ' . db_prefix() . 'lead_marketing m ON m.id = s.marketing_type left join ' . db_prefix() . 'lead_conversion_type c ON c.id = ls.conversion_type ';
     }
+    
+    
+if (!empty($params['tags'])) {
+
+    $sql .= "
+        INNER JOIN tbltaggables tg 
+            ON tg.rel_id = l.id 
+            AND tg.rel_type = 'lead'
+           ";
+
+    $escapedTags = array_map([$CI->db, 'escape'], $params['tags']);
+
+    $sql .= " AND  tg.tag_id IN (" . implode(',', $escapedTags) . ")";
+}
+
 
 
     if (!empty($params['course']) || !empty($params['degree']) || !empty($params['google_source'])) {
@@ -5071,6 +5163,8 @@ function leads_update_count_report($params = false, $max_status = 0, $leads_coun
             calls.contact
         ) AS uni_dates FROM " . db_prefix() . "leads as l inner join " . db_prefix() . "calls_activity_logs as calls on  l.phonenumber = calls.contact  ";
     }
+    
+
 
 
     if (!empty($params['up_to_date'])) {
@@ -5114,9 +5208,25 @@ function leads_update_count_report($params = false, $max_status = 0, $leads_coun
         $sql .= ' join ' . db_prefix() . 'reminders  on  ' . db_prefix() . 'reminders.rel_id = l.id ';
     }
 
+    
+if (!empty($params['tags'])) {
+
+    $sql .= "
+        INNER JOIN tbltaggables tg 
+            ON tg.rel_id = l.id 
+            AND tg.rel_type = 'lead'
+           ";
+
+    $escapedTags = array_map([$CI->db, 'escape'], $params['tags']);
+
+    $sql .= " AND  tg.tag_id IN (" . implode(',', $escapedTags) . ")";
+}
+
     if (!$has_permission_view) {
         $sql .= ' AND ' . $whereNoViewPermission;
     }
+    
+    
 
 
     $sql .= " Where 1= 1 ";
@@ -5776,6 +5886,20 @@ function get_leads_summary_filter_excel_report($params)
         $sql .= ' JOIN tblreminders ON tblreminders.rel_id = l.id';
     }
 
+
+if (!empty($params['tags'])) {
+
+    $sql .= "
+        INNER JOIN tbltaggables tg 
+            ON tg.rel_id = l.id 
+            AND tg.rel_type = 'lead'
+           ";
+
+    $escapedTags = array_map([$CI->db, 'escape'], $params['tags']);
+
+    $sql .= " AND  tg.tag_id IN (" . implode(',', $escapedTags) . ")";
+}
+
     $sql .= ' WHERE 1=1';
 
     if (isset($status['lost'])) {
@@ -6147,6 +6271,21 @@ function get_status_summary_filter_performance($params, $conversion_status = 0)
     if (!empty($params['followup_to_date'])) {
         $sql .= ' join tblreminders  on  tblreminders.rel_id = l.id ';
     }
+    
+    
+if (!empty($params['tags'])) {
+
+    $sql .= "
+        INNER JOIN tbltaggables tg 
+            ON tg.rel_id = l.id 
+            AND tg.rel_type = 'lead'
+           ";
+
+    $escapedTags = array_map([$CI->db, 'escape'], $params['tags']);
+
+    $sql .= " AND  tg.tag_id IN (" . implode(',', $escapedTags) . ")";
+}
+
 
     if (isset($status['lost'])) {
         $sql .= ' WHERE lost=1';

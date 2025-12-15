@@ -424,6 +424,32 @@ $status_list_ = array_column($status_list, null, "id");
                                     ?>
                                 </div>
                             </div>
+                             <div class="col-md-2 leads-filter-column">
+                                <div class="form-group">
+                                <?php
+                                echo render_select(
+                                'tags[]',
+                                $tags,
+                                ['id', 'name'],
+                                '',
+                                '',
+                                [
+                                'data-width' => '100%',
+                                'data-live-search' => 'true',
+                                'multiple' => true
+                                ],
+                                [],
+                                'no-mbot',
+                                '',
+                                false,
+                                'tags'
+                                );
+                                
+                                
+                                echo '</div>';
+                                ?>
+                                </div>
+                            </div>
 
                             <div class="col-md-6 leads-filter-column">
                                 <div class="form-group">
@@ -548,6 +574,74 @@ $status_list_ = array_column($status_list, null, "id");
     <?php init_tail(); ?>
     <!-- <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/3.0.2/chart.min.js"></script> -->
     <!-- <script src="https://cdnjs.cloudflare.com/ajax/libs/moment.js/2.13.0/moment.min.js"></script> -->
+<script>
+$(document).ready(function () {
+
+    const $tags = $('#tags');
+    $tags.selectpicker();
+
+    $(document).on('input', '.bs-searchbox input', function () {
+
+        let keyword = $(this).val().trim();
+        if (keyword.length < 2) return;
+
+        // Keep selected values + text
+        let selectedValues = $tags.val() || [];
+        let selectedOptions = [];
+
+        // Store selected option data
+        $tags.find('option:selected').each(function () {
+            selectedOptions.push({
+                id: $(this).val(),
+                name: $(this).text()
+            });
+        });
+
+        $.ajax({
+            url: admin_url + 'reports/search_by_tags',
+            type: 'POST',
+            dataType: 'json',
+            data: { tags: keyword },
+            success: function (res) {
+
+                if (!res.status || !res.data) return;
+
+                let optionsHtml = '';
+
+                // 🔝 Add selected items FIRST
+                selectedOptions.forEach(tag => {
+                    optionsHtml += `
+                        <option value="${tag.id}" selected>
+                            ${tag.name}
+                        </option>`;
+                });
+
+                // 🔽 Add search results (skip selected)
+                res.data.forEach(tag => {
+                    if (!selectedValues.includes(tag.id.toString())) {
+                        optionsHtml += `
+                            <option value="${tag.id}">
+                                ${tag.name}
+                            </option>`;
+                    }
+                });
+
+                // 🔄 Refresh select
+                $tags
+                    .html(optionsHtml)
+                    .selectpicker('refresh')
+                    .selectpicker('val', selectedValues);
+            },
+            error: function () {
+                console.error('Tag search failed');
+            }
+        });
+    });
+
+});
+</script>
+
+
     <script>
         <?php
         $conversion_type_color = array_column($conversion_type, 'color', 'name');
@@ -2603,6 +2697,7 @@ function show_data_(classid)
             var element_view_status = document.getElementById("view_status");
             var element_view_fb_name = document.getElementById("view_facebook_names");
             var element_view_google_type = document.getElementById("view_source_marketing");
+             var element_view_tags = document.getElementById("tags");
             var location = document.getElementById("location");
             date_type = document.getElementById("date_type").value;
             <?php if (is_admin()) { ?>
@@ -2627,6 +2722,7 @@ function show_data_(classid)
             var update_count_min = '';
             var update_count_max = '';
             var update_staff_id = "";
+            var view_tags_options = "";
             if (slider_data && status_filter == 1) {
                 update_count_min = document.getElementById("update_count_min").value;
                 update_count_max = document.getElementById("update_count_max").value;
@@ -2658,6 +2754,13 @@ function show_data_(classid)
             if (typeof(element_view_google_type) != 'undefined' && element_view_google_type != null) {
                 view_google_options = document.getElementById('view_source_marketing').selectedOptions;
                 view_google_options = Array.from(view_google_options).map(({
+                    value
+                }) => value);
+            }
+            
+             if (typeof(element_view_tags) != 'undefined' && element_view_tags != null) {
+                view_tags_options = document.getElementById('tags').selectedOptions;
+                view_tags_options = Array.from(view_tags_options).map(({
                     value
                 }) => value);
             }
@@ -2754,7 +2857,8 @@ function show_data_(classid)
                 assign_to_date: assign_to_date,
                 graph_status: graph_status,
                 call_status: call_status,
-                total_status: total_status
+                total_status: total_status,
+                tags:view_tags_options
             };
 
             ajax_get_post_data = ajax_post_data
