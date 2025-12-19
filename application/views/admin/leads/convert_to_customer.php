@@ -367,6 +367,10 @@ if ($lead->type == 1) {
                               // Set the required attribute based on the "mandatry" field
                               $required = !empty($fees["mandatry"]) ? "required" : "false";
                               $mandatry = !empty($fees["mandatry"]) ? "<small class='text-danger'>*</small>" : "";
+                              if(!empty($lead->type) && $lead->type == 2 && $fees["id"] == 6)
+                              {
+                                  $required .=" readonly ";
+                              }
 
 
                            ?>
