@@ -176,7 +176,7 @@ if (!empty($_POST['payment_id'])) {
                 </a>';
         }
 
-        if (is_admin() || has_permission('hostel_payment_delete', '', 'delete')) {
+        if (is_admin() || has_permission('hostel_management', '', 'hostel_payment_delete')) {
             $action .= '
      <button class="btn-xs btn btn-xs btn-danger" onclick="document_approved(this, 0,' . (int)$aRow['id'] . ')">
                     <i class="fa fa-trash"></i>
