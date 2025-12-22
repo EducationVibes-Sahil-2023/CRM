@@ -4185,7 +4185,8 @@ WHERE s.client_id = " . (int)$client_id . "
 
             $doc_ids       = $data["doc_type_id"];
             $doc_names     = $data["doc_type_name"];
-            $document_url  = $data["doc_url"] ?? [];
+            $document_url   = array_values(array_filter($data['doc_url'] ?? []));
+
             $client_id     = (int) $data["clientid"];
             $update_array  = [];
             $error_logs    = [];
@@ -4981,6 +4982,9 @@ WHERE s.client_id = " . (int)$client_id . "
                     "created_by" => get_staff_user_id()
                 ];
             }
+            
+            
+        
 
             // Upload media documents if present
             if (!empty($media_upload_data["doc_type"][0])) {
@@ -5011,16 +5015,43 @@ WHERE s.client_id = " . (int)$client_id . "
 
 
 
-            $workData = [];
-            foreach ($work_experience_details as $work) {
+        $workData = [];
 
-                $workData[] = [
-                    "currently_working" => $work['current_working'],
-                    "year" => $work['year'],
-                    "remark" => $work['profile'],
-                    "client_id" => $client_id
-                ];
+if (!empty($work_experience_details)) {
+    foreach ($work_experience_details as $index => $work) {
+        $file_name = null;
+
+        // Check if a file was uploaded for this index
+        if (isset($_FILES['work_exp']['name'][$index]) && $_FILES['work_exp']['name'][$index] != '') {
+            $files = [
+                'name'     => $_FILES['work_exp']['name'][$index],
+                'type'     => $_FILES['work_exp']['type'][$index],
+                'tmp_name' => $_FILES['work_exp']['tmp_name'][$index],
+                'error'    => $_FILES['work_exp']['error'][$index],
+                'size'     => $_FILES['work_exp']['size'][$index]
+            ];
+
+            // Only proceed if upload has no error
+            if ($files['error'] === UPLOAD_ERR_OK) {
+                // Call your custom function
+                $upload_result = upload_applicant_documents($client_id, $files);
+
+                // Get file path or name from your function
+                $file_name = isset($upload_result['file_path']) ? $upload_result['file_path'] : null;
             }
+        }
+
+        // Prepare work experience data
+        $workData[] = [
+            'currently_working' => isset($work['current_working']) ? $work['current_working'] : 0,
+            'year'              => isset($work['year']) ? $work['year'] : null,
+            'remark'            => isset($work['profile']) ? $work['profile'] : '',
+            'client_id'         => $client_id,
+            'file'              => $file_name
+        ];
+    }
+}
+
 
             // Delete existing work experience for the client
             $this->db->delete(db_prefix() . "work_experience", ["client_id" => $client_id]);

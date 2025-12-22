@@ -1170,7 +1170,7 @@ class Leads extends AdminController
         $data['members']     = $this->staff_model->get('', ['is_not_staff' => 0, 'active' => 1]);
         $data['sources']  = $this->leads_model->get_source();
         $data["university_list"] = [];
-        $data["passpost_status"] = get_passport_stages();
+        $data["passpost_status"] = get_passport_stages($data['lead']->type??'');
         if (!empty($data['lead']->type_name)) {
             $lead_type = !empty($data['lead']->type_name) ? $data['lead']->type_name : '';
             $data["university_list"] = get_university_list($lead_type);

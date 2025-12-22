@@ -102,8 +102,9 @@ class Fly_model extends App_Model
     public function check_ticket_data($clients = [], $data = [])
     {
         foreach ($clients as $client_id) {
-            $ticket = $this->db->select('ticket_status, id')
-                ->from(db_prefix() . 'ticket_data')
+            $ticket = $this->db->select('t.ticket_status, t.id,c.applicant_stage')
+                ->from(db_prefix() . 'ticket_data t')
+                ->JOIN(db_prefix() . 'clients c',"t.client_id = c.userid")
                 ->where('client_id', $client_id)
                 ->order_by('id', 'DESC')
                 ->limit(1)
@@ -111,14 +112,23 @@ class Fly_model extends App_Model
                 ->row();
 
 
+
             // Deny if another active ticket exists (status == 3), and we're not updating the same one
-            if ($ticket && $ticket->ticket_status < 3 && (empty($data["id"]) &&  $ticket->id != $data["id"])) {
-                $data = [
-                    "status" => false,
-                    "message" => "Cannot create ticket. Client " . get_client_name($client_id) . " already has an active ticket."
-                ];
-                return $data;
-                die;
+            if (
+            !empty($ticket)
+            && $ticket->ticket_status < 3
+            && (
+            empty($data['id']) 
+            || $ticket->id != $data['id']
+            )
+            && $ticket->applicant_stage != SC
+            ) {
+            $data = [
+            "status" => false,
+            "message" => "Cannot create ticket. Client " . get_client_name($client_id) . " already has an active ticket."
+            ];
+            return $data;
+            die;
             }
         }
 
@@ -143,9 +153,12 @@ class Fly_model extends App_Model
             if ($auto == 0) {
                 $check = $this->check_ticket_data($client_exam_data["client_ids"], $client_exam_data);
 
+
                 if (!$check["status"]) {
                     return $check;
                 }
+                
+
             }
 
             // Deactivate previous auto-generated tickets in the batch
@@ -190,6 +203,8 @@ class Fly_model extends App_Model
 
                 // Handle single/manual (auto == 0) insert/update
                 if ($auto == 0) {
+                    
+
                     if (!empty($client_exam_data["id"])) {
                         $data["id"] = $client_exam_data["id"];
                         $updateData[] = $data;
@@ -223,6 +238,7 @@ class Fly_model extends App_Model
             }
 
 
+
             // Save to DB
             if (!empty($updateData)) {
                 $this->db->update_batch(db_prefix() . 'ticket_data', $updateData, 'id');
@@ -230,6 +246,7 @@ class Fly_model extends App_Model
 
             if (!empty($insertData)) {
                 $this->db->insert_batch(db_prefix() . 'ticket_data', $insertData);
+
             }
 
             if ($auto == 1 && !empty($client_exam_data["batch_id"])) {
