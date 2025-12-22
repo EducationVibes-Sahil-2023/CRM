@@ -260,6 +260,18 @@ if ($lead->type == 1) {
                            </div>
                         <?php } ?>
                         </div>
+                        
+                         <?php if ($lead->type == 1) { ?>
+                             <div class="col-md-12">
+                                 <div class="checkbox">
+                                    <input type="hidden" value="0" id="visa_refusal" name="visa_refusal">
+                                    <input class="form-check-input checkbox-group" type="checkbox" value="1" id="visa_refusal" name="visa_refusal">
+                                    <label class="form-check-label" for="visa_refusal">
+                                       Visa Refusal
+                                    </label>
+                                 </div>
+                              </div>
+                         <?php } ?>
                      </div>
 
                      <?php if ($lead->source == REFERENCE_ID) { ?>

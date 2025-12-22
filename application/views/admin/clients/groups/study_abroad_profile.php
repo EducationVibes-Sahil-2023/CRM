@@ -5,7 +5,7 @@
 if (!empty($score_value)) {
     $score_value = array_column($score_value, null, "type");
 }
-$passport_stages = get_passport_stages();
+$passport_stages = get_passport_stages(1);
 $caste_category = get_caste_category();
 $neet_status = get_neet_status();
 $relationshipArray = get_relationShip();
@@ -165,6 +165,16 @@ if ($lead_type_status == 1) {
 
 ?>
 <style>
+.budget-info
+ {
+    /* border: 1px solid lightgrey; */
+    padding: 5px 20px;
+    background: #ffcece;
+    /* height: 100px; */
+    /* color: white; */
+    border-radius: 10px;
+    box-shadow: 3px 3px 7px lightgrey;
+}
     select.ui-datepicker-year {
         color: black;
     }
@@ -678,8 +688,7 @@ if ($lead_type_status == 1) {
                                     <div
                                         class="col-lg-3 passport-div-ARN <?= !empty($showPasswordArn && $showPasswordArn == 1) ? '' : 'hide' ?>">
                                         <div class="form-group">
-                                            <label for="passport_number">Passport ARN <small
-                                                    class="text-danger">*</small></label>
+                                            <label for="passport_number">Passport ARN </label>
                                             <input class="form-control passport-info text-uppercase" type="text"
                                                 placeholder="Enter Passport ARN" name="passport_arn" id="passport_arn"
                                                 pattern="^[A-Z0-9-]{15,20}$"
@@ -782,6 +791,88 @@ if ($lead_type_status == 1) {
                                     }
                                     ?>
                                 </div>
+                                <div class="row col-md-12">
+                                 
+                                    <div class="col-md-12">
+                                    <div class="form-check">
+                                    <input class="form-check-input" type="checkbox" onclick="apply_new_passport()" name="new_passport_status" id="new_passport" value="1" <?=!empty($passport_info->new_passport_status && $passport_info->new_passport_status == 1)?'checked':''?> >
+                                    <label class="form-check-label" for="new_passport">
+                                    I have applied for a new passport
+                                    </label>
+                                    </div>
+                                    </div>
+                                
+                                   <div class="new-passport-info " style="display:<?=!empty($passport_info->new_passport_status && $passport_info->new_passport_status == 1)?'':'none'?>">
+                                              <div class="col-md-4">
+                                         
+                                            <div class="form-group">
+                                            <label for="new_passport_arn">Passport ARN <small
+                                                    class="text-danger">*</small></label>
+                                            <input class="form-control passport-info text-uppercase" type="text"
+                                                placeholder="Enter Passport ARN" name="new_passport_arn" id="new_passport_arn"
+                                                pattern="^[A-Z0-9-]{15,20}$"
+                                                title="Passport ARN must be 15 to 20 characters, using uppercase letters (A-Z), numbers (0-9), and hyphens (-) only."
+                                                maxlength="20" onkeyup="isValidARN()"
+                                                value="<?= isset($passport_info) ? htmlspecialchars($passport_info->new_passport_arn) : '' ?>"
+                                                >
+
+
+                                        </div>
+                                         </div>
+                                            <?php
+                                    foreach ($profile_section["new_passport"] as $s_stage) {
+                                        $doc_type = $s_stage["name"] ?? '';
+                                        $doc_id = $s_stage["id"] ?? '';
+                                        $info = $s_stage["info"] ?? '';
+                                        $accept = $s_stage["file_type"] ?? '';
+                                        $is_mandatory = !empty($s_stage["mandatry"]);
+                                        $mandatry_text = $is_mandatory ? "<small class='text-danger'>*</small>" : '';
+                                        $required_attr = $is_mandatory ? "required required-check" : '';
+                                        $file_url = !empty($applicant_documents[$doc_id]["document_file"]) ? $applicant_documents[$doc_id]["document_file"] : '';
+                                        $required_attr = !empty($file_url) ? "" : $required_attr;
+
+                                    ?>
+                                        <div
+                                            class="col-lg-4 media-files passport-div-status ">
+                                            <div class="form-group">
+                                                <label for="exampleInputMobileNumber"><?= $s_stage["name"] ?>
+                                                    <?= $mandatry_text  . "  (" . $s_stage["file_type"] . ")" ?>
+                                                    <?php if (!empty($info)) : ?>
+                                                        &nbsp;<i class="fa fa-info-circle"
+                                                            title="<?= htmlspecialchars($info, ENT_QUOTES, 'UTF-8') ?>"></i>
+                                                    <?php endif; ?></label>
+                                                <input type="hidden" name="doc_type[]"
+                                                    value="<?= htmlspecialchars($doc_id, ENT_QUOTES, 'UTF-8') ?>">
+                                                <input type="hidden" name="doc_name[]"
+                                                    value="<?= htmlspecialchars($doc_type, ENT_QUOTES, 'UTF-8') ?>">
+                                                <input type="hidden" name="doc_url[]"
+                                                    value="<?= htmlspecialchars($file_url, ENT_QUOTES, 'UTF-8') ?>">
+                                                <input type="file" name="files[<?= $doc_id ?>]" value="<?= $file_url ?>"
+                                                    class="form-control"
+                                                    accept="<?= htmlspecialchars($accept, ENT_QUOTES, 'UTF-8') ?>"
+                                                    <?= $required_attr ?>>
+                                                <?php
+                                                if (!empty($file_url)) {
+                                                ?>
+                                                    <div class="margin-top">
+                                                        <i class="fa fa-eye  btn btn-xs btn-primary"
+                                                            onclick="show_media_files('<?= base_url($file_url) ?>');"></i>
+                                                        <i class="fa fa-download  btn btn-xs btn-primary"
+                                                            onclick="download_media_files(`<?= base_url($file_url) ?>`, '_blank');"></i>
+                                                    </div>
+                                                <?php
+                                                }
+                                                ?>
+
+                                            </div>
+                                        </div>
+                                    <?php
+                                    }
+                                    ?> 
+                                    </div>    
+                              
+                                    
+                                </div>
                                 <div class="btn-save-fun">
                                     <div class="col-md-12">
                                         <button type="submit" onclick="save_passport_details()"
@@ -799,7 +890,7 @@ if ($lead_type_status == 1) {
                     <div class="col-md-12">
                         <div class="card">
 
-                            <h4>Admission Preferences <span class="float-right h4">Budget Range : <?= !empty($client->budget_range) ? $client->budget_range . " LPA " : '' ?></span></h4>
+                            <h4>Admission Preferences <span class="float-right h4 budget-info">Budget Range : <?= !empty($client->budget_range) ? $client->budget_range . " LPA " : '' ?></span></h4>
                             <hr>
                             <form id="admission-preferences-form" class="" onsubmit=" return false;">
                                 <div class="">
@@ -1406,7 +1497,7 @@ if ($lead_type_status == 1) {
                                         </div>
                                         <div class="col-lg-2 border2 border1">
                                             <div class="c1">
-                                                <p>University <?= $text_danger_mbbs ?></p>
+                                                <p>Board <?= $text_danger_mbbs ?></p>
                                             </div>
                                             <div class="c2">
 
@@ -1414,7 +1505,7 @@ if ($lead_type_status == 1) {
                                                 <?php
                                                 $selected = [];
                                                 $selected[] = $academicdetails->diploma_board;
-                                                echo render_select('diploma_board', $diploma_board, array('id', 'name'), "", $selected, ["required" => "required", "required-check" => "required-check"], [], "", "", "", "diploma_board"); ?>
+                                                echo render_select('diploma_board', $board_dropdown, array('id', 'name'), "", $selected, ["required" => "required", "required-check" => "required-check"], [], "", "", "", "diploma_board"); ?>
                                             </div>
                                         </div>
                                         <div class="col-lg-2 border2 border1">
@@ -1615,6 +1706,16 @@ if ($lead_type_status == 1) {
                                                     </dsiv>
                                                 </div>
                                             </div>
+                                             <div class="col-lg-3 border2 border1">
+                                            <div class="c1">
+                                                <p>Institute Name <!--<?= $text_danger_mbbs ?> --></p>
+                                            </div>
+                                            <div class="c2">
+                                                <input class="form-control"  type="text" class="form-group"
+                                                    placeholder="Enter Institute Name" name="g_institute"
+                                                    value="<?= $academicdetails->g_institute; ?>">
+                                            </div>
+                                        </div>
                                             <div class="col-lg-2 border2 border1">
                                                 <div class="c1">
                                                     <p>Year of Starting <?= $text_danger_mbbs ?> </p>
@@ -1781,6 +1882,16 @@ if ($lead_type_status == 1) {
                                                     echo render_select('post_graduation_board', $universities_list, array('id', 'name'), "", $selected, ["required" => "required", "required-check" => "required-check", "data-select" =>  !empty($academicdetails->post_graduation_board) ? $academicdetails->post_graduation_board : ''], [], "", "universityLoad", "", "post_graduation_board"); ?>
                                                 </div>
                                             </div>
+                                              <div class="col-lg-3 border2 border1">
+                                            <div class="c1">
+                                                <p>Institute Name <!--<?= $text_danger_mbbs ?>--> </p>
+                                            </div>
+                                            <div class="c2">
+                                                <input class="form-control"  type="text" class="form-group"
+                                                    placeholder="Enter Institute Name" name="p_g_institute"
+                                                    value="<?= $academicdetails->p_g_institute; ?>">
+                                            </div>
+                                        </div>
                                             <div class="col-lg-2 border2 border1">
                                                 <div class="c1">
                                                     <p>Year of Starting <?= $text_danger_mbbs ?></p>
@@ -1948,7 +2059,7 @@ if ($lead_type_status == 1) {
                                                                 required>
                                                         </div>
 
-                                                        <div class="form-group col-md-9">
+                                                        <div class="form-group col-md-6">
                                                             <label for="work_profile_<?= $key ?>">Role/Profile <span class="text-danger">*</span></label>
                                                             <textarea class="form-control"
                                                                 name="work_profile[]"
@@ -1956,6 +2067,26 @@ if ($lead_type_status == 1) {
                                                                 rows="3"
                                                                 required><?= htmlspecialchars($work['remark'] ?? '') ?></textarea>
                                                         </div>
+                                                        
+                                                        <div class="col-lg-3">
+                                                        <div class="form-group">
+                                                            <label for="work_exp_<?= $key ?>">Experience Letter <small class="text-danger">*</small></label>
+                                                            <input type="file" class="form-control" name="work_exp[]" id="work_exp_<?= $key ?>" required required-check accept=".pdf,.jpg,.jpeg,.png">
+                                                            <?php
+                                                        if (!empty($work['file'])) {
+                                                        ?>
+                                                            <div class="margin-top">
+                                                                <i class="fa fa-eye  btn btn-xs btn-primary"
+                                                                    onclick="show_media_files('<?= base_url($work['file']) ?>');"></i>
+                                                                <i class="fa fa-download  btn btn-xs btn-primary"
+                                                                    onclick="download_media_files(`<?= base_url($work['file']) ?>`, '_blank');"></i>
+                                                            </div>
+                                                        <?php
+                                                        }
+                                                        ?>
+                                                        </div>
+                                                          
+                                                    </div>
                                                         <?php if ($key == 0) { ?>
                                                             <div class="form-group col-md-1 d-flex flex-column justify-content-center">
                                                                 <label>&nbsp;</label>
@@ -1997,13 +2128,19 @@ if ($lead_type_status == 1) {
                                                             required>
                                                     </div>
 
-                                                    <div class="form-group col-md-9">
+                                                    <div class="form-group col-md-6">
                                                         <label for="work_profile_0">Role/Profile <span class="text-danger">*</span></label>
                                                         <textarea class="form-control"
                                                             name="work_profile[]"
                                                             id="work_profile_0"
                                                             rows="3"
                                                             required><?= htmlspecialchars($academicdetails->work_profile ?? '') ?></textarea>
+                                                    </div>
+                                                          <div class="col-lg-3">
+                                                        <div class="form-group">
+                                                            <label for="work_exp_0">Experience Letter <small class="text-danger">*</small></label>
+                                                            <input type="file" class="form-control" name="work_exp[]" id="work_exp_0" required required-check accept=".pdf,.jpg,.jpeg,.png">
+                                                        </div>
                                                     </div>
 
                                                     <div class="form-group col-md-1 d-flex flex-column justify-content-center">
@@ -2170,8 +2307,25 @@ if ($lead_type_status == 1) {
                                                         !empty($get_entrance_exams_list[$entrance['exam_id']]['academic_type']) &&
                                                         $get_entrance_exams_list[$entrance['exam_id']]['academic_type'] > 0
                                                     ): ?>
+                                                    
+                                                    <?php  
+                                                    // echo "<pre>";
+                                                        $examListById = array_column($get_entrance_exams_list, null, 'id');
+
+$academic_type_status = isset($examListById[$entrance['exam_id']]) 
+    ? $examListById[$entrance['exam_id']]['academic_type'] 
+    : null;
+
+
+                                                        // echo"</pre>";
+                                                    
+                                                    
+                                                    ?>
                                                         <div class="row col-md-12 mt-3 entrance-score-div">
-                                                            <?php foreach ($get_entrance_exam_scrore as $score): ?>
+                                                            <?php 
+                                                            
+                                                            foreach ($get_entrance_exam_scrore as $score): 
+                                                            if($academic_type_status !=$score["exam_type"]){ continue;} ?>
                                                                 <div class="col-md-3 form-group">
                                                                     <label><?= htmlspecialchars($score["name"]) ?> <span class="text-danger">*</span></label>
                                                                     <input
@@ -2781,7 +2935,7 @@ if ($lead_type_status == 1) {
     
     document.addEventListener("DOMContentLoaded", function() {
     var documentAccessOnly = "<?=!empty($documentAccessOnly)?$documentAccessOnly:0?>";
-    console.log(documentAccessOnly);
+    // console.log(documentAccessOnly);
 
     if (documentAccessOnly == "1") {
         $('.nav-tabs-horizontal li').each(function() {
@@ -2800,6 +2954,17 @@ if ($lead_type_status == 1) {
 });
 
 
+function apply_new_passport() {
+    const checkbox = document.getElementById('new_passport');
+$(".new-passport-info input").val('');
+    if (checkbox.checked) {
+        $(".new-passport-info").show();
+        // console.log('New passport applied');
+    } else {
+        // console.log('New passport not applied');
+         $(".new-passport-info").hide();
+    }
+}
     function multiple_document_download(className, zipFileName = '<?= sanitizeFileName($basicdetails->first_name . ' ' . $basicdetails->last_name) ?>.zip') {
         const files = [];
 
@@ -2877,16 +3042,51 @@ if ($lead_type_status == 1) {
 
     function show_country_dropdown(select_segment, selectCountry = ".study_country") {
 
-        let filteredData = [];
+        // let filteredData = [];
 
         // Step 1: Filter data
-        if (countryDropdownArray.length === 0) {
-            filteredData = dropdown_country_university_selection.filter(function(entry) {
-                return entry.name.toLowerCase().trim() === select_segment_default.toLowerCase().trim();
-            });
-        } else {
-            filteredData = countryDropdownArray;
-        }
+        // if (countryDropdownArray.length === 0) {
+        //     filteredData = dropdown_country_university_selection.filter(function(entry) {
+        //         return entry.name.toLowerCase().trim() === select_segment_default.toLowerCase().trim();
+        //     });
+        // } else {
+        //     filteredData = countryDropdownArray;
+        // }
+        
+    let filteredData = [];
+
+const normalize = s => String(s).toLowerCase().trim();
+
+// 1️⃣ Separate Study Abroad and other segments
+const studyAbroadData = dropdown_country_university_selection
+    .filter(item => normalize(item.name) === "study abroad")
+    .map(item => ({
+        ...item,
+        name: "Study Abroad" // normalize segment name
+    }));
+
+const otherSegmentData = dropdown_country_university_selection.filter(
+    item => normalize(item.name) !== "study abroad"
+);
+
+// 2️⃣ Track existing countries from Study Abroad
+const countrySet = new Set(
+    studyAbroadData.map(item => normalize(item.country_name))
+);
+
+// 3️⃣ Merge + force segment name
+filteredData = [
+    ...studyAbroadData,
+    ...otherSegmentData
+        .filter(item => !countrySet.has(normalize(item.country_name)))
+        .map(item => ({
+            ...item,
+            name: "Study Abroad" // force segment name
+        }))
+];
+
+// console.log(filteredData);
+
 
         // Step 2: Create unique list of countries
         let seenCountries = new Set();
@@ -2985,11 +3185,11 @@ if ($lead_type_status == 1) {
     }
 
     async function handleCountryChange(selectElement, universitySelectElement) {
-        const selectedCountry = selectElement.value;
+        const selectedCountry = selectElement.options[selectElement.selectedIndex].text;
         const $countrySelect = $(selectElement);
         const $universitySelect = $(universitySelectElement);
-
-        if (selectedCountry > 0) {
+// console.log(selectedCountry);
+        if (selectedCountry !="" || selectedCountry > 0) {
             try {
                 const universityList = await show_university_dropdown(select_segment_default, selectedCountry);
                 $universitySelect.empty();
@@ -3041,8 +3241,8 @@ if ($lead_type_status == 1) {
         return new Promise(function(resolve, reject) {
             var filteredData = dropdown_country_university_selection.filter(function(entry) {
                 return (
-                    entry.name.toLowerCase() === select_segment.trim().toLowerCase() &&
-                    entry.country_id.toLowerCase() === countryid.trim().toLowerCase()
+                    // entry.name.toLowerCase() === select_segment.trim().toLowerCase() &&
+                    entry.country_name.toLowerCase() === countryid.trim().toLowerCase()
                 );
             });
             var uniqueUniversityNames = new Set();
@@ -3217,15 +3417,15 @@ if ($lead_type_status == 1) {
 
     function loadCourses(searchTerm = '', courseSelect, selectedCourse = '') {
         try {
-            console.log("searchTerm:", searchTerm);
-            console.log("courseSelect:", courseSelect);
-            console.log("selectedCourse:", selectedCourse);
+            // console.log("searchTerm:", searchTerm);
+            // console.log("courseSelect:", courseSelect);
+            // console.log("selectedCourse:", selectedCourse);
 
             const degreeElement = $("#degree option:selected");
             let degreeType = degreeElement.data("type")?.trim();
 
-            console.log("Selected degree element:", degreeElement);
-            console.log("Raw degree type:", degreeType);
+            // console.log("Selected degree element:", degreeElement);
+            // console.log("Raw degree type:", degreeType);
 
             if (!degreeType) {
                 console.warn("No degree type found.");
@@ -3582,18 +3782,25 @@ if ($lead_type_status == 1) {
             </div>
 
             <div class="form-group col-md-1">
-                <label for="work_experience_${timestamp}">Years <span class="text-danger">*</span></label>
-                <input type="number" class="form-control" name="work_experience[]" id="work_experience_${timestamp}" required>
+                <label for="work_exp_${timestamp}">Years <span class="text-danger">*</span></label>
+                <input type="number" class="form-control" name="work_experience[]" id="work_exp_${timestamp}" required>
             </div>
 
-            <div class="form-group col-md-9">
+            <div class="form-group col-md-6">
                 <label for="work_profile_${timestamp}">Role/Profile <span class="text-danger">*</span></label>
                 <textarea class="form-control" name="work_profile[]" id="work_profile_${timestamp}" rows="3" required></textarea>
             </div>
+            
+               <div class="col-lg-3">
+                                                        <div class="form-group">
+                                                            <label for="work_exp_${timestamp}">Experience Letter <small class="text-danger">*</small></label>
+                                                            <input type="file" class="form-control" name="work_exp[]" id="work_exp_${timestamp}" required required-check accept=".pdf,.jpg,.jpeg,.png">
+                                                        </div>
+                                                    </div>
 
             <div class="form-group col-md-1 d-flex flex-column justify-content-center">
                 <label>&nbsp;</label>
-                <button type="button" class="btn btn-danger" onclick="deleteWorkExp(this)">
+                <button type="button" class="btn btn-danger" onclick="removeWorkExperience(this)">
                     <i class="fa fa-trash"></i>
                 </button>
             </div>
@@ -3601,6 +3808,7 @@ if ($lead_type_status == 1) {
 
         document.getElementById('work-experience-container').insertAdjacentHTML('beforeend', html);
     }
+
 
 
     function removeWorkExperience(element) {
@@ -3681,6 +3889,7 @@ if ($lead_type_status == 1) {
     }
 
     function changeEntranceStatus(event) {
+       
         const $parent = $(event).closest(".entrance-exams");
         const selectedData = $(event).find("option:selected").data("selected");
         const $statusActive = $parent.find(".entrance-exams-status-active");
@@ -3693,6 +3902,8 @@ if ($lead_type_status == 1) {
             $inputs.prop("required", selectedData == 1).attr("required-check", selectedData == 1 ? "required-check" : null);
         } else {
             $statusActive.addClass("hide");
+             console.log("lkfnskfnfs");
+             $(event).parents(".entrance-exams").find(".entrance-score-div").remove();
         }
     }
 </script>

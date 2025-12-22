@@ -380,7 +380,7 @@ if (empty($staffData["post_sales"]) && !is_admin()):
                                             <?= render_select('vendor', $study_abroad_vendors, array('id', 'name'), "Vendor Names <small class='text-danger'>*</small>", [isset($selected_university_shortlisting['vendor_id']) ? $selected_university_shortlisting['vendor_id'] : ''], ["required" => "required", "required-check" => "required-check"]) ?>
                                         </div>
                                         <div class="col-md-3">
-                                            <label>Sop <small class='text-danger'>*</small></label>
+                                            <label>Sop </label>
                                             <input type="file" class="form-control" <?= isset($selected_university_shortlisting['sop']) ? '' : 'required required-check' ?> accept=".pdf,image/*" name="sop">
                                             <?php
                                             $file_url_sop = isset($selected_university_shortlisting['sop']) ? $selected_university_shortlisting['sop'] : '';
@@ -2104,44 +2104,46 @@ if (empty($staffData["post_sales"]) && !is_admin()):
                 }
             });
 
-            if (stage_id > 0) {
-                const $pendencyDivs = $("#pendency_" + stage_id + " .pendency-div");
+           if (stage_id > 0) {
+    const $pendencyDivs = $("#pendency_" + stage_id + " .pendency-div");
 
-                $pendencyDivs.each(function() {
-                    const $pendencyDiv = $(this);
-                    const $select = $pendencyDiv.find("select");
-                    const $textarea = $pendencyDiv.find("textarea");
+    $pendencyDivs.each(function() {
+        const $pendencyDiv = $(this);
 
-                    const selectValue = $.trim($select.val() || '');
-                    const textareaValue = $.trim($textarea.val() || '');
+        const $select = $pendencyDiv.find("select").filter(":visible");
+        const $textarea = $pendencyDiv.find("textarea").filter(":visible");
 
-                    const selectName = $select.attr("name");
-                    const textareaName = $textarea.attr("name");
+        const selectValue = $.trim($select.val() || '');
+        const textareaValue = $.trim($textarea.val() || '');
 
-                    if (selectValue == 1) {
-                        additional_fields[selectName] = "required";
-                        form_status = false;
-                        $select.addClass("error");
-                        if (selectName) {
-                            alert_float("danger", "Please clear the pendencies before proceeding.");
+        const selectName = $select.attr("name");
+        const textareaName = $textarea.attr("name");
 
-                            return false;
-                            additional_fields[selectName] = "required";
-                        }
-                    } else {
-                        $select.removeClass("error");
-                    }
-
-                    if (textareaValue === "") {
-                        additional_fields[textareaName] = "required";
-                        form_status = false;
-                        $textarea.addClass("error");
-                    } else {
-                        $textarea.removeClass("error");
-                    }
-                });
+        // Check select only if visible
+        if ($select.length && selectValue == 1) {
+            additional_fields[selectName] = "required";
+            form_status = false;
+            $select.addClass("error");
+            if (selectName) {
+                alert_float("danger", "Please clear the pendencies before proceeding.");
             }
+        } else {
+            $select.removeClass("error");
+        }
+
+        // Check textarea only if visible
+        if ($textarea.length && textareaValue === "") {
+            additional_fields[textareaName] = "required";
+            form_status = false;
+            $textarea.addClass("error");
+        } else {
+            $textarea.removeClass("error");
+        }
+    });
+}
+
             if (!form_status) {
+                console.log(additional_fields);
                 appValidateForm($("#" + id), additional_fields);
                 $("#" + id).submit(); // If desired, remove this line to prevent auto-submit
                 resolve(false);

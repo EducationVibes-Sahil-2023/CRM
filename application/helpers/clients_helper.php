@@ -1490,16 +1490,31 @@ function get_clients_fees_hostel($where = [])
 
 
 
-function get_passport_stages()
+function get_passport_stages($lead_type = 2)
 {
     $CI = &get_instance();
-    return $passport_stages = $CI->db->select("*")
-        ->where('status', 1)
+
+    // Always convert to array
+    if (!is_array($lead_type)) {
+        $lead_type = [$lead_type];
+    }
+
+    $CI->db->select('*')
         ->from(db_prefix() . 'passport_stages')
-        ->order_by("sequence", "asc")
-        ->get()
-        ->result_array();
+        ->where('status', 1)
+        ->group_start();
+
+    foreach ($lead_type as $type) {
+        $CI->db->or_where("FIND_IN_SET(" . (int)$type . ", lead_type) >", 0);
+    }
+
+    $CI->db->group_end()
+        ->order_by('sequence', 'asc');
+
+    return $CI->db->get()->result_array();
 }
+
+
 
 function get_pcc_stages()
 {
