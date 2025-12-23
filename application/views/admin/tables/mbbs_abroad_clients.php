@@ -222,7 +222,7 @@ AND ' . db_prefix() . 'leads.type IN (' . implode(',', $this->ci->db->escape_str
     FROM ' . db_prefix() . 'ticket_data td1
     INNER JOIN (
         SELECT 
-            MAX(id) AS max_id,
+           MAX(IF(ticket_status != 6, id, NULL)) AS max_id,
             client_id,
             SUM(
                 IF(ticket_status != 6, ticket_cost, -ticket_cost)

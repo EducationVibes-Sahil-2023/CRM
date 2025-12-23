@@ -110,6 +110,8 @@ class Fly_batch extends AdminController
             $fly_date = $this->input->post("fly_date", true);
             $departure_location = $this->input->post("departure_location", true);
             $manually = $this->input->post("manually", true);
+            $old_batch_id = $this->input->post("old_batch_id", true);
+            $ticket_status = $this->input->post("ticket_status", true);
 
             // check_invitation_letter($client_list);
             // check_neet_Aff($client_list);
@@ -127,8 +129,14 @@ class Fly_batch extends AdminController
                     "payment_mode"       => $payment_mode,
                     "fly_date"           => $fly_date,
                     "departure_location" => $departure_location,
-                    "ticket_status" => 1,
+                    "ticket_status" => $ticket_status??1,
+                    
                 ];
+             
+                if(!empty($old_batch_id))
+                {
+                    $postData_Ticket["old_batch_id"] = $old_batch_id;
+                }
 
                 $documents =  $_FILES["ticket_file"];
                 if (isset($documents) && is_array($documents) && $documents["error"] === UPLOAD_ERR_OK) {
@@ -195,7 +203,6 @@ class Fly_batch extends AdminController
 
                 // ✅ Remove the ID from update fields (not needed for update)
                 unset($postData_Ticket["id"]);
-
                 // ✅ Check if there is anything to update
                 if (!empty($postData_Ticket)) {
                     $this->db->where('id', $id);

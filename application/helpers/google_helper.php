@@ -1229,7 +1229,7 @@ LEFT JOIN (
     ) td_sum ON td_latest.client_id = td_sum.client_id
     INNER JOIN (
         SELECT client_id, MAX(id) AS latest_id
-        FROM " . db_prefix() . "ticket_data
+        FROM " . db_prefix() . "ticket_data where ticket_status !=6
         GROUP BY client_id
     ) td_max ON td_latest.client_id = td_max.client_id 
             AND td_latest.id = td_max.latest_id

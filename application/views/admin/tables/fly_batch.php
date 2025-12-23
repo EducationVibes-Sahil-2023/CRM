@@ -27,6 +27,7 @@ $aColumns = [
     db_prefix() . 'ticket_data.ticket_file as ticket_file',
     db_prefix() . 'ticket_batch.id as batch_id',
     db_prefix() . 'ticket_data.batch_id as ticket_batch_id',
+    db_prefix() . 'ticket_data.old_batch_id as old_batch_id'
     
    
     

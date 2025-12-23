@@ -13,6 +13,7 @@ $flight_type   = getDataInformation('flight_type', ['id', 'name'], ['status' => 
 $flight_departure   = getDataInformation('departure_location', ['id', 'name'], ['status' => 1]);
 $airline   = getDataInformation('airline', ['id', 'name'], ['status' => 1]);
 
+
         if(is_admin())
     {
 //         ini_set('display_errors', 1);
@@ -37,7 +38,33 @@ if (!empty(!empty($country))) {
             <div class="col-md-12">
                 <div class="panel_s">
                     <div class="panel-body">
-                        <h4 class="no-margin"><?php echo _l('External Ticket Details'); ?></h4>
+                        <div class="row">
+                            <div class="col-md-9"><h4 class=""><?php echo _l('External Ticket Details'); ?></h4></div>
+                            <div class="col-md-3">
+                                  <?php 
+             if (has_permission('fly_batch', '', 'create')) {        
+                    
+                        ?>
+                         <div class="">
+                                <?= render_select(
+    'ticket_status',
+    $ticketStatus,
+    ['id', 'name'],
+    '',
+    $ticketData->status ?? '', // selected value
+    [
+        'data-width' => '100%',
+        'data-none-selected-text' => false, // remove blank
+        'data-actions-box' => false
+    ]
+); ?>
+
+                            </div>
+                        <?php
+                    }
+                    ?>
+                            </div>
+                        </div>
                         <hr>
 
                         <?= form_open('', ['id' => 'ticket_form']); ?>
@@ -155,19 +182,7 @@ if (!empty(!empty($country))) {
 ); ?>
 
                             </div>
-                            <!-- <div class="col-md-3">
-                                <?= render_select(
-                                    'ticket_status',
-                                    $ticket_status,
-                                    ['id', 'name'],
-                                    'Ticket Status',
-                                    [$ticketData->ticket_status ?? ''] ?? '',
-                                    [
-                                        'data-width' => '100%',
-                                        'data-none-selected-text' => 'No Selected'
-                                    ]
-                                ); ?>
-                            </div> -->
+                           
 
                         </div>
 
@@ -373,6 +388,8 @@ if (!empty(!empty($country))) {
             // Append country_name from select
             var countryText = $('#country option:selected').text() || '';
             formData.append('country_name', countryText);
+            var ticket_status = $('#ticket_status').val() || 0;
+formData.append('status', ticket_status);
 
             show_loader();
 

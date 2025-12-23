@@ -1,4 +1,19 @@
-<?php defined('BASEPATH') or exit('No direct script access allowed'); ?>
+<?php defined('BASEPATH') or exit('No direct script access allowed');
+
+$batchData = $this->db
+    ->select('old_batch_id,tb.name')
+    ->from(db_prefix() . 'ticket_data t')
+    ->join(db_prefix() . 'ticket_batch tb',"tb.id = t.old_batch_id")
+    ->where([
+        't.status'    => 1,
+        't.client_id' => $client_id
+    ])->group_by("old_batch_id")
+    ->get()
+    ->result_array();
+    
+    $batchData[] = array("old_batch_id"=>0,"name"=>"Manually");
+
+?>
 <style>
     .table>tbody>tr>td,
     .table>tfoot>tr>td {
@@ -72,11 +87,18 @@ $table_data = array(
             <div class="modal-body" id="ticketCreateBody">
                 <form class="row" id="ticket-form" onsubmit="return false;">
                     <?= render_input('ticket_id', '', '', 'hidden'); ?>
+                   
+                        <div class="form-group col-md-4">
+                        <?= render_select('old_batch_id', $batchData, ['old_batch_id', 'name'], 'Batch Name'); ?>
+                    </div>
+                 
                     <div class="form-group col-md-4">
                         <?= render_select('vendor_name', $vendor_list, ['id', 'name'], 'Vendor Name', []); ?>
                     </div>
 <div class="form-group col-md-4 hide">
                         <?= render_input('batch_id', 'Batch id', '', 'text'); ?>
+                        <?= render_input('ticket_status', 'ticket id', '', 'text'); ?>
+                        
                     </div>
                     <div class="form-group col-md-4">
                         <?= render_input('ticket_cost', 'Ticket Cost', '', 'number'); ?>
@@ -150,15 +172,18 @@ $table_data = array(
 
                 // Populate modal fields
                 $("#ticket_cost").val(decodedData.cost);
-                 $("#batch_id").val(decodedData.batch_id);
+                 $("#batch_id").val(decodedData.ticket_batch_id);
                 $("#ticket_id").val(decodedData.data_id);
+                 $("#ticket_status").val(decodedData.ticket_status);
+                
                 $("#payment_date").val(decodedData.payment_date);
                 $("#payment_mode").val(decodedData.payment_mode_id).trigger("change");
                 $("#fly_date").val(decodedData.fly_date);
                 $("#vendor_name").val(decodedData.vendor_id).trigger("change");
                 $("#departure_location").val(decodedData.departure_location_id).trigger("change");
-                
-if (decodedData.batch_id > 0) {
+                 $("#old_batch_id").val(decodedData.old_batch_id).trigger("change");
+            console.log(decodedData);    
+if (decodedData.ticket_batch_id > 0) {
     // Disable all input and select fields inside #ticketModal, except file inputs
     $('#ticketModal')
         .find('input:not([type="file"]), select')
@@ -230,6 +255,8 @@ $(".ticket_file_view").remove();
         let departure_location = $("#departure_location").val();
         let id = $("#ticket_id").val();
         let batch_id = $("#batch_id").val()??0;
+        let old_batch_id = $("#old_batch_id").val()??0;
+         let ticket_status = $("#ticket_status").val()??0;
 
 
         // Get selected client IDs (you must set this dynamically from your selection logic)
@@ -252,6 +279,8 @@ $(".ticket_file_view").remove();
         formData.append("manually", batch_id>0?2:1);
         formData.append("departure_location", departure_location);
         formData.append("id", id);
+        formData.append("old_batch_id", old_batch_id??0);
+         formData.append("ticket_status", ticket_status);
         
         // ✅ Append file input (ensure there's an <input type="file" id="ticket_file">)
 let fileInput = document.getElementById("ticket_file");
