@@ -11139,6 +11139,7 @@ WHERE s.client_id = " . (int)$client_id . "
         // ✅ Prepare any required data (if needed in view)
         $data = [];
         $data["id"] = $id;
+         $data["ticketStatus"] = fly_status();
         $data["country"] = $this->s_db->query("SELECT co.name,c.country_name,c.id country_id FROM course co left join countries c ON (co.id = c.segment_id) group by country_name order by country_name asc")->result_array();
         $data["ticketData"] = $this->db->where('id', $id)->get(db_prefix() . 'external_ticket_data')->row();
         // ✅ Set correct view page
@@ -11214,7 +11215,7 @@ WHERE s.client_id = " . (int)$client_id . "
                 'passport'         => $data['passport'] ?? '',
                 'gender'           => $data['gender'] ?? '',
 
-                'status'           => 1
+                'status'           => $data['status'] ?? 1,
             ];
 
 
