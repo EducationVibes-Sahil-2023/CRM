@@ -120,8 +120,8 @@ $application_statuses = get_application_statuses();
                <div class="panel-body">
                   <div class="_buttons">
                      <?php if (has_permission('customers', '', 'create')) { ?>
-                        <!-- <a href="<?php echo admin_url('clients/ev_partner'); ?>" class="btn btn-info mright5 test pull-left display-block">
-                           <?php echo "New EVP Applicant"; ?></a> -->
+                        <a href="<?php echo admin_url('clients/ev_partner'); ?>" class="btn btn-info mright5 test pull-left display-block">
+                           <?php echo "New EVP Applicant"; ?></a>
                         <a href="<?php echo admin_url('clients/import'); ?>" class="btn btn-info pull-left mright5 hidden-xs hide">
                            <?php echo _l('import_customers'); ?></a>
                      <?php } ?>

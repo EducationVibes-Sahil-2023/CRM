@@ -16,6 +16,7 @@ $diploma_board = get_diploma_board_list();
 $board_dropdown = get_board_dropdown();
 $offerLetersDownload = get_offerLetters($client_id);
 $PreDepositeDownload = get_preDeposite($client_id);
+$pcc_stages = get_pcc_stages();
 
 $staff_list              = $this->leads_model->get_staff_list();
 $get_entrance_exams_list              = $this->clients_model->get_entrance_exam_list();
@@ -165,16 +166,16 @@ if ($lead_type_status == 1) {
 
 ?>
 <style>
-.budget-info
- {
-    /* border: 1px solid lightgrey; */
-    padding: 5px 20px;
-    background: #ffcece;
-    /* height: 100px; */
-    /* color: white; */
-    border-radius: 10px;
-    box-shadow: 3px 3px 7px lightgrey;
-}
+    .budget-info {
+        /* border: 1px solid lightgrey; */
+        padding: 5px 20px;
+        background: #ffcece;
+        /* height: 100px; */
+        /* color: white; */
+        border-radius: 10px;
+        box-shadow: 3px 3px 7px lightgrey;
+    }
+
     select.ui-datepicker-year {
         color: black;
     }
@@ -335,26 +336,26 @@ if ($lead_type_status == 1) {
             <div class="scroller arrow-right"><i class="fa fa-angle-right"></i></div>
             <div class="horizontal-tabs">
                 <ul class="nav nav-tabs profile-tabs row customer-profile-tabs nav-tabs-horizontal" role="tablist">
-                    <li role="presentation" class="active">
+                    <li role="presentation" section="Basic Information" class="active">
                         <a href="#student_details" class="active" aria-controls="student_details" role="tab"
                             data-toggle="tab">Student Details</a>
                     </li>
-                    <li role="presentation">
+                    <li role="presentation" section="Passport Information">
                         <a href="#passport" aria-controls="passport" role="tab" data-toggle="tab">Passport</a>
                     </li>
-                    <li role="presentation">
+                    <li role="presentation" section="Admission Preferences" >
                         <a href="#admission_preferences" aria-controls="admission_preferences" role="tab"
                             data-toggle="tab">Admission Preferences</a>
                     </li>
-                    <li role="presentation">
+                    <li role="presentation"  section="Academic">
                         <a href="#academic_details" aria-controls="academic_details" role="tab"
                             data-toggle="tab">Academic Details</a>
                     </li>
-                    <li role="presentation">
-                        <a href="#documents" aria-controls="documents" role="tab" data-toggle="tab">Documents</a>
+                    <li role="presentation" section="document">
+                        <a href="#documents" aria-controls="documents"  role="tab" data-toggle="tab">Documents</a>
                     </li>
-                    <li role="presentation">
-                        <a href="#welcome_message" aria-controls="welcome_message" role="tab" data-toggle="tab">Welcome
+                    <li role="presentation" section="Welcome message">
+                        <a href="#welcome_message" aria-controls="welcome_message"  role="tab" data-toggle="tab">Welcome
                             Message</a>
                     </li>
                     <!-- <li role="presentation">
@@ -740,6 +741,8 @@ if ($lead_type_status == 1) {
                                                 required-check>
                                         </div>
                                     </div>
+
+
                                     <?php
                                     foreach ($profile_section["passport"] as $s_stage) {
                                         $doc_type = $s_stage["name"] ?? '';
@@ -790,37 +793,31 @@ if ($lead_type_status == 1) {
                                     <?php
                                     }
                                     ?>
-                                </div>
-                                <div class="row col-md-12">
-                                 
-                                    <div class="col-md-12">
-                                    <div class="form-check">
-                                    <input class="form-check-input" type="checkbox" onclick="apply_new_passport()" name="new_passport_status" id="new_passport" value="1" <?=!empty($passport_info->new_passport_status && $passport_info->new_passport_status == 1)?'checked':''?> >
-                                    <label class="form-check-label" for="new_passport">
-                                    I have applied for a new passport
-                                    </label>
-                                    </div>
-                                    </div>
-                                
-                                   <div class="new-passport-info " style="display:<?=!empty($passport_info->new_passport_status && $passport_info->new_passport_status == 1)?'':'none'?>">
-                                              <div class="col-md-4">
-                                         
-                                            <div class="form-group">
-                                            <label for="new_passport_arn">Passport ARN <small
-                                                    class="text-danger">*</small></label>
-                                            <input class="form-control passport-info text-uppercase" type="text"
-                                                placeholder="Enter Passport ARN" name="new_passport_arn" id="new_passport_arn"
-                                                pattern="^[A-Z0-9-]{15,20}$"
-                                                title="Passport ARN must be 15 to 20 characters, using uppercase letters (A-Z), numbers (0-9), and hyphens (-) only."
-                                                maxlength="20" onkeyup="isValidARN()"
-                                                value="<?= isset($passport_info) ? htmlspecialchars($passport_info->new_passport_arn) : '' ?>"
-                                                >
 
+                                    <div class="col-lg-3 ">
+                                        <div class="form-group">
+                                            <label>PCC status</label>
+                                            <select class="form-control" onchange="change_pcc_status()" name="pcc_status" id="pcc_status">
+                                                <option value="">Select PCC Status</option>
+                                                <?php
+                                                foreach ($pcc_stages as $pcc) {
+                                                    $selected = "";
+                                                    if ($pcc["id"] == $client->pcc_status) {
+                                                        $selected = "selected";
+                                                        $show_pcc_details = $pcc['upload'];
+                                                    }
+                                                ?>
+                                                    <option value="<?= $pcc["id"] ?>" <?= $selected ?> data-pcc_orignal_doc_id="<?= $pcc['orignal_doc_id'] ?? 0 ?>" data-pcc_status="<?= $pcc['upload'] ?? 0 ?>"><?= $pcc["name"] ?></option>
+                                                <?php
 
+                                                }
+                                                ?>
+                                            </select>
                                         </div>
-                                         </div>
-                                            <?php
-                                    foreach ($profile_section["new_passport"] as $s_stage) {
+                                    </div>
+
+                                    <?php
+                                    foreach ($profile_section["pcc"] as $s_stage) {
                                         $doc_type = $s_stage["name"] ?? '';
                                         $doc_id = $s_stage["id"] ?? '';
                                         $info = $s_stage["info"] ?? '';
@@ -832,33 +829,21 @@ if ($lead_type_status == 1) {
                                         $required_attr = !empty($file_url) ? "" : $required_attr;
 
                                     ?>
-                                        <div
-                                            class="col-lg-4 media-files passport-div-status ">
+                                        <div class="col-lg-3 media-files pcc-div-status <?= !empty($show_pcc_details && $show_pcc_details == 1) ? '' : 'hide' ?>">
                                             <div class="form-group">
-                                                <label for="exampleInputMobileNumber"><?= $s_stage["name"] ?>
-                                                    <?= $mandatry_text  . "  (" . $s_stage["file_type"] . ")" ?>
-                                                    <?php if (!empty($info)) : ?>
-                                                        &nbsp;<i class="fa fa-info-circle"
-                                                            title="<?= htmlspecialchars($info, ENT_QUOTES, 'UTF-8') ?>"></i>
+                                                <label for="exampleInputMobileNumber"><?= $s_stage["name"] ?> <?= $mandatry_text  . "  (" . $s_stage["file_type"] . ")" ?> <?php if (!empty($info)) : ?>
+                                                        &nbsp;<i class="fa fa-info-circle" title="<?= htmlspecialchars($info, ENT_QUOTES, 'UTF-8') ?>"></i>
                                                     <?php endif; ?></label>
-                                                <input type="hidden" name="doc_type[]"
-                                                    value="<?= htmlspecialchars($doc_id, ENT_QUOTES, 'UTF-8') ?>">
-                                                <input type="hidden" name="doc_name[]"
-                                                    value="<?= htmlspecialchars($doc_type, ENT_QUOTES, 'UTF-8') ?>">
-                                                <input type="hidden" name="doc_url[]"
-                                                    value="<?= htmlspecialchars($file_url, ENT_QUOTES, 'UTF-8') ?>">
-                                                <input type="file" name="files[<?= $doc_id ?>]" value="<?= $file_url ?>"
-                                                    class="form-control"
-                                                    accept="<?= htmlspecialchars($accept, ENT_QUOTES, 'UTF-8') ?>"
-                                                    <?= $required_attr ?>>
+                                                <input type="hidden" name="doc_type[]" value="<?= htmlspecialchars($doc_id, ENT_QUOTES, 'UTF-8') ?>">
+                                                <input type="hidden" name="doc_name[]" value="<?= htmlspecialchars($doc_type, ENT_QUOTES, 'UTF-8') ?>">
+                                                <input type="hidden" name="doc_url[]" value="<?= htmlspecialchars($file_url, ENT_QUOTES, 'UTF-8') ?>">
+                                                <input type="file" name="files[<?= $doc_id ?>]" value="<?= $file_url ?>" class="form-control" accept="<?= htmlspecialchars($accept, ENT_QUOTES, 'UTF-8') ?>" <?= $required_attr ?>>
                                                 <?php
                                                 if (!empty($file_url)) {
                                                 ?>
                                                     <div class="margin-top">
-                                                        <i class="fa fa-eye  btn btn-xs btn-primary"
-                                                            onclick="show_media_files('<?= base_url($file_url) ?>');"></i>
-                                                        <i class="fa fa-download  btn btn-xs btn-primary"
-                                                            onclick="download_media_files(`<?= base_url($file_url) ?>`, '_blank');"></i>
+                                                        <i class="fa fa-eye  btn btn-xs btn-primary" onclick="show_media_files('<?= base_url($file_url) ?>');"></i>
+                                                        <i class="fa fa-download  btn btn-xs btn-primary" onclick="download_media_files(`<?= base_url($file_url) ?>`, '_blank');"></i>
                                                     </div>
                                                 <?php
                                                 }
@@ -868,10 +853,112 @@ if ($lead_type_status == 1) {
                                         </div>
                                     <?php
                                     }
-                                    ?> 
-                                    </div>    
-                              
-                                    
+                                    ?>
+                                </div>
+                                <hr class="mtop5 mbot10">
+                                <div class="row col-md-12">
+                                    <div class="col-md-2">
+                                        <div class="form-check">
+                                            <input class="form-check-input checkbox-group" type="checkbox" onchange="change_refusal()" <?= (!empty($client->visa_refusal) && $client->visa_refusal == 1) ? 'checked' : '' ?> value="1" id="visa_refusal" name="visa_refusal">
+                                            <label class="form-check-label" for="visa_refusal">
+                                                Visa Refusal
+                                            </label>
+                                        </div>
+                                    </div>
+                                    <div id="visa-refusal-data" style="display:<?= (!empty($client->visa_refusal) && $client->visa_refusal == 1) ? '' : 'none' ?> ?>">
+                                        <div class="col-md-3">
+                                            <?php echo render_input('visa_year', 'Visa Year <small class="text-danger">*</small>', !empty($client->visa_year) ? $client->visa_year : '', '', ["required" => "required", "placeholder" => "Visa Year"]); ?>
+
+                                        </div>
+
+                                        <div class="col-md-5">
+                                            <?php echo render_input('visa_country', 'Visa Country <small class="text-danger">*</small>', !empty($client->visa_country) ? $client->visa_country : '', '', ["required" => "required", "placeholder" => "Visa Country"]); ?>
+
+                                        </div>
+                                    </div>
+
+                                </div>
+                                <hr class="mtop5 mbot10">
+                                <div class="row col-md-12">
+
+                                    <div class="col-md-12">
+                                        <div class="form-check">
+                                            <input class="form-check-input" type="checkbox" onclick="apply_new_passport()" name="new_passport_status" id="new_passport" value="1" <?= !empty($passport_info->new_passport_status && $passport_info->new_passport_status == 1) ? 'checked' : '' ?>>
+                                            <label class="form-check-label" for="new_passport">
+                                                I have applied for a new passport
+                                            </label>
+                                        </div>
+                                    </div>
+
+                                    <div class="new-passport-info " style="display:<?= !empty($passport_info->new_passport_status && $passport_info->new_passport_status == 1) ? '' : 'none' ?>">
+                                        <div class="col-md-4">
+
+                                            <div class="form-group">
+                                                <label for="new_passport_arn">Passport ARN <small
+                                                        class="text-danger">*</small></label>
+                                                <input class="form-control passport-info text-uppercase" type="text"
+                                                    placeholder="Enter Passport ARN" name="new_passport_arn" id="new_passport_arn"
+                                                    pattern="^[A-Z0-9-]{15,20}$"
+                                                    title="Passport ARN must be 15 to 20 characters, using uppercase letters (A-Z), numbers (0-9), and hyphens (-) only."
+                                                    maxlength="20" onkeyup="isValidARN()"
+                                                    value="<?= isset($passport_info) ? htmlspecialchars($passport_info->new_passport_arn) : '' ?>">
+
+
+                                            </div>
+                                        </div>
+                                        <?php
+                                        foreach ($profile_section["new_passport"] as $s_stage) {
+                                            $doc_type = $s_stage["name"] ?? '';
+                                            $doc_id = $s_stage["id"] ?? '';
+                                            $info = $s_stage["info"] ?? '';
+                                            $accept = $s_stage["file_type"] ?? '';
+                                            $is_mandatory = !empty($s_stage["mandatry"]);
+                                            $mandatry_text = $is_mandatory ? "<small class='text-danger'>*</small>" : '';
+                                            $required_attr = $is_mandatory ? "required required-check" : '';
+                                            $file_url = !empty($applicant_documents[$doc_id]["document_file"]) ? $applicant_documents[$doc_id]["document_file"] : '';
+                                            $required_attr = !empty($file_url) ? "" : $required_attr;
+
+                                        ?>
+                                            <div
+                                                class="col-lg-4 media-files passport-div-status ">
+                                                <div class="form-group">
+                                                    <label for="exampleInputMobileNumber"><?= $s_stage["name"] ?>
+                                                        <?= $mandatry_text  . "  (" . $s_stage["file_type"] . ")" ?>
+                                                        <?php if (!empty($info)) : ?>
+                                                            &nbsp;<i class="fa fa-info-circle"
+                                                                title="<?= htmlspecialchars($info, ENT_QUOTES, 'UTF-8') ?>"></i>
+                                                        <?php endif; ?></label>
+                                                    <input type="hidden" name="doc_type[]"
+                                                        value="<?= htmlspecialchars($doc_id, ENT_QUOTES, 'UTF-8') ?>">
+                                                    <input type="hidden" name="doc_name[]"
+                                                        value="<?= htmlspecialchars($doc_type, ENT_QUOTES, 'UTF-8') ?>">
+                                                    <input type="hidden" name="doc_url[]"
+                                                        value="<?= htmlspecialchars($file_url, ENT_QUOTES, 'UTF-8') ?>">
+                                                    <input type="file" name="files[<?= $doc_id ?>]" value="<?= $file_url ?>"
+                                                        class="form-control"
+                                                        accept="<?= htmlspecialchars($accept, ENT_QUOTES, 'UTF-8') ?>"
+                                                        <?= $required_attr ?>>
+                                                    <?php
+                                                    if (!empty($file_url)) {
+                                                    ?>
+                                                        <div class="margin-top">
+                                                            <i class="fa fa-eye  btn btn-xs btn-primary"
+                                                                onclick="show_media_files('<?= base_url($file_url) ?>');"></i>
+                                                            <i class="fa fa-download  btn btn-xs btn-primary"
+                                                                onclick="download_media_files(`<?= base_url($file_url) ?>`, '_blank');"></i>
+                                                        </div>
+                                                    <?php
+                                                    }
+                                                    ?>
+
+                                                </div>
+                                            </div>
+                                        <?php
+                                        }
+                                        ?>
+                                    </div>
+
+
                                 </div>
                                 <div class="btn-save-fun">
                                     <div class="col-md-12">
@@ -1706,16 +1793,16 @@ if ($lead_type_status == 1) {
                                                     </dsiv>
                                                 </div>
                                             </div>
-                                             <div class="col-lg-3 border2 border1">
-                                            <div class="c1">
-                                                <p>Institute Name <!--<?= $text_danger_mbbs ?> --></p>
+                                            <div class="col-lg-3 border2 border1">
+                                                <div class="c1">
+                                                    <p>Institute Name <!--<?= $text_danger_mbbs ?> --></p>
+                                                </div>
+                                                <div class="c2">
+                                                    <input class="form-control" type="text" class="form-group"
+                                                        placeholder="Enter Institute Name" name="g_institute"
+                                                        value="<?= $academicdetails->g_institute; ?>">
+                                                </div>
                                             </div>
-                                            <div class="c2">
-                                                <input class="form-control"  type="text" class="form-group"
-                                                    placeholder="Enter Institute Name" name="g_institute"
-                                                    value="<?= $academicdetails->g_institute; ?>">
-                                            </div>
-                                        </div>
                                             <div class="col-lg-2 border2 border1">
                                                 <div class="c1">
                                                     <p>Year of Starting <?= $text_danger_mbbs ?> </p>
@@ -1882,16 +1969,16 @@ if ($lead_type_status == 1) {
                                                     echo render_select('post_graduation_board', $universities_list, array('id', 'name'), "", $selected, ["required" => "required", "required-check" => "required-check", "data-select" =>  !empty($academicdetails->post_graduation_board) ? $academicdetails->post_graduation_board : ''], [], "", "universityLoad", "", "post_graduation_board"); ?>
                                                 </div>
                                             </div>
-                                              <div class="col-lg-3 border2 border1">
-                                            <div class="c1">
-                                                <p>Institute Name <!--<?= $text_danger_mbbs ?>--> </p>
+                                            <div class="col-lg-3 border2 border1">
+                                                <div class="c1">
+                                                    <p>Institute Name <!--<?= $text_danger_mbbs ?>--> </p>
+                                                </div>
+                                                <div class="c2">
+                                                    <input class="form-control" type="text" class="form-group"
+                                                        placeholder="Enter Institute Name" name="p_g_institute"
+                                                        value="<?= $academicdetails->p_g_institute; ?>">
+                                                </div>
                                             </div>
-                                            <div class="c2">
-                                                <input class="form-control"  type="text" class="form-group"
-                                                    placeholder="Enter Institute Name" name="p_g_institute"
-                                                    value="<?= $academicdetails->p_g_institute; ?>">
-                                            </div>
-                                        </div>
                                             <div class="col-lg-2 border2 border1">
                                                 <div class="c1">
                                                     <p>Year of Starting <?= $text_danger_mbbs ?></p>
@@ -2067,26 +2154,26 @@ if ($lead_type_status == 1) {
                                                                 rows="3"
                                                                 required><?= htmlspecialchars($work['remark'] ?? '') ?></textarea>
                                                         </div>
-                                                        
+
                                                         <div class="col-lg-3">
-                                                        <div class="form-group">
-                                                            <label for="work_exp_<?= $key ?>">Experience Letter <small class="text-danger">*</small></label>
-                                                            <input type="file" class="form-control" name="work_exp[]" id="work_exp_<?= $key ?>" required required-check accept=".pdf,.jpg,.jpeg,.png">
-                                                            <?php
-                                                        if (!empty($work['file'])) {
-                                                        ?>
-                                                            <div class="margin-top">
-                                                                <i class="fa fa-eye  btn btn-xs btn-primary"
-                                                                    onclick="show_media_files('<?= base_url($work['file']) ?>');"></i>
-                                                                <i class="fa fa-download  btn btn-xs btn-primary"
-                                                                    onclick="download_media_files(`<?= base_url($work['file']) ?>`, '_blank');"></i>
+                                                            <div class="form-group">
+                                                                <label for="work_exp_<?= $key ?>">Experience Letter <small class="text-danger">*</small></label>
+                                                                <input type="file" class="form-control" name="work_exp[]" id="work_exp_<?= $key ?>" accept=".pdf,.jpg,.jpeg,.png">
+                                                                <?php
+                                                                if (!empty($work['file'])) {
+                                                                ?>
+                                                                    <div class="margin-top">
+                                                                        <i class="fa fa-eye  btn btn-xs btn-primary"
+                                                                            onclick="show_media_files('<?= base_url($work['file']) ?>');"></i>
+                                                                        <i class="fa fa-download  btn btn-xs btn-primary"
+                                                                            onclick="download_media_files(`<?= base_url($work['file']) ?>`, '_blank');"></i>
+                                                                    </div>
+                                                                <?php
+                                                                }
+                                                                ?>
                                                             </div>
-                                                        <?php
-                                                        }
-                                                        ?>
+
                                                         </div>
-                                                          
-                                                    </div>
                                                         <?php if ($key == 0) { ?>
                                                             <div class="form-group col-md-1 d-flex flex-column justify-content-center">
                                                                 <label>&nbsp;</label>
@@ -2136,7 +2223,7 @@ if ($lead_type_status == 1) {
                                                             rows="3"
                                                             required><?= htmlspecialchars($academicdetails->work_profile ?? '') ?></textarea>
                                                     </div>
-                                                          <div class="col-lg-3">
+                                                    <div class="col-lg-3">
                                                         <div class="form-group">
                                                             <label for="work_exp_0">Experience Letter <small class="text-danger">*</small></label>
                                                             <input type="file" class="form-control" name="work_exp[]" id="work_exp_0" required required-check accept=".pdf,.jpg,.jpeg,.png">
@@ -2307,25 +2394,27 @@ if ($lead_type_status == 1) {
                                                         !empty($get_entrance_exams_list[$entrance['exam_id']]['academic_type']) &&
                                                         $get_entrance_exams_list[$entrance['exam_id']]['academic_type'] > 0
                                                     ): ?>
-                                                    
-                                                    <?php  
-                                                    // echo "<pre>";
+
+                                                        <?php
+                                                        // echo "<pre>";
                                                         $examListById = array_column($get_entrance_exams_list, null, 'id');
 
-$academic_type_status = isset($examListById[$entrance['exam_id']]) 
-    ? $examListById[$entrance['exam_id']]['academic_type'] 
-    : null;
+                                                        $academic_type_status = isset($examListById[$entrance['exam_id']])
+                                                            ? $examListById[$entrance['exam_id']]['academic_type']
+                                                            : null;
 
 
                                                         // echo"</pre>";
-                                                    
-                                                    
-                                                    ?>
+
+
+                                                        ?>
                                                         <div class="row col-md-12 mt-3 entrance-score-div">
-                                                            <?php 
-                                                            
-                                                            foreach ($get_entrance_exam_scrore as $score): 
-                                                            if($academic_type_status !=$score["exam_type"]){ continue;} ?>
+                                                            <?php
+
+                                                            foreach ($get_entrance_exam_scrore as $score):
+                                                                if ($academic_type_status != $score["exam_type"]) {
+                                                                    continue;
+                                                                } ?>
                                                                 <div class="col-md-3 form-group">
                                                                     <label><?= htmlspecialchars($score["name"]) ?> <span class="text-danger">*</span></label>
                                                                     <input
@@ -2900,7 +2989,68 @@ $academic_type_status = isset($examListById[$entrance['exam_id']])
 <?php //$this->load->view('admin/clients/client_group'); 
 ?>
 
+</div>
+</div>
+</div>
+</div>
+<div class="panel_s">
+    <div class="panel-body">
+        <h4 class="customer-profile-group-heading">Activity Log</h4>
+        <div class="lead-activity activity-feed" style="height:400px; overflow:scroll;">
+            <!-- Dynamic content will be loaded here -->
+        </div>
+    </div>
+</div>
+
 <script>
+    var activity_url = "<?= base_url() ?>admin/clients/activity_logs/<?= $client_id ?>";
+
+    function handleActivityChange() {
+        console.log("start activity");
+
+        var selectedType = 4;
+
+        // Safely get the active section
+        var section = $(".profile-tabs li.active").attr("section") || "";
+
+        console.log("section:", section);
+
+        // Make sure activity_url exists
+        if (typeof activity_url === "undefined") {
+            console.error("activity_url is not defined");
+            return;
+        }
+
+        reloadActivity_list(activity_url, {
+            type: selectedType,
+            section: section
+        });
+    }
+
+    // Updated reloadActivity_list with POST
+    function reloadActivity_list(url, postData = {}) {
+        $(".lead-activity").html('');
+        // show_loader();
+        $.ajax({
+            url: url,
+            type: 'POST',
+            data: postData,
+            success: function(data) {
+                $(".lead-activity").html(data);
+                hide_loader();
+            },
+            error: function(xhr, status, error) {
+                hide_loader();
+                $(".lead-activity").html("Error loading data");
+                console.error("Error loading data:", error);
+            }
+        });
+    }
+
+    document.addEventListener("DOMContentLoaded", function() {
+        handleActivityChange();
+    });
+
     var primary_country =
         "<?= !empty($admissionpreferences->primary_country) ? $admissionpreferences->primary_country : 0 ?>";
     var primary_university =
@@ -2930,41 +3080,42 @@ $academic_type_status = isset($examListById[$entrance['exam_id']])
             $("form").find("input, select, textarea,button").prop("disabled", true).selectpicker("refresh");
         }, 1500);
     }
-    
-    
-    
+
+
+
     document.addEventListener("DOMContentLoaded", function() {
-    var documentAccessOnly = "<?=!empty($documentAccessOnly)?$documentAccessOnly:0?>";
-    // console.log(documentAccessOnly);
+        var documentAccessOnly = "<?= !empty($documentAccessOnly) ? $documentAccessOnly : 0 ?>";
+        // console.log(documentAccessOnly);
 
-    if (documentAccessOnly == "1") {
-        $('.nav-tabs-horizontal li').each(function() {
-            var $li = $(this);
-            var $a = $li.find('a[href="#documents"]');
-            if ($a.length === 0) {
-                $li.hide();
-            } else {
-                $li.show();
-                $a.trigger("click"); // More robust to use $a not $li
-            }
-        });
-        
-        $(".btn-save-funn").hide();
+        if (documentAccessOnly == "1") {
+            $('.nav-tabs-horizontal li').each(function() {
+                var $li = $(this);
+                var $a = $li.find('a[href="#documents"]');
+                if ($a.length === 0) {
+                    $li.hide();
+                } else {
+                    $li.show();
+                    $a.trigger("click"); // More robust to use $a not $li
+                }
+            });
+
+            $(".btn-save-funn").hide();
+        }
+    });
+
+
+    function apply_new_passport() {
+        const checkbox = document.getElementById('new_passport');
+        $(".new-passport-info input").val('');
+        if (checkbox.checked) {
+            $(".new-passport-info").show();
+            // console.log('New passport applied');
+        } else {
+            // console.log('New passport not applied');
+            $(".new-passport-info").hide();
+        }
     }
-});
 
-
-function apply_new_passport() {
-    const checkbox = document.getElementById('new_passport');
-$(".new-passport-info input").val('');
-    if (checkbox.checked) {
-        $(".new-passport-info").show();
-        // console.log('New passport applied');
-    } else {
-        // console.log('New passport not applied');
-         $(".new-passport-info").hide();
-    }
-}
     function multiple_document_download(className, zipFileName = '<?= sanitizeFileName($basicdetails->first_name . ' ' . $basicdetails->last_name) ?>.zip') {
         const files = [];
 
@@ -3052,40 +3203,40 @@ $(".new-passport-info input").val('');
         // } else {
         //     filteredData = countryDropdownArray;
         // }
-        
-    let filteredData = [];
 
-const normalize = s => String(s).toLowerCase().trim();
+        let filteredData = [];
 
-// 1️⃣ Separate Study Abroad and other segments
-const studyAbroadData = dropdown_country_university_selection
-    .filter(item => normalize(item.name) === "study abroad")
-    .map(item => ({
-        ...item,
-        name: "Study Abroad" // normalize segment name
-    }));
+        const normalize = s => String(s).toLowerCase().trim();
 
-const otherSegmentData = dropdown_country_university_selection.filter(
-    item => normalize(item.name) !== "study abroad"
-);
+        // 1️⃣ Separate Study Abroad and other segments
+        const studyAbroadData = dropdown_country_university_selection
+            .filter(item => normalize(item.name) === "study abroad")
+            .map(item => ({
+                ...item,
+                name: "Study Abroad" // normalize segment name
+            }));
 
-// 2️⃣ Track existing countries from Study Abroad
-const countrySet = new Set(
-    studyAbroadData.map(item => normalize(item.country_name))
-);
+        const otherSegmentData = dropdown_country_university_selection.filter(
+            item => normalize(item.name) !== "study abroad"
+        );
 
-// 3️⃣ Merge + force segment name
-filteredData = [
-    ...studyAbroadData,
-    ...otherSegmentData
-        .filter(item => !countrySet.has(normalize(item.country_name)))
-        .map(item => ({
-            ...item,
-            name: "Study Abroad" // force segment name
-        }))
-];
+        // 2️⃣ Track existing countries from Study Abroad
+        const countrySet = new Set(
+            studyAbroadData.map(item => normalize(item.country_name))
+        );
 
-// console.log(filteredData);
+        // 3️⃣ Merge + force segment name
+        filteredData = [
+            ...studyAbroadData,
+            ...otherSegmentData
+            .filter(item => !countrySet.has(normalize(item.country_name)))
+            .map(item => ({
+                ...item,
+                name: "Study Abroad" // force segment name
+            }))
+        ];
+
+        // console.log(filteredData);
 
 
         // Step 2: Create unique list of countries
@@ -3188,8 +3339,8 @@ filteredData = [
         const selectedCountry = selectElement.options[selectElement.selectedIndex].text;
         const $countrySelect = $(selectElement);
         const $universitySelect = $(universitySelectElement);
-// console.log(selectedCountry);
-        if (selectedCountry !="" || selectedCountry > 0) {
+        // console.log(selectedCountry);
+        if (selectedCountry != "" || selectedCountry > 0) {
             try {
                 const universityList = await show_university_dropdown(select_segment_default, selectedCountry);
                 $universitySelect.empty();
@@ -3793,8 +3944,8 @@ filteredData = [
             
                <div class="col-lg-3">
                                                         <div class="form-group">
-                                                            <label for="work_exp_${timestamp}">Experience Letter <small class="text-danger">*</small></label>
-                                                            <input type="file" class="form-control" name="work_exp[]" id="work_exp_${timestamp}" required required-check accept=".pdf,.jpg,.jpeg,.png">
+                                                            <label for="work_exp_${timestamp}">Experience Letter</label>
+                                                            <input type="file" class="form-control" name="work_exp[]" id="work_exp_${timestamp}"  accept=".pdf,.jpg,.jpeg,.png">
                                                         </div>
                                                     </div>
 
@@ -3889,7 +4040,7 @@ filteredData = [
     }
 
     function changeEntranceStatus(event) {
-       
+
         const $parent = $(event).closest(".entrance-exams");
         const selectedData = $(event).find("option:selected").data("selected");
         const $statusActive = $parent.find(".entrance-exams-status-active");
@@ -3902,8 +4053,27 @@ filteredData = [
             $inputs.prop("required", selectedData == 1).attr("required-check", selectedData == 1 ? "required-check" : null);
         } else {
             $statusActive.addClass("hide");
-             console.log("lkfnskfnfs");
-             $(event).parents(".entrance-exams").find(".entrance-score-div").remove();
+            console.log("lkfnskfnfs");
+            $(event).parents(".entrance-exams").find(".entrance-score-div").remove();
+        }
+    }
+
+    function change_refusal() {
+        $("#visa-refusal-data").toggle("show");
+        $("#visa-refusal-data input").val('');
+    }
+
+    function change_pcc_status() {
+
+        let status = $("#pcc_status option:selected").attr("data-pcc_status");
+        console.log(status);
+        if (status == 1) {
+            $(".pcc-div-status").show();
+            $(".pcc-div-status").removeClass("hide");
+        } else {
+            $(".pcc-div-status").hide();
+            $(".pcc-div-status input").val('');
+            $(".pcc-div-status").addClass("hide");
         }
     }
 </script>

@@ -159,13 +159,13 @@
 
         formData.append("csrf_token_name", csrfData.hash);
         formData.append("clientid", $('input[name="clientid"]').val());
-  formData.delete('new_passport_status');
+        formData.delete('new_passport_status');
 
-// Append fresh value: 1 if checked, else 0
-formData.append(
-    'new_passport_status',
-    $('input[name="new_passport_status"]').is(':checked') ? 1 : 0
-);
+        // Append fresh value: 1 if checked, else 0
+        formData.append(
+            'new_passport_status',
+            $('input[name="new_passport_status"]').is(':checked') ? 1 : 0
+        );
 
         $.ajax({
             url: "<?php echo base_url() . 'admin/clients/passport_info' ?>",
@@ -282,9 +282,9 @@ formData.append(
 
             if (complete_application == 1) {
                 $(".tab-pane form").find("input, select, textarea,button").prop("disabled", true).selectpicker("refresh");
-                
+
             }
-              $(".disabledd").attr("disabled", true);
+            $(".disabledd").attr("disabled", true);
         }
 
         setTimeout(function() {
@@ -620,10 +620,10 @@ formData.append(
                 if (!name) return;
 
                 if (type === "radio" && !$el.prop("checked")) return;
- if (type === "checkbox") {
-        formData.append(name, $el.prop("checked") ? 1 : 0);
-        return;
-    }
+                if (type === "checkbox") {
+                    formData.append(name, $el.prop("checked") ? 1 : 0);
+                    return;
+                }
                 if (type === "file") {
                     const file = $el[0].files[0];
                     if (file) formData.append(name, file);
@@ -766,38 +766,38 @@ formData.append(
         const client_id = $('input[name="clientid"]').val(); // Used if needed later
 
         return new Promise((resolve) => {
-    const work = [];
+            const work = [];
 
-$("#work-div .work-exp-div").each(function(index) {
-    const $div = $(this);
+            $("#work-div .work-exp-div").each(function(index) {
+                const $div = $(this);
 
-    const current_working = $div.find("input[name='currently_working[]']").is(":checked") ? 1 : 0;
-    const year = $div.find("input[name='work_experience[]']").val();
-    const profile = $div.find("textarea[name='work_profile[]']").val();
+                const current_working = $div.find("input[name='currently_working[]']").is(":checked") ? 1 : 0;
+                const year = $div.find("input[name='work_experience[]']").val();
+                const profile = $div.find("textarea[name='work_profile[]']").val();
 
-    // Get the file input
-    const fileInput = $div.find("input[name='work_exp[]']")[0]; // raw DOM element
-    const file = fileInput.files.length > 0 ? fileInput.files[0] : null;
+                // Get the file input
+                const fileInput = $div.find("input[name='work_exp[]']")[0]; // raw DOM element
+                const file = fileInput.files.length > 0 ? fileInput.files[0] : null;
 
-    // Push data
-    work.push({
-        current_working,
-        year,
-        profile,
-        work_exp: file // this is a File object
-    });
+                // Push data
+                work.push({
+                    current_working,
+                    year,
+                    profile,
+                    work_exp: file // this is a File object
+                });
 
-    // Optional: append the file to FormData directly
-    if (file) {
-        formData.append(`work_exp[${index}]`, file);
-    }
-});
+                // Optional: append the file to FormData directly
+                if (file) {
+                    formData.append(`work_exp[${index}]`, file);
+                }
+            });
 
-// Remove old form fields if needed
-formData.delete('currently_working[]');
-formData.delete('work_experience[]');
-formData.delete('work_profile[]');
-formData.delete('work_exp[]');
+            // Remove old form fields if needed
+            formData.delete('currently_working[]');
+            formData.delete('work_experience[]');
+            formData.delete('work_profile[]');
+            formData.delete('work_exp[]');
 
 
 
@@ -1212,7 +1212,10 @@ formData.delete('work_exp[]');
         if (complete_application == 1) {
             $(".tab-pane form").find("input, select, textarea,button").prop("disabled", true).selectpicker("refresh");
         }
-          $(".disabledd").attr("disabled", true);
+        $(".disabledd").attr("disabled", true);
+        setTimeout(() => {
+            handleActivityChange();
+        }, 300);
     });
 
 

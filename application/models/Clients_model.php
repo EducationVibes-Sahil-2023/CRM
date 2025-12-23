@@ -2649,7 +2649,7 @@ class Clients_model extends App_Model
         return false;
     }
 
-    function activity_logs($table, $client_id, $like_query = "")
+    function activity_logs($table, $client_id, $like_query = "",$section ="")
     {
         $like_query = trim($like_query);
 
@@ -2660,6 +2660,9 @@ class Clients_model extends App_Model
 
         if (!empty($like_query)) {
             $this->db->like('l.description', $like_query, 'both'); // same as '%value%'
+        }
+         if (!empty($section)) {
+            $this->db->like('l.description', $section, 'both'); // same as '%value%'
         }
         $this->db->group_by('l.id');
         $this->db->order_by('l.date', 'desc');

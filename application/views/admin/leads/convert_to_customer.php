@@ -260,19 +260,33 @@ if ($lead->type == 1) {
                            </div>
                         <?php } ?>
                         </div>
-                        
-                         <?php if ($lead->type == 1) { ?>
-                             <div class="col-md-12">
-                                 <div class="checkbox">
-                                    <input type="hidden" value="0" id="visa_refusal" name="visa_refusal">
-                                    <input class="form-check-input checkbox-group" type="checkbox" value="1" id="visa_refusal" name="visa_refusal">
-                                    <label class="form-check-label" for="visa_refusal">
-                                       Visa Refusal
-                                    </label>
-                                 </div>
-                              </div>
-                         <?php } ?>
+
+
                      </div>
+
+                     <?php if ($lead->type == 1) { ?>
+                        <div class="row">
+                           <div class="col-md-2">
+                              <div class="checkbox">
+                                 <input class="form-check-input checkbox-group" type="checkbox"  onchange="change_refusal()" value="1" id="visa_refusal" name="visa_refusal">
+                                 <label class="form-check-label" for="visa_refusal">
+                                    Visa Refusal
+                                 </label>
+                              </div>
+                           </div>
+                           <div id="visa-refusal-data" style="display:none">
+                              <div class="col-md-3">
+                                 <?php echo render_input('visa_year', 'Visa Year <small class="text-danger">*</small>', '', '', ["required" => "required", "placeholder" => "Visa Year"]); ?>
+
+                              </div>
+
+                              <div class="col-md-5">
+                                 <?php echo render_input('visa_country', 'Visa Country <small class="text-danger">*</small>', '', '', ["required" => "required", "placeholder" => "Visa Country"]); ?>
+
+                              </div>
+                           </div>
+                        </div>
+                     <?php } ?>
 
                      <?php if ($lead->source == REFERENCE_ID) { ?>
                         <div class="col-lg-4 col-md-6 col-12 form-group">
@@ -379,9 +393,8 @@ if ($lead->type == 1) {
                               // Set the required attribute based on the "mandatry" field
                               $required = !empty($fees["mandatry"]) ? "required" : "false";
                               $mandatry = !empty($fees["mandatry"]) ? "<small class='text-danger'>*</small>" : "";
-                              if(!empty($lead->type) && $lead->type == 2 && $fees["id"] == 6)
-                              {
-                                  $required .=" readonly ";
+                              if (!empty($lead->type) && $lead->type == 2 && $fees["id"] == 6) {
+                                 $required .= " readonly ";
                               }
 
 
@@ -393,7 +406,7 @@ if ($lead->type == 1) {
                                     <input type="hidden" value="<?= $fees['id'] ?>" name="<?= $field_name ?>_id">
 
                                     <div class="input-group-addon currency-symbol-<?= $id ?>"><?= !empty($get_currencies[$fees["default_currency"]]["symbol"]) ? $get_currencies[$fees["default_currency"]]["symbol"] : '$' ?></div>
-                                    <input type="text" onkeypress="return acceptText(this,'number')"  name="<?= $field_name ?>" <?= $required ?> class="form-control currency-refefees_<?= $fees['id'] ?>" placeholder="0.00" id="<?= $field_name ?>" size="8">
+                                    <input type="text" onkeypress="return acceptText(this,'number')" name="<?= $field_name ?>" <?= $required ?> class="form-control currency-refefees_<?= $fees['id'] ?>" placeholder="0.00" id="<?= $field_name ?>" size="8">
                                     <div class="input-group-addon currency-addon">
 
                                        <select name="<?= $field_name ?>_currency_type" id="<?= $field_name ?>" class="currency-selector currency-selector-<?= $id ?>" onchange="updateSymbol(<?= $id ?>)">
@@ -749,5 +762,10 @@ if ($lead->type == 1) {
          });
 
          return isDuplicate;
+      }
+
+      function change_refusal() {
+         $("#visa-refusal-data").toggle("show");
+         $("#visa-refusal-data input").val('');
       }
    </script>

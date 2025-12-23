@@ -851,6 +851,344 @@ class Clients extends AdminController
         $this->load->view('admin/clients/client', $data);
     }
 
+    public function study_ev_partner($id = '')
+    {
+        // $database_secondary = $this->load->database('database_secondary', TRUE);
+
+        $this->load->model('leads_model');
+        $data['lead_type'] = $this->leads_model->get_type();
+        $client = "";
+        if (!empty($id)) {
+            $client = $this->clients_model->get($id);
+        }
+        $data["dropdown_country_university_selection"] = $this->s_db->query("SELECT co.name,c.country_name,u.university_name FROM course co left join countries c ON (co.id = c.segment_id) left join universities u on (u.country_id = c.id and u.status ='0') ")->result_array();
+        if (!has_permission('customers', '', 'view')) {
+            if ($id != '' && !is_customer_admin($id)) {
+                if ($client->addedfrom == get_staff_user_id()) {
+                } else {
+                    if (has_permission('customers', '', 'applicant_view_document') &&  !$this->input->get('group') ? 'profile' : $this->input->get('group') == 'profile') {
+                        $data['documentAccessOnly'] = 1;
+                    } else {
+                        access_denied('customers');
+                    }
+                }
+            }
+        }
+
+        $data['admissionpreferences'] = $this->clients_model->getAdmissionPreferences($id);
+
+
+        if ($this->input->post() && !$this->input->is_ajax_request()) {
+            if ($id == '') {
+                if (!has_permission('customers', '', 'create')) {
+                    access_denied('customers');
+                }
+
+                $data = $this->input->post();
+                $save_and_add_contact = false;
+                if (isset($data['save_and_add_contact'])) {
+                    unset($data['save_and_add_contact']);
+                    $save_and_add_contact = true;
+                }
+                $id = $this->clients_model->add($data);
+                if (!has_permission('customers', '', 'view')) {
+                    $assign['customer_admins']   = [];
+                    $assign['customer_admins'][] = get_staff_user_id();
+                    $this->clients_model->assign_admins($assign, $id);
+                }
+                if ($id) {
+                    set_alert('success', _l('added_successfully', _l('client')));
+                    if ($save_and_add_contact == false) {
+                        redirect(admin_url('clients/client/' . $id));
+                    } else {
+                        redirect(admin_url('clients/client/' . $id . '?group=contacts&new_contact=true'));
+                    }
+                }
+            } else {
+                if (!has_permission('customers', '', 'edit')) {
+                    if (!is_customer_admin($id)) {
+                        if ($client->addedfrom == get_staff_user_id()) {
+                        } else {
+                            access_denied('customers');
+                        }
+                        // access_denied('customers');
+                    }
+                }
+                $success = $this->clients_model->update($this->input->post(), $id);
+                if ($success == true) {
+                    set_alert('success', _l('updated_successfully', _l('client')));
+                }
+                redirect(admin_url('clients/client/' . $id));
+            }
+        }
+
+        $group         = !$this->input->get('group') ? 'profile' : $this->input->get('group');
+        $data['group'] = $group;
+
+        if ($group != 'contacts' && $contact_id = $this->input->get('contactid')) {
+            redirect(admin_url('clients/client/' . $id . '?group=contacts&contactid=' . $contact_id));
+        }
+
+        // Customer groups
+        $data['groups'] = $this->clients_model->get_groups();
+
+
+        if ($id == '') {
+            $title = _l('add_new', _l('client_lowercase'));
+        } else {
+            $this->load->model('leads_model');
+
+            $client                = $this->clients_model->get($id);
+
+            if (!empty($client->leadid)) {
+                $data["lead_data"]                = $this->leads_model->get($client->leadid);
+            }
+            $data['customer_tabs'] = get_customer_profile_tabs();
+
+            $prefix_page = !empty($data["lead_data"]->type_name)
+                ? strtolower(str_replace(" ", "_", $data["lead_data"]->type_name))
+                : '';
+
+            foreach ($data['customer_tabs'] as $key => $tabs) {
+                $urls = explode("/", $tabs["view"]); // Split URL into parts
+                $last_index = count($urls) - 1; // Get last index
+
+                // Modify the last segment by adding the prefix
+                $urls[$last_index] = $prefix_page . '_' . $urls[$last_index];
+
+                // Rebuild the URL
+                $modified_url = implode("/", $urls);
+
+                // Construct full file path using CodeIgniter's VIEWPATH constant
+                $file_path = VIEWPATH . $modified_url . ".php";
+
+                // Check if the file exists
+                if (file_exists($file_path)) {
+                    $data['customer_tabs'][$key]["view"] = $modified_url;
+                } else {
+                }
+            }
+
+
+
+
+            if (!$client) {
+                show_404();
+            }
+
+            $data['contacts'] = $this->clients_model->get_contacts($id);
+            $data['basicDetails'] = $this->clients_model->get_contact_by_userid($data['contacts'][0]['userid']);
+
+            $data['tab']      = isset($data['customer_tabs'][$group]) ? $data['customer_tabs'][$group] : null;
+
+
+            if (!$data['tab']) {
+                show_404();
+            }
+            $data['basicdetails'] = $this->clients_model->getBasicDetails($id);
+            $title          = $data["basicdetails"]->first_name . " " . $data["basicdetails"]->last_name;
+
+            // Fetch data based on groups
+            if ($group == 'profile') {
+                $data["tab"]["view"] =  'admin/clients/groups/ev_partner_profile';
+
+                $data['customer_groups'] = $this->clients_model->get_customer_groups($id);
+                $data['customer_admins'] = $this->clients_model->get_admins($id);
+                $data['university_shortlisting'] = $this->clients_model->university_shortlisting($id, 1);
+                $data['passport_info'] = $this->clients_model->getPassportDetails($id);
+                $data['admissionpreferences'] = $this->clients_model->getAdmissionPreferences($id);
+                $data['parentdetails'] = $this->clients_model->getParentDetails($id);
+                $data['academicdetails'] = $this->clients_model->getAcademicDetails($id);
+                $data['declarationdetails'] = $this->clients_model->getDeclarationDetails($id);
+                $data['program_data'] = $this->clients_model->getProgram();
+                $data['course_data'] = $this->clients_model->getCourse();
+                $data['entrance_data'] = $this->clients_model->getEntrance();
+                $data['documents'] =  $this->clients_model->get_documents($id);
+                $data['score_columns'] =  $this->clients_model->get_scroe_column();
+                $data['score_value'] =  $this->clients_model->get_scroe_value($id);
+            } elseif ($group == 'attachments') {
+                $data['attachments'] = get_all_customer_attachments($id);
+            } elseif ($group == 'vault') {
+                $data['vault_entries'] = hooks()->apply_filters('check_vault_entries_visibility', $this->clients_model->get_vault_entries($id));
+
+                if ($data['vault_entries'] === -1) {
+                    $data['vault_entries'] = [];
+                }
+            } elseif ($group == 'estimates') {
+                $this->load->model('estimates_model');
+                $data['estimate_statuses'] = $this->estimates_model->get_statuses();
+            } elseif ($group == 'invoices') {
+                $this->load->model('invoices_model');
+                $data['invoice_statuses'] = $this->invoices_model->get_statuses();
+            } elseif ($group == 'credit_notes') {
+                $this->load->model('credit_notes_model');
+                $data['credit_notes_statuses'] = $this->credit_notes_model->get_statuses();
+                $data['credits_available']     = $this->credit_notes_model->total_remaining_credits_by_customer($id);
+            } elseif ($group == 'payments') {
+                $this->load->model('payment_modes_model');
+                $data['payment_modes'] = $this->payment_modes_model->get();
+            } elseif ($group == 'notes') {
+                $data['user_notes'] = $this->misc_model->get_notes($id, 'customer');
+            } elseif ($group == 'projects') {
+                $this->load->model('projects_model');
+                $data['project_statuses'] = $this->projects_model->get_project_statuses();
+            } elseif ($group == 'statement') {
+                if (!has_permission('invoices', '', 'view') && !has_permission('payments', '', 'view')) {
+                    set_alert('danger', _l('access_denied'));
+                    redirect(admin_url('clients/client/' . $id));
+                }
+
+                $data = array_merge($data, prepare_mail_preview_data('customer_statement', $id));
+            } elseif ($group == 'map') {
+                if (get_option('google_api_key') != '' && !empty($client->latitude) && !empty($client->longitude)) {
+                    $this->app_scripts->add('map-js', base_url($this->app_scripts->core_file('assets/js', 'map.js')) . '?v=' . $this->app_css->core_version());
+
+                    $this->app_scripts->add('google-maps-api-js', [
+                        'path'       => 'https://maps.googleapis.com/maps/api/js?key=' . get_option('google_api_key') . '&callback=initMap',
+                        'attributes' => [
+                            'async',
+                            'defer',
+                            'latitude'       => "$client->latitude",
+                            'longitude'      => "$client->longitude",
+                            'mapMarkerTitle' => "$client->company",
+                        ],
+                    ]);
+                }
+            } elseif ($group == 'tracker'  || $group == 'study_tracker') {
+                $data["tab"]["view"] =  'admin/clients/groups/mbbs_abroad_applicant_tracker';
+                $this->load->model('exam_model');
+                $data['upload_documents'] = $this->clients_model->get_update_documents($id);
+                $data['upload_documents_button'] = $this->clients_model->upload_documents_button();
+                $data['profile_verification_button'] = $this->clients_model->profile_verification_button();
+                $data['profile_creator_vendor'] = $this->clients_model->get_profile_creator_vendor();
+                $data['profile_creation_data'] = $this->clients_model->get_profile_creator_data($id);
+                $data['customer_admins'] = $this->clients_model->get_admins($id);
+                $data['admissionpreferences'] = $this->clients_model->getAdmissionPreferences($id);
+                $data['university_shortlisting'] = $this->clients_model->university_shortlisting($id);
+                $data['university_application_status'] = $this->clients_model->university_status_update();
+                $data['university_status_submit'] = $this->clients_model->university_status_submit();
+                $data['documents'] =  $this->clients_model->get_documents($id);
+                $university_names = array_column($data['university_shortlisting'], "university_name");
+                $data['university_exams'] = [];
+                if (!empty($university_names)) {
+                    $data['university_exams'] = $this->clients_model->university_exams($university_names);
+                }
+                $data['exams_array'] = array_column(get_university_exam(), null, "id");
+                $data['entrance_exams'] =  $this->clients_model->entrance_exams($id);
+                $data['entrance_exams'] = array_reduce($data['entrance_exams'], function ($acc, $row) {
+                    $acc[$row['university_name']] = ($acc[$row['university_name']] ?? []);
+                    $acc[$row['university_name']][] = $row;
+                    return $acc;
+                }, []);
+
+
+                $data['legalization'] =  $this->clients_model->legalization_data($id);
+
+                $data['customer_vendors'] = [];
+                if (!empty($data['profile_creation_data'][0]["vendor"])) {
+                    $data['customer_vendors'] = $this->clients_model->get_profile_creator_vendor($data['profile_creation_data'][0]["vendor"]);
+                }
+            } else if ($group == 'fly_ticket') {
+                $data['country_list'] = get_country_list(7);
+                $data['vendor_list'] = get_vendor_list(3);
+                $data['payment_mode'] = get_payment_mode();
+                $data['departure_location'] = get_departure_list();
+            } else if ($group == 'visa') {
+                $data['selected_university_country'] = $this->clients_model->selected_university_country($id);
+                $data['vendor'] = $this->clients_model->visa_vendor();
+                $data["visa_data"] = $this->db->select('*')->where(['client_id' => $id])->get(db_prefix() . 'visa_documents')->result_array();
+            } else if ($group == 'accommodation') {
+                $data['selected_university_country'] = $this->clients_model->selected_university_country($id);
+                $data['vendor'] = $this->clients_model->accommodation_vendor();
+                $data["accommodation_data"] = $this->db->select('*')->where(['client_id' => $id])->get(db_prefix() . 'accommodation')->result_array();
+                $data["flight_data"] = $this->db->select('*')->where(['client_id' => $id])->get(db_prefix() . 'flight')->result_array();
+            }
+            $data["client_infomation"] = $this->clients_model->get($id);
+
+
+            // $data['staff'] = $this->staff_model->get('', ['active' => 1]);
+
+            $data['members'] = $this->staff_model->post_sale_get();
+
+            $data['staff'] = [];
+            if (!empty($data["lead_data"]->type)) {
+                $lead_status_data = $data["lead_data"]->type;
+                foreach ($data['members'] as $members) {
+                    // if ($members["lead_type"] == $lead_status_data) {
+                    $data['staff'][] = $members;
+                    // }
+                }
+            }
+                // echo $data["lead_data"]->form_data->lead_status;
+            ;
+
+            $data['client'] = $client;
+            // $title          = $client->company;
+
+
+            // Get all active staff members (used to add reminder)
+            $data['members'] = $data['staff'];
+
+            if (!empty($data['client']->company)) {
+                // Check if is realy empty client company so we can set this field to empty
+                // The query where fetch the client auto populate firstname and lastname if company is empty
+                if (is_empty_customer_company($data['client']->userid)) {
+                    $data['client']->company = '';
+                }
+            }
+        }
+        $data['lead_type_status'] = 2;
+        $this->load->model('currencies_model');
+        $data['currencies'] = $this->currencies_model->get();
+
+        if ($id != '') {
+            $customer_currency = $data['client']->default_currency;
+
+            foreach ($data['currencies'] as $currency) {
+                if ($customer_currency != 0) {
+                    if ($currency['id'] == $customer_currency) {
+                        $customer_currency = $currency;
+
+                        break;
+                    }
+                } else {
+                    if ($currency['isdefault'] == 1) {
+                        $customer_currency = $currency;
+
+                        break;
+                    }
+                }
+            }
+
+            if (is_array($customer_currency)) {
+                $customer_currency = (object) $customer_currency;
+            }
+
+            $data['customer_currency'] = $customer_currency;
+
+            $slug_zip_folder = ($client->company != ''
+                ? $client->companyclient
+                : get_contact_full_name(get_primary_contact_user_id($client->userid))
+            );
+
+            $data['zip_in_folder'] = slug_it($slug_zip_folder);
+        }
+
+        $data['bodyclass'] = 'customer-profile dynamic-create-groups';
+        $data['title']     = $title;
+        $data['client_id']     = $id;
+
+
+
+        // $data["customer_tabs"]["profile"]["view"] = 'admin/clients/groups/' . !empty($data["lead_data"]->type_name) ? 'admin/clients/groups/' . 'profile_' . str_replace(" ", "_", strtolower($data["lead_data"]->type_name)) : 'admin/clients/groups/' . 'profile';
+
+
+        $data["tab"]["js"] =  'admin/clients/client_js_study_abroad';
+        $data["tab"]["left_tabs"] =  'admin/clients/ev_tabs';
+
+        $this->load->view('admin/clients/study_client', $data);
+    }
+
 
     public function export($contact_id)
     {
@@ -4479,6 +4817,11 @@ WHERE s.client_id = " . (int)$client_id . "
                 $media_upload_data = $_POST;
                 $pcc_status = !empty($_POST["pcc_status"]) ? $_POST["pcc_status"] : 0;
                 $orignal_doc_id =  $_POST["orignal_doc_id"] ?? 0;
+
+                $visa_refusal = !empty($_POST["visa_refusal"]) ? $_POST["visa_refusal"] : 0;
+                $visa_year = !empty($_POST["visa_year"]) ? $_POST["visa_year"] : 0;
+                $visa_country = !empty($_POST["visa_country"]) ? $_POST["visa_country"] : 0;
+
                 $passpot_data = [];
                 unset($_POST["clientid"]);
                 unset($_POST["doc_type_id"]);
@@ -4488,6 +4831,9 @@ WHERE s.client_id = " . (int)$client_id . "
                 unset($_POST["doc_url"]);
                 unset($_POST["pcc_status"]);
                 unset($_POST['orignal_doc_id']);
+                unset($_POST['visa_refusal']);
+                unset($_POST['visa_year']);
+                unset($_POST['visa_country']);
 
 
 
@@ -4518,7 +4864,6 @@ WHERE s.client_id = " . (int)$client_id . "
                     $passpot_data["updated_date"] = date('Y-m-d H:i:s');
                     $passpot_data["updated_by"] = get_staff_user_id();
                     $this->db->where('client_id', $client_id);
-
                     $rows_affected = $this->db->update(db_prefix() . 'client_passport_details', $passpot_data);
                     $this->db->insert(db_prefix() . 'application_activity_log', array("description" => "Passport Information updated by - ", "date" => date('Y-m-d H:i:s'), "staffid" => get_staff_user_id(), "client_id" => $client_id));
                 } else {
@@ -4535,6 +4880,11 @@ WHERE s.client_id = " . (int)$client_id . "
                         $this->db->where("userid", $client_id);
                         $this->db->update(db_prefix() . 'clients', array("pcc_status" => $pcc_status));
                     }
+
+
+                    $this->db->where("userid", $client_id);
+                    $this->db->update(db_prefix() . 'clients', array("visa_refusal" => $visa_refusal, "visa_country" => $visa_country, "visa_year" => $visa_year));
+
 
                     if (!empty($media_upload_data["doc_type"])) {
                         $this->media_upload($media_upload_data, $_FILES);
@@ -4982,9 +5332,9 @@ WHERE s.client_id = " . (int)$client_id . "
                     "created_by" => get_staff_user_id()
                 ];
             }
-            
-            
-        
+
+
+
 
             // Upload media documents if present
             if (!empty($media_upload_data["doc_type"][0])) {
@@ -5015,42 +5365,42 @@ WHERE s.client_id = " . (int)$client_id . "
 
 
 
-        $workData = [];
+            $workData = [];
 
-if (!empty($work_experience_details)) {
-    foreach ($work_experience_details as $index => $work) {
-        $file_name = null;
+            if (!empty($work_experience_details)) {
+                foreach ($work_experience_details as $index => $work) {
+                    $file_name = null;
 
-        // Check if a file was uploaded for this index
-        if (isset($_FILES['work_exp']['name'][$index]) && $_FILES['work_exp']['name'][$index] != '') {
-            $files = [
-                'name'     => $_FILES['work_exp']['name'][$index],
-                'type'     => $_FILES['work_exp']['type'][$index],
-                'tmp_name' => $_FILES['work_exp']['tmp_name'][$index],
-                'error'    => $_FILES['work_exp']['error'][$index],
-                'size'     => $_FILES['work_exp']['size'][$index]
-            ];
+                    // Check if a file was uploaded for this index
+                    if (isset($_FILES['work_exp']['name'][$index]) && $_FILES['work_exp']['name'][$index] != '') {
+                        $files = [
+                            'name'     => $_FILES['work_exp']['name'][$index],
+                            'type'     => $_FILES['work_exp']['type'][$index],
+                            'tmp_name' => $_FILES['work_exp']['tmp_name'][$index],
+                            'error'    => $_FILES['work_exp']['error'][$index],
+                            'size'     => $_FILES['work_exp']['size'][$index]
+                        ];
 
-            // Only proceed if upload has no error
-            if ($files['error'] === UPLOAD_ERR_OK) {
-                // Call your custom function
-                $upload_result = upload_applicant_documents($client_id, $files);
+                        // Only proceed if upload has no error
+                        if ($files['error'] === UPLOAD_ERR_OK) {
+                            // Call your custom function
+                            $upload_result = upload_applicant_documents($client_id, $files);
 
-                // Get file path or name from your function
-                $file_name = isset($upload_result['file_path']) ? $upload_result['file_path'] : null;
+                            // Get file path or name from your function
+                            $file_name = isset($upload_result['file_path']) ? $upload_result['file_path'] : null;
+                        }
+                    }
+
+                    // Prepare work experience data
+                    $workData[] = [
+                        'currently_working' => isset($work['current_working']) ? $work['current_working'] : 0,
+                        'year'              => isset($work['year']) ? $work['year'] : null,
+                        'remark'            => isset($work['profile']) ? $work['profile'] : '',
+                        'client_id'         => $client_id,
+                        'file'              => $file_name
+                    ];
+                }
             }
-        }
-
-        // Prepare work experience data
-        $workData[] = [
-            'currently_working' => isset($work['current_working']) ? $work['current_working'] : 0,
-            'year'              => isset($work['year']) ? $work['year'] : null,
-            'remark'            => isset($work['profile']) ? $work['profile'] : '',
-            'client_id'         => $client_id,
-            'file'              => $file_name
-        ];
-    }
-}
 
 
             // Delete existing work experience for the client
@@ -9515,6 +9865,7 @@ if (!empty($work_experience_details)) {
         }
 
         $type = (int) $_POST['type'];
+        $section = $_POST['section'] ?? '';
         $like_query = "";
         // Resolve table name based on activity type
         switch ($type) {
@@ -9541,7 +9892,7 @@ if (!empty($work_experience_details)) {
                 exit;
         }
 
-        $activity_log = $this->clients_model->activity_logs($table, $client_id, $like_query);
+        $activity_log = $this->clients_model->activity_logs($table, $client_id, $like_query, $section);
 
         $html = '';
 
