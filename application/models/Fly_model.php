@@ -186,9 +186,10 @@ class Fly_model extends App_Model
                     "departure_location" => $client_exam_data["departure_location"],
                     "auto"               => $auto,
                     "status"             => 1,
-                    "ticket_status"      => 2,
+                    "ticket_status"      => isset($client_exam_data["ticket_status"])?$client_exam_data["ticket_status"]:2,
                     "country_name"       => $get_primary_university[$client_id]["primary_country"] ?? '',
-                    "university_name"    => $get_primary_university[$client_id]["primary_university"] ?? ''
+                    "university_name"    => $get_primary_university[$client_id]["primary_university"] ?? '',
+                    "old_batch_id"    => $client_exam_data["old_batch_id"] ?? ''
 
                 ];
                 if (!empty($client_exam_data["ticket_file"])) {
@@ -198,6 +199,8 @@ class Fly_model extends App_Model
                 if (!empty($client_exam_data["batch_id"])) {
                     $data["batch_id"] = $client_exam_data["batch_id"];
                 }
+                
+      
 
 
 
