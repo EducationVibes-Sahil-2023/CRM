@@ -660,6 +660,87 @@ if ($lead_type_status == 2) {
                                     }
                                     ?>
                                 </div>
+                                <div class="row col-md-12">
+
+                                    <div class="col-md-12">
+                                        <div class="form-check">
+                                            <input class="form-check-input" type="checkbox" onclick="apply_new_passport()" name="new_passport_status" id="new_passport" value="1" <?= !empty($passport_info->new_passport_status && $passport_info->new_passport_status == 1) ? 'checked' : '' ?>>
+                                            <label class="form-check-label" for="new_passport">
+                                                I have applied for a new passport
+                                            </label>
+                                        </div>
+                                    </div>
+
+                                    <div class="new-passport-info " style="display:<?= !empty($passport_info->new_passport_status && $passport_info->new_passport_status == 1) ? '' : 'none' ?>">
+                                        <div class="col-md-4">
+
+                                            <div class="form-group">
+                                                <label for="new_passport_arn">Passport ARN <small
+                                                        class="text-danger">*</small></label>
+                                                <input class="form-control passport-info text-uppercase" type="text"
+                                                    placeholder="Enter Passport ARN" name="new_passport_arn" id="new_passport_arn"
+                                                    pattern="^[A-Z0-9-]{15,20}$"
+                                                    title="Passport ARN must be 15 to 20 characters, using uppercase letters (A-Z), numbers (0-9), and hyphens (-) only."
+                                                    maxlength="20" onkeyup="isValidARN()"
+                                                    value="<?= isset($passport_info) ? htmlspecialchars($passport_info->new_passport_arn) : '' ?>">
+
+
+                                            </div>
+                                        </div>
+                                        <?php
+                                        foreach ($profile_section["new_passport"] as $s_stage) {
+                                            $doc_type = $s_stage["name"] ?? '';
+                                            $doc_id = $s_stage["id"] ?? '';
+                                            $info = $s_stage["info"] ?? '';
+                                            $accept = $s_stage["file_type"] ?? '';
+                                            $is_mandatory = !empty($s_stage["mandatry"]);
+                                            $mandatry_text = $is_mandatory ? "<small class='text-danger'>*</small>" : '';
+                                            $required_attr = $is_mandatory ? "required required-check" : '';
+                                            $file_url = !empty($applicant_documents[$doc_id]["document_file"]) ? $applicant_documents[$doc_id]["document_file"] : '';
+                                            $required_attr = !empty($file_url) ? "" : $required_attr;
+
+                                        ?>
+                                            <div
+                                                class="col-lg-4 media-files passport-div-status ">
+                                                <div class="form-group">
+                                                    <label for="exampleInputMobileNumber"><?= $s_stage["name"] ?>
+                                                        <?= $mandatry_text  . "  (" . $s_stage["file_type"] . ")" ?>
+                                                        <?php if (!empty($info)) : ?>
+                                                            &nbsp;<i class="fa fa-info-circle"
+                                                                title="<?= htmlspecialchars($info, ENT_QUOTES, 'UTF-8') ?>"></i>
+                                                        <?php endif; ?></label>
+                                                    <input type="hidden" name="doc_type[]"
+                                                        value="<?= htmlspecialchars($doc_id, ENT_QUOTES, 'UTF-8') ?>">
+                                                    <input type="hidden" name="doc_name[]"
+                                                        value="<?= htmlspecialchars($doc_type, ENT_QUOTES, 'UTF-8') ?>">
+                                                    <input type="hidden" name="doc_url[]"
+                                                        value="<?= htmlspecialchars($file_url, ENT_QUOTES, 'UTF-8') ?>">
+                                                    <input type="file" name="files[<?= $doc_id ?>]" value="<?= $file_url ?>"
+                                                        class="form-control"
+                                                        accept="<?= htmlspecialchars($accept, ENT_QUOTES, 'UTF-8') ?>"
+                                                        <?= $required_attr ?>>
+                                                    <?php
+                                                    if (!empty($file_url)) {
+                                                    ?>
+                                                        <div class="margin-top">
+                                                            <i class="fa fa-eye  btn btn-xs btn-primary"
+                                                                onclick="show_media_files('<?= base_url($file_url) ?>');"></i>
+                                                            <i class="fa fa-download  btn btn-xs btn-primary"
+                                                                onclick="download_media_files(`<?= base_url($file_url) ?>`, '_blank');"></i>
+                                                        </div>
+                                                    <?php
+                                                    }
+                                                    ?>
+
+                                                </div>
+                                            </div>
+                                        <?php
+                                        }
+                                        ?>
+                                    </div>
+
+
+                                </div>
                                 <div class="btn-save-fun margin-top">
                                     <div class="col-md-12">
                                         <button type="submit" onclick="save_passport_details()" class="btn btn-primary button-22 pull-right margin-top">Save changes</button>
@@ -1494,7 +1575,7 @@ if ($lead_type_status == 2) {
                                                 // Set the required attribute based on the "mandatry" field
                                                 $required = !empty($fees["mandatry"]) ? "required" : "false";
                                                 $mandatry = !empty($fees["mandatry"]) ? "<small class='text-danger'>*</small>" : "";
-$disabled = (strtolower($admissionpreferences->primary_country) == 'georgia') && $id == 6?'disabled':'';
+                                                $disabled = (strtolower($admissionpreferences->primary_country) == 'georgia') && $id == 6 ? 'disabled' : '';
 
 
                                             ?>
@@ -1520,10 +1601,10 @@ $disabled = (strtolower($admissionpreferences->primary_country) == 'georgia') &&
 
 
                                                         </div>
-                                                        <input <?=$disabled?> type="text" name="<?= $field_name ?>" <?= $required ?> class="form-control currency-amount fees_<?= $fees['id'] ?>" placeholder="0.00" id="<?= $field_name ?>" value="<?= $fees["amount"] ?>" size="8" onkeypress="return acceptText(this,'number')">
+                                                        <input <?= $disabled ?> type="text" name="<?= $field_name ?>" <?= $required ?> class="form-control currency-amount fees_<?= $fees['id'] ?>" placeholder="0.00" id="<?= $field_name ?>" value="<?= $fees["amount"] ?>" size="8" onkeypress="return acceptText(this,'number')">
                                                         <div class="input-group-addon currency-addon">
 
-                                                            <select <?=$disabled?> name="<?= $field_name ?>_currency_type" id="<?= $field_name ?>" class="currency-selector <?=$disabled?> currency-selector-<?= $id ?>" onchange="updateSymbol(<?= $id ?>)">
+                                                            <select <?= $disabled ?> name="<?= $field_name ?>_currency_type" id="<?= $field_name ?>" class="currency-selector <?= $disabled ?> currency-selector-<?= $id ?>" onchange="updateSymbol(<?= $id ?>)">
                                                                 <?php foreach ($get_currencies as $c) {
                                                                 ?>
                                                                     <option
@@ -2029,6 +2110,18 @@ $disabled = (strtolower($admissionpreferences->primary_country) == 'georgia') &&
                     }
                 }
             });
+        }
+    }
+
+    function apply_new_passport() {
+        const checkbox = document.getElementById('new_passport');
+        $(".new-passport-info input").val('');
+        if (checkbox.checked) {
+            $(".new-passport-info").show();
+            // console.log('New passport applied');
+        } else {
+            // console.log('New passport not applied');
+            $(".new-passport-info").hide();
         }
     }
 </script>
