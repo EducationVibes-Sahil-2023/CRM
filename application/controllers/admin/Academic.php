@@ -38,6 +38,9 @@ class Academic extends AdminController
         $this->load->view('admin/academic/courses', $data);
     }
 
+
+
+
     public function university_name()
     {
         if (!has_permission('academic', '', 'create')) {
@@ -218,5 +221,18 @@ class Academic extends AdminController
                 die;
             }
         }
+    }
+
+    public function u_courses()
+    {
+        if (!has_permission('admission', '', 'view')) {
+            access_denied('Admission view');
+            die;
+        }
+        if ($this->input->is_ajax_request()) {
+            $this->app->get_table_data('u_courses');
+        }
+        $data['title']                = "Admission University Courses";
+        $this->load->view('admin/academic/u_courses', $data);
     }
 }

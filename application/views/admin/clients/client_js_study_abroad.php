@@ -61,35 +61,43 @@
             hide_loader();
             return false;
         }
+        let mobileInput = $("input[name='mobile']");
+        let fatherMobileInput = $("input[name='fathers_mobile']");
 
-        let phonenumber = $("input[name='mobile']").val();
-        let p_phonenumber = $("input[name='fathers_mobile']").val();
-        phonenumber = formatPhoneNumber(phonenumber);
-        p_phonenumber = formatPhoneNumber(p_phonenumber);
+        let phonenumber = formatPhoneNumber(mobileInput.val());
+        let p_phonenumber = formatPhoneNumber(fatherMobileInput.val());
 
-        if (status == 0) {
-            // Assuming phonenumber and p_phonenumber are already defined and cleaned
-            if (phonenumber === p_phonenumber && phonenumber !== "") {
-                alert_float("danger", "Student contact number and your parent's contact number cannot be the same.");
-                hide_loader();
-                return false;
-            }
+        // Check if field is required
+        let isMobileRequired = mobileInput.prop("required");
+        let isFatherMobileRequired = fatherMobileInput.prop("required");
+
+        // Run validation ONLY if required
+        if (isMobileRequired) {
+
 
             if (phonenumber.length !== 10) {
                 alert_float("danger", "Student contact number must be exactly 10 digits.");
                 hide_loader();
                 return false;
             }
-
+        }
+        if (isFatherMobileRequired) {
             if (p_phonenumber.length !== 10) {
                 alert_float("danger", "Parent's contact number must be exactly 10 digits.");
                 hide_loader();
                 return false;
             }
-
-        } else {
-
         }
+
+        if (phonenumber != "" && p_phonenumber != "") {
+            if (phonenumber === p_phonenumber) {
+                alert_float("danger", "Student contact number and parent's contact number cannot be the same.");
+                hide_loader();
+                return false;
+            }
+        }
+
+
 
         let formData = new FormData($("#basic-information-form")[0]); // Create FormData from form
 

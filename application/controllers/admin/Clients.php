@@ -861,7 +861,7 @@ class Clients extends AdminController
         if (!empty($id)) {
             $client = $this->clients_model->get($id);
         }
-        $data["dropdown_country_university_selection"] = $this->s_db->query("SELECT co.name,c.country_name,u.university_name FROM course co left join countries c ON (co.id = c.segment_id) left join universities u on (u.country_id = c.id and u.status ='0') ")->result_array();
+        $data["dropdown_country_university_selection"] = $this->s_db->query("SELECT co.name,c.country_name,u.university_name,c.id country_id,u.id university_id FROM course co left join countries c ON (co.id = c.segment_id) left join universities u on (u.country_id = c.id and u.status ='0') ")->result_array();
         if (!has_permission('customers', '', 'view')) {
             if ($id != '' && !is_customer_admin($id)) {
                 if ($client->addedfrom == get_staff_user_id()) {
@@ -990,7 +990,7 @@ class Clients extends AdminController
 
             // Fetch data based on groups
             if ($group == 'profile') {
-                $data["tab"]["view"] =  'admin/clients/groups/ev_partner_profile';
+                $data["tab"]["view"] =  'admin/clients/groups/study_ev_partner_profile';
 
                 $data['customer_groups'] = $this->clients_model->get_customer_groups($id);
                 $data['customer_admins'] = $this->clients_model->get_admins($id);
@@ -1182,11 +1182,14 @@ class Clients extends AdminController
 
         // $data["customer_tabs"]["profile"]["view"] = 'admin/clients/groups/' . !empty($data["lead_data"]->type_name) ? 'admin/clients/groups/' . 'profile_' . str_replace(" ", "_", strtolower($data["lead_data"]->type_name)) : 'admin/clients/groups/' . 'profile';
 
+        if (empty($data["tab"]["view"])) {
+            $data["tab"]["view"] =  'admin/clients/groups/study_ev_partner_profile';
+        }
 
         $data["tab"]["js"] =  'admin/clients/client_js_study_abroad';
-        $data["tab"]["left_tabs"] =  'admin/clients/ev_tabs';
+        $data["tab"]["left_tabs"] =  'admin/clients/study_ev_tabs';
 
-        $this->load->view('admin/clients/study_client', $data);
+        $this->load->view('admin/clients/client', $data);
     }
 
 
@@ -4660,6 +4663,7 @@ WHERE s.client_id = " . (int)$client_id . "
             $state = trim($_POST["state"] ?? '');
             $loan_required = trim($_POST["loan_required"] ?? '');
             $tagging = trim($_POST["tagging"] ?? '');
+            $client_type = trim($_POST["client_type"] ?? '');
             unset($_POST["clientid"]);
             unset($_POST["doc_type_id"]);
             unset($_POST["doc_type_name"]);
@@ -4673,6 +4677,7 @@ WHERE s.client_id = " . (int)$client_id . "
             unset($_POST["address"]);
             unset($_POST["loan_required"]);
             unset($_POST["tagging"]);
+            unset($_POST["client_type"]);
 
 
             if (empty($client_id) || !empty($agent_id)) {
@@ -4705,7 +4710,7 @@ WHERE s.client_id = " . (int)$client_id . "
 
                 if (empty($client_id)) {
 
-                    $client_data = ["active" => 1, "datecreated" => date('Y-m-d H:i:s'), "addedfrom" => get_staff_user_id(), "applicant_status" => 0, "applicant_stage" => 1, "applicant_sub_status" => 1, "tracker_id" => 0, "client_type" => 2, "agent_id" => $agent_id, "unique_agent_id" => $unique_agent_id];
+                    $client_data = ["active" => 1, "datecreated" => date('Y-m-d H:i:s'), "addedfrom" => get_staff_user_id(), "applicant_status" => 0, "applicant_stage" => 1, "applicant_sub_status" => 1, "tracker_id" => 0, "client_type" => !empty($client_type) ? $client_type : 2, "agent_id" => $agent_id, "unique_agent_id" => $unique_agent_id];
                     $this->db->insert(db_prefix() . 'clients', $client_data);
                     $client_id = $this->db->insert_id();
                 } else {
@@ -11139,7 +11144,7 @@ WHERE s.client_id = " . (int)$client_id . "
         // ✅ Prepare any required data (if needed in view)
         $data = [];
         $data["id"] = $id;
-         $data["ticketStatus"] = fly_status();
+        $data["ticketStatus"] = fly_status();
         $data["country"] = $this->s_db->query("SELECT co.name,c.country_name,c.id country_id FROM course co left join countries c ON (co.id = c.segment_id) group by country_name order by country_name asc")->result_array();
         $data["ticketData"] = $this->db->where('id', $id)->get(db_prefix() . 'external_ticket_data')->row();
         // ✅ Set correct view page
