@@ -21,7 +21,8 @@ $applicant_tracker   = applicant_tracker_study($lead_type_status);
 $applicant_pendency  = applicant_pendency();
 $pendency_status     = applicant_pendency_status();
 $pendencyStaus       = pendency_status(); // Consider renaming for clarity
-$offerLetterStatus   = offerletterStatus();
+$offerLetterStatus   = array_column(offerletterStatus(),null,"id");
+
 
 // Currency list
 $get_currencies_raw = get_currencies();
@@ -326,6 +327,11 @@ if (empty($staffData["post_sales"]) && !is_admin()):
                                         </tbody>
                                     </table>
                                 </div>
+                                
+                                
+                                <p class="mt-5">
+                                    <input type="checkbox" id="ec_complete" <?=!empty($client->ec_complete)?'checked':''?> name="ec_complete" value="1" required> EC Complete Done <span class="text-danger">*</span>
+                                </p>
 
                                 <div class="document_approval_message_action">
                                 </div>
@@ -494,6 +500,16 @@ if (empty($staffData["post_sales"]) && !is_admin()):
                                                         ]
                                                     ) ?>
                                                 </div>
+                                                
+                                                
+                                                    <div class="col-md-1">
+                                                        <p>&nbsp;</p>
+                                                        
+                                                            <button type="button" class="btn btn-success add_pendency_btn" onclick="new_pendency_create(<?= $track['id'] ?>)">
+                                                                <i class="fa fa-plus"></i>
+                                                            </button>
+                                                       
+                                                    </div>
                                             </div>
                                         <?php
                                         }
@@ -597,7 +613,7 @@ if (empty($staffData["post_sales"]) && !is_admin()):
                                                 <div class="col-md-3">
                                                     <?= render_input(
                                                         "offer_date_{$key}",
-                                                        "Offer Letter Receiving <small class='text-danger'>*</small>",
+                                                        "Offer Decision Date <small class='text-danger'>*</small>",
                                                         $o_letter['offer_date'] ?? '',
                                                         'date',
                                                         ['required-check' => 'required-check', 'required' => 'required']
@@ -628,9 +644,10 @@ if (empty($staffData["post_sales"]) && !is_admin()):
                                                     </select>
                                                 </div>
 
+
                                                 <!-- Offer Upload -->
                                                 <div class="col-md-3 offer-letter-div <?= !empty($offerLetterStatus[$o_letter['university_offer_status']]) ? '' : 'hide' ?> form-group">
-                                                    <label>Offer Upload <small class="text-danger">*</small></label>
+                                                    <label>Upload <small class="text-danger">*</small></label>
                                                     <input type="file"
                                                         data-fileUrl="<?= $file_url_offer_letter ?>"
                                                         class="form-control"
@@ -696,7 +713,7 @@ if (empty($staffData["post_sales"]) && !is_admin()):
                                             <div class="col-md-3">
                                                 <?= render_input(
                                                     "offer_date[]",
-                                                    "Offer Letter Receiving <small class='text-danger'>*</small>",
+                                                    "Offer Decision Date <small class='text-danger'>*</small>",
                                                     '',
                                                     'date',
                                                     ['required-check' => 'required-check', 'required' => 'required']
@@ -720,7 +737,7 @@ if (empty($staffData["post_sales"]) && !is_admin()):
                                             </div>
 
                                             <div class="col-md-3 offer-letter-div hide form-group">
-                                                <label>Offer Upload <small class="text-danger">*</small></label>
+                                                <label>Upload <small class="text-danger">*</small></label>
                                                 <input type="file"
                                                     data-fileUrl=""
                                                     class="form-control"
@@ -1176,6 +1193,12 @@ if (empty($staffData["post_sales"]) && !is_admin()):
 ?>
 <?php init_tail(); ?>
 <!-- /.MultiStep Form -->
+
+<?php 
+array_unshift($offerLetterStatus, array("id" => "", "name" => "Select Type"));
+
+
+?>
 <script>
     var client_id = <?= !empty($client_id) ? $client_id : '' ?>;
     var complete_application = " <?= !empty($client->sc_100) && $client->sc_100 == 1 ? 1 : 0 ?>";
@@ -1597,6 +1620,16 @@ if (empty($staffData["post_sales"]) && !is_admin()):
             return false;
         }
 
+if (id == 1) {
+    if (!$("#ec_complete").is(':checked')) {
+        alert_float("danger", "Select Checkbox EC Complete Status update");
+        hide_loader();
+        return false;
+    }
+    
+    upload_data.append("ec_complete", $("#ec_complete").is(':checked')?1:0);
+}
+
         if (id == 2) {
 
             if (selectedUniversityShortListing == "") {
@@ -1730,6 +1763,22 @@ if (empty($staffData["post_sales"]) && !is_admin()):
             hide_loader();
 
             if (response.resp_code === "RCS") {
+                
+                 if (response.warning_status != undefined && response.warning_status == 2) {
+                     
+                    
+    // Show confirmation dialog
+    const proceed = confirm(response.warning_message+". Do you want to continue?");
+    
+    if (!proceed) {
+        // User clicked "No"
+        hide_loader();
+        return false;
+    }
+
+
+                 }
+                
                 if (response.resp_desc != "") {
                     alert_float("success", response.resp_desc);
                 }
@@ -1756,6 +1805,11 @@ if (empty($staffData["post_sales"]) && !is_admin()):
                         return false;
                     }
                     show_next_previous(obj);
+                }
+                
+                if(id== 5)
+                {
+location.reload();
                 }
             } else {
                 if (response.resp_desc != "") {
@@ -2520,9 +2574,11 @@ if (empty($staffData["post_sales"]) && !is_admin()):
     // Ensure pendencyStatusOptions is safely defined
     var pendencyStatusOptions = <?= !empty($pendency_status) && is_array($pendency_status) ? json_encode($pendency_status, JSON_HEX_TAG | JSON_HEX_AMP | JSON_HEX_APOS | JSON_HEX_QUOT) : '[]' ?>;
 
-    function createPendencyBlock(deletestatus = 0) {
+    function createPendencyBlock(deletestatus = 0,id="") {
         const pendencyId = Math.floor(Date.now()); // unique ID based on timestamp
-        let deleteHtml = ``;
+        let deleteHtml = `<div class='col-md-1 form-group'><p>&nbsp;</p> <button type="button" class="btn btn-success add_pendency_btn" onclick="new_pendency_create(`+id+`)">
+                                                                <i class="fa fa-plus"></i>
+                                                            </button></div>`;
         if (deletestatus == 1) {
             deleteHtml = `<div class='col-md-1 form-group'><p>&nbsp;</p><button class="btn btn-danger" onclick="$(this).parents('.pendency-div').remove()"><i class='fa fa-trash '></i></button></div>`;
 
@@ -2556,7 +2612,7 @@ if (empty($staffData["post_sales"]) && !is_admin()):
     function create_pendency(value, id) {
         if (parseInt(value) === 2) {
 
-            const pendencyBlock = createPendencyBlock();
+            const pendencyBlock = createPendencyBlock(0,id);
 
             const targetDiv = document.getElementById(`pendency_${id}`);
             if (targetDiv) {
@@ -2632,9 +2688,17 @@ if (empty($staffData["post_sales"]) && !is_admin()):
         return options;
     }
 
-    function removeOfferLetter(event) {
-        $(event).parents(".offer-letter-div").remove();
+ function removeOfferLetter(event) {
+    // Show confirmation dialog
+    const proceed = confirm("Are you sure you want to remove this offer letter?");
+    
+    if (proceed) {
+        // User clicked "Yes", remove the element
+        $(event).closest(".offer-letter-inner").remove();
     }
+    // If "No", do nothing
+}
+
 
     const offerLetterOptions = `<?php
                                 foreach ($offerLetterStatus as $item) {
@@ -2657,7 +2721,7 @@ if (empty($staffData["post_sales"]) && !is_admin()):
             <!-- Offer Date -->
             <div class="col-md-3 form-group">
                 <label for="offer_date_${timestamp}">
-                    Offer Letter Receiving <small class="text-danger">*</small>
+                    Offer Decision Date <small class="text-danger">*</small>
                 </label>
                 <input type="date" class="form-control required-check" name="offer_date_${timestamp}" required />
             </div>
@@ -2679,7 +2743,7 @@ if (empty($staffData["post_sales"]) && !is_admin()):
             <!-- Offer Upload -->
             <div class="col-md-3 offer-letter-div hide form-group">
                 <label for="offer_letter_${timestamp}">
-                    Offer Upload <small class="text-danger">*</small>
+                    Upload <small class="text-danger">*</small>
                 </label>
                 <input
                     type="file"
@@ -2783,7 +2847,15 @@ if (empty($staffData["post_sales"]) && !is_admin()):
     }
 
     function removeFeesDeposite(event) {
-        $(event).parents(".fees-deposite-item").remove();
+        
+         const proceed = confirm("Are you sure you want to remove Fees Deposite?");
+    
+    if (proceed) {
+        // User clicked "Yes", remove the element
+         $(event).parents(".fees-deposite-item").remove();
+    }
+    // If "No", do nothing
+       
     }
 
 

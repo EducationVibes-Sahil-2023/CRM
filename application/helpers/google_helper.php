@@ -1239,7 +1239,7 @@ LEFT JOIN (
 
                 LEFT JOIN " . db_prefix() . "vendor_list vl ON vl.id = td.vendor_id
                 LEFT JOIN " . db_prefix() . "departure_location fl ON fl.id = td.departure_location
-                LEFT JOIN " . db_prefix() . "ticket_batch tb ON tb.id = td.batch_id
+                LEFT JOIN " . db_prefix() . "ticket_batch tb ON tb.id = td.old_batch_id
                 LEFT JOIN " . db_prefix() . "pcc_status pcc ON pcc.id = c.pcc_status
                 
                {$apostile_query}  {$apostileSub}
@@ -1434,7 +1434,7 @@ LEFT JOIN " . db_prefix() . "visa_details vd ON vd.userid = c.userid
 LEFT JOIN " . db_prefix() . "visa_status vs ON vs.id = vd.status
 LEFT JOIN " . db_prefix() . "ticket_status ts ON ts.id = td.ticket_status
 LEFT JOIN " . db_prefix() . "departure_location dl ON dl.id = td.departure_location
-LEFT JOIN " . db_prefix() . "ticket_batch tb ON tb.id = td.batch_id
+LEFT JOIN " . db_prefix() . "ticket_batch tb ON tb.id = td.old_batch_id
 LEFT JOIN " . db_prefix() . "vendor_list vl ON vl.id = td.vendor_id
 LEFT JOIN " . db_prefix() . "departure_location tdl ON tdl.id = td.departure_location
 LEFT JOIN " . db_prefix() . "payment_mode pm ON pm.id = td.payment_mode
@@ -2939,13 +2939,16 @@ function ex_ticket_data()
     on ddl.id = vd.destination_id
     LEFT JOIN `" . db_prefix() . "external_visa_type` tt
     on tt.id = vd.ticket_type
-    
+    LEFT JOIN " . db_prefix() . "ticket_status ts
+     ON ts.id = vd.ticket_status
     
     
     WHERE 1=1 {$condition_sql}
     GROUP BY vd.id
     ORDER BY vd.id DESC
 ";
+
+
         $arrayData = $CI->db->query($sql)->result_array();
 
         // Get column names

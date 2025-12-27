@@ -1863,15 +1863,28 @@ class Clients_model extends App_Model
         $this->db->order_by('sequence', "asc");
         return $update_button = $this->db->get(db_prefix() . 'document_status')->result_array();
     }
-    function university_shortlisting($client_id, $is_primary = 0, $statusCheck = 0)
+    function university_shortlisting($client_id, $is_primary = 0, $statusCheck = 0,$table="")
     {
 
+if(!empty($table))
+{
+    
+    
+     $query = $this->db->select('us.*, cv.name AS vendor_name, IF(us.country_name = a.primary_country AND us.university_name = a.primary_university, 1, 0) AS primary_university')
+            ->from(db_prefix() . 'client_university_shortlisting us')
+            ->join(db_prefix() . 'vendor_study_abroad cv', 'cv.id = us.vendor_id', 'left')
+            ->join(db_prefix() . 'admission_preferences a', 'us.client_id = a.userid', 'left')
+            ->where('us.client_id', $client_id);
+}
+else{
+    
         // Fetch shortlisted universities with vendor details
         $query = $this->db->select('us.*, cv.name AS vendor_name, IF(us.country_name = a.primary_country AND us.university_name = a.primary_university, 1, 0) AS primary_university')
             ->from(db_prefix() . 'client_university_shortlisting us')
             ->join(db_prefix() . 'profile_creater_vendor cv', 'cv.id = us.vendor_id', 'left')
             ->join(db_prefix() . 'admission_preferences a', 'us.client_id = a.userid', 'left')
             ->where('us.client_id', $client_id);
+}
 
         //     ->where([
         //         'us.client_id' => $client_id,
@@ -2713,4 +2726,20 @@ class Clients_model extends App_Model
         $this->db->order_by('id', 'asc');
         return $this->db->get()->result_array();
     }
+    
+   function check_ec_complete($clientid)
+{
+    $this->db->select("l.status,ls.name as status_name");
+    $this->db->from(db_prefix() . 'clients c');
+    $this->db->join(db_prefix() . 'leads l', 'l.id = c.leadid');
+     $this->db->join(db_prefix() . 'leads_status ls', 'ls.id = l.status');
+
+    // Add where condition for client ID
+    $this->db->where('c.userid', $clientid);
+
+   return  $this->db->get()->row();
+
+
+}
+
 }

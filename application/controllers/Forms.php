@@ -13,6 +13,18 @@ class Forms extends ClientsController
         show_404();
     }
 
+// public function checkWhatsappMessage()
+// {
+//     // ini_set('display_errors', 1);
+//     // ini_set('display_startup_errors', 1);
+//     // error_reporting(E_ALL);
+//     echo welcome_whatsapp_channel_study_abroad('8700736847',1, 420270 , 8);
+//     // echo welcome_whatsapp_message_send('9871159668', 1,420270, WELCOME_WHATSAPP_MESSAGE);
+//     // echo "okkkkkkkk";
+//     die;
+// }
+
+
     public function wtl($key)
     {
         $generate_lead_transfer_request = "";

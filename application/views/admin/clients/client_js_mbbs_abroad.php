@@ -527,11 +527,12 @@
     }
 
     function check_registration_cash_status(element, className) {
+        $("." + className+' input').val('');
         if ($(element).is(":checked")) {
-            $("." + className).hide();
+            $("." + className).toggle();
             $(element).val(1); // Show elements if checkbox is checked
         } else {
-            $("." + className).show(); // Hide elements if checkbox is unchecked
+            $("." + className).toggle(); // Hide elements if checkbox is unchecked
             $(element).val(0);
         }
     }
@@ -865,6 +866,9 @@
         }
         $(".disabledd").attr("disabled", true);
         $("#documents-form input[name='files[61]']:not(.disabledd)").attr("disabled", false);
+         setTimeout(() => {
+            handleActivityChange();
+        }, 300);
 
     });
 
