@@ -75,7 +75,8 @@
                      </h4>
                   </div>
                </div>
-               <?php $this->load->view((isset($tab['left_tabs']) ? $tab['left_tabs'] : 'admin/clients/tabs')); ?>
+               <?php 
+               $this->load->view((isset($tab['left_tabs']) ? $tab['left_tabs'] : 'admin/clients/tabs')); ?>
             </div>
          <?php } ?>
          <div class="col-md-<?php if (isset($client)) {

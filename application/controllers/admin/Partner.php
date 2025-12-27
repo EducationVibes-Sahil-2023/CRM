@@ -27,6 +27,7 @@ class partner extends AdminController
 
     public function ev_partner()
     {
+        $this->load->model('leads_model');
         if (!has_permission('partners', '', 'view')) {
             access_denied('Partners view');
             die;
@@ -36,6 +37,7 @@ class partner extends AdminController
         }
         $data['title']                = "EV partner";
         $data['type']                = "ev_partner";
+        $data['lead_type'] = $this->leads_model->get_type();
         $this->load->view('admin/partner/ev_partner', $data);
     }
 
@@ -65,6 +67,7 @@ class partner extends AdminController
             } else if (strtolower($type) == 'ev_partner') {
                 $table = db_prefix() . 'ev_partner';
                 $partner_type = 'name';
+                $data["lead_type"] = implode(",", $data["lead_type"]);
             } else {
                 echo json_encode([
                     'success'              => 0,

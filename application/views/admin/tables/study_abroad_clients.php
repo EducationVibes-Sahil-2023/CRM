@@ -10,8 +10,7 @@ if (!empty($user_lead_type->lead_type)) {
     $user_lead_type = 0;
 }
 
-if(has_permission('customers', '', 'applicant_view_document') )
-{
+if (has_permission('customers', '', 'applicant_view_document')) {
     $user_lead_type = 1;
 }
 
@@ -236,13 +235,10 @@ if ($role == 3) {
 // If user does NOT have 'view' permission and is not in post-sales
 $current_staff_id = get_staff_user_id();
 
-if(has_permission('customers', '', 'applicant_view_document'))
-{
-
-}
-else{
-if (!has_permission('customers', '', 'view') && isset($post_sales->post_sales) && $post_sales->post_sales != 1) {
-    $where[] = 'AND (
+if (has_permission('customers', '', 'applicant_view_document')) {
+} else {
+    if (!has_permission('customers', '', 'view') && isset($post_sales->post_sales) && $post_sales->post_sales != 1) {
+        $where[] = 'AND (
         ' . db_prefix() . 'clients.userid IN (
             SELECT customer_id 
             FROM ' . db_prefix() . 'customer_admins 
@@ -250,7 +246,7 @@ if (!has_permission('customers', '', 'view') && isset($post_sales->post_sales) &
         ) 
         OR ' . db_prefix() . 'leads.assigned = ' . $current_staff_id . '
     ) ';
-}
+    }
 }
 
 if (!is_admin()) {
@@ -361,12 +357,12 @@ if ($this->ci->input->post('office_location_orignal_documents')) {
 
 
 if ($this->ci->input->post('lead_type')) {
-    array_push($where, 'AND( ' . db_prefix() . 'leads.type IN (' . implode(',', $this->ci->db->escape_str($this->ci->input->post('lead_type'))) . '))');
+    array_push($where, 'AND( ' . db_prefix() . 'leads.type IN (' . implode(',', $this->ci->db->escape_str($this->ci->input->post('lead_type'))) . ')  or ' . db_prefix() . 'clients.client_type = 3)');
 }
 
-// if (empty($this->ci->input->post('ev_partner_filter'))) {
-// array_push($where, ' OR ( ' . db_prefix() . 'leads.type IN (' . implode(',', $this->ci->db->escape_str($this->ci->input->post('lead_type'))) . ')  or ' . db_prefix() . 'clients.client_type = 2)');
-// }
+if (empty($this->ci->input->post('ev_partner_filter'))) {
+    array_push($where, ' OR ( ' . db_prefix() . 'leads.type IN (' . implode(',', $this->ci->db->escape_str($this->ci->input->post('lead_type'))) . ')  or ' . db_prefix() . 'clients.client_type = 3)');
+}
 
 if ($this->ci->input->post('apostille_status')) {
     $apostille_status = array_map(function ($status) {
@@ -716,9 +712,9 @@ foreach ($rResult as $aRow) {
 
     if (!empty($aRow["name"])) {
         // Set base URL and client name anchor
-        if ($aRow["client_type"] == 2) {
+        if ($aRow["client_type"] == 3) {
             // EV Partner
-            $url = admin_url('clients/ev_partner/' . $aRow['userid'] . '?group=study_tracker');
+            $url = admin_url('clients/study_ev_partner/' . $aRow['userid'] . '?group=study_tracker');
             $companyLink = '<a href="' . $url . '" target="_blank">' . $aRow['name'] . '</a>';
         } else {
             // Regular client

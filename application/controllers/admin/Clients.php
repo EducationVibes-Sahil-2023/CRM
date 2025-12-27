@@ -313,7 +313,7 @@ class Clients extends AdminController
             if ($group == 'profile') {
                 $data['customer_groups'] = $this->clients_model->get_customer_groups($id);
                 $data['customer_admins'] = $this->clients_model->get_admins($id);
-                if ($data["lead_data"]->type == 1) {
+               if ($data["lead_data"]->type == 1) {
                     $data['university_shortlisting'] = $this->clients_model->university_shortlisting($id, '', 1,'vendor_study_abroad');
 
                     $data['course_list_ug'] =  $this->get_courses("Bachelor");
@@ -388,13 +388,13 @@ class Clients extends AdminController
                 $data['profile_creator_vendor'] = $this->clients_model->get_profile_creator_vendor();
                 $data['profile_creation_data'] = $this->clients_model->get_profile_creator_data($id);
                 $data['customer_admins'] = $this->clients_model->get_admins($id);
-                $data['admissionpreferences'] = $this->clients_model->getAdmissionPreferences($id);
+               $data['admissionpreferences'] = $this->clients_model->getAdmissionPreferences($id);
                 if ($data["lead_data"]->type == 1) {
                 $data['university_shortlisting'] = $this->clients_model->university_shortlisting($id,'','','vendor_study_abroad');
                 }
                 else{
                 $data['university_shortlisting'] = $this->clients_model->university_shortlisting($id);
-                }
+                 }
                 $data['university_application_status'] = $this->clients_model->university_status_update();
                 $data['university_status_submit'] = $this->clients_model->university_status_submit();
                 $data['documents'] =  $this->clients_model->get_documents($id);
@@ -866,7 +866,7 @@ class Clients extends AdminController
         if (!empty($id)) {
             $client = $this->clients_model->get($id);
         }
-        $data["dropdown_country_university_selection"] = $this->s_db->query("SELECT co.name,c.country_name,u.university_name FROM course co left join countries c ON (co.id = c.segment_id) left join universities u on (u.country_id = c.id and u.status ='0') ")->result_array();
+        $data["dropdown_country_university_selection"] = $this->s_db->query("SELECT co.name,c.country_name,u.university_name,c.id country_id,u.id university_id FROM course co left join countries c ON (co.id = c.segment_id) left join universities u on (u.country_id = c.id and u.status ='0') ")->result_array();
         if (!has_permission('customers', '', 'view')) {
             if ($id != '' && !is_customer_admin($id)) {
                 if ($client->addedfrom == get_staff_user_id()) {
@@ -995,7 +995,7 @@ class Clients extends AdminController
 
             // Fetch data based on groups
             if ($group == 'profile') {
-                $data["tab"]["view"] =  'admin/clients/groups/ev_partner_profile';
+                $data["tab"]["view"] =  'admin/clients/groups/study_ev_partner_profile';
 
                 $data['customer_groups'] = $this->clients_model->get_customer_groups($id);
                 $data['customer_admins'] = $this->clients_model->get_admins($id);
@@ -1187,11 +1187,14 @@ class Clients extends AdminController
 
         // $data["customer_tabs"]["profile"]["view"] = 'admin/clients/groups/' . !empty($data["lead_data"]->type_name) ? 'admin/clients/groups/' . 'profile_' . str_replace(" ", "_", strtolower($data["lead_data"]->type_name)) : 'admin/clients/groups/' . 'profile';
 
+        if (empty($data["tab"]["view"])) {
+            $data["tab"]["view"] =  'admin/clients/groups/study_ev_partner_profile';
+        }
 
         $data["tab"]["js"] =  'admin/clients/client_js_study_abroad';
-        $data["tab"]["left_tabs"] =  'admin/clients/ev_tabs';
+        $data["tab"]["left_tabs"] =  'admin/clients/study_ev_tabs';
 
-        $this->load->view('admin/clients/study_client', $data);
+        $this->load->view('admin/clients/client', $data);
     }
 
 
@@ -3172,7 +3175,6 @@ WHERE s.client_id = " . (int)$client_id . "
                 }
 
 
- $_update["w_location"] = !empty($_POST["w_location"]) ? $_POST["w_location"] : '';
                 $_update["date_of_payment"] = !empty($_POST["date_of_payment"]) ? $_POST["date_of_payment"] : '';
                 $_update["registration_slip_cash_status"] = !empty($_POST["registration_slip_cash_status"]) ? $_POST["registration_slip_cash_status"] : '';
                 $_update["payment_recevied_from"] = !empty($_POST["payment_recevied_from"]) ? $_POST["payment_recevied_from"] : '';
@@ -4666,9 +4668,7 @@ WHERE s.client_id = " . (int)$client_id . "
             $state = trim($_POST["state"] ?? '');
             $loan_required = trim($_POST["loan_required"] ?? '');
             $tagging = trim($_POST["tagging"] ?? '');
-            
-            $country_code = trim($_POST["country_code"] ?? '');
-            $a_country = trim($_POST["a_country"] ?? '');
+            $client_type = trim($_POST["client_type"] ?? '');
             unset($_POST["clientid"]);
             unset($_POST["doc_type_id"]);
             unset($_POST["doc_type_name"]);
@@ -4682,8 +4682,7 @@ WHERE s.client_id = " . (int)$client_id . "
             unset($_POST["address"]);
             unset($_POST["loan_required"]);
             unset($_POST["tagging"]);
-            unset($_POST["country_code"]);
-            unset($_POST["a_country"]);
+            unset($_POST["client_type"]);
 
 
             if (empty($client_id) || !empty($agent_id)) {
@@ -4716,7 +4715,7 @@ WHERE s.client_id = " . (int)$client_id . "
 
                 if (empty($client_id)) {
 
-                    $client_data = ["active" => 1, "datecreated" => date('Y-m-d H:i:s'), "addedfrom" => get_staff_user_id(), "applicant_status" => 0, "applicant_stage" => 1, "applicant_sub_status" => 1, "tracker_id" => 0, "client_type" => 2, "agent_id" => $agent_id, "unique_agent_id" => $unique_agent_id];
+                    $client_data = ["active" => 1, "datecreated" => date('Y-m-d H:i:s'), "addedfrom" => get_staff_user_id(), "applicant_status" => 0, "applicant_stage" => 1, "applicant_sub_status" => 1, "tracker_id" => 0, "client_type" => !empty($client_type) ? $client_type : 2, "agent_id" => $agent_id, "unique_agent_id" => $unique_agent_id];
                     $this->db->insert(db_prefix() . 'clients', $client_data);
                     $client_id = $this->db->insert_id();
                 } else {
@@ -4764,7 +4763,7 @@ WHERE s.client_id = " . (int)$client_id . "
                 $this->db->insert(db_prefix() . 'application_activity_log', array("description" => "Basic Information Created by - ", "date" => date('Y-m-d H:i:s'), "staffid" => get_staff_user_id(), "client_id" => $client_id));
             }
 
-            // if (!empty($reference_name) || !empty($state) || !empty($address)) {
+            if (!empty($reference_name) || !empty($state) || !empty($address)) {
 
                 $updateClientInfo = [];
                 if (!empty($reference_name)) {
@@ -4782,21 +4781,12 @@ WHERE s.client_id = " . (int)$client_id . "
                 if (!empty($loan_required)) {
                     $updateClientInfo['loan_required'] = !empty($loan_required) ? $loan_required : 0;
                 }
-                 if (!empty($country_code)) {
-                    $updateClientInfo['country_code'] = !empty($country_code) ? $country_code : 0;
-                }
-                 if (!empty($a_country)) {
-                    $updateClientInfo['a_country'] = !empty($a_country) ? $a_country : 0;
-                }
-                
-                if(!empty($updateClientInfo)){
                 $this->db->where('userid', $client_id);
                 $rows_affected = $this->db->update(db_prefix() . 'clients', $updateClientInfo);
                 if (!empty($reference_name)) {
                     $this->db->insert(db_prefix() . 'application_activity_log', array("description" => "Refrence Information Updated by - ", "date" => date('Y-m-d H:i:s'), "staffid" => get_staff_user_id(), "client_id" => $client_id));
                 }
-                }
-            // }
+            }
 
 
             if ($rows_affected) {
@@ -6022,30 +6012,9 @@ WHERE s.client_id = " . (int)$client_id . "
             ->row();
 
         if ($tracker_id == 1) {
-            
-            $ec_complete = $post_data["ec_complete"]??0;
-          
             $data = $this->document_verification($post_data);
             $university_shortlisting_data = $this->clients_model->university_shortlisting($client_id);
 
-
-  
-            if($ec_complete == 1)
-            {
-                
-                $lead_status = $this->clients_model->check_ec_complete($client_id);
-                    if ($lead_status->status == EC_LEAD_STATUS) {
-                        
-                    } else {
-      
-
-                     $data["warning_status"] = 2;
-                     $data["warning_message"] = "Your lead status is: " . $lead_status->status_name??'Unknown';
-           
-                    }
-
-            }
-            
             // Check if no tracker ID is set
             if (empty($check_client->tracker_id) || $check_client->tracker_id == 0) {
                 $update_data = [
@@ -6054,8 +6023,6 @@ WHERE s.client_id = " . (int)$client_id . "
                         ? STUDY_UNIVERSITY_APPLIED
                         : STUDY_UNIVERSITY_SHORTLISTING_PENDING
                 ];
-                
-                $update_data["ec_complete"] = $ec_complete;
 
                 $this->db->where("userid", $client_id);
                 $this->db->update(db_prefix() . 'clients', $update_data);
@@ -6064,13 +6031,6 @@ WHERE s.client_id = " . (int)$client_id . "
                 $this->db->where("client_id", $client_id);
                 $this->db->update(db_prefix() . 'client_university_shortlisting', $update_data);
             } else {
-                
-                if(isset($ec_complete)){
-                $update_data["ec_complete"] = $ec_complete;
-
-                $this->db->where("userid", $client_id);
-                $this->db->update(db_prefix() . 'clients', $update_data);
-                }
                 $data["pass_stage"] = $check_client->tracker_id;
             }
         } else if ($tracker_id == 2) {
@@ -11189,7 +11149,7 @@ WHERE s.client_id = " . (int)$client_id . "
         // ✅ Prepare any required data (if needed in view)
         $data = [];
         $data["id"] = $id;
-         $data["ticketStatus"] = fly_status();
+        $data["ticketStatus"] = fly_status();
         $data["country"] = $this->s_db->query("SELECT co.name,c.country_name,c.id country_id FROM course co left join countries c ON (co.id = c.segment_id) group by country_name order by country_name asc")->result_array();
         $data["ticketData"] = $this->db->where('id', $id)->get(db_prefix() . 'external_ticket_data')->row();
         // ✅ Set correct view page
@@ -11266,7 +11226,6 @@ WHERE s.client_id = " . (int)$client_id . "
                 'gender'           => $data['gender'] ?? '',
 
                 'status'           => $data['status'] ?? 1,
-                 'ticket_status'           => $data['ticket_status'] ?? 2,
             ];
 
 
