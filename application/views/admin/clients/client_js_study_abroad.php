@@ -629,9 +629,26 @@
 
                 if (type === "radio" && !$el.prop("checked")) return;
                 if (type === "checkbox") {
-                    formData.append(name, $el.prop("checked") ? 1 : 0);
-                    return;
-                }
+    // Collect all checked values for this checkbox name
+    const values = [];
+
+    $("#admission-details-form input[type='checkbox'][name='" + name + "']:checked").each(function () {
+        values.push($(this).val());
+    });
+
+    // Remove existing value to avoid duplicates
+    formData.delete(name);
+
+    // Save as comma-separated string
+    if (values.length > 0) {
+        formData.append(name, values.join(','));
+    } else {
+        formData.append(name, '');
+    }
+
+    return;
+}
+
                 if (type === "file") {
                     const file = $el[0].files[0];
                     if (file) formData.append(name, file);
@@ -819,45 +836,157 @@
 
 
     function check_registration_cash_status(element, className) {
+        $("." + className+' input').val('');
         if ($(element).is(":checked")) {
-            $("." + className).hide();
+            $("." + className).toggle();
             $(element).val(1); // Show elements if checkbox is checked
         } else {
-            $("." + className).show(); // Hide elements if checkbox is unchecked
+            $("." + className).toggle(); // Hide elements if checkbox is unchecked
             $(element).val(0);
         }
     }
 
     $(document).ready(function() {
 
-        $('input[type=radio][name=after_x_status]').change(function() {
-            let selected_value = $(this).val();
-            $('#twelthAcademicDetails, #diplomaAcademicDetails').removeClass("show").addClass("hide");
-            if (selected_value == 'Both') {
-                $('#twelthAcademicDetails, #diplomaAcademicDetails').removeClass("hide").addClass("show");
-            } else if (selected_value == '12th') {
-                // console.log("12 select");
-                $('#twelthAcademicDetails').removeClass("hide").addClass("show");
-            } else if (selected_value == 'Diploma') {
-                $('#diplomaAcademicDetails').removeClass("hide").addClass("show");
-            }
-        });
+    let lastAfterXStatus = $('input[name="after_x_status"]:checked').val() || null;
 
-        $('input[type=radio][name=after_xx_status]').change(function() {
-            let selected_value = $(this).val(); // Use 'this' to get the value of the selected radio input.
-            // console.log(selected_value);
-            // Hide both academic details by default.
-            $('#graduationAcademicDetails, #post_graduationAcademicDetails').removeClass("show").addClass("hide");
+// $('input[type=checkbox][name="after_x_status"]').on('change', function () {
 
-            if (selected_value == 'Both') {
-                $('#graduationAcademicDetails, #post_graduationAcademicDetails').removeClass("hide").addClass("show");
-            } else if (selected_value == 'Graduation') {
-                // console.log("12 select");
-                $('#graduationAcademicDetails').removeClass("hide").addClass("show");
-            } else if (selected_value == 'Post Graduation') {
-                $('#post_graduationAcademicDetails').removeClass("hide").addClass("show");
-            }
-        });
+//     const selected_value = $(this).val();
+
+//     // Store last valid selection
+//     lastAfterXStatus = selected_value;
+
+//     // Hide all sections
+//     $('#twelthAcademicDetails, #diplomaAcademicDetails')
+//         .removeClass('show')
+//         .addClass('hide');
+
+//     if (selected_value === 'Both') {
+//         $('#twelthAcademicDetails, #diplomaAcademicDetails')
+//             .removeClass('hide')
+//             .addClass('show');
+
+//     } else if (selected_value === '12th') {
+//         $('#twelthAcademicDetails')
+//             .removeClass('hide')
+//             .addClass('show');
+
+//     } else if (selected_value === 'Diploma') {
+//         $('#diplomaAcademicDetails')
+//             .removeClass('hide')
+//             .addClass('show');
+//     }
+// });
+
+
+ $('input[type=checkbox][name="after_x_status"]').on('change', function () {
+
+    const $checked = $('input[name="after_x_status"]:checked');
+
+    // ❌ Prevent unchecking all
+    if ($checked.length === 0) {
+        $(this).prop('checked', true);
+        alert_float('danger', 'At least one option must be selected.');
+        return;
+    }
+
+    // Hide all sections first
+    $('#twelthAcademicDetails, #diplomaAcademicDetails')
+        .removeClass('show')
+        .addClass('hide');
+
+    // Flags
+    let has12th = false;
+    let hasDiploma = false;
+    let hasBoth = false;
+
+    // Check selected values
+    $checked.each(function () {
+        const value = $(this).val();
+
+        if (value === '12th') has12th = true;
+        if (value === 'Diploma') hasDiploma = true;
+        if (value === 'Both') hasBoth = true;
+    });
+
+    // Show sections logic
+    if (hasBoth || (has12th && hasDiploma)) {
+        $('#twelthAcademicDetails, #diplomaAcademicDetails')
+            .removeClass('hide')
+            .addClass('show');
+    } else if (has12th) {
+        $('#twelthAcademicDetails')
+            .removeClass('hide')
+            .addClass('show');
+    } else if (hasDiploma) {
+        $('#diplomaAcademicDetails')
+            .removeClass('hide')
+            .addClass('show');
+    }
+});
+
+$('input[type=checkbox][name="after_xx_status"]').on('change', function () {
+
+    const $checked = $('input[name="after_xx_status"]:checked');
+
+    // ❌ Prevent unchecking all
+    if ($checked.length === 0) {
+        $(this).prop('checked', true);
+        alert_float('danger', 'At least one option must be selected.');
+        return;
+    }
+
+    // Hide all sections first
+    $('#graduationAcademicDetails, #post_graduationAcademicDetails, #pg_diplomaDetails')
+        .removeClass('show')
+        .addClass('hide');
+
+    // Flags
+    let hasGraduation = false;
+    let hasPostGraduation = false;
+    let hasPostDiploma = false;
+    let hasBoth = false;
+
+    // Detect selected values
+    $checked.each(function () {
+        const value = $(this).val();
+
+        if (value === 'Graduation') hasGraduation = true;
+        if (value === 'Post Graduation') hasPostGraduation = true;
+        if (value === 'PG Diploma') hasPostDiploma = true;
+        if (value === 'Both') hasBoth = true;
+    });
+
+    // Show sections logic
+    if (hasBoth) {
+        $('#graduationAcademicDetails, #post_graduationAcademicDetails, #pg_diplomaDetails')
+            .removeClass('hide')
+            .addClass('show');
+    } 
+    else {
+        if (hasGraduation) {
+            $('#graduationAcademicDetails')
+                .removeClass('hide')
+                .addClass('show');
+        }
+
+        if (hasPostGraduation) {
+            $('#post_graduationAcademicDetails')
+                .removeClass('hide')
+                .addClass('show');
+        }
+
+        if (hasPostDiploma) {
+            $('#pg_diplomaDetails')
+                .removeClass('hide')
+                .addClass('show');
+        }
+    }
+});
+
+
+
 
         $("#twelth_result_status").on("change", function() {
             let isDeclared = $(this).val() === "Declared";
@@ -915,6 +1044,23 @@
         $("#post_graduation_result_status").on('change', function() {
             const drs = $(this).val();
             const $detailsSection = $("#post_graduationAcademicDetails .result-change-hide");
+
+            // Clear input, select, and file values within the section
+            $detailsSection.find("input:not([type='hidden']), select").val('');
+            $detailsSection.find("input[type='file']").val(null); // Proper way to clear file input
+
+            // Toggle visibility based on status
+            if (drs === 'Declared') {
+                $detailsSection.show();
+            } else {
+                $detailsSection.hide();
+            }
+        });
+        
+        
+          $("#pg_result_status").on('change', function() {
+            const drs = $(this).val();
+            const $detailsSection = $("#pg_diplomaDetails .result-change-hide");
 
             // Clear input, select, and file values within the section
             $detailsSection.find("input:not([type='hidden']), select").val('');

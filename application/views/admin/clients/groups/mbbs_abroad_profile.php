@@ -289,25 +289,25 @@ if ($lead_type_status == 2) {
             <div class="scroller arrow-right"><i class="fa fa-angle-right"></i></div>
             <div class="horizontal-tabs">
                 <ul class="nav nav-tabs profile-tabs row customer-profile-tabs nav-tabs-horizontal" role="tablist">
-                    <li role="presentation" class="active">
+                    <li role="presentation" section="Basic Information" class="active">
                         <a href="#student_details" class="active" aria-controls="student_details" role="tab" data-toggle="tab">Student Details</a>
                     </li>
-                    <li role="presentation">
+                    <li role="presentation" section="Passport Information" >
                         <a href="#passport" aria-controls="passport" role="tab" data-toggle="tab">Passport</a>
                     </li>
-                    <li role="presentation">
+                    <li role="presentation" section="Admission Preferences" >
                         <a href="#admission_preferences" aria-controls="admission_preferences" role="tab" data-toggle="tab">Admission Preferences</a>
                     </li>
-                    <li role="presentation">
+                    <li role="presentation" section="Academic Details">
                         <a href="#academic_details" aria-controls="academic_details" role="tab" data-toggle="tab">Academic Details</a>
                     </li>
-                    <li role="presentation">
+                    <li role="presentation" section="document">
                         <a href="#documents" aria-controls="documents" role="tab" data-toggle="tab">Documents</a>
                     </li>
-                    <li role="presentation">
+                    <li role="presentation" section="Welcome message">
                         <a href="#welcome_message" aria-controls="welcome_message" role="tab" data-toggle="tab">Welcome Message</a>
                     </li>
-                    <li role="presentation">
+                    <li role="presentation" section="Fees data updated">
                         <a href="#fees_details" aria-controls="fees_details" role="tab" data-toggle="tab">Fees Details</a>
                     </li>
                     <?php hooks()->do_action('after_customer_billing_and_shipping_tab', isset($client) ? $client : false); ?>
@@ -1531,6 +1531,19 @@ if ($lead_type_status == 2) {
                                             ?>
                                         </div>
                                     </div>
+                                    
+                                     <div class="col-lg-2 hide-show-regi"
+                                        style="display: <?= !empty($client->registration_slip_cash_status) ? 'block' : 'none' ?>;">
+                                        <div class="form-group">
+                                            <label for="exampleInputMiddleName">Location<small
+                                                    class="text-danger">*</small></label>
+                                            <input
+                                                class="form-control <?= !empty($final_sumbit) ? 'disabled-form-welcome' : '' ?>"
+                                                <?= !empty($final_sumbit) ? 'disabled' : '' ?> type="text"
+                                                name="w_location" <?= $text_danger_mbbs_required ?>
+                                                value="<?= !empty($client->w_location) ? $client->w_location : '' ?>">
+                                        </div>
+                                    </div>
                                 </div>
                                 <div class="row btn-save-fun">
                                     <div class="col-md-12 ">
@@ -1835,8 +1848,66 @@ if ($lead_type_status == 2) {
 
 <?php //$this->load->view('admin/clients/client_group'); 
 ?>
-
+</div>
+</div>
+<div class="panel_s mt-5">
+    <div class="panel-body">
+        <h4 class="customer-profile-group-heading">Activity Log</h4>
+        <div class="lead-activity activity-feed" style="height:400px; overflow:scroll;">
+            <!-- Dynamic content will be loaded here -->
+        </div>
+    </div>
+</div>
 <script>
+
+
+    var activity_url = "<?= base_url() ?>admin/clients/activity_logs/<?= $client_id ?>";
+
+    function handleActivityChange() {
+        console.log("start activity");
+
+        var selectedType = 4;
+
+        // Safely get the active section
+        var section = $(".profile-tabs li.active").attr("section") || "";
+
+        console.log("section:", section);
+
+        // Make sure activity_url exists
+        if (typeof activity_url === "undefined") {
+            console.error("activity_url is not defined");
+            return;
+        }
+
+        reloadActivity_list(activity_url, {
+            type: selectedType,
+            section: section
+        });
+    }
+
+    // Updated reloadActivity_list with POST
+    function reloadActivity_list(url, postData = {}) {
+        $(".lead-activity").html('');
+        // show_loader();
+        $.ajax({
+            url: url,
+            type: 'POST',
+            data: postData,
+            success: function(data) {
+                $(".lead-activity").html(data);
+                hide_loader();
+            },
+            error: function(xhr, status, error) {
+                hide_loader();
+                $(".lead-activity").html("Error loading data");
+                console.error("Error loading data:", error);
+            }
+        });
+    }
+
+    document.addEventListener("DOMContentLoaded", function() {
+        handleActivityChange();
+    });
     var primary_country = "<?= !empty($admissionpreferences->primary_country) ? $admissionpreferences->primary_country : 0 ?>";
     var primary_university = "<?= !empty($admissionpreferences->primary_university) ? $admissionpreferences->primary_university : 0 ?>";
 

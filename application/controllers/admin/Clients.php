@@ -313,8 +313,8 @@ class Clients extends AdminController
             if ($group == 'profile') {
                 $data['customer_groups'] = $this->clients_model->get_customer_groups($id);
                 $data['customer_admins'] = $this->clients_model->get_admins($id);
-                if ($data["lead_data"]->type == 1) {
-                    $data['university_shortlisting'] = $this->clients_model->university_shortlisting($id, '', 1);
+               if ($data["lead_data"]->type == 1) {
+                    $data['university_shortlisting'] = $this->clients_model->university_shortlisting($id, '', 1,'vendor_study_abroad');
 
                     $data['course_list_ug'] =  $this->get_courses("Bachelor");
                     $data['course_list_pg'] =  $this->get_courses("Master");
@@ -388,8 +388,13 @@ class Clients extends AdminController
                 $data['profile_creator_vendor'] = $this->clients_model->get_profile_creator_vendor();
                 $data['profile_creation_data'] = $this->clients_model->get_profile_creator_data($id);
                 $data['customer_admins'] = $this->clients_model->get_admins($id);
-                $data['admissionpreferences'] = $this->clients_model->getAdmissionPreferences($id);
+               $data['admissionpreferences'] = $this->clients_model->getAdmissionPreferences($id);
+                if ($data["lead_data"]->type == 1) {
+                $data['university_shortlisting'] = $this->clients_model->university_shortlisting($id,'','','vendor_study_abroad');
+                }
+                else{
                 $data['university_shortlisting'] = $this->clients_model->university_shortlisting($id);
+                 }
                 $data['university_application_status'] = $this->clients_model->university_status_update();
                 $data['university_status_submit'] = $this->clients_model->university_status_submit();
                 $data['documents'] =  $this->clients_model->get_documents($id);

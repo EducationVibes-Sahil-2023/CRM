@@ -2,7 +2,7 @@
 <?php
 $states = get_states();
 $yesNO_Array = [array("id" => 0, "name" => "No"), array("id" => 1, "name" => "Yes")];
-
+$countryCode = get_country_code();
 ?>
 <style>
    .currency-selector {
@@ -91,14 +91,70 @@ if ($lead->type == 1) {
                </div>
                <div class="row col-md-12">
 
-                  <div class="col-lg-4 col-md-6 col-12">
+ <div class="col-lg-3 col-md-6 col-12">
+
+                     <?php
+                     array_unshift($countryCode, ['name' => '']); // Add an empty option at the beginning
+
+                     echo render_select(
+                        'a_country',
+                        $countryCode,
+                        ['country_id', 'short_name'],
+                        'Applicant Country <small class="text-danger">*</small>',
+                        '',
+                        [
+                           'data-width' => '100%',
+                           'data-none-selected-text' => 'Applicant Country',
+                           'data-actions-box' => true,
+                            "required" => "required"
+                        ],
+                        [],
+                        'no-mbot',
+                        '',
+                        false,
+                        'a_country'
+                     );
+
+
+                     // echo render_select('country', $countries, array('country_id', array('short_name')), 'clients_country', $selected, array('data-none-selected-text' => _l('dropdown_non_selected_tex')));
+                     ?>
+                  </div>
+                   <div class="col-lg-3 col-md-6 col-12">
+
+                     <?php
+                     array_unshift($countryCode, ['name' => '']); // Add an empty option at the beginning
+
+                     echo render_select(
+                        'country_code',
+                        $countryCode,
+                        ['country_id', array('short_name','calling_code')],
+                        'Country Code <small class="text-danger">*</small>',
+                        '',
+                        [
+                           'data-width' => '100%',
+                           'data-none-selected-text' => 'Country Code',
+                           'data-actions-box' => true,
+                           "required" => "required"
+                        ],
+                        [],
+                        'no-mbot',
+                        '',
+                        false,
+                        'country_code'
+                     );
+
+
+                     // echo render_select('country', $countries, array('country_id', array('short_name')), 'clients_country', $selected, array('data-none-selected-text' => _l('dropdown_non_selected_tex')));
+                     ?>
+                  </div>
+                  <div class="col-lg-2 col-md-6 col-12">
                      <?php echo render_input('phonenumber', 'lead_convert_to_client_phone', $lead->phonenumber, "", ["required" => "required"]); ?>
                   </div>
 
-                  <div class="col-lg-4 col-md-6 col-12">
+                  <div class="col-lg-2 col-md-6 col-12">
                      <?php echo render_input('city', 'client_city', $lead->city); ?>
                   </div>
-                  <div class="col-lg-4 col-md-6 col-12">
+                  <div class="col-lg-2 col-md-6 col-12">
 
                      <?php
                      array_unshift($states, ['name' => '']); // Add an empty option at the beginning
@@ -112,7 +168,8 @@ if ($lead->type == 1) {
                         [
                            'data-width' => '100%',
                            'data-none-selected-text' => 'States',
-                           'data-actions-box' => true
+                           'data-actions-box' => true,
+                          
                         ],
                         [],
                         'no-mbot',
@@ -268,7 +325,7 @@ if ($lead->type == 1) {
                         <div class="row">
                            <div class="col-md-2">
                               <div class="checkbox">
-                                 <input class="form-check-input checkbox-group" type="checkbox"  onchange="change_refusal()" value="1" id="visa_refusal" name="visa_refusal">
+                                 <input class="form-check-input checkbox-group" type="checkbox"  onchange="change_refusal(this)" value="1" id="visa_refusal" name="visa_refusal">
                                  <label class="form-check-label" for="visa_refusal">
                                     Visa Refusal
                                  </label>
@@ -276,12 +333,12 @@ if ($lead->type == 1) {
                            </div>
                            <div id="visa-refusal-data" style="display:none">
                               <div class="col-md-3">
-                                 <?php echo render_input('visa_year', 'Visa Year <small class="text-danger">*</small>', '', '', ["required" => "required", "placeholder" => "Visa Year"]); ?>
+                                 <?php echo render_input('visa_year', 'Visa Year <small class="text-danger">*</small>', '', '', ["placeholder" => "Visa Year"]); ?>
 
                               </div>
 
                               <div class="col-md-5">
-                                 <?php echo render_input('visa_country', 'Visa Country <small class="text-danger">*</small>', '', '', ["required" => "required", "placeholder" => "Visa Country"]); ?>
+                                 <?php echo render_input('visa_country', 'Visa Country <small class="text-danger">*</small>', '', '', [ "placeholder" => "Visa Country"]); ?>
 
                               </div>
                            </div>
@@ -764,8 +821,26 @@ if ($lead->type == 1) {
          return isDuplicate;
       }
 
-      function change_refusal() {
-         $("#visa-refusal-data").toggle("show");
-         $("#visa-refusal-data input").val('');
-      }
+      function change_refusal(event) {
+
+    const isChecked = $(event).is(':checked');
+    const $refusalDiv = $("#visa-refusal-data");
+$refusalDiv.find('input')
+            .removeAttr('required')
+            .val('');
+    if (isChecked) {
+        // Show section
+        $refusalDiv.show();
+
+        // Add required to inputs inside
+        $refusalDiv.find('input').attr('required', true);
+    } else {
+        // Hide section
+        $refusalDiv.hide();
+
+        // Remove required and clear values
+        
+    }
+}
+
    </script>

@@ -3400,7 +3400,7 @@ function doc_urls_additional($user_id)
     return $final_files;
 }
 
-function get_ev_partner()
+function get_ev_partner($lead_type = 2)
 {
     $CI = &get_instance();
 
@@ -3408,10 +3408,14 @@ function get_ev_partner()
         // Fetch data from the `document_upload_type` table with a join to the `file_type` table
         $board_dropdown = $CI->db
             ->select("*")
-            ->where(array("status" => 1))
             ->from(db_prefix() . 'ev_partner')
-            ->get()
-            ->result_array();
+            ->where('status', 1);
+
+        if (!empty($lead_type)) {
+            $CI->db->where("FIND_IN_SET('$lead_type', lead_type) >", 0);
+        }
+
+        $board_dropdown = $CI->db->get()->result_array();
 
         return $board_dropdown; // Return the fetched data
     } catch (Exception $e) {

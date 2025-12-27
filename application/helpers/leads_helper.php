@@ -9362,3 +9362,24 @@ function get_examList()
         return []; // Return an empty array to ensure function fails gracefully
     }
 }
+
+function get_country_code()
+{
+    $CI = &get_instance();
+
+    try {
+        // Fetch data from the `document_upload_type` table with a join to the `file_type` table
+        $countryCode = $CI->db
+            ->select("country_id,short_name,calling_code")
+            ->from(db_prefix() . 'countries')
+            ->get()
+            ->result_array();
+
+        return $countryCode; // Return the fetched data
+    } catch (Exception $e) {
+        // Log the error message if an exception occurs
+        log_message('error', 'Error fetching RelationShip: ' . $e->getMessage());
+
+        return []; // Return an empty array to ensure function fails gracefully
+    }
+}

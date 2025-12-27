@@ -14,7 +14,7 @@ $degreeArray = get_degree();
 $universities_list = get_universities_list();
 $diploma_board = get_diploma_board_list();
 $board_dropdown = get_board_dropdown();
-$ev_partner = get_ev_partner();
+$ev_partner = get_ev_partner(1);
 $pcc_stages = get_pcc_stages();
 
 $staff_list              = $this->leads_model->get_staff_list();

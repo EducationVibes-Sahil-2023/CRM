@@ -16,6 +16,7 @@
                         <div class="clearfix"></div>
                         <?php render_datatable(array(
                             "Partner Name",
+                            _l('Lead Type'),
                             _l('status'),
                             _l('action'),
                         ), 'partner'); ?>
@@ -51,6 +52,17 @@
                                 <input type="text" class="form-control" name="name" id="partner_name" placeholder="Enter partner name" required>
                             </div>
 
+
+                            <div class="leads-filter-column">
+                                <?php
+
+                                echo '<div id="leads-filter-source">';
+                                echo render_select('lead_type[]', $lead_type, array('id', 'name'), 'Lead Type <span class="text-danger">*</span>', '', array('data-width' => '100%', 'data-none-selected-text' => _l('lead_import_type'), 'multiple' => true, 'data-actions-box' => true, "required" => "required"), array(), 'no-mbot', '', false, "lead_type");
+                                echo '</div>';
+
+                                // die;
+                                ?>
+                            </div>
                             <div class="form-group mb-3">
                                 <label for="status">Status <span class="text-danger">*</span></label>
                                 <select name="status" id="status" class="form-control" required>
@@ -94,6 +106,7 @@
         $('#partner').on('hidden.bs.modal', function(event) {
             $('#partner input[name="name"]').val('');
             $('#partner input[name="partner_id"]').val('');
+            $('#lead_type').val('').selectpicker('refresh');
             $('.add-title').removeClass('hide');
             $('.edit-title').removeClass('hide');
         });
@@ -109,13 +122,38 @@
 
             if (typeof(id) !== 'undefined') {
                 $('input[name="partner_id"]').val(id);
-                var name = $(button).data("name")
-                var status = $(button).data("status")
+
+                var name = $(button).data("name");
+                var status = $(button).data("status");
+                var lead_type = $(button).data("lead_type");
+
                 $('input[name="name"]').val(name);
                 $('select[name="status"]').val(status);
+                if (lead_type !== undefined && lead_type !== null && lead_type !== '') {
+
+                    // Normalize lead_type to array
+                    if (Array.isArray(lead_type)) {
+                        lead_type = lead_type;
+                    } else if (typeof lead_type === 'string') {
+                        lead_type = lead_type.includes(',') ?
+                            lead_type.split(',').map(v => v.trim()) :
+                            [lead_type];
+                    } else {
+                        lead_type = [lead_type.toString()];
+                    }
+
+                    $('#lead_type').val(lead_type).selectpicker('refresh');
+
+                } else {
+                    // Clear selection
+                    $('#lead_type').val([]).selectpicker('refresh');
+                }
+
+
                 $('#currency_modal .add-title').addClass('hide');
                 $('#currency_modal .edit-title').removeClass('hide');
                 $('#currency_modal input[name="name"]').val(name);
+
             }
         });
     });
