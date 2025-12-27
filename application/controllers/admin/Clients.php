@@ -314,7 +314,7 @@ class Clients extends AdminController
                 $data['customer_groups'] = $this->clients_model->get_customer_groups($id);
                 $data['customer_admins'] = $this->clients_model->get_admins($id);
                 if ($data["lead_data"]->type == 1) {
-                    $data['university_shortlisting'] = $this->clients_model->university_shortlisting($id, '', 1);
+                    $data['university_shortlisting'] = $this->clients_model->university_shortlisting($id, '', 1,'vendor_study_abroad');
 
                     $data['course_list_ug'] =  $this->get_courses("Bachelor");
                     $data['course_list_pg'] =  $this->get_courses("Master");
@@ -389,7 +389,12 @@ class Clients extends AdminController
                 $data['profile_creation_data'] = $this->clients_model->get_profile_creator_data($id);
                 $data['customer_admins'] = $this->clients_model->get_admins($id);
                 $data['admissionpreferences'] = $this->clients_model->getAdmissionPreferences($id);
+                if ($data["lead_data"]->type == 1) {
+                $data['university_shortlisting'] = $this->clients_model->university_shortlisting($id,'','','vendor_study_abroad');
+                }
+                else{
                 $data['university_shortlisting'] = $this->clients_model->university_shortlisting($id);
+                }
                 $data['university_application_status'] = $this->clients_model->university_status_update();
                 $data['university_status_submit'] = $this->clients_model->university_status_submit();
                 $data['documents'] =  $this->clients_model->get_documents($id);
@@ -3167,6 +3172,7 @@ WHERE s.client_id = " . (int)$client_id . "
                 }
 
 
+ $_update["w_location"] = !empty($_POST["w_location"]) ? $_POST["w_location"] : '';
                 $_update["date_of_payment"] = !empty($_POST["date_of_payment"]) ? $_POST["date_of_payment"] : '';
                 $_update["registration_slip_cash_status"] = !empty($_POST["registration_slip_cash_status"]) ? $_POST["registration_slip_cash_status"] : '';
                 $_update["payment_recevied_from"] = !empty($_POST["payment_recevied_from"]) ? $_POST["payment_recevied_from"] : '';
@@ -4660,6 +4666,9 @@ WHERE s.client_id = " . (int)$client_id . "
             $state = trim($_POST["state"] ?? '');
             $loan_required = trim($_POST["loan_required"] ?? '');
             $tagging = trim($_POST["tagging"] ?? '');
+            
+            $country_code = trim($_POST["country_code"] ?? '');
+            $a_country = trim($_POST["a_country"] ?? '');
             unset($_POST["clientid"]);
             unset($_POST["doc_type_id"]);
             unset($_POST["doc_type_name"]);
@@ -4673,6 +4682,8 @@ WHERE s.client_id = " . (int)$client_id . "
             unset($_POST["address"]);
             unset($_POST["loan_required"]);
             unset($_POST["tagging"]);
+            unset($_POST["country_code"]);
+            unset($_POST["a_country"]);
 
 
             if (empty($client_id) || !empty($agent_id)) {
@@ -4753,7 +4764,7 @@ WHERE s.client_id = " . (int)$client_id . "
                 $this->db->insert(db_prefix() . 'application_activity_log', array("description" => "Basic Information Created by - ", "date" => date('Y-m-d H:i:s'), "staffid" => get_staff_user_id(), "client_id" => $client_id));
             }
 
-            if (!empty($reference_name) || !empty($state) || !empty($address)) {
+            // if (!empty($reference_name) || !empty($state) || !empty($address)) {
 
                 $updateClientInfo = [];
                 if (!empty($reference_name)) {
@@ -4771,12 +4782,21 @@ WHERE s.client_id = " . (int)$client_id . "
                 if (!empty($loan_required)) {
                     $updateClientInfo['loan_required'] = !empty($loan_required) ? $loan_required : 0;
                 }
+                 if (!empty($country_code)) {
+                    $updateClientInfo['country_code'] = !empty($country_code) ? $country_code : 0;
+                }
+                 if (!empty($a_country)) {
+                    $updateClientInfo['a_country'] = !empty($a_country) ? $a_country : 0;
+                }
+                
+                if(!empty($updateClientInfo)){
                 $this->db->where('userid', $client_id);
                 $rows_affected = $this->db->update(db_prefix() . 'clients', $updateClientInfo);
                 if (!empty($reference_name)) {
                     $this->db->insert(db_prefix() . 'application_activity_log', array("description" => "Refrence Information Updated by - ", "date" => date('Y-m-d H:i:s'), "staffid" => get_staff_user_id(), "client_id" => $client_id));
                 }
-            }
+                }
+            // }
 
 
             if ($rows_affected) {
@@ -6002,9 +6022,30 @@ WHERE s.client_id = " . (int)$client_id . "
             ->row();
 
         if ($tracker_id == 1) {
+            
+            $ec_complete = $post_data["ec_complete"]??0;
+          
             $data = $this->document_verification($post_data);
             $university_shortlisting_data = $this->clients_model->university_shortlisting($client_id);
 
+
+  
+            if($ec_complete == 1)
+            {
+                
+                $lead_status = $this->clients_model->check_ec_complete($client_id);
+                    if ($lead_status->status == EC_LEAD_STATUS) {
+                        
+                    } else {
+      
+
+                     $data["warning_status"] = 2;
+                     $data["warning_message"] = "Your lead status is: " . $lead_status->status_name??'Unknown';
+           
+                    }
+
+            }
+            
             // Check if no tracker ID is set
             if (empty($check_client->tracker_id) || $check_client->tracker_id == 0) {
                 $update_data = [
@@ -6013,6 +6054,8 @@ WHERE s.client_id = " . (int)$client_id . "
                         ? STUDY_UNIVERSITY_APPLIED
                         : STUDY_UNIVERSITY_SHORTLISTING_PENDING
                 ];
+                
+                $update_data["ec_complete"] = $ec_complete;
 
                 $this->db->where("userid", $client_id);
                 $this->db->update(db_prefix() . 'clients', $update_data);
@@ -6021,6 +6064,13 @@ WHERE s.client_id = " . (int)$client_id . "
                 $this->db->where("client_id", $client_id);
                 $this->db->update(db_prefix() . 'client_university_shortlisting', $update_data);
             } else {
+                
+                if(isset($ec_complete)){
+                $update_data["ec_complete"] = $ec_complete;
+
+                $this->db->where("userid", $client_id);
+                $this->db->update(db_prefix() . 'clients', $update_data);
+                }
                 $data["pass_stage"] = $check_client->tracker_id;
             }
         } else if ($tracker_id == 2) {
@@ -11216,6 +11266,7 @@ WHERE s.client_id = " . (int)$client_id . "
                 'gender'           => $data['gender'] ?? '',
 
                 'status'           => $data['status'] ?? 1,
+                 'ticket_status'           => $data['ticket_status'] ?? 2,
             ];
 
 

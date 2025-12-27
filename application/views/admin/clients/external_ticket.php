@@ -51,7 +51,7 @@ if (!empty(!empty($country))) {
     $ticketStatus,
     ['id', 'name'],
     '',
-    $ticketData->status ?? '', // selected value
+    $ticketData->ticket_status ?? '', // selected value
     [
         'data-width' => '100%',
         'data-none-selected-text' => false, // remove blank
@@ -389,7 +389,7 @@ if (!empty(!empty($country))) {
             var countryText = $('#country option:selected').text() || '';
             formData.append('country_name', countryText);
             var ticket_status = $('#ticket_status').val() || 0;
-formData.append('status', ticket_status);
+formData.append('ticket_status', ticket_status);
 
             show_loader();
 
