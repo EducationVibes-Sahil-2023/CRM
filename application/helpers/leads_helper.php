@@ -8876,13 +8876,11 @@ function welcome_whatsapp_channel_study_abroad($contact_number, $staff_id, $lead
             throw new Exception("Lead not found.");
         }
 
-
-
         // Skip if welcome message already sent
-        if ($lead->welcome_message_status == 1) {
-            return true;
-        }
-        
+        // if ($lead->welcome_message_status == 1) {
+        //     return true;
+        // }
+  
            if ($lead->type != 1) {
             return true;
         }

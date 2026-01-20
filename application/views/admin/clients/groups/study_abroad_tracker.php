@@ -63,6 +63,7 @@ $visa_vendors = get_vendor_list(2);
 $courier_type = get_courier_list();
 $payment_mode = get_payment_mode();
 $fundsStatus = get_status_table("funds_status");
+$fundsType = get_status_table("funds_type");
 $interviewType = get_status_table("interview_status");
 $conformation_letter_status = get_status_table("application_conformation_letter_status");
 
@@ -916,15 +917,25 @@ if (empty($staffData["post_sales"]) && !is_admin()):
                                     <div class="row">
                                         <div class="col-md-3">
                                             <?= render_select(
+                                                'funds_type[]',
+                                                $fundsType,
+                                                ['id', 'name'],
+                                                "Funds Type <small class='text-danger'>*</small>",
+                                                !empty($selected_university_shortlisting['funds_type']) ? explode(",",$selected_university_shortlisting['funds_type']) : '',
+                                                ['data-width' => '100%', 'data-none-selected-text' => 'Select Funds Type', 'multiple' => true, 'data-actions-box' => true,'required-check' => 'required-check', 'required' => 'required','multiple' => true], array(), 'no-mbot', '', false,
+                                            ); ?>
+                                        </div>
+                                        <div class="col-md-3">
+                                            <?= render_select(
                                                 'funds_status',
                                                 $fundsStatus,
                                                 ['id', 'name'],
                                                 "Funds Status <small class='text-danger'>*</small>",
                                                 isset($selected_university_shortlisting['funds_status']) ? $selected_university_shortlisting['funds_status'] : '',
-                                                ['required-check' => 'required-check', 'required' => 'required']
+                                                ['required-check' => 'required-check', 'required' => 'required'], array(), 'no-mbot', '', false,
                                             ); ?>
                                         </div>
-                                        <div class="col-md-9 form-group">
+                                        <div class="col-md-6 form-group">
                                             <label for="funds_remark">Funds Remark <small class='text-danger'>*</small></label>
                                             <textarea rows="4" name="funds_remark" class="form-control funds_remark" required required-check><?= isset($selected_university_shortlisting['funds_remark']) ? $selected_university_shortlisting['funds_remark'] : '' ?></textarea>
                                         </div>
@@ -944,7 +955,7 @@ if (empty($staffData["post_sales"]) && !is_admin()):
                                                         <div class="form-group">
                                                             <label>Interview Status <small class="text-danger">*</small></label>
                                                             <select name="interview_status[]" class="form-control selectpicker interview_status" data-live-search="true" data-none-selected-text="Non selected" onchange="changeInterviewStatus(this)" required required-check>
-                                                                <option value="">Select...</option>
+                                                                <!--<option value="">Select...</option>-->
                                                                 <?php
 
                                                                 foreach ($interviewType as $type):
@@ -1013,14 +1024,24 @@ if (empty($staffData["post_sales"]) && !is_admin()):
                                                 <div class="col-md-3">
                                                     <div class="form-group">
                                                         <label>Interview Status <small class="text-danger">*</small></label>
-                                                        <select name="interview_status" class="form-control selectpicker interview_status" data-live-search="true" data-none-selected-text="Non selected" onchange="changeInterviewStatus(this)" required required-check>
-                                                            <option value="">Select...</option>
-                                                            <?php foreach ($interviewType as $type): ?>
-                                                                <option data-show-status="<?= $type['show_status'] ?>" value="<?= htmlspecialchars($type['id'], ENT_QUOTES, 'UTF-8') ?>">
-                                                                    <?= htmlspecialchars($type['name'], ENT_QUOTES, 'UTF-8') ?>
-                                                                </option>
-                                                            <?php endforeach; ?>
-                                                        </select>
+                                                     <select name="interview_status"
+        class="form-control selectpicker interview_status"
+        data-live-search="true"
+        data-none-selected-text="None selected"
+        onchange="changeInterviewStatus(this)"
+        required
+        required-check>
+
+    <option value="" selected disabled></option>
+
+    <?php foreach ($interviewType as $type): ?>
+        <option data-show-status="<?= $type['show_status'] ?>"
+                value="<?= htmlspecialchars($type['id'], ENT_QUOTES, 'UTF-8') ?>">
+            <?= htmlspecialchars($type['name'], ENT_QUOTES, 'UTF-8') ?>
+        </option>
+    <?php endforeach; ?>
+</select>
+
                                                     </div>
                                                 </div>
 
@@ -2040,8 +2061,10 @@ location.reload();
                 let pre_deposite_array = [];
                 let funds_status = $("#funds-form").find("select[name='funds_status']").val() || '';
                 let funds_remark = $("#funds-form").find("textarea[name='funds_remark']").val() || '';
+                 let funds_type = $("#funds-form").find("select[name='funds_type[]']").val() || '';
                 upload_data.append("funds_status", funds_status);
                 upload_data.append("funds_remark", funds_remark);
+                upload_data.append("funds_type", funds_type);
 
 
 
@@ -2870,7 +2893,7 @@ location.reload();
         const $section = $(selectElement).closest('.interview-section-inter');
 
         // Clear all input, select, and textarea values inside this section (excluding the one just changed)
-        $section.find("input, select, textarea").not(selectElement).val('').prop('checked', false);
+        // $section.find("input, select, textarea").not(selectElement).val('').prop('checked', false);
 
         // Toggle visibility based on showStatus
         if (showStatus === '1') {

@@ -1890,12 +1890,28 @@ class Clients extends AdminController
                 }
 
                 if (!empty($receiving_date)) {
-                    $query = $this->db->select("r.id, r.userid, r.doc_id")
-                        ->from(db_prefix() . 'client_apostille_data r')
-                        ->where_in('r.userid', $ids)
-                        ->where_in('r.doc_id', $documents_id)
-                        ->where('r.courier_date >', $receiving_date)
-                        ->get();
+                    //   if (!empty($_POST["apostile_id"])) {
+                    //       ->where_in('r.id', $_POST["apostile_id"]);
+                    //   }
+                    // $query = $this->db->select("r.id, r.userid, r.doc_id")
+                    //     ->from(db_prefix() . 'client_apostille_data r')
+                    //     ->where_in('r.userid', $ids)
+                    //     ->where_in('r.doc_id', $documents_id)
+                    //     ->where('r.courier_date >', $receiving_date)
+                    //     ->get();
+                    
+                    $this->db->select('r.id, r.userid, r.doc_id')
+                    ->from(db_prefix() . 'client_apostille_data r')
+                    ->where_in('r.userid', $ids)
+                    ->where_in('r.doc_id', $documents_id)
+                    ->where('r.courier_date >', $receiving_date);
+                    
+                    if (!empty($_POST['apostile_id'])) {
+                    $this->db->where_in('r.id', $_POST['apostile_id']);
+                    }
+                    
+                    $query = $this->db->get();
+
 
                     if ($query->num_rows() > 0) {
                         $ddata = $query->result_array();
@@ -4669,6 +4685,8 @@ WHERE s.client_id = " . (int)$client_id . "
             $loan_required = trim($_POST["loan_required"] ?? '');
             $tagging = trim($_POST["tagging"] ?? '');
             $client_type = trim($_POST["client_type"] ?? '');
+            $a_country = trim($_POST["a_country"] ?? '');
+            $country_code = trim($_POST["country_code"] ?? '');
             unset($_POST["clientid"]);
             unset($_POST["doc_type_id"]);
             unset($_POST["doc_type_name"]);
@@ -4683,6 +4701,8 @@ WHERE s.client_id = " . (int)$client_id . "
             unset($_POST["loan_required"]);
             unset($_POST["tagging"]);
             unset($_POST["client_type"]);
+            unset($_POST["a_country"]);
+             unset($_POST["country_code"]);
 
 
             if (empty($client_id) || !empty($agent_id)) {
@@ -4763,7 +4783,7 @@ WHERE s.client_id = " . (int)$client_id . "
                 $this->db->insert(db_prefix() . 'application_activity_log', array("description" => "Basic Information Created by - ", "date" => date('Y-m-d H:i:s'), "staffid" => get_staff_user_id(), "client_id" => $client_id));
             }
 
-            if (!empty($reference_name) || !empty($state) || !empty($address)) {
+            // if (!empty($reference_name) || !empty($state) || !empty($address)) {
 
                 $updateClientInfo = [];
                 if (!empty($reference_name)) {
@@ -4781,12 +4801,22 @@ WHERE s.client_id = " . (int)$client_id . "
                 if (!empty($loan_required)) {
                     $updateClientInfo['loan_required'] = !empty($loan_required) ? $loan_required : 0;
                 }
+                  if (!empty($a_country)) {
+                    $updateClientInfo['a_country'] = !empty($a_country) ? $a_country : 0;
+                }
+                
+                 if (!empty($country_code)) {
+                    $updateClientInfo['country_code'] = !empty($country_code) ? $country_code : 0;
+                }
+                
+                if(!empty($updateClientInfo)){
                 $this->db->where('userid', $client_id);
                 $rows_affected = $this->db->update(db_prefix() . 'clients', $updateClientInfo);
+                }
                 if (!empty($reference_name)) {
                     $this->db->insert(db_prefix() . 'application_activity_log', array("description" => "Refrence Information Updated by - ", "date" => date('Y-m-d H:i:s'), "staffid" => get_staff_user_id(), "client_id" => $client_id));
                 }
-            }
+            // }
 
 
             if ($rows_affected) {
@@ -6748,6 +6778,7 @@ WHERE s.client_id = " . (int)$client_id . "
             ]);
 
             $updateArray = [
+                "funds_type" => !empty($_POST["funds_type"]) ? $_POST["funds_type"] : '',
                 "funds_status" => !empty($_POST["funds_status"]) ? $_POST["funds_status"] : '',
                 "funds_remark"      => isset($_POST["funds_remark"]) ? $_POST["funds_remark"] : ''
             ];
@@ -11228,6 +11259,11 @@ WHERE s.client_id = " . (int)$client_id . "
                 'status'           => $data['status'] ?? 1,
             ];
 
+
+if(!empty($_POST['ticket_status']))
+{
+    $save_data["ticket_status"] = $_POST['ticket_status'];
+}
 
 
 

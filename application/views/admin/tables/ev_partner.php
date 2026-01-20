@@ -6,6 +6,7 @@ $aColumns = [
     db_prefix() . 'ev_partner.id as id',
     db_prefix() . 'ev_partner.name as name',
     db_prefix() . 'ev_partner.status as status',
+     db_prefix() . 'ev_partner.lead_type as lead_types',
     'GROUP_CONCAT(' . db_prefix() . 'leads_type.name SEPARATOR ", ") AS lead_type'
 ];
 
@@ -41,7 +42,7 @@ foreach ($rResult as $aRow) {
             'data-id'                 => $aRow['id'],
             'data-name'                 => $aRow['name'],
             'data-status'                 => $aRow['status'],
-            'data-lead_type'                 => $aRow['lead_type']
+            'data-lead_type'                 => $aRow['lead_types']
         ];
         $status = 'Inactive';
         if ($aRow["status"] == 1) {
