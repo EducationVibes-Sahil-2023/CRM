@@ -89,7 +89,7 @@
             }
         }
 
-        if (phonenumber != "" && p_phonenumber != "") {
+        if (phonenumber != "" && p_phonenumber != "" && isMobileRequired) {
             if (phonenumber === p_phonenumber) {
                 alert_float("danger", "Student contact number and parent's contact number cannot be the same.");
                 hide_loader();

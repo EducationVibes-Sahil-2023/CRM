@@ -99,7 +99,8 @@ $join[] = " LEFT JOIN " . db_prefix() . "leads_sources  ON ({$sTable}.source = "
 $join[] = " LEFT JOIN " . db_prefix() . "leads_type ON ({$sTable}.type = " . db_prefix() . "leads_type.id)";
 $join[] = " LEFT JOIN " . db_prefix() . "staff ON ({$sTable}.assigned = " . db_prefix() . "staff.staffid)";
 $join[] = " LEFT JOIN " . db_prefix() . "countries ON ({$sTable}.country = " . db_prefix() . "countries.country_id)";
-
+$join[] = " LEFT JOIN " . db_prefix() . "clients ON ({$sTable}.id = " . db_prefix() . "clients.leadid)";
+$join[] = " LEFT JOIN " . db_prefix() . "applicant_status ON (".db_prefix() . "clients.active = " . db_prefix() . "applicant_status.id)";
 
 
 

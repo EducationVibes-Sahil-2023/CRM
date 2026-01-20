@@ -62,8 +62,8 @@ class AdminController extends App_Controller
         }
 
         // Update staff last activity
-        $this->db->where('staffid', get_staff_user_id());
-        $this->db->update('staff', ['last_activity' => date('Y-m-d H:i:s')]);
+        // $this->db->where('staffid', get_staff_user_id());
+        // $this->db->update('staff', ['last_activity' => date('Y-m-d H:i:s')]);
 
         $this->load->model('staff_model');
 

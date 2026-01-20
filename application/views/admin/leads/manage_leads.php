@@ -990,6 +990,12 @@ $reference_name = $this->db
             <i class="fa fa-chevron-down"></i>
          </div>
       </li>
+      <?php if(is_admin())
+      {
+          ?>
+          <?php 
+      }
+      ?>
       <li class="">
          <div id="follow_date_right" data-from="followup_from_date" data-to="followup_to_date" class="date-filter form-control">
             <i class="fa fa-calendar"></i>

@@ -210,10 +210,10 @@ if (!function_exists('get_data_excel')) {
 
 
             if (!empty($spreadsheetId) && !empty($arrayData)) {
-                $CI->db->where('id', $currentId);
-                $CI->db->update(db_prefix() . "excel_data_update", [
-                    'lastSync' => date('Y-m-d H:i:s')
-                ]);
+                // $CI->db->where('id', $currentId);
+                // $CI->db->update(db_prefix() . "excel_data_update", [
+                //     'lastSync' => date('Y-m-d H:i:s')
+                // ]);
                 $CI->googlesheetapi->updateSheetData($spreadsheetId, $arrayData, $sheet_name);
             }
         }
@@ -344,10 +344,10 @@ function syncExcel($id = "")
 
 
         // Update last sync timestamp
-        $CI->db->where('id', $currentId);
-        $CI->db->update(db_prefix() . "excel_data_update", [
-            'lastSync' => date('Y-m-d H:i:s')
-        ]);
+        // $CI->db->where('id', $currentId);
+        // $CI->db->update(db_prefix() . "excel_data_update", [
+        //     'lastSync' => date('Y-m-d H:i:s')
+        // ]);
 
         // Output JSON
         $dataArray[] = array(
@@ -568,10 +568,10 @@ function syncExcel_new($id = "")
 
 
         // Update last sync timestamp
-        $CI->db->where('id', $currentId);
-        $CI->db->update(db_prefix() . "excel_data_update", [
-            'lastSync' => date('Y-m-d H:i:s')
-        ]);
+        // $CI->db->where('id', $currentId);
+        // $CI->db->update(db_prefix() . "excel_data_update", [
+        //     'lastSync' => date('Y-m-d H:i:s')
+        // ]);
 
         // Output JSON
         $dataArray[] = array(
@@ -1285,10 +1285,10 @@ LEFT JOIN (
         $arrayDataValues = array_map('array_values', $arrayData);
 
         // Update last sync
-        $CI->db->where('id', $currentId);
-        $CI->db->update(db_prefix() . "excel_data_update", [
-            'lastSync' => date('Y-m-d H:i:s')
-        ]);
+        // $CI->db->where('id', $currentId);
+        // $CI->db->update(db_prefix() . "excel_data_update", [
+        //     'lastSync' => date('Y-m-d H:i:s')
+        // ]);
 
         // Add to final array
         $dataArray[] = [
@@ -1463,10 +1463,10 @@ GROUP BY c.userid,td.id ";
 
         $arrayDataValues = array_map('array_values', $arrayData);
         // Update last sync
-        $CI->db->where('id', $currentId);
-        $CI->db->update(db_prefix() . "excel_data_update", [
-            'lastSync' => date('Y-m-d H:i:s')
-        ]);
+        // $CI->db->where('id', $currentId);
+        // $CI->db->update(db_prefix() . "excel_data_update", [
+        //     'lastSync' => date('Y-m-d H:i:s')
+        // ]);
         // Add to final array
         return  $dataArray[] = [
             "columnName"    => $columns,
@@ -1615,10 +1615,10 @@ GROUP BY c.userid,vd.id";
 
         $arrayDataValues = array_map('array_values', $arrayData);
         // Update last sync
-        $CI->db->where('id', $currentId);
-        $CI->db->update(db_prefix() . "excel_data_update", [
-            'lastSync' => date('Y-m-d H:i:s')
-        ]);
+        // $CI->db->where('id', $currentId);
+        // $CI->db->update(db_prefix() . "excel_data_update", [
+        //     'lastSync' => date('Y-m-d H:i:s')
+        // ]);
         // Add to final array
         return  $dataArray[] = [
             "columnName"    => $columns,
@@ -1808,10 +1808,10 @@ GROUP BY " . db_prefix() . "clients.userid";
         // $arrayDataValues = array_map('array_values', $arrayData);
 
         // Update last sync
-        $CI->db->where('id', $currentId);
-        $CI->db->update(db_prefix() . "excel_data_update", [
-            'lastSync' => date('Y-m-d H:i:s')
-        ]);
+        // $CI->db->where('id', $currentId);
+        // $CI->db->update(db_prefix() . "excel_data_update", [
+        //     'lastSync' => date('Y-m-d H:i:s')
+        // ]);
 
         // Add to final array
         $dataArray[] = [
@@ -1944,10 +1944,10 @@ function leads_excel_sync($id = "")
 
 
             // Update last sync
-            $CI->db->where('id', $currentId)
-                ->update(db_prefix() . "excel_data_update", [
-                    'lastSync' => date('Y-m-d H:i:s')
-                ]);
+            // $CI->db->where('id', $currentId)
+            //     ->update(db_prefix() . "excel_data_update", [
+            //         'lastSync' => date('Y-m-d H:i:s')
+            //     ]);
 
             // Append to output
             $dataArray[] = [
@@ -2497,10 +2497,10 @@ function payment_quotations($id = '')
 
         $arrayDataValues = array_map('array_values', $arrayData);
         // Update last sync
-        $CI->db->where('id', $currentId);
-        $CI->db->update(db_prefix() . "excel_data_update", [
-            'lastSync' => date('Y-m-d H:i:s')
-        ]);
+        // $CI->db->where('id', $currentId);
+        // $CI->db->update(db_prefix() . "excel_data_update", [
+        //     'lastSync' => date('Y-m-d H:i:s')
+        // ]);
         // Add to final array
         return  $dataArray[] = [
             "columnName"    => $columns,
@@ -2842,10 +2842,10 @@ function ex_visa_data()
 
 
         // Update last sync
-        $CI->db->where('id', $currentId)
-            ->update(db_prefix() . "excel_data_update", [
-                'lastSync' => date('Y-m-d H:i:s')
-            ]);
+        // $CI->db->where('id', $currentId)
+        //     ->update(db_prefix() . "excel_data_update", [
+        //         'lastSync' => date('Y-m-d H:i:s')
+        //     ]);
         // Add to final array
         
                 $arrayDataValues = [];
@@ -2943,7 +2943,7 @@ function ex_ticket_data()
      ON ts.id = vd.ticket_status
     
     
-    WHERE 1=1 {$condition_sql}
+    WHERE 1=1 and vd.status=1 {$condition_sql}
     GROUP BY vd.id
     ORDER BY vd.id DESC
 ";
@@ -2962,10 +2962,10 @@ function ex_ticket_data()
 
 
         // Update last sync
-        $CI->db->where('id', $currentId)
-            ->update(db_prefix() . "excel_data_update", [
-                'lastSync' => date('Y-m-d H:i:s')
-            ]);
+        // $CI->db->where('id', $currentId)
+        //     ->update(db_prefix() . "excel_data_update", [
+        //         'lastSync' => date('Y-m-d H:i:s')
+        //     ]);
         // Add to final array
         
                 $arrayDataValues = [];

@@ -13,17 +13,73 @@ class Forms extends ClientsController
         show_404();
     }
 
-// public function checkWhatsappMessage()
-// {
-//     // ini_set('display_errors', 1);
-//     // ini_set('display_startup_errors', 1);
-//     // error_reporting(E_ALL);
-//     echo welcome_whatsapp_channel_study_abroad('8700736847',1, 420270 , 8);
-//     // echo welcome_whatsapp_message_send('9871159668', 1,420270, WELCOME_WHATSAPP_MESSAGE);
-//     // echo "okkkkkkkk";
-//     die;
-// }
+public function checkWhatsappMessage()
+{
+   
+$this->db->where('status', 2);
+$this->db->where('cron_time <', date('Y-m-d H:i:s'));
+$query = $this->db->get(db_prefix().'whatsapp_messages_channel');
 
+$result = $query->result();
+
+foreach ($result as $row) {
+
+    try {
+
+        // Start transaction for safety
+        $this->db->trans_begin();
+
+        // Call WhatsApp function
+        $response = welcome_whatsapp_channel_study_abroad(
+            $row->phonenumber,
+            $row->responsible,
+            $row->lead_id,
+            $row->channel_type
+        );
+
+        // If function returns false or error
+        if ($response === false) {
+            throw new Exception('WhatsApp function failed for ID: ' . $row->id);
+        }
+
+        // Update status after successful send
+        $this->db->where('id', $row->id)
+                 ->update(db_prefix().'whatsapp_messages_channel', [
+                     'status'   => 1, // sent
+                     'updated_at'  => date('Y-m-d H:i:s')
+                 ]);
+
+        // Commit transaction
+        if ($this->db->trans_status() === FALSE) {
+            throw new Exception('DB transaction failed for ID: ' . $row->id);
+        }
+
+        $this->db->trans_commit();
+
+    } catch (Exception $e) {
+
+        // Rollback on error
+        $this->db->trans_rollback();
+
+        // Optional: mark as failed
+        $this->db->where('id', $row->id)
+                 ->update(db_prefix().'whatsapp_messages_channel', [
+                     'status' => 0 // failed
+                 ]);
+
+        // Log error (recommended)
+        log_message('error', $e->getMessage());
+    }
+}
+
+
+}
+
+
+ public function call_whatsaap_function()
+    {
+        
+    }
 
     public function wtl($key)
     {
@@ -963,8 +1019,24 @@ class Forms extends ClientsController
                         $success = true;
 
                         if (ENABLE_WHATSAPP_MESSAGE) {
-                            
-                            welcome_whatsapp_channel_study_abroad($post_data["phonenumber"], $form->responsible, $lead_id, 8);
+                           
+if(!empty($post_data["phonenumber"]) && !empty($lead_id)) {
+    $data = [
+        'phonenumber'   => $post_data["phonenumber"],
+        'responsible'   => $form->responsible,
+        'lead_id'       => $lead_id,
+        'channel_type'  => 8,
+        'status'        => 2,
+        'cron_time'     => date('Y-m-d H:i:s', strtotime('+10 minute')),
+        'created_at'    => date('Y-m-d H:i:s')
+    ];
+
+    $this->db->insert(db_prefix().'whatsapp_messages_channel', $data);
+
+}
+
+
+                            // welcome_whatsapp_channel_study_abroad($post_data["phonenumber"], $form->responsible, $lead_id, 8);
                             welcome_whatsapp_message_send($post_data["phonenumber"], $form->responsible, $lead_id, WELCOME_WHATSAPP_MESSAGE);
                         }
 

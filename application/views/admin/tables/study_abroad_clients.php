@@ -136,7 +136,7 @@ $aColumns[] = db_prefix() . "admission_preferences.primary_university as primary
 
 
 $join = [
-    'LEFT JOIN ' . db_prefix() . 'basic_details ON ' . db_prefix() . 'basic_details.userid=' . db_prefix() . 'clients.userid ',
+    ' JOIN ' . db_prefix() . 'basic_details ON ' . db_prefix() . 'basic_details.userid=' . db_prefix() . 'clients.userid ',
     'LEFT JOIN ' . db_prefix() . 'applicant_status ON ' . db_prefix() . 'applicant_status.id=' . db_prefix() . 'clients.active ',
     ' LEFT JOIN ' . db_prefix() . 'leads ON ' . db_prefix() . 'leads.id = ' . db_prefix() . 'clients.leadid 
 AND ' . db_prefix() . 'leads.type IN (' . implode(',', $this->ci->db->escape_str($this->ci->input->post('lead_type'))) . ')',
@@ -357,11 +357,23 @@ if ($this->ci->input->post('office_location_orignal_documents')) {
 
 
 if ($this->ci->input->post('lead_type')) {
-    array_push($where, 'AND( ' . db_prefix() . 'leads.type IN (' . implode(',', $this->ci->db->escape_str($this->ci->input->post('lead_type'))) . ')  or ' . db_prefix() . 'clients.client_type = 3)');
+    if($this->ci->input->post('type') == 1){
+    array_push($where, 'AND ( ' . db_prefix() . 'leads.type IN (' . implode(',', $this->ci->db->escape_str($this->ci->input->post('lead_type'))) . ')  or ' . db_prefix() . 'clients.client_type = 3)');
+    }
+    else
+    {
+        //  array_push($where, 'AND( ' . db_prefix() . 'leads.type IN (' . implode(',', $this->ci->db->escape_str($this->ci->input->post('lead_type'))) . ') )');
+    }
 }
 
 if (empty($this->ci->input->post('ev_partner_filter'))) {
-    array_push($where, ' OR ( ' . db_prefix() . 'leads.type IN (' . implode(',', $this->ci->db->escape_str($this->ci->input->post('lead_type'))) . ')  or ' . db_prefix() . 'clients.client_type = 3)');
+     if($this->ci->input->post('type') == 1){
+    array_push($where, ' AND ( ' . db_prefix() . 'leads.type IN (' . implode(',', $this->ci->db->escape_str($this->ci->input->post('lead_type'))) . ')  or ' . db_prefix() . 'clients.client_type = 3)');
+     }
+     else
+     {
+        //   array_push($where, ' OR ( ' . db_prefix() . 'leads.type IN (' . implode(',', $this->ci->db->escape_str($this->ci->input->post('lead_type'))) . '))');
+     }
 }
 
 if ($this->ci->input->post('apostille_status')) {
@@ -665,6 +677,7 @@ $additional_array = [
 
 
 if (is_admin() || is_postSale()) {
+    
 } else {
     if ($_POST["order"][0]["column"] == 0) {
         $_POST["order"][0]["column"] = "";
@@ -686,7 +699,7 @@ if (!empty($_POST["search"]["value"])) {
 // $additional_array =[];
 
 if ($this->ci->input->post('type') == 1) {
-    $groupBy = 'GROUP BY ' . db_prefix() . 'clients.userid';
+    $groupBy = 'GROUP BY ' . db_prefix() . 'clients.userid order by fid DESC';
 } else if ($this->ci->input->post('type') == 2) {
     $groupBy = 'GROUP BY ' . db_prefix() . 'client_university_shortlisting.id 
                      ORDER BY ' . db_prefix() . 'client_university_shortlisting.client_id DESC, 

@@ -90,7 +90,7 @@ if (!is_postSale() && !is_admin()) {
                                                 <i class="fa fa-info-circle" title="<?= htmlspecialchars($doc["info"]) ?>"></i>
                                             <?php endif; ?>
 
-                                            <?php if (empty($doc["bulk"]) && !empty($doc["id"])): ?>
+                                            <?php if ((empty($doc["bulk"]) && !empty($doc["id"])) || (has_permission('customers', '', 'appostile_edit') && !empty($doc["id"]))): ?>
                                                 <br>
                                                 <a href="#"
                                                     data-toggle="modal"
