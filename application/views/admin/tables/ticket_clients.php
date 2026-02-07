@@ -9,6 +9,7 @@ $aColumns = [
     db_prefix() . 'external_ticket_data.name as name',
     db_prefix() . 'external_ticket_vendor.name as ticket_vendor',
     db_prefix() . 'external_visa_type.name as ticket_type',
+     db_prefix() . 'ticket_status.name as ticket_name',
     db_prefix() . 'external_ticket_data.flight_date as flight_date',
     'pm.name as payment_mode',
     db_prefix() . 'external_ticket_data.payment_date as payment_date',
@@ -33,6 +34,8 @@ $join = [
         ON dm.id = ' . db_prefix() . 'external_ticket_data.deposite_mode',
     'LEFT JOIN ' . db_prefix() . 'external_visa_type 
         ON ' . db_prefix() . 'external_visa_type.id = ' . db_prefix() . 'external_ticket_data.ticket_type',
+         'LEFT JOIN ' . db_prefix() . 'ticket_status 
+        ON ' . db_prefix() . 'ticket_status.id = ' . db_prefix() . 'external_ticket_data.ticket_status',
     'LEFT JOIN ' . db_prefix() . 'external_ticket_vendor 
         ON ' . db_prefix() . 'external_ticket_vendor.id = ' . db_prefix() . 'external_ticket_data.ticket_vendor',
     'LEFT JOIN ' . db_prefix() . 'departure_location 
@@ -44,6 +47,30 @@ $join = [
 // Optional WHERE conditions
 $where = [];
 
+if (!empty($this->ci->input->post('ticket_status'))) {
+            $where[]  = " AND {$sTable}.ticket_status IN (" . implode(',', $this->ci->db->escape_str($this->ci->input->post('ticket_status'))) . ")";
+
+}
+
+if (!empty($this->ci->input->post('ticket_type'))) {
+            $where[]  = " AND {$sTable}.ticket_type IN (" . implode(',', $this->ci->db->escape_str($this->ci->input->post('ticket_type'))) . ")";
+
+}
+
+if (!empty($this->ci->input->post('ticket_vendor'))) {
+            $where[]  = " AND {$sTable}.ticket_vendor IN (" . implode(',', $this->ci->db->escape_str($this->ci->input->post('ticket_vendor'))) . ")";
+
+}
+
+if (!empty($this->ci->input->post('airline'))) {
+            $where[]  = " AND {$sTable}.airline IN (" . implode(',', $this->ci->db->escape_str($this->ci->input->post('airline'))) . ")";
+
+}
+
+if (!empty($this->ci->input->post('ticket_type'))) {
+            $where[]  = " AND {$sTable}.ticket_type IN (" . implode(',', $this->ci->db->escape_str($this->ci->input->post('ticket_type'))) . ")";
+
+}
 $where[] = " AND " . db_prefix() . 'external_ticket_data.status = 1 ';
 // Group by ID to prevent duplicates
 $group_by = 'GROUP BY ' . db_prefix() . 'external_ticket_data.id';
@@ -87,6 +114,7 @@ foreach ($rResult as $aRow) {
 
     $row[] = $aRow['ticket_vendor'];
     $row[] = $aRow['ticket_type'];
+     $row[] = $aRow['ticket_name'];
     $row[] = _d($aRow['flight_date']); // Format date
     // $row[] = $aRow['ticket_status'];       // Yes/No
     $row[] = $aRow['payment_mode'];

@@ -1,6 +1,11 @@
 <?php defined('BASEPATH') or exit('No direct script access allowed'); ?>
 <?php init_head(); ?>
 <?php
+
+$visa_vendor = getDataInformation('external_visa_vendor', ['id', 'name'], ['status' => 1]);
+$visa_type   = getDataInformation('external_visa_type', ['id', 'name'], ['status' => 1]);
+$visa_status   = getDataInformation('external_visa_status', ['id', 'name'], ['status' => 1]);
+
 $table_data = array(
     array('name' => 'Name'),
     array('name' => 'Visa Vendor'),
@@ -39,10 +44,48 @@ $table_data = array(
                             </div>
                         </div>
                         <hr class="hr-panel-heading" />
-
+ <div class="row" id="leads-table ">
+                          <div id="filterArea" class="col-md-12 hidden-xs">
+                              <div class="row">
+                                  <div class="col-md-2 leads-filter-column">
+                         <?php
+                                    echo '<div id="leads-filter-source">';
+                                    echo render_select('visa_status[]', $visa_status, array('id', 'name'), '', '', array('data-width' => '100%', 'data-none-selected-text' => 'Visa status', 'multiple' => true, 'data-actions-box' => true), array(), 'no-mbot', '', false, "visa_status");
+                                    echo '</div>';
+                                    ?>
+                                    </div>
+                         
+                                    
+                                     <div class="col-md-2 leads-filter-column">
+                         <?php
+                                    echo '<div id="leads-filter-source">';
+                                    echo render_select('visa_vendor[]', $visa_vendor, array('id', 'name'), '', '', array('data-width' => '100%', 'data-none-selected-text' => 'Visa vendor', 'multiple' => true, 'data-actions-box' => true), array(), 'no-mbot', '', false, "visa_vendor");
+                                    echo '</div>';
+                                    ?>
+                                    </div>
+                                    
+                                    
+                                    <div class="col-md-2 leads-filter-column">
+                         <?php
+                                    echo '<div id="leads-filter-source">';
+                                    echo render_select('visa_type[]', $visa_type, array('id', 'name'), '', '', array('data-width' => '100%', 'data-none-selected-text' => 'Visa type', 'multiple' => true, 'data-actions-box' => true), array(), 'no-mbot', '', false, "visa_type");
+                                    echo '</div>';
+                                    ?>
+                                    </div>
+                                    
+                                    <div class="col-md-2 text-center leads-filter-column">
+                                     <div class="form-group">
+                                       <button type="button" class="btn btn-primary" id="apply_filter">Apply Filter</button>
+                                       <button class="btn btn-primary" onclick="window. location. reload();">Reset</button>
+                                    </div>
+                                 </div>
+                                    </div>
+                                    </div>
+                                    </div>
+                                     <hr class="hr-panel-heading" />
                         <div class="clearfix mtop20"></div>
                         <?php
-                        render_datatable($table_data, 'clients', [], [
+                        render_datatable($table_data, 'external-visa', [], [
                             'data-last-order-identifier' => 'customers',
                             'data-default-order'         => get_table_last_order('customers'),
                         ]);
@@ -62,23 +105,31 @@ init_tail();
     var tAPI = "";
 
     $(function() {
-        var CustomersServerParams = {};
-        $.each($('._hidden_inputs._filters input'), function() {
-            CustomersServerParams[$(this).attr('name')] = '[name="' + $(this).attr('name') + '"]';
-        });
-        CustomersServerParams['exclude_inactive'] = '[name="exclude_inactive"]:checked';
-        CustomersServerParams['assigned'] = "[name='view_assigned[]']";
-        CustomersServerParams['source'] = "[name='view_source[]']";
-        CustomersServerParams['lead_type'] = "[name='lead_type[]']";
-        CustomersServerParams['from_date'] = "[name='from_date']";
-        CustomersServerParams['to_date'] = "[name='to_date']";
-        CustomersServerParams['application_stage'] = "[name='view_application_stage']";
-        CustomersServerParams['application_sub_stage'] = "[name='view_application_sub_stage']";
-        CustomersServerParams['vendor_type'] = "[name='vendor_type[]']";
-        tAPI = initDataTable('.table-clients', admin_url + 'clients/visa_details_table', [0], [0], CustomersServerParams);
-        $('input[name="exclude_inactive"]').on('change', function() {
-            tAPI.ajax.reload();
-        });
+         var CustomersServerParams = {};
+
+    $('._hidden_inputs._filters input').each(function () {
+        CustomersServerParams[$(this).attr('name')] =
+            '[name="' + $(this).attr('name') + '"]';
+    });
+
+    CustomersServerParams['visa_status'] = "[name='visa_status[]']";
+    CustomersServerParams['visa_vendor'] = "[name='visa_vendor[]']";
+    CustomersServerParams['visa_type'] = "[name='visa_type[]']";
+
+    tAPI = initDataTable(
+        '.table-external-visa',
+        admin_url + 'clients/visa_details_table',
+        [0],
+        [0],
+        CustomersServerParams
+    );
+
+    $('#apply_filter').on('click', function () {
+        if (tAPI) {
+            tAPI.ajax.reload(null, false); // false = keep pagination
+        }
+    });
+     
     });
 
     function deleteVisa(id) {

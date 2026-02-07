@@ -44,6 +44,21 @@ $join = [
 // Optional WHERE conditions
 $where = [];
 
+if (!empty($this->ci->input->post('visa_type'))) {
+            $where[]  = " AND {$sTable}.visa_type IN (" . implode(',', $this->ci->db->escape_str($this->ci->input->post('visa_type'))) . ")";
+
+}
+
+if (!empty($this->ci->input->post('visa_vendor'))) {
+            $where[]  = " AND {$sTable}.visa_vendor IN (" . implode(',', $this->ci->db->escape_str($this->ci->input->post('visa_vendor'))) . ")";
+
+}
+
+if (!empty($this->ci->input->post('visa_status'))) {
+            $where[]  = " AND {$sTable}.visa_status IN (" . implode(',', $this->ci->db->escape_str($this->ci->input->post('visa_status'))) . ")";
+
+}
+
 $where[] = " AND " . db_prefix() . 'external_visa_data.status = 1 ';
 // Group by ID to prevent duplicates
 $group_by = 'GROUP BY ' . db_prefix() . 'external_visa_data.id';

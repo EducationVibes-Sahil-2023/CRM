@@ -505,7 +505,7 @@ if ($this->ci->input->post('tf_status')) {
     if ($tf_status == "Yes") {
         $where[] = " AND " . db_prefix() . "client_university_shortlisting.fees_deposite_slip != '' ";
     } else {
-        $where[] = " AND " . db_prefix() . "client_university_shortlisting.fees_deposite_slip IS NULL or " . db_prefix() . "client_university_shortlisting.fees_deposite_slip='' ";
+        $where[] = " AND (" . db_prefix() . "client_university_shortlisting.fees_deposite_slip IS NULL or " . db_prefix() . "client_university_shortlisting.fees_deposite_slip='') ";
     }
 }
 
