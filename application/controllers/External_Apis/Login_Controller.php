@@ -723,4 +723,124 @@ error_reporting(E_ALL);
     paymentDuesHostel();
 }
 
+
+   public function update_quotations()
+{
+   $basePath = './uploads/clients_documents/';
+
+    // 1️⃣ Get all users with userid > 1783
+    $query = $this->db
+                  ->select('userid')
+                  ->from('tblclients_new')
+                  ->where('userid >', 1783)
+                  ->get();
+
+    $users = $query->result_array();
+
+    foreach ($users as $user) {
+        $userid = $user['userid'];
+        $userFolder = rtrim($basePath, '/') . '/' . intval($userid) . '/';
+
+        if (!is_dir($userFolder)) {
+            echo "User {$userid}: Folder not found.<br>";
+            continue;
+        }
+
+        // Initialize latest file tracking
+        $latestFiles = [
+            'quotation' => null,
+            'registration_slip_invoice' => null,
+            'registration_slip' => null,
+            'fees_structure' => null,
+            'refund_payment_proof' => null
+        ];
+        $latestTimes = array_fill_keys(array_keys($latestFiles), 0);
+
+        $files = scandir($userFolder);
+        foreach ($files as $file) {
+            if ($file === '.' || $file === '..') continue;
+
+            $filePath = $userFolder . $file; // full path with ./ at start
+            $mtime = filemtime($filePath);
+
+            // Convert path to start with 'uploads/' (remove leading ./)
+            $dbPath = preg_replace('#^\./#', '', $filePath);
+
+            // 1️⃣ quotation: ends with quotation.<ext>
+            if (preg_match('/quotation\.[a-z0-9]+$/i', $file)) {
+                if ($mtime > $latestTimes['quotation']) {
+                    $latestTimes['quotation'] = $mtime;
+                    $latestFiles['quotation'] = $dbPath; // store path starting with uploads/
+                }
+            }
+
+// 2️⃣ registration_slip_invoice: starts with "Registration_Slip_" (case-sensitive)
+if (strpos($file, 'Registration_Slip_') === 0) {
+    if ($mtime > $latestTimes['registration_slip_invoice']) {
+        $latestTimes['registration_slip_invoice'] = $mtime;
+        $latestFiles['registration_slip_invoice'] = $dbPath;
+    }
+}
+
+// 3️⃣ registration_slip: ends with "registration_slip" (case-sensitive)
+$searchSuffix = 'registration_slip'; // without extension
+
+// Check if filename (without extension) ends with 'registration_slip'
+$filenameWithoutExt = pathinfo($file, PATHINFO_FILENAME);
+
+if (substr($filenameWithoutExt, -strlen($searchSuffix)) === $searchSuffix) {
+    if ($mtime > $latestTimes['registration_slip']) {
+        $latestTimes['registration_slip'] = $mtime;
+        $latestFiles['registration_slip'] = $dbPath; // full path including extension
+    }
+}
+
+
+
+            // 3️⃣ fees_structure: ends with fees_structure.<ext>
+            if (preg_match('/fees_structure\.[a-z0-9]+$/i', $file)) {
+                if ($mtime > $latestTimes['fees_structure']) {
+                    $latestTimes['fees_structure'] = $mtime;
+                    $latestFiles['fees_structure'] = $dbPath;
+                }
+            }
+
+            // 4️⃣ refund_payment_proof: ends with refund_payment_proof.<ext>
+            if (preg_match('/refund_payment_proof\.[a-z0-9]+$/i', $file)) {
+                if ($mtime > $latestTimes['refund_payment_proof']) {
+                    $latestTimes['refund_payment_proof'] = $mtime;
+                    $latestFiles['refund_payment_proof'] = $dbPath;
+                }
+            }
+        }
+
+        // Only prepare columns that have files
+        $updateData = array_filter($latestFiles, fn($v) => !empty($v));
+
+        if (!empty($updateData)) {
+            echo "<b>User {$userid} - Preview Update:</b><br>";
+            foreach ($updateData as $column => $path) {
+                echo "&nbsp;&nbsp;Column <b>{$column}</b> would be updated with path: <b>{$path}</b><br>";
+            }
+
+            // Optional: show SQL query preview
+            $setParts = [];
+            foreach ($updateData as $col => $val) {
+                $setParts[] = "`{$col}` = '" . addslashes($val) . "'";
+            }
+            $this->db->where('userid', $userid);
+$this->db->update('tblclients_new', $updateData);
+            $sqlPreview = "UPDATE `tblclients_new` SET " . implode(', ', $setParts) . " WHERE userid = {$userid};";
+            echo "&nbsp;&nbsp;<i>SQL Preview:</i> {$sqlPreview}<br><br>";
+        } else {
+            echo "User {$userid}: No files found to update.<br><br>";
+        }
+    }
+
+    echo "✅ Preview completed for all users.<br>";
+}
+
+
+
+
 }

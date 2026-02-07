@@ -1464,7 +1464,7 @@ if (empty($staff_list[get_staff_user_id()]["post_sales"]) && !is_admin()) {
 
                                         ?>
                                                 <div class="col-md-12 visa_div_application <?= $visa['status'] == 4 ? 'visa-rejected-div' : '' ?>">
-                                                    <?php if ($key > 0 || ($key > 0 && is_admin())) { ?>
+                                                    <?php if ( ($key > 0 && is_admin())) { ?>
                                                         <div class="text-right">
                                                             <i class='fa fa-trash btn btn-danger' onclick="remove_visa_div(this,<?= $visa_id ?>)"></i>
                                                         </div>

@@ -1196,20 +1196,43 @@ function syncExcel_neww($id = "")
                 LEFT JOIN " . db_prefix() . "passport_stages ps ON ps.id = pd.passport_status
                 LEFT JOIN " . db_prefix() . "academic_details ad ON ad.userid = c.userid
 LEFT JOIN (
-    SELECT vd1.*, vv.name AS vendor_name, pm.name AS payment_mode_name
-    FROM " . db_prefix() . "visa_details vd1
+    SELECT 
+        vd_latest.*,
+        vd_sum.total_visa_cost,
+        vv.name AS vendor_name,
+        pm.name AS payment_mode_name
+    FROM " . db_prefix() . "visa_details vd_latest
+
+    /* Total visa cost per user */
     INNER JOIN (
-        SELECT userid, MAX(created_at) AS max_date
+        SELECT 
+            userid,
+            SUM(cost) AS total_visa_cost
         FROM " . db_prefix() . "visa_details
         GROUP BY userid
-    ) vd2 
-        ON vd1.userid = vd2.userid 
-       AND vd1.created_at = vd2.max_date
+    ) vd_sum 
+        ON vd_latest.userid = vd_sum.userid
+
+    /* Latest visa record per user */
+    INNER JOIN (
+        SELECT 
+            userid,
+            MAX(id) AS latest_id
+        FROM " . db_prefix() . "visa_details
+        GROUP BY userid
+    ) vd_max 
+        ON vd_latest.userid = vd_max.userid
+       AND vd_latest.id = vd_max.latest_id
+
+    /* Extra joins */
     LEFT JOIN " . db_prefix() . "vendor_list vv 
-        ON vv.id = vd1.vendor_id
+        ON vv.id = vd_latest.vendor_id
+
     LEFT JOIN " . db_prefix() . "payment_mode pm 
-        ON pm.id = vd1.payment_mode
-) vd ON vd.userid = c.userid
+        ON pm.id = vd_latest.payment_mode
+) vd 
+ON vd.userid = c.userid
+
 
 
 
@@ -1253,7 +1276,7 @@ LEFT JOIN (
         // if (!empty($orignal_documents_status) && (int) $orignal_documents_status === 1) {
         //  echo $sql; die;
         //         }
-        // if($currentId == 5)
+        // if($currentId == 4)
         // {
         //  echo $sql; die;
         // }
