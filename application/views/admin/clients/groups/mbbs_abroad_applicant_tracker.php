@@ -1461,10 +1461,12 @@ if (empty($staff_list[get_staff_user_id()]["post_sales"]) && !is_admin()) {
                                             foreach ($visa_details as $key => $visa) {
                                                 $visa_id = $visa["id"];
                                                 $file_url = !empty($visa["file"]) ? $visa["file"] : '';
+                                                $file_url_application_form = !empty($visa["application_form"]) ? $visa["application_form"] : '';
+                                                $file_url_tracking_receipt = !empty($visa["tracking_receipt"]) ? $visa["tracking_receipt"] : '';
 
                                         ?>
                                                 <div class="col-md-12 visa_div_application <?= $visa['status'] == 4 ? 'visa-rejected-div' : '' ?>">
-                                                    <?php if ( ($key > 0 && is_admin())) { ?>
+                                                    <?php if (($key > 0 && is_admin())) { ?>
                                                         <div class="text-right">
                                                             <i class='fa fa-trash btn btn-danger' onclick="remove_visa_div(this,<?= $visa_id ?>)"></i>
                                                         </div>
@@ -1552,6 +1554,53 @@ if (empty($staff_list[get_staff_user_id()]["post_sales"]) && !is_admin()) {
                                                             ], [], 'no-mbot', '', false, 'visa_payment_mode'); ?>
                                                         </div>
                                                     </div>
+                                                    <div class="d-flex visa-apply-details">
+
+                                                        <div class="col-md-4">
+                                                            <label>Apply Date <small class='text-danger'>*</small></label>
+                                                            <?php echo render_input('visa_apply_date_' . $visa_id, '',  $visa["apply_date"], 'date', [
+                                                                'required-check' => 'required-check',
+                                                                'required' => 'required'
+                                                            ]); ?>
+                                                        </div>
+
+                                                        <?php if (strtolower($admissionpreferences->primary_country) == "georgia") { ?>
+                                                            <div class="col-md-4">
+                                                                <label>Visa Application Form <small class='text-danger'>*</small></label>
+                                                                <?php
+                                                                $re = !empty($file_url_application_form) ? 'false' : 'true';
+                                                                echo render_input('visa_application_form_' . $visa_id, '', '', 'file', ["data-file" => $file_url_application_form, "required" => $re]); ?>
+                                                                <?php
+                                                                if (!empty($file_url_application_form)) { ?>
+                                                                    <div class="margin-top">
+                                                                        <i class="fa fa-eye btn btn-xs btn-primary" onclick="show_media_files('<?= base_url($file_url_application_form) ?>');"></i>&nbsp;
+                                                                        <i class="fa fa-download btn btn-xs btn-primary" onclick="download_media_files('<?= base_url($file_url_application_form) ?>', '_blank');"></i>
+                                                                        <?php if ($delete_document_status) { ?>
+                                                                            <button type="button" class="btn-xs btn btn-danger" onclick="delete_documents(6,<?= $track['id'] ?>,<?= $visa['id'] ?>,'application_form')"><i class="fa fa-trash"></i></button>
+                                                                        <?php } ?>
+                                                                    </div>
+                                                                <?php } ?>
+                                                            </div>
+
+                                                            <div class="col-md-4">
+                                                                <label>Visa Tracking Receipt <small class='text-danger'>*</small></label>
+                                                                <?php
+                                                                $re = !empty($file_url_tracking_receipt) ? 'false' : 'true';
+                                                                echo render_input('visa_tracking_receipt_' . $visa_id, '', '', 'file', ["data-file" => $file_url_tracking_receipt, "required" => $re]); ?>
+                                                                <?php
+                                                                if (!empty($file_url_tracking_receipt)) { ?>
+                                                                    <div class="margin-top">
+                                                                        <i class="fa fa-eye btn btn-xs btn-primary" onclick="show_media_files('<?= base_url($file_url_tracking_receipt) ?>');"></i>&nbsp;
+                                                                        <i class="fa fa-download btn btn-xs btn-primary" onclick="download_media_files('<?= base_url($file_url_tracking_receipt) ?>', '_blank');"></i>
+                                                                        <?php if ($delete_document_status) { ?>
+                                                                            <button type="button" class="btn-xs btn btn-danger" onclick="delete_documents(6,<?= $track['id'] ?>,<?= $visa['id'] ?>,'tracking_receipt')"><i class="fa fa-trash"></i></button>
+                                                                        <?php } ?>
+                                                                    </div>
+                                                                <?php } ?>
+                                                            </div>
+
+                                                        <?php } ?>
+                                                    </div>
                                                     <div class="d-flex visa-receving-details">
                                                         <div class="col-md-4">
                                                             <label>Visa Received <small class='text-danger'>*</small></label>
@@ -1571,7 +1620,7 @@ if (empty($staff_list[get_staff_user_id()]["post_sales"]) && !is_admin()) {
                                                                     <i class="fa fa-eye btn btn-xs btn-primary" onclick="show_media_files('<?= base_url($file_url) ?>');"></i>&nbsp;
                                                                     <i class="fa fa-download btn btn-xs btn-primary" onclick="download_media_files('<?= base_url($file_url) ?>', '_blank');"></i>
                                                                     <?php if ($delete_document_status) { ?>
-                                                                        <button class="btn-xs btn btn-danger" onclick="delete_documents(6,<?= $track['id'] ?>,<?= $visa['id'] ?>)"><i class="fa fa-trash"></i></button>
+                                                                        <button type="button" class="btn-xs btn btn-danger" onclick="delete_documents(6,<?= $track['id'] ?>,<?= $visa['id'] ?>)"><i class="fa fa-trash"></i></button>
                                                                     <?php } ?>
                                                                 </div>
                                                             <?php } ?>

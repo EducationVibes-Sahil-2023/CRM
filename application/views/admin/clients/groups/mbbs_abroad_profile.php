@@ -28,6 +28,46 @@ array_push($documents_type, array("id" => "University_Payment_Slip", "disabled" 
 array_push($documents_type, array("id" => "invitation", "disabled" => 1, "disabledd" => 1, "stage" => "Visa", "name" => "Invitation Letter", "file_type" => ".pdf,image/*"));
 array_push($documents_type, array("id" => "visa", "disabled" => 1, "disabledd" => 1, "stage" => "", "name" => "Visa", "file_type" => ".pdf,image/*"));
 
+
+$visasectionDetails = $this->db
+	->select("file,tracking_receipt,application_form")
+	->from(db_prefix() . "visa_details")
+	->where(array("userid" => $client_id))
+	->order_by("id", "ASC")
+	->get()
+	->result_array();
+
+if (!empty($visasectionDetails)) {
+
+	foreach ($visasectionDetails as $k => $visaInfo) {
+
+		foreach ($visaInfo as $key => $value) {
+
+			if (!empty($value)) {   // skip empty columns
+
+				// Custom display name
+				if ($key == "file") {
+					$display_name = "Visa Stamp";
+				} else {
+					$display_name = ucfirst(str_replace("_", " ", $key));
+				}
+
+				$display_name .= " " . ($k + 1);
+
+				$documents_type[] = array(
+					"id"        => "Visa Section",
+					"disabled"  => 1,
+					"disabledd" => 1,
+					"stage"     => "Visa",
+					"name"      => $display_name,
+					"file_type" => ".pdf,image/*"
+				);
+			}
+		}
+	}
+}
+
+
 $staff_id = array_column($customer_admins, "staff_id");
 $final_sumbit = $client->submission_status;
 $read_only = "readonly";
@@ -292,10 +332,10 @@ if ($lead_type_status == 2) {
                     <li role="presentation" section="Basic Information" class="active">
                         <a href="#student_details" class="active" aria-controls="student_details" role="tab" data-toggle="tab">Student Details</a>
                     </li>
-                    <li role="presentation" section="Passport Information" >
+                    <li role="presentation" section="Passport Information">
                         <a href="#passport" aria-controls="passport" role="tab" data-toggle="tab">Passport</a>
                     </li>
-                    <li role="presentation" section="Admission Preferences" >
+                    <li role="presentation" section="Admission Preferences">
                         <a href="#admission_preferences" aria-controls="admission_preferences" role="tab" data-toggle="tab">Admission Preferences</a>
                     </li>
                     <li role="presentation" section="Academic Details">
@@ -984,7 +1024,7 @@ if ($lead_type_status == 2) {
 
                                     <div class="row qualification-div" id="twelthAcademicDetails" style="display:<?= ($academicdetails->after_x_status == '12th' || $academicdetails->after_x_status == 'Both' || empty($academicdetails->after_x_status)) ? 'block' : 'none' ?>">
 
-                                        <div class="col-lg-4 border2 border1">
+                                        <div class="col-lg-3 border2 border1">
                                             <div class="c1">
                                                 <p>Board / University <?= $text_danger_mbbs ?></p>
                                             </div>
@@ -996,6 +1036,22 @@ if ($lead_type_status == 2) {
                                             </div>
                                         </div>
                                         <div class="col-lg-3 border2 border1">
+                                            <div class="c1">
+                                                <p>School Name</p>
+                                            </div>
+                                            <div class="c2">
+                                                <input class="form-control" type="text" placeholder="School Name" name="school_name" id="school_name" value="<?= $academicdetails->school_name; ?>">
+                                            </div>
+                                        </div>
+                                        <div class="col-lg-3 border2 border1">
+                                            <div class="c1">
+                                                <p>School Adress</p>
+                                            </div>
+                                            <div class="c2">
+                                                <textarea class="form-control" placeholder="School Address" name="school_address" id="school_address"><?= $academicdetails->school_address; ?></textarea>
+                                            </div>
+                                        </div>
+                                        <div class="col-lg-2 border2 border1">
                                             <div class="c1">
                                                 <p>Year of Passing <?= $text_danger_mbbs ?></p>
                                             </div>
@@ -1020,7 +1076,7 @@ if ($lead_type_status == 2) {
                                             </div>
                                         </div>
                                         <div class="twelth_result_status_div" style="display:<?= ($academicdetails->twelth_result_status == 'Awaited') ? 'none' : '' ?>">
-                                            <div class="col-lg-3 border2 border1 " id="twelth_marking_scheme_div">
+                                            <div class="col-lg-2 border2 border1 " id="twelth_marking_scheme_div">
                                                 <div class="c1">
                                                     <p>Marking Scheme <?= $text_danger_mbbs ?></p>
                                                 </div>
@@ -1057,7 +1113,7 @@ if ($lead_type_status == 2) {
                                                     <input class="form-control" <?= $text_danger_mbbs_required ?> type="float" placeholder="Enter Your 12th Percentage" name="twelth_percentage" id="twelth_percentage" value="<?= $academicdetails->twelth_percentage; ?>">
                                                 </div>
                                             </div>
-                                            <div class="col-lg-2 border2 border1">
+                                            <div class="col-lg-1 border2 border1">
                                                 <div class="c1">
                                                     <p>PCB <?= $text_danger_mbbs ?></p>
                                                 </div>
@@ -1065,7 +1121,7 @@ if ($lead_type_status == 2) {
                                                     <input class="form-control" <?= $text_danger_mbbs_required ?> type="float" placeholder="PCB Marks" name="pcb" id="pcb" value="<?= $academicdetails->pcb; ?>">
                                                 </div>
                                             </div>
-                                            <div class="col-lg-2 border2 border1">
+                                            <div class="col-lg-1 border2 border1">
                                                 <div class="c1">
                                                     <p>Online Result</p>
                                                 </div>
@@ -1093,7 +1149,7 @@ if ($lead_type_status == 2) {
                                                 $file_url = !empty($applicant_documents[$doc_id]["document_file"]) ? $applicant_documents[$doc_id]["document_file"] : '';
                                                 $required_attr = !empty($file_url) ? "" : $required_attr;
                                             ?>
-                                                <div class="col-lg-4 border2 media-files  ">
+                                                <div class="col-lg-3 border2 media-files  ">
                                                     <div class="form-group">
                                                         <label for="exampleInputMobileNumber"><?= $s_stage["name"] ?> <?= $mandatry_text  . "  (" . $s_stage["file_type"] . ")" ?> <?php if (!empty($info)) : ?>
                                                                 &nbsp;<i class="fa fa-info-circle" title="<?= htmlspecialchars($info, ENT_QUOTES, 'UTF-8') ?>"></i>
@@ -1128,6 +1184,29 @@ if ($lead_type_status == 2) {
                                     <h4>NEET Exam</h4>
                                     <hr>
 
+                                    <div class="row">
+                                        <h4>NEET Credentials</h4>
+                                        <div class="col-lg-3 border2 border1">
+                                            <div class="c1">
+                                                <p>Id</p>
+                                            </div>
+                                            <div class="c2">
+                                                <input class="form-control" type="text" class="form-group"
+                                                    placeholder="Enter Neet User ID" name="neet_user_id" value="<?= $academicdetails->neet_user_id; ?>">
+                                            </div>
+                                        </div>
+
+                                        <div class="col-lg-3 border2 border1" >
+                                            <div class="c1">
+                                                <p>Password</p>
+                                            </div>
+                                            <div class="c2">
+                                                <input class="form-control" type="text" class="form-group"
+                                                    placeholder="Enter Neet User Password" name="neet_user_password" value="<?= $academicdetails->neet_user_password; ?>">
+                                            </div>
+                                        </div>
+                                        
+                                    </div>
                                     <div class="col-lg-2 border2 border1">
                                         <div class="c1">
                                             <p>Result Status <?= $text_danger_mbbs ?></p>
@@ -1531,8 +1610,8 @@ if ($lead_type_status == 2) {
                                             ?>
                                         </div>
                                     </div>
-                                    
-                                     <div class="col-lg-2 hide-show-regi"
+
+                                    <div class="col-lg-2 hide-show-regi"
                                         style="display: <?= !empty($client->registration_slip_cash_status) ? 'block' : 'none' ?>;">
                                         <div class="form-group">
                                             <label for="exampleInputMiddleName">Location<small
@@ -1859,8 +1938,6 @@ if ($lead_type_status == 2) {
     </div>
 </div>
 <script>
-
-
     var activity_url = "<?= base_url() ?>admin/clients/activity_logs/<?= $client_id ?>";
 
     function handleActivityChange() {
