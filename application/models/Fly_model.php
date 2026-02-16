@@ -112,6 +112,10 @@ class Fly_model extends App_Model
                 ->row();
 
 
+if(is_admin())
+{
+    // return ["status" => true, "message" => "Ticket creation check passed."];
+}
 
             // Deny if another active ticket exists (status == 3), and we're not updating the same one
             if (
