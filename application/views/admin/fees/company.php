@@ -773,7 +773,7 @@ $processing_fee = $sectionDetails["processing_fee"];
                             <div class="row">
                                 <div class="col-md-4">
                                     <label><i class="fas fa-phone"></i> Contact Number</label>
-                                    <input type="text" class="form-control" value="" placeholder="Enter contact number" id="contact_number" name="contact_number">
+                                    <input type="text" class="form-control" value="+91 7217219100" placeholder="Enter contact number" id="contact_number" name="contact_number">
                                 </div>
                                 <div class="col-md-4">
                                     <label><i class="fas fa-envelope"></i> Email</label>
@@ -1104,7 +1104,7 @@ $processing_fee = $sectionDetails["processing_fee"];
     function removeOneTimeChargeRow() {
         var tableBody = document.getElementById('oneTimeChargesBody');
         // if (tableBody.rows.length > 1) {
-            tableBody.deleteRow(tableBody.rows.length - 1);
+        tableBody.deleteRow(tableBody.rows.length - 1);
         // }
     }
 
@@ -1122,7 +1122,7 @@ $processing_fee = $sectionDetails["processing_fee"];
     function removeServiceRow() {
         var tableBody = document.getElementById('servicesBody');
         // if (tableBody.rows.length > 1) {
-            tableBody.deleteRow(tableBody.rows.length - 1);
+        tableBody.deleteRow(tableBody.rows.length - 1);
         // }
     }
 

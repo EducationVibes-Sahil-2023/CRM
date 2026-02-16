@@ -391,6 +391,10 @@
         /* Right Side Phone Box */
         .footer-right {
             position: relative;
+            justify-content: center;
+            /* horizontal center */
+            align-items: center;
+            /* vertical center */
         }
 
         .phone-box {
@@ -405,6 +409,12 @@
             /* display: flex; */
             align-items: center;
             gap: 15px;
+            display: flex;
+            align-items: center;
+            padding-left: 50px;
+            /* align icon & text vertically */
+
+
         }
 
         .phone-box i {
@@ -727,7 +737,7 @@
 
                 <div class="footer-right">
                     <div class="phone-box">
-                        <i class="fa fa-phone"></i>
+                        <img src="<?= base_url('/assets/pdf_layout/call-icon.png') ?>" style="width:32px; height:32px;">
                         <span><?= !empty($contactInfo["phone"]) ? $contactInfo["phone"] : '+91 7217219100' ?></span>
                     </div>
                 </div>
@@ -749,6 +759,9 @@
 
 
     async function generatePDFAndUpload() {
+        const csrfName = '<?= $this->security->get_csrf_token_name(); ?>';
+        let csrfHash = '<?= $this->security->get_csrf_hash(); ?>';
+
         const {
             jsPDF
         } = window.jspdf;
@@ -802,7 +815,7 @@
         formData.append("pdf_file", pdfBlob, filename);
 
         // Correct CSRF token append
-        formData.append("csrf_token_name", "77a5427eaef71e10ee2dbb92c5cc00f1");
+        formData.append(csrfName, csrfHash);
         formData.append("country_name", "<?= $university_data['country_name'] ?>");
         formData.append("university_name", "<?= $university_data['university_name'] ?>");
         formData.append("segment_type", "<?= $university_data['segment_type'] ?>");
