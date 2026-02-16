@@ -26,6 +26,36 @@ function app_init_admin_sidebar_menu_items()
         //         ]);
         // }
 
+        if (has_permission('fees_structure', '', 'view')) {
+
+                $CI->app_menu->add_sidebar_menu_item('fees_structure', [
+                        'collapse' => true,
+                        'name'     => "Fees Structure",
+                        'position' => 5,
+                        'icon'     => 'fa fa-user-o',
+                ]);
+
+
+                // Pending Customers (MBBS Abroad)
+                $CI->app_menu->add_sidebar_children_item('fees_structure', [
+                        'slug'     => 'Fees/company',
+                        'icon'     => 'fa fa-user-times',
+                        'name'     => "EV Fees Structures",
+                        'href'     => admin_url('Fees/company'),
+                        'position' => 1,
+                ]);
+
+
+                $CI->app_menu->add_sidebar_children_item('fees_structure', [
+                        'slug'     => 'Fees/partner',
+                        'icon'     => 'fa fa-user-times',
+                        'name'     => "Partner Fees Structures",
+                        'href'     => admin_url('Fees/partner'),
+                        'position' => 1,
+                ]);
+        }
+
+
         if (
                 has_permission('customers', '', 'view')
                 || (
@@ -145,7 +175,7 @@ function app_init_admin_sidebar_menu_items()
                 ]);
         }
 
-       
+
 
         // Fly Batch
         if (has_permission('fly_batch', '', 'view_own') || has_permission('fly_batch', '', 'view')) {
@@ -171,8 +201,8 @@ function app_init_admin_sidebar_menu_items()
 
 
 
-    if (has_permission('fly_batch', '', 'departure_create')) {
-                 $CI->app_menu->add_sidebar_children_item('batch_create', [
+        if (has_permission('fly_batch', '', 'departure_create')) {
+                $CI->app_menu->add_sidebar_children_item('batch_create', [
                         'href'     => admin_url('fly_batch/departure'),
                         'slug'     => 'fly_departure',
                         'name'     => "Fly Departure",

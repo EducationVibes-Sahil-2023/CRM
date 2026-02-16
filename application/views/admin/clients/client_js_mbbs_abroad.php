@@ -1467,7 +1467,7 @@
         }
     }
 
-    function delete_documents(type, tracker_id, id) {
+    function delete_documents(type, tracker_id, id,docType="") {
         // Basic field validation before confirmation
         if (!client_id || !tracker_id || !type || !id) {
             alert_float("danger", "Missing required information. Please refresh the page and try again.");
@@ -1482,6 +1482,7 @@
             formData.append("clientid", client_id);
             formData.append("type", type);
             formData.append("tracker_id", tracker_id);
+            formData.append("docType", docType);
             formData.append("id", id);
 
             $.ajax({

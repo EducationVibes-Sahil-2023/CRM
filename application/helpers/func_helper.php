@@ -14,14 +14,47 @@ if (!function_exists('startsWith')) {
         return \app\services\utilities\Str::startsWith($haystack, $needle);
     }
 }
+function getBase64Image($path = "")
+{
+    if (empty($path)) {
+        return "";
+    }
+
+    // If already base64, return as is
+    if (strpos($path, 'data:image') === 0) {
+        return $path;
+    }
+
+    // Validate URL or local file
+    if (filter_var($path, FILTER_VALIDATE_URL) || file_exists($path)) {
+
+        $imageData = @file_get_contents($path);
+
+        if ($imageData === false) {
+            return ""; // failed to fetch image
+        }
+
+        $type = pathinfo($path, PATHINFO_EXTENSION);
+        $type = strtolower($type);
+
+        // Default fallback
+        if (!$type) {
+            $type = "png";
+        }
+
+        return 'data:image/' . $type . ';base64,' . base64_encode($imageData);
+    }
+
+    return "";
+}
 
 if (!function_exists('endsWith')) {
     /**
-    * String ends with
-    * @param  string $haystack
-    * @param  string $needle
-    * @return boolean
-    */
+     * String ends with
+     * @param  string $haystack
+     * @param  string $needle
+     * @return boolean
+     */
     function endsWith($haystack, $needle)
     {
         return \app\services\utilities\Str::endsWith($haystack, $needle);
@@ -452,10 +485,11 @@ function strip_html_tags($str, $allowed = '')
 }
 
 
-function sanitizeFileName($string) {
+function sanitizeFileName($string)
+{
     // Remove special characters except letters, numbers, and spaces
     $string = preg_replace('/[^A-Za-z0-9 ]/', '', $string);
-    
+
     // Replace one or more spaces with a single hyphen
     $string = preg_replace('/\s+/', '-', $string);
 
@@ -465,3 +499,143 @@ function sanitizeFileName($string) {
     return $string;
 }
 
+function saveBase64Image($base64_string, $folder = "uploads/", $filename = null)
+{
+
+    if (empty($base64_string)) {
+        return false;
+    }
+
+    // Check if it contains base64 header
+    if (preg_match('/^data:(image\/[a-zA-Z0-9\-\+\.]+);base64,/', $base64_string, $matches)) {
+
+        $mime_type = $matches[1]; // image/png, image/jpeg etc
+        $extension = explode('/', $mime_type)[1];
+
+        // Remove header
+        $base64_string = substr($base64_string, strpos($base64_string, ',') + 1);
+    } else {
+        return $base64_string; // Not valid base64 image
+    }
+
+    // Check valid base64
+    return base64_encode(base64_decode($string, true)) === $string;
+
+    // Make sure folder exists
+    if (!is_dir($folder)) {
+        if (!mkdir($folder, 0755, true)) {
+            return false; // failed to create folder
+        }
+    }
+
+    // Remove "data:image/...;base64," prefix if exists
+    if (preg_match('/^data:image\/(\w+);base64,/', $base64_string, $type)) {
+        $base64_string = substr($base64_string, strpos($base64_string, ',') + 1);
+        $extension = strtolower($type[1]); // png, jpeg, jpg, gif, webp
+        if ($extension == 'jpeg') $extension = 'jpg'; // normalize
+    } else {
+        $extension = "png"; // default
+    }
+
+    // Remove whitespaces (important!)
+    $base64_string = str_replace(' ', '+', $base64_string);
+
+    // Decode base64
+    $image_data = base64_decode($base64_string);
+    if ($image_data === false) return false;
+
+    // Generate filename if not provided
+    if (!$filename) {
+        $filename = "image_" . time();
+    }
+
+    // Ensure folder ends with slash
+    $folder = rtrim($folder, '/') . '/';
+
+    // Full path
+    $filepath = $folder . $filename . "." . $extension;
+
+    // Save the image file
+    if (file_put_contents($filepath, $image_data)) {
+        return base_url() . $filepath; // success
+    }
+
+    return false; // failed
+}
+
+
+
+function knowledge_base($countryName, $university_name, $file_path, $path = "")
+{
+    $CI = &get_instance();
+
+    // Get existing folders from DB
+    $folders = $CI->db->select("id,name,parent_id")->get(db_prefix() . "knowledge_base_folder")->result_array();
+    $folder_map = [];
+    if (!empty($folders)) {
+        foreach ($folders as $f) {
+            // Key: parent_id_name, value: folder info
+            $key = $f['parent_id'] . '_' . $f['name'];
+            $folder_map[$key] = $f;
+        }
+    }
+
+    // Build folder path array
+    $folder_path = trim($path, "/") . '/' . trim($countryName);
+    $structure_folders = explode("/", $folder_path);
+
+    $parent_id = 0;
+    foreach ($structure_folders as $folder) {
+        $folder = trim($folder);
+        $key = $parent_id . '_' . $folder;
+
+        if (!isset($folder_map[$key])) {
+            // Insert new folder
+            $insert_array = [
+                "name" => $folder,
+                "group_ids" => "",
+                "status" => 1,
+                "parent_id" => $parent_id,
+                "edit" => 0
+            ];
+            $CI->db->insert(db_prefix() . "knowledge_base_folder", $insert_array);
+            $folder_id = $CI->db->insert_id();
+
+            // Add to map
+            $folder_map[$key] = [
+                "id" => $folder_id,
+                "parent_id" => $parent_id,
+                "name" => $folder
+            ];
+        } else {
+            $folder_id = $folder_map[$key]['id'];
+        }
+
+        $parent_id = $folder_id; // next folder's parent
+    }
+
+    // Clean university name for DB
+    $clean_university_name = preg_replace("/[^a-zA-Z0-9\s]/", "", trim($university_name));
+
+    // Check if the file already exists in this folder
+    $exists = $CI->db->select("id")
+        ->where([
+            "folder_id" => $folder_id,
+            "status" => 1,
+            "name" => $clean_university_name
+        ])
+        ->get(db_prefix() . "knowledge_base_files")
+        ->row();
+
+    if (empty($exists)) {
+        // Insert file into knowledge_base_files
+        $insert_file_array = [
+            "name" => $clean_university_name,
+            "type" => "pdf",
+            "status" => 1,
+            "folder_id" => $folder_id,
+            "path" => $file_path
+        ];
+        $CI->db->insert(db_prefix() . "knowledge_base_files", $insert_file_array);
+    }
+}

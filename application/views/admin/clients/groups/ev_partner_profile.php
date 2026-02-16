@@ -118,6 +118,46 @@ $neetResultStatus[]["name"] = "Not Appeared";
 $neetResultStatus[]["name"] = "Fail";
 array_unshift($neetResultStatus, array(""));
 
+
+$visasectionDetails = $this->db
+	->select("file,tracking_receipt,application_form")
+	->from(db_prefix() . "visa_details")
+	->where(array("userid" => $client_id))
+	->order_by("id", "ASC")
+	->get()
+	->result_array();
+
+if (!empty($visasectionDetails)) {
+
+	foreach ($visasectionDetails as $k => $visaInfo) {
+
+		foreach ($visaInfo as $key => $value) {
+
+			if (!empty($value)) {   // skip empty columns
+
+				// Custom display name
+				if ($key == "file") {
+					$display_name = "Visa Stamp";
+				} else {
+					$display_name = ucfirst(str_replace("_", " ", $key));
+				}
+
+				$display_name .= " " . ($k + 1);
+
+				$documents_type[] = array(
+					"id"        => "Visa Section",
+					"disabled"  => 1,
+					"disabledd" => 1,
+					"stage"     => "Visa",
+					"name"      => $display_name,
+					"file_type" => ".pdf,image/*"
+				);
+			}
+		}
+	}
+}
+
+
 ?>
 <!-- <script src="https://code.jquery.com/jquery-3.6.3.js"></script> -->
 <script>
@@ -604,66 +644,66 @@ if ($lead_type_status == 2) {
 										<?php
 										}
 										?>
-									    <div class="col-lg-3 ">
-                                        <div class="form-group">
-                                            <label>PCC status</label>
-                                            <select class="form-control" onchange="change_pcc_status()" name="pcc_status" id="pcc_status">
-                                                <option value="">Select PCC Status</option>
-                                                <?php
-                                                foreach ($pcc_stages as $pcc) {
-                                                    $selected = "";
-                                                    if ($pcc["id"] == $client->pcc_status) {
-                                                        $selected = "selected";
-                                                        $show_pcc_details = $pcc['upload'];
-                                                    }
-                                                ?>
-                                                    <option value="<?= $pcc["id"] ?>" <?= $selected ?> data-pcc_orignal_doc_id="<?= $pcc['orignal_doc_id'] ?? 0 ?>" data-pcc_status="<?= $pcc['upload'] ?? 0 ?>"><?= $pcc["name"] ?></option>
-                                                <?php
+										<div class="col-lg-3 ">
+											<div class="form-group">
+												<label>PCC status</label>
+												<select class="form-control" onchange="change_pcc_status()" name="pcc_status" id="pcc_status">
+													<option value="">Select PCC Status</option>
+													<?php
+													foreach ($pcc_stages as $pcc) {
+														$selected = "";
+														if ($pcc["id"] == $client->pcc_status) {
+															$selected = "selected";
+															$show_pcc_details = $pcc['upload'];
+														}
+													?>
+														<option value="<?= $pcc["id"] ?>" <?= $selected ?> data-pcc_orignal_doc_id="<?= $pcc['orignal_doc_id'] ?? 0 ?>" data-pcc_status="<?= $pcc['upload'] ?? 0 ?>"><?= $pcc["name"] ?></option>
+													<?php
 
-                                                }
-                                                ?>
-                                            </select>
-                                        </div>
-                                    </div>
+													}
+													?>
+												</select>
+											</div>
+										</div>
 
-                                    <?php
-                                    foreach ($profile_section["pcc"] as $s_stage) {
-                                        $doc_type = $s_stage["name"] ?? '';
-                                        $doc_id = $s_stage["id"] ?? '';
-                                        $info = $s_stage["info"] ?? '';
-                                        $accept = $s_stage["file_type"] ?? '';
-                                        $is_mandatory = !empty($s_stage["mandatry"]);
-                                        $mandatry_text = $is_mandatory ? "<small class='text-danger'>*</small>" : '';
-                                        $required_attr = $is_mandatory ? "required required-check" : '';
-                                        $file_url = !empty($applicant_documents[$doc_id]["document_file"]) ? $applicant_documents[$doc_id]["document_file"] : '';
-                                        $required_attr = !empty($file_url) ? "" : $required_attr;
+										<?php
+										foreach ($profile_section["pcc"] as $s_stage) {
+											$doc_type = $s_stage["name"] ?? '';
+											$doc_id = $s_stage["id"] ?? '';
+											$info = $s_stage["info"] ?? '';
+											$accept = $s_stage["file_type"] ?? '';
+											$is_mandatory = !empty($s_stage["mandatry"]);
+											$mandatry_text = $is_mandatory ? "<small class='text-danger'>*</small>" : '';
+											$required_attr = $is_mandatory ? "required required-check" : '';
+											$file_url = !empty($applicant_documents[$doc_id]["document_file"]) ? $applicant_documents[$doc_id]["document_file"] : '';
+											$required_attr = !empty($file_url) ? "" : $required_attr;
 
-                                    ?>
-                                        <div class="col-lg-3 media-files pcc-div-status <?= !empty($show_pcc_details && $show_pcc_details == 1) ? '' : 'hide' ?>">
-                                            <div class="form-group">
-                                                <label for="exampleInputMobileNumber"><?= $s_stage["name"] ?> <?= $mandatry_text  . "  (" . $s_stage["file_type"] . ")" ?> <?php if (!empty($info)) : ?>
-                                                        &nbsp;<i class="fa fa-info-circle" title="<?= htmlspecialchars($info, ENT_QUOTES, 'UTF-8') ?>"></i>
-                                                    <?php endif; ?></label>
-                                                <input type="hidden" name="doc_type[]" value="<?= htmlspecialchars($doc_id, ENT_QUOTES, 'UTF-8') ?>">
-                                                <input type="hidden" name="doc_name[]" value="<?= htmlspecialchars($doc_type, ENT_QUOTES, 'UTF-8') ?>">
-                                                <input type="hidden" name="doc_url[]" value="<?= htmlspecialchars($file_url, ENT_QUOTES, 'UTF-8') ?>">
-                                                <input type="file" name="files[<?= $doc_id ?>]" value="<?= $file_url ?>" class="form-control" accept="<?= htmlspecialchars($accept, ENT_QUOTES, 'UTF-8') ?>" <?= $required_attr ?>>
-                                                <?php
-                                                if (!empty($file_url)) {
-                                                ?>
-                                                    <div class="margin-top">
-                                                        <i class="fa fa-eye  btn btn-xs btn-primary" onclick="show_media_files('<?= base_url($file_url) ?>');"></i>
-                                                        <i class="fa fa-download  btn btn-xs btn-primary" onclick="download_media_files(`<?= base_url($file_url) ?>`, '_blank');"></i>
-                                                    </div>
-                                                <?php
-                                                }
-                                                ?>
+										?>
+											<div class="col-lg-3 media-files pcc-div-status <?= !empty($show_pcc_details && $show_pcc_details == 1) ? '' : 'hide' ?>">
+												<div class="form-group">
+													<label for="exampleInputMobileNumber"><?= $s_stage["name"] ?> <?= $mandatry_text  . "  (" . $s_stage["file_type"] . ")" ?> <?php if (!empty($info)) : ?>
+															&nbsp;<i class="fa fa-info-circle" title="<?= htmlspecialchars($info, ENT_QUOTES, 'UTF-8') ?>"></i>
+														<?php endif; ?></label>
+													<input type="hidden" name="doc_type[]" value="<?= htmlspecialchars($doc_id, ENT_QUOTES, 'UTF-8') ?>">
+													<input type="hidden" name="doc_name[]" value="<?= htmlspecialchars($doc_type, ENT_QUOTES, 'UTF-8') ?>">
+													<input type="hidden" name="doc_url[]" value="<?= htmlspecialchars($file_url, ENT_QUOTES, 'UTF-8') ?>">
+													<input type="file" name="files[<?= $doc_id ?>]" value="<?= $file_url ?>" class="form-control" accept="<?= htmlspecialchars($accept, ENT_QUOTES, 'UTF-8') ?>" <?= $required_attr ?>>
+													<?php
+													if (!empty($file_url)) {
+													?>
+														<div class="margin-top">
+															<i class="fa fa-eye  btn btn-xs btn-primary" onclick="show_media_files('<?= base_url($file_url) ?>');"></i>
+															<i class="fa fa-download  btn btn-xs btn-primary" onclick="download_media_files(`<?= base_url($file_url) ?>`, '_blank');"></i>
+														</div>
+													<?php
+													}
+													?>
 
-                                            </div>
-                                        </div>
-                                    <?php
-                                    }
-                                    ?>
+												</div>
+											</div>
+										<?php
+										}
+										?>
 									</div>
 									<div class="btn-save-fun">
 										<div class="col-md-12">
@@ -901,7 +941,7 @@ if ($lead_type_status == 2) {
 
 										<div class="row qualification-div" id="twelthAcademicDetails" style="display:<?= ($academicdetails->after_x_status == '12th' || $academicdetails->after_x_status == 'Both' || empty($academicdetails->after_x_status)) ? 'block' : 'none' ?>">
 
-											<div class="col-lg-4 border2 border1">
+											<div class="col-lg-3 border2 border1">
 												<div class="c1">
 													<p>Board / University <?= $text_danger_mbbs ?></p>
 												</div>
@@ -912,7 +952,24 @@ if ($lead_type_status == 2) {
 													echo render_select('twelth_board', $board_dropdown, array('id', 'name'), "", $selected, ["required" => "required", "required-check" => "required-check"], [], "", "", "", "twelth_board"); ?>
 												</div>
 											</div>
+
 											<div class="col-lg-3 border2 border1">
+												<div class="c1">
+													<p>School Name</p>
+												</div>
+												<div class="c2">
+													<input class="form-control" type="text" placeholder="School Name" name="school_name" id="school_name" value="<?= $academicdetails->school_name; ?>">
+												</div>
+											</div>
+											<div class="col-lg-3 border2 border1">
+												<div class="c1">
+													<p>School Adress</p>
+												</div>
+												<div class="c2">
+													<textarea class="form-control" placeholder="School Address" name="school_address" id="school_address"><?= $academicdetails->school_address; ?></textarea>
+												</div>
+											</div>
+											<div class="col-lg-2 border2 border1">
 												<div class="c1">
 													<p>Year of Passing <?= $text_danger_mbbs ?></p>
 												</div>
@@ -937,7 +994,7 @@ if ($lead_type_status == 2) {
 												</div>
 											</div>
 											<div class="twelth_result_status_div" style="display:<?= ($academicdetails->twelth_result_status == 'Awaited') ? 'none' : '' ?>">
-												<div class="col-lg-3 border2 border1 " id="twelth_marking_scheme_div">
+												<div class="col-lg-2 border2 border1 " id="twelth_marking_scheme_div">
 													<div class="c1">
 														<p>Marking Scheme <?= $text_danger_mbbs ?></p>
 													</div>
@@ -974,7 +1031,7 @@ if ($lead_type_status == 2) {
 														<input class="form-control" <?= $text_danger_mbbs_required ?> type="float" placeholder="Enter Your 12th Percentage" name="twelth_percentage" id="twelth_percentage" value="<?= $academicdetails->twelth_percentage; ?>">
 													</div>
 												</div>
-												<div class="col-lg-2 border2 border1">
+												<div class="col-lg-1 border2 border1">
 													<div class="c1">
 														<p>PCB <?= $text_danger_mbbs ?></p>
 													</div>
@@ -982,7 +1039,7 @@ if ($lead_type_status == 2) {
 														<input class="form-control" <?= $text_danger_mbbs_required ?> type="float" placeholder="PCB Marks" name="pcb" id="pcb" value="<?= $academicdetails->pcb; ?>">
 													</div>
 												</div>
-												<div class="col-lg-2 border2 border1">
+												<div class="col-lg-1 border2 border1">
 													<div class="c1">
 														<p>Online Result</p>
 													</div>
@@ -1009,7 +1066,7 @@ if ($lead_type_status == 2) {
 													$file_url = !empty($applicant_documents[$doc_id]["document_file"]) ? $applicant_documents[$doc_id]["document_file"] : '';
 													$required_attr = !empty($file_url) ? "" : $required_attr;
 												?>
-													<div class="col-lg-4 border2 media-files  ">
+													<div class="col-lg-3 border2 media-files  ">
 														<div class="form-group">
 															<label for="exampleInputMobileNumber"><?= $s_stage["name"] ?> <?= $mandatry_text  . "  (" . $s_stage["file_type"] . ")" ?> <?php if (!empty($info)) : ?>
 																	&nbsp;<i class="fa fa-info-circle" title="<?= htmlspecialchars($info, ENT_QUOTES, 'UTF-8') ?>"></i>
@@ -1043,7 +1100,30 @@ if ($lead_type_status == 2) {
 									<div id="entrance_exam_div" class="row accadmic-education-div ">
 										<h4>NEET Exam</h4>
 										<hr>
+										<div class="col-lg-12 row">
+											<h4 class="col-lg-12">NEET Credentials</h4>
+											<div class="col-lg-3 border2 border1">
+												<div class="c1">
+													<p>Id</p>
+												</div>
+												<div class="c2">
+													<input class="form-control" type="text" class="form-group"
+														placeholder="Enter Neet User ID" name="neet_user_id" value="<?= $academicdetails->neet_user_id; ?>">
+												</div>
+											</div>
 
+											<div class="col-lg-3 border2 border1">
+												<div class="c1">
+													<p>Password</p>
+												</div>
+												<div class="c2">
+													<input class="form-control" type="text" class="form-group"
+														placeholder="Enter Neet User Password" name="neet_user_password" value="<?= $academicdetails->neet_user_password; ?>">
+												</div>
+											</div>
+
+										</div>
+										<hr>
 										<div class="col-lg-2 border2 border1">
 											<div class="c1">
 												<p>Result Status <?= $text_danger_mbbs ?></p>
@@ -1251,16 +1331,16 @@ if ($lead_type_status == 2) {
 													// $required_attr = $is_mandatory ? "required required-check" : '';
 													$file_url = !empty($applicant_documents[$doc_id]["document_file"]) ? $applicant_documents[$doc_id]["document_file"] : '';
 													$required_attr = !empty($file_url) ? "" : $required_attr;
-													
-													                                               $upload_assign = [];
 
-if (!empty($doc_files['upload_assign'])) {
-    if (is_array($doc_files['upload_assign'])) {
-        $upload_assign = $doc_files['upload_assign'];
-    } else {
-        $upload_assign = explode(",", (string)$doc_files['upload_assign']);
-    }
-}
+													$upload_assign = [];
+
+													if (!empty($doc_files['upload_assign'])) {
+														if (is_array($doc_files['upload_assign'])) {
+															$upload_assign = $doc_files['upload_assign'];
+														} else {
+															$upload_assign = explode(",", (string)$doc_files['upload_assign']);
+														}
+													}
 												?>
 													<tr>
 														<td><?= ($index) ?></td>
@@ -1298,17 +1378,17 @@ if (!empty($doc_files['upload_assign'])) {
 														<td>
 															<?php if (is_admin() || !empty($staff_list[get_staff_user_id()]["post_sales"])) {
 															?>
-																<input type="file" name="files[<?= $doc_id ?>]" value="<?= $file_url ?>" class="form-control <?= (!empty($doc_files['disabledd']) && $doc_files['disabledd'] == 1) || 
-    (!is_admin() && !empty($upload_assign) && !in_array(get_staff_user_id(), $upload_assign))
-        ? 'disabledd' 
-        : '' ; ?>" accept="<?= htmlspecialchars($accept, ENT_QUOTES, 'UTF-8') ?>" <?= $required_attr ?>>
+																<input type="file" name="files[<?= $doc_id ?>]" value="<?= $file_url ?>" class="form-control <?= (!empty($doc_files['disabledd']) && $doc_files['disabledd'] == 1) ||
+																																									(!is_admin() && !empty($upload_assign) && !in_array(get_staff_user_id(), $upload_assign))
+																																									? 'disabledd'
+																																									: ''; ?>" accept="<?= htmlspecialchars($accept, ENT_QUOTES, 'UTF-8') ?>" <?= $required_attr ?>>
 															<?php
 															} else {
 															?>
-																<input type="file" <?= !empty($doc_files["disabled"] == 1) ? 'disabled' : '' ?> name="files[<?= $doc_id ?>]" value="<?= $file_url ?>" class="form-control  <?= (!empty($doc_files['disabledd']) && $doc_files['disabledd'] == 1) || 
-    (!is_admin() && !empty($upload_assign) && !in_array(get_staff_user_id(), $upload_assign))
-        ? 'disabledd' 
-        : '' ; ?>" accept="<?= htmlspecialchars($accept, ENT_QUOTES, 'UTF-8') ?>" <?= $required_attr ?>>
+																<input type="file" <?= !empty($doc_files["disabled"] == 1) ? 'disabled' : '' ?> name="files[<?= $doc_id ?>]" value="<?= $file_url ?>" class="form-control  <?= (!empty($doc_files['disabledd']) && $doc_files['disabledd'] == 1) ||
+																																																								(!is_admin() && !empty($upload_assign) && !in_array(get_staff_user_id(), $upload_assign))
+																																																								? 'disabledd'
+																																																								: ''; ?>" accept="<?= htmlspecialchars($accept, ENT_QUOTES, 'UTF-8') ?>" <?= $required_attr ?>>
 															<?php
 															}
 															?>
@@ -1487,7 +1567,7 @@ if (!empty($doc_files['upload_assign'])) {
 													// Set the required attribute based on the "mandatry" field
 													$required = !empty($fees["mandatry"]) ? "required" : "false";
 													$mandatry = !empty($fees["mandatry"]) ? "<small class='text-danger'></small>" : "";
-$disabled = (strtolower($admissionpreferences->primary_country) == 'georgia') && $id == 6?'disabled':'';
+													$disabled = (strtolower($admissionpreferences->primary_country) == 'georgia') && $id == 6 ? 'disabled' : '';
 
 												?>
 													<div class="col-lg-4 col-md-4 col-6 fees-block-<?= $id ?>">
@@ -1512,10 +1592,10 @@ $disabled = (strtolower($admissionpreferences->primary_country) == 'georgia') &&
 
 
 															</div>
-															<input <?=$disabled?> type="text" onkeypress="return acceptText(this,'number')" name="<?= $field_name ?>" <?= $required ?> class="form-control currency-amount fees_<?= $fees['id'] ?>" placeholder="0.00" id="<?= $field_name ?>" value="<?= $fees["amount"] ?>" size="8">
+															<input <?= $disabled ?> type="text" onkeypress="return acceptText(this,'number')" name="<?= $field_name ?>" <?= $required ?> class="form-control currency-amount fees_<?= $fees['id'] ?>" placeholder="0.00" id="<?= $field_name ?>" value="<?= $fees["amount"] ?>" size="8">
 															<div class="input-group-addon currency-addon">
 
-																<select <?=$disabled?> name="<?= $field_name ?>_currency_type" id="<?= $field_name ?>" class="currency-selector <?=$disabled?> currency-selector-<?= $id ?>" onchange="updateSymbol(<?= $id ?>)">
+																<select <?= $disabled ?> name="<?= $field_name ?>_currency_type" id="<?= $field_name ?>" class="currency-selector <?= $disabled ?> currency-selector-<?= $id ?>" onchange="updateSymbol(<?= $id ?>)">
 																	<?php foreach ($get_currencies as $c) {
 																	?>
 																		<option
@@ -1682,26 +1762,24 @@ $disabled = (strtolower($admissionpreferences->primary_country) == 'georgia') &&
 ?>
 
 <script>
+	document.addEventListener("DOMContentLoaded", function() {
+		var documentAccessOnly = "<?= !empty($documentAccessOnly) ? $documentAccessOnly : 0 ?>";
+		console.log(documentAccessOnly);
 
-
-document.addEventListener("DOMContentLoaded", function() {
-    var documentAccessOnly = "<?=!empty($documentAccessOnly)?$documentAccessOnly:0?>";
-    console.log(documentAccessOnly);
-
-    if (documentAccessOnly == "1") {
-        $('.nav-tabs-horizontal li').each(function() {
-            var $li = $(this);
-            var $a = $li.find('a[href="#documents"]');
-            if ($a.length === 0) {
-                $li.hide();
-            } else {
-                $li.show();
-                $a.trigger("click"); // More robust to use $a not $li
-            }
-        });
-        $(".btn-save-funn").hide();
-    }
-});
+		if (documentAccessOnly == "1") {
+			$('.nav-tabs-horizontal li').each(function() {
+				var $li = $(this);
+				var $a = $li.find('a[href="#documents"]');
+				if ($a.length === 0) {
+					$li.hide();
+				} else {
+					$li.show();
+					$a.trigger("click"); // More robust to use $a not $li
+				}
+			});
+			$(".btn-save-funn").hide();
+		}
+	});
 
 	var primary_country = "<?= !empty($admissionpreferences->primary_country) ? $admissionpreferences->primary_country : 0 ?>";
 	var primary_university = "<?= !empty($admissionpreferences->primary_university) ? $admissionpreferences->primary_university : 0 ?>";
