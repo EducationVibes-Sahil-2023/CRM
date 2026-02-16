@@ -329,3 +329,5 @@ define('REFERENCE_ID', '1');
 define('REFERENCE_AMOUNT_ID', '8');
 define('GOOGLE_SHEET_SHARE', 'sahil.chaudhary@educationvibes.in');
 define('PRIORITY_ARRAY_STUDY_ABROAD', '3');
+
+define('KNOWLEDGE_BASE_FEES_PATH', 'Fees Structure/MBBS Abroad/'); // highest automatically-assigned error code
