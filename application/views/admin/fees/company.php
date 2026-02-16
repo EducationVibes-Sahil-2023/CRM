@@ -280,7 +280,7 @@ $processing_fee = $sectionDetails["processing_fee"];
                 <div class="panel-body">
                     <div class="row col-12">
                         <div class="col-lg-12">
-                            <?php echo render_select('created_universities', $feesStructure_data, array('id', 'university_name'), 'Created Fees Structures', []); ?>
+                            <?php echo render_select('created_universities', $feesStructure_data, array('id', 'university_name'), 'Created Fees Structures', [$id]); ?>
                         </div>
                     </div>
                     <form onsubmit="return false;" id="universityForm">
