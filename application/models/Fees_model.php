@@ -47,7 +47,7 @@ class Fees_model extends App_Model
     function universities()
     {
         $query = $this->s_db
-            ->select("u.id,u.country_id,u.university_name,ub.images,ub.logo,ub.card_image,ub.founded")
+            ->select("u.id,u.country_id,u.university_name,ub.images,,if(ub.logo!='',ub.logo,ub.logo_image) as logo,if(ub.card_image!='',ub.card_image,ub.images) as card_image,ub.founded")
             ->from("universities u")->join("university_banner ub", "ub.university_id = u.id", "Left")
             ->get()
             ->result_array();
