@@ -278,7 +278,11 @@ $processing_fee = $sectionDetails["processing_fee"];
         <div class="row">
             <div class="panel_s">
                 <div class="panel-body">
-
+                    <div class="row col-12">
+                        <div class="col-lg-12">
+                            <?php echo render_select('created_universities', $feesStructure_data, array('id', 'university_name'), 'Created Fees Structures', []); ?>
+                        </div>
+                    </div>
                     <form onsubmit="return false;" id="universityForm">
                         <!-- University Basic Info - Improved UI -->
                         <div class="university-info">
@@ -1470,5 +1474,16 @@ $processing_fee = $sectionDetails["processing_fee"];
         };
 
         reader.readAsDataURL(file);
+    });
+
+    $("#created_universities").change(function() {
+
+        let selectedUniversity = $(this).val();
+
+        if (selectedUniversity > 0) {
+            var url = "<?= admin_url('Fees/company/'); ?>" + selectedUniversity;
+            window.location.href = url;
+        }
+
     });
 </script>

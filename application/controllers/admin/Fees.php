@@ -23,7 +23,15 @@ class Fees extends AdminController
         $data['segment']     = $this->fees_model->segment();
         $data['countries']     = $this->fees_model->countries();
         $data['universities']     = $this->fees_model->universities();
-        $data["feesStructure"] = $this->fees_model->getFeesStructure($id);
+        // Always get all
+        $allFees = $this->fees_model->getFeesStructure();
+        $data["feesStructure"] = [];
+        $data["feesStructure_data"] = $allFees;
+        if (!empty($id)) {
+            $data["feesStructure"] = $this->fees_model->getFeesStructure($id);
+        }
+
+
         // Determine correct view page
         $view_page = 'admin/fees/company'; // You can switch based on type if needed
 
@@ -57,6 +65,9 @@ class Fees extends AdminController
             "segment_id"      => $segment_id,
             "country_id"      => $country_id,
             "university_id"   => $university_id,
+            "segment_name"      => $_POST["university_info"]["segment_type"] ?? '',
+            "country_name"      => $_POST["university_info"]["country_name"] ?? '',
+            "university_name"   => $_POST["university_info"]["university_name"] ?? '',
             "university_data" => json_encode($this->input->post('university_info')),
             "section_data"    => json_encode($this->input->post('sections')),
             "contact_data"    => json_encode($this->input->post('contact')),

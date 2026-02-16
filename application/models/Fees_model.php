@@ -85,13 +85,20 @@ class Fees_model extends App_Model
         return $this->db->insert(db_prefix() . 'fees_structure_data', $data);
     }
 
-    public function getFeesStructure($id)
+    public function getFeesStructure($id = "")
     {
+        if (!empty($id)) {
+            return $this->db
+                ->where('id', $id)
+                ->get(db_prefix() . 'fees_structure_data')
+                ->row_array();
+        }
+
         return $this->db
-            ->where('id', $id)
-            ->get(db_prefix() . 'fees_structure_data')   // change table name
-            ->row_array();
+            ->get(db_prefix() . 'fees_structure_data')
+            ->result_array();
     }
+
 
     public function officeLocations()
     {
