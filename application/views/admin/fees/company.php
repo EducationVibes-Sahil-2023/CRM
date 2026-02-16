@@ -261,11 +261,14 @@ $processing_fee = $sectionDetails["processing_fee"];
 
     .preview_image {
         height: 100px !important;
+        max-width: 200px;
+
     }
 
     .preview_image img {
         height: 100% !important;
         width: unset !important;
+
     }
 
     .preview_image img[src=""] {
@@ -324,13 +327,13 @@ $processing_fee = $sectionDetails["processing_fee"];
                                 <?php echo render_select('universities', [], array('id', 'name'), 'Universities', []); ?>
                             </div>
                             <div class="col-lg-3">
-                                <?php echo render_input('year', "Year", $universityDetails["year"] ?? '', 'number'); ?>
+                                <?php echo render_input('year', "Duration", $universityDetails["year"] ?? '', 'number'); ?>
                             </div>
                         </div>
                         <input type="hidden" id="id" name="id" value="<?= $id ?>">
 
                         <div class="row">
-                            <div class="col-lg-3">
+                            <!-- <div class="col-lg-3">
                                 <?php
                                 echo render_input(
                                     'website_logo',
@@ -343,7 +346,7 @@ $processing_fee = $sectionDetails["processing_fee"];
                                 <div class="website_logo_preview preview_image">
                                     <img src="<?= $universityDetails["logo"] ?? '' ?>" id="website_logo_preview">
                                 </div>
-                            </div>
+                            </div> -->
 
                             <div class="col-lg-3">
                                 <?php
@@ -863,7 +866,10 @@ $processing_fee = $sectionDetails["processing_fee"];
         let selectedCountries = countries[segment_id] || [];
 
         let $countriesSelect = $("#countries");
+        let $universitiesSelect = $("#universities");
         $countriesSelect.empty();
+        $universitiesSelect.empty()
+
 
         // Default option
         $countriesSelect.append(
@@ -875,6 +881,17 @@ $processing_fee = $sectionDetails["processing_fee"];
             })
         );
 
+
+        $universitiesSelect.append(
+            $('<option>', {
+                value: '',
+                text: 'Select universities',
+                selected: true,
+                disabled: true
+            })
+        );
+
+        $universitiesSelect.selectpicker('refresh');
         // Append countries
         selectedCountries.forEach(function(country) {
             $countriesSelect.append(
@@ -1068,9 +1085,9 @@ $processing_fee = $sectionDetails["processing_fee"];
 
     function removeOtherChargeRow() {
         var tableBody = document.getElementById('otherChargesBody');
-        if (tableBody.rows.length > 1) {
-            tableBody.deleteRow(tableBody.rows.length - 1);
-        }
+        // if (tableBody.rows.length > 1) {
+        tableBody.deleteRow(tableBody.rows.length - 1);
+        // }
     }
 
     // One Time Charges Table Functions
@@ -1086,9 +1103,9 @@ $processing_fee = $sectionDetails["processing_fee"];
 
     function removeOneTimeChargeRow() {
         var tableBody = document.getElementById('oneTimeChargesBody');
-        if (tableBody.rows.length > 1) {
+        // if (tableBody.rows.length > 1) {
             tableBody.deleteRow(tableBody.rows.length - 1);
-        }
+        // }
     }
 
     // Services Table Functions
@@ -1104,9 +1121,9 @@ $processing_fee = $sectionDetails["processing_fee"];
 
     function removeServiceRow() {
         var tableBody = document.getElementById('servicesBody');
-        if (tableBody.rows.length > 1) {
+        // if (tableBody.rows.length > 1) {
             tableBody.deleteRow(tableBody.rows.length - 1);
-        }
+        // }
     }
 
     // Processing Fee Table Functions

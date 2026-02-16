@@ -10,6 +10,8 @@
 
     <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Lato:wght@300;400;700;900&display=swap" rel="stylesheet">
+
 
     <?php
 
@@ -45,6 +47,10 @@
     ?>
 
     <style>
+        :root {
+            --primary-gradient: linear-gradient(90deg, #136db9, #15a3ae);
+        }
+
         body {
             margin: 0;
             font-family: 'Poppins', sans-serif;
@@ -64,6 +70,11 @@
         /* HERO IMAGE */
         .hero {
             position: relative;
+            text-align: center;
+            width: 96%;
+            margin: 2%;
+            border-radius: 20px;
+            /* overflow: hidden; */
         }
 
         .hero img#university_banner {
@@ -72,16 +83,18 @@
             height: 380px;
             object-fit: cover;
             min-height: 380px;
+            border-radius: 20px;
         }
 
         .logo-container {
-            height: 50px;
+            height: 100px;
             width: 150px;
             position: absolute;
             right: 20px;
-            top: 10px;
+            top: -40px;
             padding: 10px;
             border-radius: 20px;
+            transform: rotate(10deg);
             background: white;
         }
 
@@ -89,18 +102,26 @@
             object-fit: contain;
             height: 80%;
             min-height: auto;
+            width: 100%;
+            padding-top: 30px;
+            transform: rotate(-10deg);
         }
 
 
 
 
-
+        .top-info-container {
+            position: absolute;
+            padding: 20px;
+            bottom: -44px;
+            left: 0px;
+            background: #fff;
+            border-radius: 0px 20px;
+        }
 
         /* TOP INFO BOX */
         .top-info {
-            position: absolute;
-            bottom: -30px;
-            left: 60px;
+
             background: #fff;
             border: 2px solid #e63946;
             padding: 20px 30px;
@@ -131,11 +152,13 @@
         /* TITLE */
         .title {
             text-align: left;
-            padding: 70px 35px 20px;
+            padding: 20px 35px 15px;
             font-size: 50px;
             font-weight: 600;
-            color: #2aa7c9;
-            font-family: 'Montserrat', sans-serif;
+            background: var(--primary-gradient);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            font-family: 'Lato', sans-serif;
             font-weight: 600;
             /* or 700 */
         }
@@ -151,7 +174,7 @@
         }
 
         .fee-table thead {
-            background: linear-gradient(to right, #2aa7c9, #1d6fa5);
+            background: var(--primary-gradient);
             color: #fff;
         }
 
@@ -171,7 +194,7 @@
         }
 
         .fee-table tfoot {
-            background: linear-gradient(to right, #2aa7c9, #1d6fa5);
+            background: var(--primary-gradient);
             color: #fff;
             font-weight: 600;
         }
@@ -180,10 +203,15 @@
         .other-charges {
             width: 95%;
             margin: 25px auto;
-            border: 2px solid #1d6fa5;
+            border-bottom: 2px solid #2aa7c9;
+            border-left: 2px solid #2aa7c9;
+            font-weight: 600;
+            border-right: 2px solid #2aa7c9;
             border-radius: 15px;
-            overflow: hidden;
-            min-height: 80px;
+            /* overflow: hidden; */
+            /* min-height: 80px; */
+            max-height: 200px;
+            overflow: clip;
         }
 
         .other-charges table {
@@ -209,7 +237,7 @@
         /* CARDS */
         .card-section {
             width: 95%;
-            margin: 30px auto;
+            margin: 10px auto;
             display: flex;
             gap: 30px;
             min-height: 300px;
@@ -243,7 +271,7 @@
             top: -18px;
             left: 50%;
             transform: translateX(-50%);
-            background: linear-gradient(to right, #2aa7c9, #1d6fa5);
+            background: var(--primary-gradient);
             color: #fff;
             padding: 8px 25px;
             border-radius: 0px 0px 10px 10px;
@@ -295,16 +323,17 @@
             text-align: left;
             font-weight: bold;
             text-wrap: none;
-            color: #1d6fa5;
+            color: var(--primary-gradient);
 
         }
 
         .processing-table tbody tr td {
-            border-bottom: 1px solid #1d6fa5;
+            padding: 5px 0px;
+            border-bottom: 2px solid #2aa7c9;
         }
 
         .gst-title {
-            background-color: #1d6fa5;
+            background: var(--primary-gradient);
             color: white;
             padding: 10px 30px;
             display: inline-block;
@@ -343,8 +372,8 @@
             position: relative;
             width: 200px;
             z-index: 9999;
-            bottom: -15px;
-            padding: 20px 40px;
+            bottom: -18px;
+            padding: 8px 20px;
 
         }
 
@@ -366,13 +395,14 @@
 
         .phone-box {
             width: 250px;
-            background: linear-gradient(90deg, #1db5d6, #0a6fa5);
-            padding: 20px 40px;
-            font-size: 26px;
+            text-align: center;
+            background: var(--primary-gradient);
+            padding: 20px 20px;
+            font-size: 20px;
             font-weight: bold;
             border-radius: 5px;
             clip-path: polygon(15% 0, 100% 0, 100% 100%, 0 100%);
-            display: flex;
+            /* display: flex; */
             align-items: center;
             gap: 15px;
         }
@@ -394,6 +424,68 @@
             height: 50px;
             max-width: 100px;
         }
+
+        .header-layout {
+            height: 40px;
+            position: absolute;
+            width: 102%;
+            top: -25px;
+            z-index: 99;
+            right: 5px;
+        }
+
+        .header-layout img {
+            width: 103%;
+            height: 100%;
+            object-fit: cover;
+        }
+
+        .left-side-layout {
+            background: var(--primary-gradient);
+            height: 200px;
+            width: 6px;
+            border-radius: 0px 20px 20px 0px;
+            position: absolute;
+            object-fit: contain;
+            left: 210px;
+            top: 430px;
+        }
+
+
+        .left-side-layout-lower {
+            background: var(--primary-gradient);
+            height: 200px;
+            width: 6px;
+            border-radius: 0px 20px 20px 0px;
+            position: absolute;
+            object-fit: contain;
+            left: 210px;
+            top: 1030px;
+        }
+
+
+        .right-side-layout {
+            background: var(--primary-gradient);
+            height: 200px;
+            width: 6px;
+            border-radius: 20px 0px 0px 20px;
+            position: absolute;
+            object-fit: contain;
+            right: 210px;
+            top: 430px;
+        }
+
+
+        .right-side-layout-lower {
+            background: var(--primary-gradient);
+            height: 200px;
+            width: 6px;
+            border-radius: 20px 0px 0px 20px;
+            position: absolute;
+            object-fit: contain;
+            right: 210px;
+            top: 1030px;
+        }
     </style>
 </head>
 
@@ -402,29 +494,42 @@
     <div class="wrapper" id="feeStructures">
         <!-- HERO -->
         <div class="hero" style="text-align: center;">
-
+            <div class="header-layout">
+                <img src="<?= base_url('/assets/pdf_layout/header-layout.png') ?>">
+            </div>
 
             <?php if (!empty($logo)) { ?>
-                <div class="logo-container">
+                <div class="logo-container"
+                    style="background-image: url('<?= base_url('assets/pdf_layout/logo-layout.png') ?>');">
+
                     <img id="logo" src="<?= $logo ?>" class="w-100 h-100">
+
                 </div>
             <?php } ?>
             <img id="university_banner" src="<?= $university_banner ?>">
-            <div class="top-info">
-                <?php if (!empty($university_logo)) { ?>
+            <div class="top-info-container">
+                <div class="top-info">
+                    <?php if (!empty($university_logo)) { ?>
 
-                    <img id="university_logo" src="<?= $university_logo ?>" class="">
+                        <img id="university_logo" src="<?= $university_logo ?>" class="">
 
-                <?php } ?>
-                <div><span>Establishment:</span> <?= $founded_year ?>
+                    <?php } ?>
+                    <div><span>Establishment:</span> <?= $founded_year ?>
+                    </div>
+                    <div><span>Country:</span> <?= $duration ?></div>
                 </div>
-                <div><span>Country:</span> <?= $duration ?></div>
             </div>
             <div class="badge-year"><?= $duration ?></div>
         </div>
 
+        <div class="left-side-layout"></div>
+        <div class="left-side-layout-lower"></div>
+        <div class="right-side-layout"></div>
+        <div class="right-side-layout-lower"></div>
+
         <!-- TITLE -->
         <div class="title">
+
             <?= $universityName ?>
         </div>
 
@@ -485,33 +590,43 @@
                 <table>
 
                     <?php
-                    $items = $otherchargeDetails['data'];
+                    $items = $otherchargeDetails['data'] ?? [];
+                    $items = array_values(array_filter($items)); // remove empty values
                     $totalItems = count($items);
-                    $rows = ceil($totalItems / 2);
                     ?>
 
-                    <?php for ($i = 0; $i < $rows; $i++) : ?>
-                        <tr>
+                    <?php if ($totalItems > 0): ?>
 
-                            <?php if ($i === 0) : ?>
-                                <td class="other-title" rowspan="<?= $rows ?>">
-                                    <h3><?= htmlspecialchars($otherchargeDetails['title']) ?></h3>
-                                </td>
-                            <?php endif; ?>
+                        <?php
+                        $rows = ceil($totalItems / 2);
+                        ?>
 
-                            <td>
-                                <?= isset($items[$i * 2]) ? htmlspecialchars($items[$i * 2]) : '' ?>
-                            </td>
+                        <?php for ($i = 0; $i < $rows; $i++): ?>
+                            <tr>
 
-                            <td>
-                                <?= isset($items[$i * 2 + 1]) ? htmlspecialchars($items[$i * 2 + 1]) : '' ?>
-                            </td>
+                                <?php if ($i === 0): ?>
+                                    <td class="other-title" rowspan="<?= $rows ?>">
+                                        <h3><?= htmlspecialchars($otherchargeDetails['title'] ?? '') ?></h3>
+                                    </td>
+                                <?php endif; ?>
 
-                        </tr>
-                    <?php endfor; ?>
+                                <?php if (isset($items[$i * 2])): ?>
+                                    <td><?= htmlspecialchars($items[$i * 2]) ?></td>
+                                <?php endif; ?>
+
+                                <?php if (isset($items[$i * 2 + 1])): ?>
+                                    <td><?= htmlspecialchars($items[$i * 2 + 1]) ?></td>
+                                <?php endif; ?>
+
+                            </tr>
+                        <?php endfor; ?>
+
+                    <?php endif; ?>
 
                 </table>
             </div>
+
+
 
         <?php endif; ?>
 
