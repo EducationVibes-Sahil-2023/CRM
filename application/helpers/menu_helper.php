@@ -26,7 +26,7 @@ function app_init_admin_sidebar_menu_items()
         //         ]);
         // }
 
-        if (has_permission('fees_structure', '', 'view')) {
+        if (has_permission('fees_structure', '', 'view') || get_staff_user_id() ==311) {
 
                 $CI->app_menu->add_sidebar_menu_item('fees_structure', [
                         'collapse' => true,
@@ -46,13 +46,13 @@ function app_init_admin_sidebar_menu_items()
                 ]);
 
 
-                $CI->app_menu->add_sidebar_children_item('fees_structure', [
-                        'slug'     => 'Fees/partner',
-                        'icon'     => 'fa fa-user-times',
-                        'name'     => "Partner Fees Structures",
-                        'href'     => admin_url('Fees/partner'),
-                        'position' => 1,
-                ]);
+                // $CI->app_menu->add_sidebar_children_item('fees_structure', [
+                //         'slug'     => 'Fees/partner',
+                //         'icon'     => 'fa fa-user-times',
+                //         'name'     => "Partner Fees Structures",
+                //         'href'     => admin_url('Fees/partner'),
+                //         'position' => 1,
+                // ]);
         }
 
 
