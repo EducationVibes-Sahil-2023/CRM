@@ -26,7 +26,7 @@ function app_init_admin_sidebar_menu_items()
         //         ]);
         // }
 
-        if (has_permission('fees_structure', '', 'view') || get_staff_user_id() ==311) {
+        if (has_permission('fees_structure', '', 'create') || get_staff_user_id() == 311) {
 
                 $CI->app_menu->add_sidebar_menu_item('fees_structure', [
                         'collapse' => true,
