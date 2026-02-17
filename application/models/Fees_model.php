@@ -114,4 +114,18 @@ class Fees_model extends App_Model
 
         return implode(' | ', $names);
     }
+
+    public function getRegions($id = "")
+    {
+        if (!empty($id)) {
+            return $this->db
+                ->where('id', $id)
+                ->get(db_prefix() . 'location_regions')
+                ->row_array();
+        }
+
+        return $this->db
+            ->get(db_prefix() . 'location_regions')
+            ->result_array();
+    }
 }

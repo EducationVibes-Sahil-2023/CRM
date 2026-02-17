@@ -14,11 +14,14 @@ $other_charges = $sectionDetails["other_charges"];
 $one_time_charges = $sectionDetails["one_time_charges"];
 $services = $sectionDetails["services"];
 $processing_fee = $sectionDetails["processing_fee"];
+$contactInfo = $feesStructure["contact_data"];
+
 ?>
 
 <!-- Include Font Awesome for icons -->
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css">
-
+<script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
 <style>
     /* General Styles */
     table {
@@ -54,6 +57,10 @@ $processing_fee = $sectionDetails["processing_fee"];
     textarea:focus {
         outline: 2px solid #007bff;
         background: white;
+    }
+
+    td.flex {
+        display: flex;
     }
 
     button {
@@ -185,6 +192,11 @@ $processing_fee = $sectionDetails["processing_fee"];
         font-weight: normal;
     }
 
+    .contact-section input.form-contro,
+    .contact-section input::placeholder {
+        color: black;
+    }
+
     /* Table Footer */
     tfoot tr {
         font-weight: bold;
@@ -278,6 +290,12 @@ $processing_fee = $sectionDetails["processing_fee"];
 
 <div id="wrapper">
     <div class="content">
+        <iframe
+            id="pdfFrame"
+            style="width:794px; height:1200px; border:0;position: absolute;">
+        </iframe>
+
+
         <div class="row">
             <div class="panel_s">
                 <div class="panel-body">
@@ -286,31 +304,45 @@ $processing_fee = $sectionDetails["processing_fee"];
                             <?php echo render_select('created_universities', $feesStructure_data, array('id', 'university_name'), 'Created Fees Structures', [$id]); ?>
                         </div>
                     </div>
-                    <form onsubmit="return false;" id="universityForm">
+                    <form id="feesStructure-form" onsubmit="return false;">
                         <!-- University Basic Info - Improved UI -->
                         <div class="university-info">
                             <div class="row">
-                                <div class="col-md-6">
+                                <div class="col-md-4">
                                     <label>University Name</label>
-                                    <input type="text" class="form-control form-control-lg" value="<?= $universityDetails["university_name"] ?? '' ?>" readonly placeholder="University Name" name="university_name" id="university_name" style="font-size: 24px; height: auto;">
+                                    <input type="text" class="form-control form-control-lg"
+                                        value="<?= $universityDetails["university_name"] ?? '' ?>" readonly
+                                        placeholder="University Name" name="university_name" id="university_name"
+                                        style="font-size: 24px; height: auto;">
+                                </div>
+                                <div class="col-md-2">
+                                    <label>Region</label>
+                                    <div class="region-badge">
+                                        <input type="text" class="form-control form-control-lg" readonly name="region_name" value="<?= $universityDetails["region_name"] ?? '' ?> "
+                                            placeholder="Regionḍ year" id="region_name">
+                                    </div>
                                 </div>
                                 <div class="col-md-2">
                                     <label>Founded Year</label>
                                     <div class="duration-badge">
-                                        <input type="text" class="form-control form-control-lg" readonly name="4
-                                        ." value="<?= $universityDetails["founded_year"] ?? '' ?> " placeholder="Founded year" id="founded_year">
+                                        <input type="text" class="form-control form-control-lg" readonly name="founded_year" value="<?= $universityDetails["founded_year"] ?? '' ?> "
+                                            placeholder="Founded year" id="founded_year">
                                     </div>
                                 </div>
                                 <div class="col-md-2">
                                     <label>Country Name</label>
                                     <div class="duration-badge">
-                                        <input type="text" class="form-control form-control-lg" name="country_name" readonly value="<?= $universityDetails["country_name"] ?? '' ?> " placeholder="Country Name" id="country_name">
+                                        <input type="text" class="form-control form-control-lg" name="country_name"
+                                            readonly value="<?= $universityDetails["country_name"] ?? '' ?> "
+                                            placeholder="Country Name" id="country_name">
                                     </div>
                                 </div>
                                 <div class="col-md-2">
                                     <label>Program Duration</label>
                                     <div class="duration-badge">
-                                        <input type="text" class="form-control form-control-lg" readonly value="<?= $universityDetails["duration"] ?? '' ?> " placeholder="Duration" name="program_duration" id="program_duration">
+                                        <input type="text" class="form-control form-control-lg" readonly
+                                            value="<?= $universityDetails["duration"] ?? '' ?> " placeholder="Duration"
+                                            name="program_duration" id="program_duration">
                                     </div>
                                 </div>
                             </div>
@@ -318,7 +350,9 @@ $processing_fee = $sectionDetails["processing_fee"];
 
                         <div class="row">
                             <div class="col-lg-3">
-                                <?php echo render_select('segment_type', $segment, array('id', 'name'), 'Segment Type', [$feesStructure["segment_id"] ?? '']); ?>
+                                <div class="form-group">
+                                    <?php echo render_select('segment_type', $segment, array('id', 'name'), 'Segment Type', [$feesStructure["segment_id"] ?? ''], ["required" => "required"]); ?>
+                                </div>
                             </div>
                             <div class="col-lg-3">
                                 <?php echo render_select('countries', [], array('id', 'name'), 'Countries', []); ?>
@@ -326,9 +360,11 @@ $processing_fee = $sectionDetails["processing_fee"];
                             <div class="col-lg-3">
                                 <?php echo render_select('universities', [], array('id', 'name'), 'Universities', []); ?>
                             </div>
+
                             <div class="col-lg-3">
-                                <?php echo render_input('year', "Duration", $universityDetails["year"] ?? '', 'number'); ?>
+                                <?php echo render_select('region_type', $regions, array('id', 'name'), 'Region Type', [$feesStructure["region_id"] ?? '']); ?>
                             </div>
+
                         </div>
                         <input type="hidden" id="id" name="id" value="<?= $id ?>">
 
@@ -347,7 +383,9 @@ $processing_fee = $sectionDetails["processing_fee"];
                                     <img src="<?= $universityDetails["logo"] ?? '' ?>" id="website_logo_preview">
                                 </div>
                             </div> -->
-
+                            <div class="col-lg-3">
+                                <?php echo render_input('year', "Duration", $universityDetails["year"] ?? '', 'number'); ?>
+                            </div>
                             <div class="col-lg-3">
                                 <?php
                                 echo render_input(
@@ -359,7 +397,8 @@ $processing_fee = $sectionDetails["processing_fee"];
                                 );
                                 ?>
                                 <div class="university_logo_preview preview_image">
-                                    <img src="<?= $universityDetails["university_logo"] ?? '' ?>" id="university_logo_preview">
+                                    <img src="<?= $universityDetails["university_logo"] ?? '' ?>"
+                                        id="university_logo_preview">
                                 </div>
                             </div>
 
@@ -374,7 +413,8 @@ $processing_fee = $sectionDetails["processing_fee"];
                                 );
                                 ?>
                                 <div class="banner_image_preview preview_image">
-                                    <img src="<?= $universityDetails["banner_image"] ?? '' ?>" id="university_banner_preview">
+                                    <img src="<?= $universityDetails["banner_image"] ?? '' ?>"
+                                        id="university_banner_preview">
                                 </div>
                             </div>
                         </div>
@@ -429,28 +469,22 @@ $processing_fee = $sectionDetails["processing_fee"];
                                         <?php foreach ($feesDetails["data"] as $fData) { ?>
                                             <tr>
                                                 <td>
-                                                    <input type="text" class="form-control"
-                                                        name="fees[year][]"
+                                                    <input type="text" class="form-control" name="fees[year][]"
                                                         value="<?= htmlspecialchars($fData['year'] ?? '') ?>">
                                                 </td>
 
                                                 <td>
-                                                    <input type="number" class="form-control"
-                                                        name="fees[tuition][]"
-                                                        value="<?= $fData['tuition'] ?? 0 ?>"
-                                                        onchange="calculateFeesTotals()">
+                                                    <input type="number" class="form-control" name="fees[tuition][]"
+                                                        value="<?= $fData['tuition'] ?? 0 ?>" onchange="calculateFeesTotals()">
                                                 </td>
 
                                                 <td>
-                                                    <input type="number" class="form-control"
-                                                        name="fees[hostel][]"
-                                                        value="<?= $fData['hostel'] ?? 0 ?>"
-                                                        onchange="calculateFeesTotals()">
+                                                    <input type="number" class="form-control" name="fees[hostel][]"
+                                                        value="<?= $fData['hostel'] ?? 0 ?>" onchange="calculateFeesTotals()">
                                                 </td>
 
                                                 <td>
-                                                    <input type="number" class="form-control"
-                                                        name="fees[development][]"
+                                                    <input type="number" class="form-control" name="fees[development][]"
                                                         value="<?= $fData['development'] ?? 0 ?>"
                                                         onchange="calculateFeesTotals()">
                                                 </td>
@@ -461,26 +495,23 @@ $processing_fee = $sectionDetails["processing_fee"];
 
                                         <tr>
                                             <td>
-                                                <input type="text" class="form-control"
-                                                    name="fees[year][]" value="1st Year">
+                                                <input type="text" class="form-control" name="fees[year][]"
+                                                    value="1st Year">
                                             </td>
 
                                             <td>
-                                                <input type="number" class="form-control"
-                                                    name="fees[tuition][]" value="0"
+                                                <input type="number" class="form-control" name="fees[tuition][]" value="0"
                                                     onchange="calculateFeesTotals()">
                                             </td>
 
                                             <td>
-                                                <input type="number" class="form-control"
-                                                    name="fees[hostel][]" value="0"
+                                                <input type="number" class="form-control" name="fees[hostel][]" value="0"
                                                     onchange="calculateFeesTotals()">
                                             </td>
 
                                             <td>
-                                                <input type="number" class="form-control"
-                                                    name="fees[development][]" value="0"
-                                                    onchange="calculateFeesTotals()">
+                                                <input type="number" class="form-control" name="fees[development][]"
+                                                    value="0" onchange="calculateFeesTotals()">
                                             </td>
                                         </tr>
 
@@ -492,16 +523,22 @@ $processing_fee = $sectionDetails["processing_fee"];
 
                                         <?php foreach ($feesDetails["footer"] as $ffData) { ?>
                                             <td><?= $ffData['label'] ?? 0 ?></td>
-                                            <td><input type="number" id="totalTuition" class="form-control" value="<?= $ffData['tuition'] ?? 0 ?>" readonly></td>
-                                            <td><input type="number" id="totalHostel" class="form-control" value="<?= $ffData['hostel'] ?? 0 ?>" readonly></td>
-                                            <td><input type="number" id="totalDev" class="form-control" value="<?= $ffData['development'] ?? 0 ?>" readonly></td>
+                                            <td><input type="number" id="totalTuition" class="form-control"
+                                                    value="<?= $ffData['tuition'] ?? 0 ?>" readonly></td>
+                                            <td><input type="number" id="totalHostel" class="form-control"
+                                                    value="<?= $ffData['hostel'] ?? 0 ?>" readonly></td>
+                                            <td><input type="number" id="totalDev" class="form-control"
+                                                    value="<?= $ffData['development'] ?? 0 ?>" readonly></td>
                                         <?php }
                                     } else { ?>
                                         <tr>
                                             <td>Total</td>
-                                            <td><input type="number" id="totalTuition" class="form-control" value="0" readonly></td>
-                                            <td><input type="number" id="totalHostel" class="form-control" value="0" readonly></td>
-                                            <td><input type="number" id="totalDev" class="form-control" value="0" readonly></td>
+                                            <td><input type="number" id="totalTuition" class="form-control" value="0"
+                                                    readonly></td>
+                                            <td><input type="number" id="totalHostel" class="form-control" value="0"
+                                                    readonly></td>
+                                            <td><input type="number" id="totalDev" class="form-control" value="0" readonly>
+                                            </td>
                                         </tr>
                                     <?php } ?>
                                 </tfoot>
@@ -517,15 +554,18 @@ $processing_fee = $sectionDetails["processing_fee"];
                                         <div>
 
                                             <!-- <h4>Other Charges</h4> -->
-                                            <input type="text" class="form-control section-title-input" value="<?= $other_charges["title"] ?? 'Other Charges' ?>" id="other_charges_title" name="other_charges_title">
+                                            <input type="text" class="form-control section-title-input"
+                                                value="<?= $other_charges["title"] ?? 'Other Charges' ?>"
+                                                id="other_charges_title" name="other_charges_title">
                                         </div>
                                         <div class="section-controls">
-                                            <button type="button" class="btn btn-success btn-sm action-btn" onclick="addOtherChargeRow()">
+                                            <button type="button" class="btn btn-success btn-sm action-btn"
+                                                onclick="addOtherChargeRow()">
                                                 <i class="fas fa-plus"></i>
                                             </button>
-                                            <button type="button" class="btn btn-danger btn-sm action-btn" onclick="removeOtherChargeRow()">
+                                            <!-- <button type="button" class="btn btn-danger btn-sm action-btn" onclick="removeOtherChargeRow()">
                                                 <i class="fas fa-minus"></i>
-                                            </button>
+                                            </button> -->
                                         </div>
                                     </div>
 
@@ -539,21 +579,48 @@ $processing_fee = $sectionDetails["processing_fee"];
                                             <?php if (!empty($other_charges["data"])) {
                                                 foreach ($other_charges["data"] as $oData) { ?>
                                                     <tr>
-                                                        <td><input type="text" class="form-control" name="other_charges[]" value="<?= $oData ?>"></td>
+                                                        <td class="d-flex"><input type="text" class="form-control"
+                                                                name="other_charges[]" value="<?= $oData ?>"><button
+                                                                type="button" class="btn btn-danger btn-sm action-btn"
+                                                                onclick="removeOtherChargeRow(this)" fdprocessedid="wa0pu">
+                                                                <i class="fas fa-minus"></i>
+                                                            </button></td>
                                                     </tr>
                                                 <?php }
                                             } else { ?>
                                                 <tr>
-                                                    <td><input type="text" class="form-control" name="other_charges[]" value="TRC @ 400 USD"></td>
+                                                    <td class="d-flex"><input type="text" class="form-control"
+                                                            name="other_charges[]" value="TRC @ 400 USD"><button
+                                                            type="button" class="btn btn-danger btn-sm action-btn"
+                                                            onclick="removeOtherChargeRow(this)" fdprocessedid="wa0pu">
+                                                            <i class="fas fa-minus"></i>
+                                                        </button></td>
                                                 </tr>
                                                 <tr>
-                                                    <td><input type="text" class="form-control" name="other_charges[]" value="Ministry Order @ 400 USD"></td>
+                                                    <td class="d-flex"><input type="text" class="form-control"
+                                                            name="other_charges[]" value="Ministry Order @ 400 USD"><button
+                                                            type="button" class="btn btn-danger btn-sm action-btn"
+                                                            onclick="removeOtherChargeRow(this)" fdprocessedid="wa0pu">
+                                                            <i class="fas fa-minus"></i>
+                                                        </button></td>
                                                 </tr>
                                                 <tr>
-                                                    <td><input type="text" class="form-control" name="other_charges[]" value="Medical Insurance @ 100 USD"></td>
+                                                    <td class="d-flex"><input type="text" class="form-control"
+                                                            name="other_charges[]"
+                                                            value="Medical Insurance @ 100 USD"><button type="button"
+                                                            class="btn btn-danger btn-sm action-btn"
+                                                            onclick="removeOtherChargeRow(this)" fdprocessedid="wa0pu">
+                                                            <i class="fas fa-minus"></i>
+                                                        </button></td>
                                                 </tr>
                                                 <tr>
-                                                    <td><input type="text" class="form-control" name="other_charges[]" value="Application Fees @ 200 USD"></td>
+                                                    <td class="d-flex"><input type="text" class="form-control"
+                                                            name="other_charges[]"
+                                                            value="Application Fees @ 200 USD"><button type="button"
+                                                            class="btn btn-danger btn-sm action-btn"
+                                                            onclick="removeOtherChargeRow(this)" fdprocessedid="wa0pu">
+                                                            <i class="fas fa-minus"></i>
+                                                        </button></td>
                                                 </tr>
                                             <?php } ?>
                                         </tbody>
@@ -567,15 +634,18 @@ $processing_fee = $sectionDetails["processing_fee"];
                                     <div class="section-header">
                                         <div>
                                             <!-- <h4>One Time Charges</h4> -->
-                                            <input type="text" class="form-control section-title-input" value="<?= $one_time_charges["title"] ?? 'One Time Charges' ?>" id="one_time_title" name="one_time_title">
+                                            <input type="text" class="form-control section-title-input"
+                                                value="<?= $one_time_charges["title"] ?? 'One Time Charges' ?>"
+                                                id="one_time_title" name="one_time_title">
                                         </div>
                                         <div class="section-controls">
-                                            <button type="button" class="btn btn-success btn-sm action-btn" onclick="addOneTimeChargeRow()">
+                                            <button type="button" class="btn btn-success btn-sm action-btn"
+                                                onclick="addOneTimeChargeRow()">
                                                 <i class="fas fa-plus"></i>
                                             </button>
-                                            <button type="button" class="btn btn-danger btn-sm action-btn" onclick="removeOneTimeChargeRow()">
+                                            <!-- <button type="button" class="btn btn-danger btn-sm action-btn" onclick="removeOneTimeChargeRow()">
                                                 <i class="fas fa-minus"></i>
-                                            </button>
+                                            </button> -->
                                         </div>
                                     </div>
 
@@ -590,33 +660,83 @@ $processing_fee = $sectionDetails["processing_fee"];
                                             <?php if (!empty($one_time_charges["items"])) {
                                                 foreach ($one_time_charges["items"] as $sData) { ?>
                                                     <tr>
-                                                        <td><input type="text" class="form-control" name="one_time_charges[]" value="<?= $sData ?>"></td>
+                                                        <td class="d-flex"><input type="text" class="form-control"
+                                                                name="one_time_charges[]" value="<?= $sData ?>"><button
+                                                                type="button" class="btn btn-danger btn-sm action-btn"
+                                                                onclick="removeOneTimeChargeRow(this)">
+                                                                <i class="fas fa-minus"></i>
+                                                            </button></td>
                                                     </tr>
                                                 <?php }
                                             } else { ?>
                                                 <tr>
-                                                    <td><input type="text" class="form-control" name="one_time_charges[]" value="College Development Charges"></td>
+                                                    <td class="d-flex"><input type="text" class="form-control"
+                                                            name="one_time_charges[]"
+                                                            value="College Development Charges"><button type="button"
+                                                            class="btn btn-danger btn-sm action-btn"
+                                                            onclick="removeOneTimeChargeRow(this)">
+                                                            <i class="fas fa-minus"></i>
+                                                        </button></td>
                                                 </tr>
                                                 <tr>
-                                                    <td><input type="text" class="form-control" name="one_time_charges[]" value="Translation & Notarization"></td>
+                                                    <td class="d-flex"><input type="text" class="form-control"
+                                                            name="one_time_charges[]"
+                                                            value="Translation & Notarization"><button type="button"
+                                                            class="btn btn-danger btn-sm action-btn"
+                                                            onclick="removeOneTimeChargeRow(this)">
+                                                            <i class="fas fa-minus"></i>
+                                                        </button></td>
                                                 </tr>
                                                 <tr>
-                                                    <td><input type="text" class="form-control" name="one_time_charges[]" value="Invitation Letter"></td>
+                                                    <td class="d-flex"><input type="text" class="form-control"
+                                                            name="one_time_charges[]" value="Invitation Letter"><button
+                                                            type="button" class="btn btn-danger btn-sm action-btn"
+                                                            onclick="removeOneTimeChargeRow(this)">
+                                                            <i class="fas fa-minus"></i>
+                                                        </button></td>
                                                 </tr>
                                                 <tr>
-                                                    <td><input type="text" class="form-control" name="one_time_charges[]" value="Immigration clearance certificate"></td>
+                                                    <td class="d-flex"><input type="text" class="form-control"
+                                                            name="one_time_charges[]"
+                                                            value="Immigration clearance certificate"><button type="button"
+                                                            class="btn btn-danger btn-sm action-btn"
+                                                            onclick="removeOneTimeChargeRow(this)">
+                                                            <i class="fas fa-minus"></i>
+                                                        </button></td>
                                                 </tr>
                                                 <tr>
-                                                    <td><input type="text" class="form-control" name="one_time_charges[]" value="Library & laboratory Card Fee"></td>
+                                                    <td class="d-flex"><input type="text" class="form-control"
+                                                            name="one_time_charges[]"
+                                                            value="Library & laboratory Card Fee"><button type="button"
+                                                            class="btn btn-danger btn-sm action-btn"
+                                                            onclick="removeOneTimeChargeRow(this)">
+                                                            <i class="fas fa-minus"></i>
+                                                        </button></td>
                                                 </tr>
                                                 <tr>
-                                                    <td><input type="text" class="form-control" name="one_time_charges[]" value="Administrative & HR Documentation charges"></td>
+                                                    <td class="d-flex"><input type="text" class="form-control"
+                                                            name="one_time_charges[]"
+                                                            value="Administrative & HR Documentation charges"><button
+                                                            type="button" class="btn btn-danger btn-sm action-btn"
+                                                            onclick="removeOneTimeChargeRow(this)">
+                                                            <i class="fas fa-minus"></i>
+                                                        </button></td>
                                                 </tr>
                                                 <tr>
-                                                    <td><input type="text" class="form-control" name="one_time_charges[]" value="Travel Insurance"></td>
+                                                    <td class="d-flex"><input type="text" class="form-control"
+                                                            name="one_time_charges[]" value="Travel Insurance"><button
+                                                            type="button" class="btn btn-danger btn-sm action-btn"
+                                                            onclick="removeOneTimeChargeRow(this)">
+                                                            <i class="fas fa-minus"></i>
+                                                        </button></td>
                                                 </tr>
                                                 <tr>
-                                                    <td><input type="text" class="form-control" name="one_time_charges[]" value="Applications Fees"></td>
+                                                    <td class="d-flex"><input type="text" class="form-control"
+                                                            name="one_time_charges[]" value="Applications Fees"><button
+                                                            type="button" class="btn btn-danger btn-sm action-btn"
+                                                            onclick="removeOneTimeChargeRow(this)">
+                                                            <i class="fas fa-minus"></i>
+                                                        </button></td>
                                                 </tr>
                                             <?php } ?>
                                         </tbody>
@@ -630,15 +750,18 @@ $processing_fee = $sectionDetails["processing_fee"];
                                     <div class="section-header">
                                         <div>
                                             <!-- <h4>Our Services</h4> -->
-                                            <input type="text" class="form-control section-title-input" value="<?= $services["title"] ?? 'Our Services' ?>" id="services_title" name="services_title">
+                                            <input type="text" class="form-control section-title-input"
+                                                value="<?= $services["title"] ?? 'Our Services' ?>" id="services_title"
+                                                name="services_title">
                                         </div>
                                         <div class="section-controls">
-                                            <button type="button" class="btn btn-success btn-sm action-btn" onclick="addServiceRow()">
+                                            <button type="button" class="btn btn-success btn-sm action-btn"
+                                                onclick="addServiceRow()">
                                                 <i class="fas fa-plus"></i>
                                             </button>
-                                            <button type="button" class="btn btn-danger btn-sm action-btn" onclick="removeServiceRow()">
+                                            <!-- <button type="button" class="btn btn-danger btn-sm action-btn" onclick="removeServiceRow()">
                                                 <i class="fas fa-minus"></i>
-                                            </button>
+                                            </button> -->
                                         </div>
                                     </div>
 
@@ -652,33 +775,80 @@ $processing_fee = $sectionDetails["processing_fee"];
                                             <?php if (!empty($services["items"])) {
                                                 foreach ($services["items"] as $ssData) { ?>
                                                     <tr>
-                                                        <td><input type="text" class="form-control" name="services[]" value="<?= $ssData ?>"></td>
+                                                        <td class="d-flex"><input type="text" class="form-control"
+                                                                name="services[]" value="<?= $ssData ?>"><button type="button"
+                                                                class="btn btn-danger btn-sm action-btn"
+                                                                onclick="removeServiceRow(this)">
+                                                                <i class="fas fa-minus"></i>
+                                                            </button></td>
                                                     </tr>
                                                 <?php }
                                             } else { ?>
                                                 <tr>
-                                                    <td><input type="text" class="form-control" name="services[]" value="Admission Letter"></td>
+                                                    <td class='d-flex'><input type="text" class="form-control"
+                                                            name="services[]" value="Admission Letter"><button type="button"
+                                                            class="btn btn-danger btn-sm action-btn"
+                                                            onclick="removeServiceRow(this)">
+                                                            <i class="fas fa-minus"></i>
+                                                        </button></td>
                                                 </tr>
                                                 <tr>
-                                                    <td><input type="text" class="form-control" name="services[]" value="Apostille of all academic documents"></td>
+                                                    <td class='d-flex'><input type="text" class="form-control"
+                                                            name="services[]"
+                                                            value="Apostille of all academic documents"><button
+                                                            type="button" class="btn btn-danger btn-sm action-btn"
+                                                            onclick="removeServiceRow(this)">
+                                                            <i class="fas fa-minus"></i>
+                                                        </button></td>
                                                 </tr>
                                                 <tr>
-                                                    <td><input type="text" class="form-control" name="services[]" value="Visa Appointment"></td>
+                                                    <td class='d-flex'><input type="text" class="form-control"
+                                                            name="services[]" value="Visa Appointment"><button type="button"
+                                                            class="btn btn-danger btn-sm action-btn"
+                                                            onclick="removeServiceRow(this)">
+                                                            <i class="fas fa-minus"></i>
+                                                        </button></td>
                                                 </tr>
                                                 <tr>
-                                                    <td><input type="text" class="form-control" name="services[]" value="Flight Ticket"></td>
+                                                    <td class='d-flex'><input type="text" class="form-control"
+                                                            name="services[]" value="Flight Ticket"><button type="button"
+                                                            class="btn btn-danger btn-sm action-btn"
+                                                            onclick="removeServiceRow(this)">
+                                                            <i class="fas fa-minus"></i>
+                                                        </button></td>
                                                 </tr>
                                                 <tr>
-                                                    <td><input type="text" class="form-control" name="services[]" value="Airport Pickup & Drop"></td>
+                                                    <td class='d-flex'><input type="text" class="form-control"
+                                                            name="services[]" value="Airport Pickup & Drop"><button
+                                                            type="button" class="btn btn-danger btn-sm action-btn"
+                                                            onclick="removeServiceRow(this)">
+                                                            <i class="fas fa-minus"></i>
+                                                        </button></td>
                                                 </tr>
                                                 <tr>
-                                                    <td><input type="text" class="form-control" name="services[]" value="Accommodation & Indian Mess"></td>
+                                                    <td class='d-flex'><input type="text" class="form-control"
+                                                            name="services[]" value="Accommodation & Indian Mess"><button
+                                                            type="button" class="btn btn-danger btn-sm action-btn"
+                                                            onclick="removeServiceRow(this)">
+                                                            <i class="fas fa-minus"></i>
+                                                        </button></td>
                                                 </tr>
                                                 <tr>
-                                                    <td><input type="text" class="form-control" name="services[]" value="Bank account & Sim card allotment"></td>
+                                                    <td class='d-flex'><input type="text" class="form-control"
+                                                            name="services[]"
+                                                            value="Bank account & Sim card allotment"><button type="button"
+                                                            class="btn btn-danger btn-sm action-btn"
+                                                            onclick="removeServiceRow(this)">
+                                                            <i class="fas fa-minus"></i>
+                                                        </button></td>
                                                 </tr>
                                                 <tr>
-                                                    <td><input type="text" class="form-control" name="services[]" value="24*7 On-call & On-campus"></td>
+                                                    <td class='d-flex'><input type="text" class="form-control"
+                                                            name="services[]" value="24*7 On-call & On-campus"><button
+                                                            type="button" class="btn btn-danger btn-sm action-btn"
+                                                            onclick="removeServiceRow(this)">
+                                                            <i class="fas fa-minus"></i>
+                                                        </button></td>
                                                 </tr>
                                             <?php } ?>
                                         </tbody>
@@ -693,15 +863,18 @@ $processing_fee = $sectionDetails["processing_fee"];
 
                                 <div>
                                     <!-- <h3>Processing Fee Details</h3> -->
-                                    <input type="text" class="form-control section-title-input" value="<?= $processing_fee["title"] ?? 'Processing Fee Details' ?>" id="processing_title" name="processing_title">
+                                    <input type="text" class="form-control section-title-input"
+                                        value="<?= $processing_fee["title"] ?? 'Processing Fee Details' ?>"
+                                        id="processing_title" name="processing_title">
                                 </div>
                                 <div class="section-controls">
-                                    <button type="button" class="btn btn-success action-btn" onclick="addProcessingRow()">
+                                    <button type="button" class="btn btn-success action-btn"
+                                        onclick="addProcessingRow()">
                                         <i class="fas fa-plus"></i> Add Row
                                     </button>
-                                    <button type="button" class="btn btn-danger action-btn" onclick="removeProcessingRow()">
+                                    <!-- <button type="button" class="btn btn-danger action-btn" onclick="removeProcessingRow()">
                                         <i class="fas fa-minus"></i> Remove
-                                    </button>
+                                    </button> -->
                                 </div>
                             </div>
 
@@ -710,12 +883,16 @@ $processing_fee = $sectionDetails["processing_fee"];
                                     <tr>
                                         <?php if (!empty($processing_fee["header"])) {
                                             foreach ($processing_fee["header"] as $pHeader) { ?>
-                                                <th><input type="text" class="form-control" name="processing[headline][]" value="<?= $pHeader["description"] ?>"></th>
-                                                <th><input type="text" class="form-control" name="processing[amount][]" value="<?= $pHeader["amount"] ?>"></th>
+                                                <th><input type="text" class="form-control" name="processing[headline][]"
+                                                        value="<?= $pHeader["description"] ?>"></th>
+                                                <th class="d-flex"><input type="text" class="form-control"
+                                                        name="processing[amount][]" value="<?= $pHeader["amount"] ?>"></th>
                                             <?php }
                                         } else { ?>
-                                            <th><input type="text" class="form-control" name="processing[headline][]" value="Installment"></th>
-                                            <th><input type="text" class="form-control" name="processing[amount][]" onchange="calculateProcessingTotal()" value="Amount (INR)"></th>
+                                            <th><input type="text" class="form-control" name="processing[headline][]"
+                                                    value="Installment"></th>
+                                            <th><input type="text" class="form-control" name="processing[amount][]"
+                                                    onchange="calculateProcessingTotal()" value="Amount (INR)"></th>
                                         <?php } ?>
                                     </tr>
                                 </thead>
@@ -724,19 +901,37 @@ $processing_fee = $sectionDetails["processing_fee"];
                                         foreach ($processing_fee["data"] as $pData) { ?>
                                             <tr>
 
-                                                <td><input type="text" class="form-control" name="processing[description][]" value="<?= $pData["description"] ?>"></td>
-                                                <td><input type="text" class="form-control processing-input" name="processing[amount][]" onchange="calculateProcessingTotal()" value="<?= $pData["amount"] ?>"></td>
+                                                <td><input type="text" class="form-control" name="processing[description][]"
+                                                        value="<?= $pData["description"] ?>"></td>
+                                                <td class="d-flex"><input type="text" class="form-control processing-input"
+                                                        name="processing[amount][]" onchange="calculateProcessingTotal()"
+                                                        value="<?= $pData["amount"] ?>"><button type="button"
+                                                        class="btn btn-danger action-btn" onclick="removeProcessingRow(this)">
+                                                        <i class="fas fa-minus"></i>
+                                                    </button></td>
                                             </tr>
                                         <?php }
                                     } else { ?>
 
                                         <tr>
-                                            <td><input type="text" class="form-control" name="processing[description][]" value="Registrtion & Documentation"></td>
-                                            <td><input type="number" class="form-control processing-input" name="processing[amount][]" value="5000" onchange="calculateProcessingTotal()"></td>
+                                            <td><input type="text" class="form-control" name="processing[description][]"
+                                                    value="Registrtion & Documentation"></td>
+                                            <td class="d-flex"><input type="number" class="form-control processing-input"
+                                                    name="processing[amount][]" value="5000"
+                                                    onchange="calculateProcessingTotal()"><button type="button"
+                                                    class="btn btn-danger action-btn" onclick="removeProcessingRow(this)">
+                                                    <i class="fas fa-minus"></i>
+                                                </button></td>
                                         </tr>
                                         <tr>
-                                            <td><input type="text" class="form-control" name="processing[description][]" value="Visa Charges & Apostile"></td>
-                                            <td><input type="number" class="form-control processing-input" name="processing[amount][]" value="3000" onchange="calculateProcessingTotal()"></td>
+                                            <td><input type="text" class="form-control" name="processing[description][]"
+                                                    value="Visa Charges & Apostile"></td>
+                                            <td class="d-flex"><input type="number" class="form-control processing-input"
+                                                    name="processing[amount][]" value="3000"
+                                                    onchange="calculateProcessingTotal()"><button type="button"
+                                                    class="btn btn-danger action-btn" onclick="removeProcessingRow(this)">
+                                                    <i class="fas fa-minus"></i>
+                                                </button></td>
                                         </tr>
                                     <?php } ?>
                                 </tbody>
@@ -744,14 +939,18 @@ $processing_fee = $sectionDetails["processing_fee"];
                                     <?php if (!empty($processing_fee["footer"])) {
                                         foreach ($processing_fee["footer"] as $fData) { ?>
                                             <tr>
-                                                <td><input type="text" class="form-control" id="processing_footer_headline" value="<?= $fData["description"] ?>"></td>
-                                                <td><input type="number" id="totalProcessing" class="form-control" value="<?= $fData["amount"] ?>" readonly></td>
+                                                <td><input type="text" class="form-control" id="processing_footer_headline"
+                                                        value="<?= $fData["description"] ?>"></td>
+                                                <td><input type="number" id="totalProcessing" class="form-control"
+                                                        value="<?= $fData["amount"] ?>" readonly></td>
                                             </tr>
                                         <?php }
                                     } else { ?>
                                         <tr>
-                                            <td><input type="text" class="form-control" id="processing_footer_headline" value="Total"></td>
-                                            <td><input type="number" id="totalProcessing" class="form-control" value="0" readonly></td>
+                                            <td><input type="text" class="form-control" id="processing_footer_headline"
+                                                    value="Total"></td>
+                                            <td><input type="number" id="totalProcessing" class="form-control" value="0"
+                                                    readonly></td>
                                         </tr>
                                     <?php } ?>
                                 </tfoot>
@@ -763,25 +962,31 @@ $processing_fee = $sectionDetails["processing_fee"];
                         <div class="row">
                             <div class="col-md-12 text-center">
                                 <div class="gst-badge">
-                                    <input type="text" class="form-control" value="<?= $processing_fee["gst_text"] ?? '18% GST Applicable' ?>" id="gst_text" name="gst_text">
+                                    <input type="text" class="form-control"
+                                        value="<?= $processing_fee["gst_text"] ?? '18% GST Applicable' ?>" id="gst_text"
+                                        name="gst_text">
                                 </div>
                             </div>
                         </div>
 
                         <!-- Contact Section -->
                         <div class="contact-section">
+
                             <div class="row">
                                 <div class="col-md-4">
                                     <label><i class="fas fa-phone"></i> Contact Number</label>
-                                    <input type="text" class="form-control" value="+91 7217219100" placeholder="Enter contact number" id="contact_number" name="contact_number">
+                                    <input type="text" class="form-control" value="<?= $contactInfo['phone'] ?? '' ?>" readonly
+                                        placeholder="Enter contact number" id="contact_number" name="contact_number">
                                 </div>
                                 <div class="col-md-4">
                                     <label><i class="fas fa-envelope"></i> Email</label>
-                                    <input type="email" class="form-control" value="" placeholder="Enter email" id="contact_email" name="contact_email">
+                                    <input type="email" class="form-control" readonly value="<?= $contactInfo['email'] ?? 'brightrouteconsulting@gmail.com' ?>" placeholder="Enter email"
+                                        id="contact_email" name="contact_email">
                                 </div>
                                 <div class="col-md-4">
                                     <label><i class="fas fa-globe"></i> Website</label>
-                                    <input type="text" class="form-control" value="" placeholder="Enter website" id="contact_website" name="contact_website">
+                                    <input type="text" class="form-control" readonly value="<?= $contactInfo['website'] ?? 'www.educationvibes.in' ?>" placeholder="Enter website"
+                                        id="contact_website" name="contact_website">
                                 </div>
                             </div>
                         </div>
@@ -791,7 +996,7 @@ $processing_fee = $sectionDetails["processing_fee"];
                         <!-- Action Buttons -->
                         <div class="row mt-4">
                             <div class="col-md-12 text-center">
-                                <button type="button" class="btn btn-primary btn-lg" onclick="saveFormData()">
+                                <button type="submit" class="btn btn-primary btn-lg" onclick="saveFormData()">
                                     <i class="fas fa-save"></i> Save Data
                                 </button>
 
@@ -800,7 +1005,7 @@ $processing_fee = $sectionDetails["processing_fee"];
                                         <i class="fas fa-eye"></i> Preview
                                     </button>
 
-                                    <button type="button" class="btn btn-success btn-lg" onclick="download()">
+                                    <button type="button" class="btn btn-success btn-lg hide generate-pdf-button" onclick="generatePDFAndUpload(<?= $id ?>)">
                                         <i class="fas fa-eye"></i> Save in KnowledgeBase
                                     </button>
                                 </div>
@@ -830,10 +1035,15 @@ $processing_fee = $sectionDetails["processing_fee"];
         window.open(url, "_blank");
     }
 
-    function download() {
+    function download(id) {
         var url = "<?= admin_url('Fees/generate'); ?>/" + id + "?download=1";
 
-        fetch(url).catch(error => console.error("Request failed:", error));
+        let newTab = window.open(url, "_blank");
+
+        // Optional: close after 3 seconds
+        setTimeout(() => {
+            if (newTab) newTab.close();
+        }, 5000);
     }
 
 
@@ -844,6 +1054,7 @@ $processing_fee = $sectionDetails["processing_fee"];
     var selected_segment = "<?= $feesStructure["segment_id"] ?? '' ?>";
     var selected_country = "<?= $feesStructure["country_id"] ?? '' ?>";
     var selected_university = "<?= $feesStructure["university_id"] ?? '' ?>";
+    var regions = <?= json_encode($regions ?? [], true) ?>;
 
     var setAuto = 0;
     if (selected_segment != "") {
@@ -916,6 +1127,8 @@ $processing_fee = $sectionDetails["processing_fee"];
                 .attr("src", "")
                 .hide();
         }
+
+        $(".generate-pdf-button").addClass("hide");
     });
 
 
@@ -959,6 +1172,8 @@ $processing_fee = $sectionDetails["processing_fee"];
         $("#university_name").val("");
 
         $universitiesSelect.selectpicker('refresh');
+        $(".generate-pdf-button").addClass("hide");
+
     });
 
 
@@ -969,7 +1184,9 @@ $processing_fee = $sectionDetails["processing_fee"];
         let university_name = $(this).find("option:selected").text(); // text of selected option
 
         // Safely get university data
-        let universityData = (universities && universities[country_id][university_id]) ? universities[country_id][university_id] : {};
+        let universityData = (universities && universities[country_id][university_id]) ? universities[country_id][
+            university_id
+        ] : {};
         // Set university logo if available
 
         if (setAuto == 0) {
@@ -995,6 +1212,8 @@ $processing_fee = $sectionDetails["processing_fee"];
         // Set input field with university name
         $("#founded_year").val(universityData.founded);
         setAuto = 0;
+        $(".generate-pdf-button").addClass("hide");
+
     });
 
 
@@ -1004,6 +1223,8 @@ $processing_fee = $sectionDetails["processing_fee"];
         if (charCode < 48 || charCode > 57) {
             e.preventDefault(); // stop non-numeric input
         }
+        $(".generate-pdf-button").addClass("hide");
+
     });
 
     $("#year").on('input', function() {
@@ -1014,6 +1235,8 @@ $processing_fee = $sectionDetails["processing_fee"];
         } else {
             $("#program_duration").val(""); // clear if empty
         }
+        $(".generate-pdf-button").addClass("hide");
+
     });
 
 
@@ -1078,17 +1301,24 @@ $processing_fee = $sectionDetails["processing_fee"];
         var rowCount = tableBody.rows.length;
         var newRow = tableBody.insertRow();
 
-        newRow.innerHTML = `
-        <td><input type="text" class="form-control" name="other_charges[]" value="New Charge"></td>
-        `;
+        newRow.innerHTML =
+            `
+        <td class="d-flex"><input type="text" class="form-control" name="other_charges[]" value="New Charge"><button type="button" class="btn btn-danger btn-sm action-btn" onclick="removeOtherChargeRow(this)" fdprocessedid="wa0pu"><i class="fas fa-minus"></i></button></td>`;
     }
 
-    function removeOtherChargeRow() {
-        var tableBody = document.getElementById('otherChargesBody');
-        // if (tableBody.rows.length > 1) {
-        tableBody.deleteRow(tableBody.rows.length - 1);
-        // }
+    function removeOtherChargeRow(obj = "") {
+
+        if (obj) {
+            $(obj).closest("tr").remove(); // find nearest <tr>
+        } else {
+            let tableBody = document.getElementById('otherChargesBody');
+
+            if (tableBody.rows.length > 0) {
+                tableBody.deleteRow(tableBody.rows.length - 1);
+            }
+        }
     }
+
 
     // One Time Charges Table Functions
     function addOneTimeChargeRow() {
@@ -1097,15 +1327,22 @@ $processing_fee = $sectionDetails["processing_fee"];
         var newRow = tableBody.insertRow();
 
         newRow.innerHTML = `
-        <td><input type="text" class="form-control" name="one_time_charges[]" value="New One Time Charge"></td>
+        <td class='flex'><input type="text" class="form-control" name="one_time_charges[]" value="New One Time Charge"><button type="button" class="btn btn-danger btn-sm action-btn" onclick="removeOneTimeChargeRow(this)">
+                                                                <i class="fas fa-minus"></i>
+                                                            </button></td>
         `;
     }
 
-    function removeOneTimeChargeRow() {
-        var tableBody = document.getElementById('oneTimeChargesBody');
-        // if (tableBody.rows.length > 1) {
-        tableBody.deleteRow(tableBody.rows.length - 1);
-        // }
+    function removeOneTimeChargeRow(obj = "") {
+        if (obj) {
+            $(obj).closest("tr").remove(); // find nearest <tr>
+        } else {
+            let tableBody = document.getElementById('oneTimeChargesBody');
+
+            if (tableBody.rows.length > 0) {
+                tableBody.deleteRow(tableBody.rows.length - 1);
+            }
+        }
     }
 
     // Services Table Functions
@@ -1115,15 +1352,22 @@ $processing_fee = $sectionDetails["processing_fee"];
         var newRow = tableBody.insertRow();
 
         newRow.innerHTML = `
-        <td><input type="text" class="form-control" name="services[]" value="New Service"></td>
+        <td class='d-flex'><input type="text" class="form-control" name="services[]" value="New Service"><button type="button" class="btn btn-danger btn-sm action-btn" onclick="removeServiceRow(this)">
+                                                                <i class="fas fa-minus"></i>
+                                                            </button></td>
         `;
     }
 
-    function removeServiceRow() {
-        var tableBody = document.getElementById('servicesBody');
-        // if (tableBody.rows.length > 1) {
-        tableBody.deleteRow(tableBody.rows.length - 1);
-        // }
+    function removeServiceRow(obj = "") {
+        if (obj) {
+            $(obj).closest("tr").remove(); // find nearest <tr>
+        } else {
+            let tableBody = document.getElementById('servicesBody');
+
+            if (tableBody.rows.length > 0) {
+                tableBody.deleteRow(tableBody.rows.length - 1);
+            }
+        }
     }
 
     // Processing Fee Table Functions
@@ -1140,10 +1384,11 @@ $processing_fee = $sectionDetails["processing_fee"];
         calculateProcessingTotal();
     }
 
-    function removeProcessingRow() {
+    function removeProcessingRow(obj = "") {
         var tableBody = document.getElementById('processingBody');
         if (tableBody.rows.length > 1) {
-            tableBody.deleteRow(tableBody.rows.length - 1);
+            // tableBody.deleteRow(tableBody.rows.length - 1);
+            $(obj).closest("tr").remove(); // find nearest <tr>
             calculateProcessingTotal();
         }
     }
@@ -1204,6 +1449,7 @@ $processing_fee = $sectionDetails["processing_fee"];
             segment_id: $('#segment_type').val(),
             country_id: $('#countries').val(),
             university_id: $('#universities').val(),
+            region_id: $('#region_type').val(),
 
             // Proper CSRF format for CodeIgniter
             [csrfData.token_name]: csrfData.hash,
@@ -1212,6 +1458,7 @@ $processing_fee = $sectionDetails["processing_fee"];
                 segment_type: $("#segment_type option:selected").text(),
                 country_name: $('#countries option:selected').text(),
                 university_name: $('#universities option:selected').text(),
+                region_name: $('#region_type option:selected').text(),
                 founded_year: $('#founded_year').val(),
                 duration: $('#program_duration').val(),
                 year: $('#year').val(),
@@ -1407,12 +1654,19 @@ $processing_fee = $sectionDetails["processing_fee"];
     }
 
 
-
-
-
     function saveFormData() {
+        appValidateForm($('#feesStructure-form'), {
+            segment_type: 'required',
+            countries: 'required',
+            universities: 'required',
+            region: 'required'
+        }, saveFormDataSubmit);
+    }
+
+    function saveFormDataSubmit() {
 
         const dataObject = collectFormData();
+        pdfData = [];
         const formData = objectToFormData(dataObject);
         console.log("final", formData);
         $.ajax({
@@ -1429,9 +1683,18 @@ $processing_fee = $sectionDetails["processing_fee"];
                     if (response.id > 0) {
                         id = response.id;
                         $(".previewData-section").removeClass("hide");
+
+                        pdfData["university_name"] = dataObject["university_info"].university_name;
+                        pdfData["country_name"] = dataObject["university_info"].country_name;
+                        pdfData["segment_type"] = dataObject["university_info"].segment_type;
+                        pdfData["region_name"] = dataObject["university_info"].region_name;
+                        $(".generate-pdf-button").removeClass("hide");
                     }
                     alert_float("success", response.resp_desc);
                 } else {
+                    id = "";
+                    $(".previewData-section").addClass("hide");
+                    $(".generate-pdf-button").addClass("hide");
                     alert_float("danger", response.resp_desc);
                 }
             },
@@ -1500,7 +1763,130 @@ $processing_fee = $sectionDetails["processing_fee"];
         if (selectedUniversity > 0) {
             var url = "<?= admin_url('Fees/company/'); ?>" + selectedUniversity;
             window.location.href = url;
+        } else {
+
+            let url = "<?= admin_url('Fees/company'); ?>";
+            window.location.href = url;
         }
 
     });
+
+    $("#region_type").on("change", function() {
+        let id = $(this).val();
+        let regionName = $(this).find("option:selected").text();
+        console.log(regionName);
+        let selectedRegion = regions[id] ?? [];
+        $("#region_name").val(regionName);
+        if (selectedRegion && selectedRegion.contact != '') {
+            $("#contact_number").val(selectedRegion.contact);
+        } else {
+            $("#contact_number").val("");
+        }
+        $(".generate-pdf-button").addClass("hide");
+
+    });
+
+    var pdfData = [];
+    async function generatePDFAndUpload(id) {
+
+        const csrfName = '<?= $this->security->get_csrf_token_name(); ?>';
+        let csrfHash = '<?= $this->security->get_csrf_hash(); ?>';
+
+        const frame = document.getElementById("pdfFrame");
+
+        try {
+
+            show_loader();
+
+            frame.src = "<?= admin_url('Fees/generate'); ?>/" + id;
+
+            frame.onload = async function() {
+
+                try {
+
+                    const element = frame.contentWindow.document.getElementById("feeStructures");
+
+                    if (!element) {
+                        throw new Error("Fee structure element not found.");
+                    }
+
+                    const canvas = await html2canvas(element, {
+                        scale: 2,
+                        useCORS: true,
+                        backgroundColor: "#ffffff"
+                    });
+
+                    const {
+                        jsPDF
+                    } = window.jspdf;
+                    const pdf = new jsPDF("p", "mm", "a4");
+                    const imgData = canvas.toDataURL("image/jpeg", 1.2);
+                    const imgWidth = 210;
+                    const pageHeight = 297;
+                    const imgHeight = (canvas.height * imgWidth) / canvas.width;
+
+                    if (imgHeight <= pageHeight) {
+                        pdf.addImage(imgData, "JPEG", 0, 0, imgWidth, imgHeight);
+                    } else {
+                        let heightLeft = imgHeight;
+                        let position = 0;
+
+                        pdf.addImage(imgData, "JPEG", 0, position, imgWidth, imgHeight);
+                        heightLeft -= pageHeight;
+
+                        while (heightLeft > 0) {
+                            position = heightLeft - imgHeight;
+                            pdf.addPage();
+                            pdf.addImage(imgData, "JPEG", 0, position, imgWidth, imgHeight);
+                            heightLeft -= pageHeight;
+                        }
+                    }
+
+
+                    const pdfBlob = pdf.output("blob");
+
+                    // Prepare FormData
+                    const formData = new FormData();
+                    const filename = pdfData["university_name"].replace(/ /g, "_") + ".pdf";
+                    formData.append("pdf_file", pdfBlob, filename);
+
+                    // Correct CSRF token append
+                    formData.append(csrfName, csrfHash);
+                    formData.append("country_name", pdfData["country_name"]);
+                    formData.append("university_name", pdfData["university_name"]);
+                    formData.append("segment_type", pdfData["segment_type"]);
+                    formData.append("region_name", pdfData["region_name"]);
+
+                    const response = await fetch("<?= base_url('admin/Fees/savePdf') ?>", {
+                        method: "POST",
+                        body: formData,
+                        credentials: "same-origin"
+                    });
+
+                    if (!response.ok) {
+                        throw new Error("Upload failed.");
+                    }
+
+                    const result = await response.text();
+                    hide_loader();
+                    alert_float("success", "PDF generated and uploaded successfully!");
+
+                    console.log("Server response:", result);
+
+                } catch (innerError) {
+
+                    alert_float("danger", innerError.message);
+                    console.error(innerError);
+
+                }
+            };
+
+        } catch (error) {
+            hide_loader();
+
+            alert_float("danger", "Something went wrong while generating PDF.");
+            console.error(error);
+
+        }
+    }
 </script>

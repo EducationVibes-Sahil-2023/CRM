@@ -27,6 +27,9 @@ class Fees extends AdminController
         $allFees = $this->fees_model->getFeesStructure();
         $data["feesStructure"] = [];
         $data["feesStructure_data"] = $allFees;
+        $allRegions = $this->fees_model->getRegions();
+        $data["regions"] = array_column($allRegions, null, 'id');
+
         if (!empty($id)) {
             $data["feesStructure"] = $this->fees_model->getFeesStructure($id);
         }
@@ -46,8 +49,9 @@ class Fees extends AdminController
         $segment_id     = $this->input->post('segment_id');
         $country_id     = $this->input->post('country_id');
         $university_id  = $this->input->post('university_id');
+        $region_id  = $this->input->post('region_id');
 
-        if (!$segment_id || !$country_id || !$university_id) {
+        if (!$segment_id || !$country_id || !$university_id || !$region_id) {
             echo json_encode([
                 'resp_code' => 'ERR',
                 'resp_desc' => 'Required fields missing.',
@@ -65,9 +69,11 @@ class Fees extends AdminController
             "segment_id"      => $segment_id,
             "country_id"      => $country_id,
             "university_id"   => $university_id,
+            "region_id"   => $region_id,
             "segment_name"      => $_POST["university_info"]["segment_type"] ?? '',
             "country_name"      => $_POST["university_info"]["country_name"] ?? '',
             "university_name"   => $_POST["university_info"]["university_name"] ?? '',
+            "region_name"   => $_POST["university_info"]["region_name"] ?? '',
             "university_data" => json_encode($this->input->post('university_info')),
             "section_data"    => json_encode($this->input->post('sections')),
             "contact_data"    => json_encode($this->input->post('contact')),
@@ -151,15 +157,16 @@ class Fees extends AdminController
             $file = $_FILES['pdf_file'];
 
             // Clean filename
-            $filename = preg_replace('/[^a-zA-Z0-9_\-\.]/', '', $file['name']);
+
 
             // Get POST data
             $countryName = $this->input->post('country_name');
             $segmentType = $this->input->post('segment_type');
             $university_name = $this->input->post('university_name');
-
+            $region_name = $this->input->post('region_name');
+            $filename = preg_replace('/[^a-zA-Z0-9_\-\.]/', '', $file['name']);
             // Define upload directory with subfolders
-            $uploadDir = FCPATH . str_replace(" ", "_", "uploads/knowledge_base/fees_structures/" . $countryName . "/" . $university_name . "/");
+            $uploadDir = FCPATH . str_replace(" ", "_", "uploads/knowledge_base/fees_structures/" . $countryName . "/" . $region_name . "/" . $university_name . "/");
 
             // Create directories if they don't exist
             if (!is_dir($uploadDir)) {
@@ -173,7 +180,7 @@ class Fees extends AdminController
             if (move_uploaded_file($file['tmp_name'], $targetPath)) {
 
                 // Relative path for DB (use forward slashes)
-                $relativePath = "uploads/knowledge_base/fees_structures/" . $countryName . "/" . $university_name . "/" . $filename;
+                $relativePath = "uploads/knowledge_base/fees_structures/" . $countryName . "/" . $region_name . "/" . $university_name . "/" . $filename;
                 $relativePath = base_url() . str_replace(" ", "_", $relativePath);
                 // Call knowledge_base function
                 knowledge_base($countryName, $university_name, $relativePath, "Fees Structure/" . $segmentType);
