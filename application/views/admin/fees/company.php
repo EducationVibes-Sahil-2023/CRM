@@ -428,10 +428,10 @@ $contactInfo = $feesStructure["contact_data"];
                                 </div>
                                 <div class="section-controls">
                                     <button type="button" class="btn btn-success action-btn" onclick="addFeesRow()">
-                                        <i class="fas fa-plus"></i> Add Year
+                                        <i class="fa fa-plus"></i> Add Year
                                     </button>
                                     <button type="button" class="btn btn-danger action-btn" onclick="removeFeesRow()">
-                                        <i class="fas fa-minus"></i> Remove Year
+                                        <i class="fa fa-minus"></i> Remove Year
                                     </button>
                                 </div>
                             </div>
@@ -561,10 +561,10 @@ $contactInfo = $feesStructure["contact_data"];
                                         <div class="section-controls">
                                             <button type="button" class="btn btn-success btn-sm action-btn"
                                                 onclick="addOtherChargeRow()">
-                                                <i class="fas fa-plus"></i>
+                                                <i class="fa fa-plus"></i>
                                             </button>
                                             <!-- <button type="button" class="btn btn-danger btn-sm action-btn" onclick="removeOtherChargeRow()">
-                                                <i class="fas fa-minus"></i>
+                                                <i class="fa fa-minus"></i>
                                             </button> -->
                                         </div>
                                     </div>
@@ -583,7 +583,7 @@ $contactInfo = $feesStructure["contact_data"];
                                                                 name="other_charges[]" value="<?= $oData ?>"><button
                                                                 type="button" class="btn btn-danger btn-sm action-btn"
                                                                 onclick="removeOtherChargeRow(this)" fdprocessedid="wa0pu">
-                                                                <i class="fas fa-minus"></i>
+                                                                <i class="fa fa-minus"></i>
                                                             </button></td>
                                                     </tr>
                                                 <?php }
@@ -593,7 +593,7 @@ $contactInfo = $feesStructure["contact_data"];
                                                             name="other_charges[]" value="TRC @ 400 USD"><button
                                                             type="button" class="btn btn-danger btn-sm action-btn"
                                                             onclick="removeOtherChargeRow(this)" fdprocessedid="wa0pu">
-                                                            <i class="fas fa-minus"></i>
+                                                            <i class="fa fa-minus"></i>
                                                         </button></td>
                                                 </tr>
                                                 <tr>
@@ -601,7 +601,7 @@ $contactInfo = $feesStructure["contact_data"];
                                                             name="other_charges[]" value="Ministry Order @ 400 USD"><button
                                                             type="button" class="btn btn-danger btn-sm action-btn"
                                                             onclick="removeOtherChargeRow(this)" fdprocessedid="wa0pu">
-                                                            <i class="fas fa-minus"></i>
+                                                            <i class="fa fa-minus"></i>
                                                         </button></td>
                                                 </tr>
                                                 <tr>
@@ -610,7 +610,7 @@ $contactInfo = $feesStructure["contact_data"];
                                                             value="Medical Insurance @ 100 USD"><button type="button"
                                                             class="btn btn-danger btn-sm action-btn"
                                                             onclick="removeOtherChargeRow(this)" fdprocessedid="wa0pu">
-                                                            <i class="fas fa-minus"></i>
+                                                            <i class="fa fa-minus"></i>
                                                         </button></td>
                                                 </tr>
                                                 <tr>
@@ -619,7 +619,7 @@ $contactInfo = $feesStructure["contact_data"];
                                                             value="Application Fees @ 200 USD"><button type="button"
                                                             class="btn btn-danger btn-sm action-btn"
                                                             onclick="removeOtherChargeRow(this)" fdprocessedid="wa0pu">
-                                                            <i class="fas fa-minus"></i>
+                                                            <i class="fa fa-minus"></i>
                                                         </button></td>
                                                 </tr>
                                             <?php } ?>
@@ -641,10 +641,10 @@ $contactInfo = $feesStructure["contact_data"];
                                         <div class="section-controls">
                                             <button type="button" class="btn btn-success btn-sm action-btn"
                                                 onclick="addOneTimeChargeRow()">
-                                                <i class="fas fa-plus"></i>
+                                                <i class="fa fa-plus"></i>
                                             </button>
                                             <!-- <button type="button" class="btn btn-danger btn-sm action-btn" onclick="removeOneTimeChargeRow()">
-                                                <i class="fas fa-minus"></i>
+                                                <i class="fa fa-minus"></i>
                                             </button> -->
                                         </div>
                                     </div>
@@ -664,7 +664,7 @@ $contactInfo = $feesStructure["contact_data"];
                                                                 name="one_time_charges[]" value="<?= $sData ?>"><button
                                                                 type="button" class="btn btn-danger btn-sm action-btn"
                                                                 onclick="removeOneTimeChargeRow(this)">
-                                                                <i class="fas fa-minus"></i>
+                                                                <i class="fa fa-minus"></i>
                                                             </button></td>
                                                     </tr>
                                                 <?php }
@@ -675,7 +675,7 @@ $contactInfo = $feesStructure["contact_data"];
                                                             value="College Development Charges"><button type="button"
                                                             class="btn btn-danger btn-sm action-btn"
                                                             onclick="removeOneTimeChargeRow(this)">
-                                                            <i class="fas fa-minus"></i>
+                                                            <i class="fa fa-minus"></i>
                                                         </button></td>
                                                 </tr>
                                                 <tr>
@@ -684,7 +684,7 @@ $contactInfo = $feesStructure["contact_data"];
                                                             value="Translation & Notarization"><button type="button"
                                                             class="btn btn-danger btn-sm action-btn"
                                                             onclick="removeOneTimeChargeRow(this)">
-                                                            <i class="fas fa-minus"></i>
+                                                            <i class="fa fa-minus"></i>
                                                         </button></td>
                                                 </tr>
                                                 <tr>
@@ -692,7 +692,7 @@ $contactInfo = $feesStructure["contact_data"];
                                                             name="one_time_charges[]" value="Invitation Letter"><button
                                                             type="button" class="btn btn-danger btn-sm action-btn"
                                                             onclick="removeOneTimeChargeRow(this)">
-                                                            <i class="fas fa-minus"></i>
+                                                            <i class="fa fa-minus"></i>
                                                         </button></td>
                                                 </tr>
                                                 <tr>
@@ -701,7 +701,7 @@ $contactInfo = $feesStructure["contact_data"];
                                                             value="Immigration clearance certificate"><button type="button"
                                                             class="btn btn-danger btn-sm action-btn"
                                                             onclick="removeOneTimeChargeRow(this)">
-                                                            <i class="fas fa-minus"></i>
+                                                            <i class="fa fa-minus"></i>
                                                         </button></td>
                                                 </tr>
                                                 <tr>
@@ -710,7 +710,7 @@ $contactInfo = $feesStructure["contact_data"];
                                                             value="Library & laboratory Card Fee"><button type="button"
                                                             class="btn btn-danger btn-sm action-btn"
                                                             onclick="removeOneTimeChargeRow(this)">
-                                                            <i class="fas fa-minus"></i>
+                                                            <i class="fa fa-minus"></i>
                                                         </button></td>
                                                 </tr>
                                                 <tr>
@@ -719,7 +719,7 @@ $contactInfo = $feesStructure["contact_data"];
                                                             value="Administrative & HR Documentation charges"><button
                                                             type="button" class="btn btn-danger btn-sm action-btn"
                                                             onclick="removeOneTimeChargeRow(this)">
-                                                            <i class="fas fa-minus"></i>
+                                                            <i class="fa fa-minus"></i>
                                                         </button></td>
                                                 </tr>
                                                 <tr>
@@ -727,7 +727,7 @@ $contactInfo = $feesStructure["contact_data"];
                                                             name="one_time_charges[]" value="Travel Insurance"><button
                                                             type="button" class="btn btn-danger btn-sm action-btn"
                                                             onclick="removeOneTimeChargeRow(this)">
-                                                            <i class="fas fa-minus"></i>
+                                                            <i class="fa fa-minus"></i>
                                                         </button></td>
                                                 </tr>
                                                 <tr>
@@ -735,7 +735,7 @@ $contactInfo = $feesStructure["contact_data"];
                                                             name="one_time_charges[]" value="Applications Fees"><button
                                                             type="button" class="btn btn-danger btn-sm action-btn"
                                                             onclick="removeOneTimeChargeRow(this)">
-                                                            <i class="fas fa-minus"></i>
+                                                            <i class="fa fa-minus"></i>
                                                         </button></td>
                                                 </tr>
                                             <?php } ?>
@@ -757,10 +757,10 @@ $contactInfo = $feesStructure["contact_data"];
                                         <div class="section-controls">
                                             <button type="button" class="btn btn-success btn-sm action-btn"
                                                 onclick="addServiceRow()">
-                                                <i class="fas fa-plus"></i>
+                                                <i class="fa fa-plus"></i>
                                             </button>
                                             <!-- <button type="button" class="btn btn-danger btn-sm action-btn" onclick="removeServiceRow()">
-                                                <i class="fas fa-minus"></i>
+                                                <i class="fa fa-minus"></i>
                                             </button> -->
                                         </div>
                                     </div>
@@ -779,7 +779,7 @@ $contactInfo = $feesStructure["contact_data"];
                                                                 name="services[]" value="<?= $ssData ?>"><button type="button"
                                                                 class="btn btn-danger btn-sm action-btn"
                                                                 onclick="removeServiceRow(this)">
-                                                                <i class="fas fa-minus"></i>
+                                                                <i class="fa fa-minus"></i>
                                                             </button></td>
                                                     </tr>
                                                 <?php }
@@ -789,7 +789,7 @@ $contactInfo = $feesStructure["contact_data"];
                                                             name="services[]" value="Admission Letter"><button type="button"
                                                             class="btn btn-danger btn-sm action-btn"
                                                             onclick="removeServiceRow(this)">
-                                                            <i class="fas fa-minus"></i>
+                                                            <i class="fa fa-minus"></i>
                                                         </button></td>
                                                 </tr>
                                                 <tr>
@@ -798,7 +798,7 @@ $contactInfo = $feesStructure["contact_data"];
                                                             value="Apostille of all academic documents"><button
                                                             type="button" class="btn btn-danger btn-sm action-btn"
                                                             onclick="removeServiceRow(this)">
-                                                            <i class="fas fa-minus"></i>
+                                                            <i class="fa fa-minus"></i>
                                                         </button></td>
                                                 </tr>
                                                 <tr>
@@ -806,7 +806,7 @@ $contactInfo = $feesStructure["contact_data"];
                                                             name="services[]" value="Visa Appointment"><button type="button"
                                                             class="btn btn-danger btn-sm action-btn"
                                                             onclick="removeServiceRow(this)">
-                                                            <i class="fas fa-minus"></i>
+                                                            <i class="fa fa-minus"></i>
                                                         </button></td>
                                                 </tr>
                                                 <tr>
@@ -814,7 +814,7 @@ $contactInfo = $feesStructure["contact_data"];
                                                             name="services[]" value="Flight Ticket"><button type="button"
                                                             class="btn btn-danger btn-sm action-btn"
                                                             onclick="removeServiceRow(this)">
-                                                            <i class="fas fa-minus"></i>
+                                                            <i class="fa fa-minus"></i>
                                                         </button></td>
                                                 </tr>
                                                 <tr>
@@ -822,7 +822,7 @@ $contactInfo = $feesStructure["contact_data"];
                                                             name="services[]" value="Airport Pickup & Drop"><button
                                                             type="button" class="btn btn-danger btn-sm action-btn"
                                                             onclick="removeServiceRow(this)">
-                                                            <i class="fas fa-minus"></i>
+                                                            <i class="fa fa-minus"></i>
                                                         </button></td>
                                                 </tr>
                                                 <tr>
@@ -830,7 +830,7 @@ $contactInfo = $feesStructure["contact_data"];
                                                             name="services[]" value="Accommodation & Indian Mess"><button
                                                             type="button" class="btn btn-danger btn-sm action-btn"
                                                             onclick="removeServiceRow(this)">
-                                                            <i class="fas fa-minus"></i>
+                                                            <i class="fa fa-minus"></i>
                                                         </button></td>
                                                 </tr>
                                                 <tr>
@@ -839,7 +839,7 @@ $contactInfo = $feesStructure["contact_data"];
                                                             value="Bank account & Sim card allotment"><button type="button"
                                                             class="btn btn-danger btn-sm action-btn"
                                                             onclick="removeServiceRow(this)">
-                                                            <i class="fas fa-minus"></i>
+                                                            <i class="fa fa-minus"></i>
                                                         </button></td>
                                                 </tr>
                                                 <tr>
@@ -847,7 +847,7 @@ $contactInfo = $feesStructure["contact_data"];
                                                             name="services[]" value="24*7 On-call & On-campus"><button
                                                             type="button" class="btn btn-danger btn-sm action-btn"
                                                             onclick="removeServiceRow(this)">
-                                                            <i class="fas fa-minus"></i>
+                                                            <i class="fa fa-minus"></i>
                                                         </button></td>
                                                 </tr>
                                             <?php } ?>
@@ -870,10 +870,10 @@ $contactInfo = $feesStructure["contact_data"];
                                 <div class="section-controls">
                                     <button type="button" class="btn btn-success action-btn"
                                         onclick="addProcessingRow()">
-                                        <i class="fas fa-plus"></i> Add Row
+                                        <i class="fa fa-plus"></i> Add Row
                                     </button>
                                     <!-- <button type="button" class="btn btn-danger action-btn" onclick="removeProcessingRow()">
-                                        <i class="fas fa-minus"></i> Remove
+                                        <i class="fa fa-minus"></i> Remove
                                     </button> -->
                                 </div>
                             </div>
@@ -907,7 +907,7 @@ $contactInfo = $feesStructure["contact_data"];
                                                         name="processing[amount][]" onchange="calculateProcessingTotal()"
                                                         value="<?= $pData["amount"] ?>"><button type="button"
                                                         class="btn btn-danger action-btn" onclick="removeProcessingRow(this)">
-                                                        <i class="fas fa-minus"></i>
+                                                        <i class="fa fa-minus"></i>
                                                     </button></td>
                                             </tr>
                                         <?php }
@@ -920,7 +920,7 @@ $contactInfo = $feesStructure["contact_data"];
                                                     name="processing[amount][]" value="5000"
                                                     onchange="calculateProcessingTotal()"><button type="button"
                                                     class="btn btn-danger action-btn" onclick="removeProcessingRow(this)">
-                                                    <i class="fas fa-minus"></i>
+                                                    <i class="fa fa-minus"></i>
                                                 </button></td>
                                         </tr>
                                         <tr>
@@ -930,7 +930,7 @@ $contactInfo = $feesStructure["contact_data"];
                                                     name="processing[amount][]" value="3000"
                                                     onchange="calculateProcessingTotal()"><button type="button"
                                                     class="btn btn-danger action-btn" onclick="removeProcessingRow(this)">
-                                                    <i class="fas fa-minus"></i>
+                                                    <i class="fa fa-minus"></i>
                                                 </button></td>
                                         </tr>
                                     <?php } ?>
@@ -974,17 +974,17 @@ $contactInfo = $feesStructure["contact_data"];
 
                             <div class="row">
                                 <div class="col-md-4">
-                                    <label><i class="fas fa-phone"></i> Contact Number</label>
+                                    <label><i class="fa fa-phone"></i> Contact Number</label>
                                     <input type="text" class="form-control" value="<?= $contactInfo['phone'] ?? '' ?>" readonly
                                         placeholder="Enter contact number" id="contact_number" name="contact_number">
                                 </div>
                                 <div class="col-md-4">
-                                    <label><i class="fas fa-envelope"></i> Email</label>
+                                    <label><i class="fa fa-envelope"></i> Email</label>
                                     <input type="email" class="form-control" readonly value="<?= $contactInfo['email'] ?? 'brightrouteconsulting@gmail.com' ?>" placeholder="Enter email"
                                         id="contact_email" name="contact_email">
                                 </div>
                                 <div class="col-md-4">
-                                    <label><i class="fas fa-globe"></i> Website</label>
+                                    <label><i class="fa fa-globe"></i> Website</label>
                                     <input type="text" class="form-control" readonly value="<?= $contactInfo['website'] ?? 'www.educationvibes.in' ?>" placeholder="Enter website"
                                         id="contact_website" name="contact_website">
                                 </div>
@@ -997,23 +997,23 @@ $contactInfo = $feesStructure["contact_data"];
                         <div class="row mt-4">
                             <div class="col-md-12 text-center">
                                 <button type="submit" class="btn btn-primary btn-lg" onclick="saveFormData()">
-                                    <i class="fas fa-save"></i> Save Data
+                                    <i class="fa fa-save"></i> Save Data
                                 </button>
 
                                 <div class="previewData-section inline-block  <?= !empty($id) ? '' : 'hide' ?>">
                                     <button type="button" class="btn btn-success btn-lg" onclick="previewData()">
-                                        <i class="fas fa-eye"></i> Preview
+                                        <i class="fa fa-eye"></i> Preview
                                     </button>
 
                                     <button type="button" class="btn btn-success btn-lg hide generate-pdf-button" onclick="generatePDFAndUpload(<?= $id ?>)">
-                                        <i class="fas fa-eye"></i> Save in KnowledgeBase
+                                        <i class="fa fa-eye"></i> Save in KnowledgeBase
                                     </button>
                                 </div>
                                 <!-- <button type="button" class="btn btn-info btn-lg" onclick="downloadJSON()">
-                                    <i class="fas fa-download"></i> Download JSON
+                                    <i class="fa fa-download"></i> Download JSON
                                 </button> -->
                                 <button type="reset" class="btn btn-default btn-lg" onclick="resetForm()">
-                                    <i class="fas fa-undo"></i> Reset
+                                    <i class="fa fa-undo"></i> Reset
                                 </button>
                             </div>
                         </div>
@@ -1303,7 +1303,7 @@ $contactInfo = $feesStructure["contact_data"];
 
         newRow.innerHTML =
             `
-        <td class="d-flex"><input type="text" class="form-control" name="other_charges[]" value="New Charge"><button type="button" class="btn btn-danger btn-sm action-btn" onclick="removeOtherChargeRow(this)" fdprocessedid="wa0pu"><i class="fas fa-minus"></i></button></td>`;
+        <td class="d-flex"><input type="text" class="form-control" name="other_charges[]" value="New Charge"><button type="button" class="btn btn-danger btn-sm action-btn" onclick="removeOtherChargeRow(this)" fdprocessedid="wa0pu"><i class="fa fa-minus"></i></button></td>`;
     }
 
     function removeOtherChargeRow(obj = "") {
@@ -1328,7 +1328,7 @@ $contactInfo = $feesStructure["contact_data"];
 
         newRow.innerHTML = `
         <td class='flex'><input type="text" class="form-control" name="one_time_charges[]" value="New One Time Charge"><button type="button" class="btn btn-danger btn-sm action-btn" onclick="removeOneTimeChargeRow(this)">
-                                                                <i class="fas fa-minus"></i>
+                                                                <i class="fa fa-minus"></i>
                                                             </button></td>
         `;
     }
@@ -1353,7 +1353,7 @@ $contactInfo = $feesStructure["contact_data"];
 
         newRow.innerHTML = `
         <td class='d-flex'><input type="text" class="form-control" name="services[]" value="New Service"><button type="button" class="btn btn-danger btn-sm action-btn" onclick="removeServiceRow(this)">
-                                                                <i class="fas fa-minus"></i>
+                                                                <i class="fa fa-minus"></i>
                                                             </button></td>
         `;
     }
