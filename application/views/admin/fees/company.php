@@ -1132,13 +1132,14 @@ $contactInfo = $feesStructure["contact_data"];
     });
 
 
-    // Countries change handler
     $("#countries").change(function() {
 
         let country_id = $(this).val();
-        let selectedUniversities = universities[country_id] || [];
 
-        // Set country name hidden input
+        let selectedUniversities = universities[country_id] ?
+            Object.values(universities[country_id]) : [];
+
+        // Set country name
         if (country_id) {
             let countryName = $(this).find("option:selected").text();
             $("#country_name").val(countryName);
@@ -1154,67 +1155,82 @@ $contactInfo = $feesStructure["contact_data"];
             $('<option>', {
                 value: '',
                 text: 'Select universities',
-                selected: true,
-                disabled: true
+                disabled: true,
+                selected: true
             })
         );
 
         // Append universities
         selectedUniversities.forEach(function(university) {
+
             $universitiesSelect.append(
                 $('<option>', {
                     value: university.id,
                     text: university.university_name
                 })
             );
+
         });
 
         $("#university_name").val("");
-
-        $universitiesSelect.selectpicker('refresh');
         $(".generate-pdf-button").addClass("hide");
 
+        $universitiesSelect.selectpicker('refresh');
     });
 
 
+
     $("#universities").change(function() {
+
         let country_id = $("#countries").val();
+        let university_id = $(this).val();
+        let university_name = $(this).find("option:selected").text();
 
-        let university_id = $(this).val(); // value of selected university
-        let university_name = $(this).find("option:selected").text(); // text of selected option
-
-        // Safely get university data
-        let universityData = (universities && universities[country_id][university_id]) ? universities[country_id][
-            university_id
-        ] : {};
-        // Set university logo if available
+        let universityData = (universities &&
+                universities[country_id] &&
+                universities[country_id][university_id]) ?
+            universities[country_id][university_id] : {};
 
         if (setAuto == 0) {
+
+            // Logo
             if (universityData.logo) {
+
+                let logoUrl = universityData.logo.startsWith("http") ?
+                    universityData.logo :
+                    "https://educationvibes.in/" + universityData.logo;
+
                 $("#university_logo_preview")
-                    .attr("src", universityData.logo)
+                    .attr("src", logoUrl)
                     .show();
+
             } else {
                 $("#university_logo_preview").hide();
             }
 
+            // Banner Image
             if (universityData.images) {
+
+                let bannerUrl = universityData.images.startsWith("http") ?
+                    universityData.images :
+                    "https://educationvibes.in/" + universityData.images;
+
                 $("#university_banner_preview")
-                    .attr("src", "https://educationvibes.in/" + universityData.images)
+                    .attr("src", bannerUrl)
                     .show();
+
             } else {
                 $("#university_banner_preview").hide();
             }
-
         }
-        $("#university_name").val(university_name);
 
-        // Set input field with university name
-        $("#founded_year").val(universityData.founded);
+        $("#university_name").val(university_name);
+        $("#founded_year").val(universityData.founded || "");
+
         setAuto = 0;
         $(".generate-pdf-button").addClass("hide");
-
     });
+
 
 
     $("#year").keypress(function(e) {
@@ -1301,6 +1317,9 @@ $contactInfo = $feesStructure["contact_data"];
         var rowCount = tableBody.rows.length;
         var newRow = tableBody.insertRow();
 
+        if (rowCount >= 4) {
+            return false;
+        }
         newRow.innerHTML =
             `
         <td class="d-flex"><input type="text" class="form-control" name="other_charges[]" value="New Charge"><button type="button" class="btn btn-danger btn-sm action-btn" onclick="removeOtherChargeRow(this)" fdprocessedid="wa0pu"><i class="fa fa-minus"></i></button></td>`;
@@ -1375,10 +1394,15 @@ $contactInfo = $feesStructure["contact_data"];
         var tableBody = document.getElementById('processingBody');
         var rowCount = tableBody.rows.length;
         var newRow = tableBody.insertRow();
-
+        if (rowCount >= 4) {
+            return false;
+        }
         newRow.innerHTML = `
-        <td><input type="text" class="form-control" name="processing[description]" value="New Processing Fee"></td>
-        <td><input type="number" class="form-control processing-input" name="processing[amount]" value="0" onchange="calculateProcessingTotal()"></td>
+        <td ><input type="text" class="form-control" name="processing[description]" value="New Processing Fee"></td>
+        <td class="d-flex"><input type="number" class="form-control processing-input" name="processing[amount]" value="0" onchange="calculateProcessingTotal()"><button type="button"
+                                                        class="btn btn-danger action-btn" onclick="removeProcessingRow(this)">
+                                                        <i class="fa fa-minus"></i>
+                                                    </button</td>
         `;
 
         calculateProcessingTotal();
