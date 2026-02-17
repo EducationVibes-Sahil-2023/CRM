@@ -46,22 +46,45 @@ class Fees_model extends App_Model
 
     function universities()
     {
-        $query = $this->s_db
-            ->select("u.id,u.country_id,u.university_name,ub.images,,if(ub.logo!='',ub.logo,ub.logo_image) as logo,if(ub.card_image!='',ub.card_image,ub.images) as card_image,ub.founded")
-            ->from("universities u")->join("university_banner ub", "ub.university_id = u.id", "Left")
-            ->get()
-            ->result_array();
+        $this->s_db->select("
+        u.id,
+        u.country_id,
+        u.university_name,
+        ub.images,
+        IF(ub.logo != '', ub.logo, ub.logo_image) AS logo,
+        IF(ub.card_image != '', ub.card_image, ub.images) AS card_image,
+        ub.founded
+    ");
 
-        $universites = [];
-        foreach ($query as $row) {
+        $this->s_db->from("universities u");
+        $this->s_db->join(
+            "university_banner ub",
+            "ub.university_id = u.id AND ub.status = 0",
+            "left"
+        );
+
+        $this->s_db->where("u.status", 0);
+
+        $query = $this->s_db->get();
+        $result = $query->result_array();
+
+        $universities = [];
+
+        foreach ($result as $row) {
             $country_id = $row['country_id'];
-            if (!isset($countries[$country_id])) {
-                $univesites[$country_id] = [];
+            $university_id = $row['id'];
+
+
+            if (!isset($universities[$country_id])) {
+                $universities[$country_id][$university_id] = [];
             }
-            $universites[$country_id][] = $row;
+
+            $universities[$country_id][$university_id] = $row;
         }
-        return $universites;
+
+        return $universities;
     }
+
 
     public function checkRecord($segment_id, $country_id, $university_id)
     {
