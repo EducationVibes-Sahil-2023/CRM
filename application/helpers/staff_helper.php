@@ -46,7 +46,7 @@ function get_available_staff_permissions($data = [])
         ],
         'customers' => [
             'name'         => _l('clients'),
-            'capabilities' => array_merge($withNotApplicableViewOwn, array("applicant_view" => "Global Applicant View Only", "delete_documents" => "Delete Documents", 'activity_logs' => "Activity Logs", "return_document" => "Orignal Document Return", "payment_action" => "Payment Action", "quotation_create" => "Quotation Create",  "quotation_delete" => "Quotation Delete", "applicant_view_document" => "Global Applicant Documents View Only","appostile_edit" => "Edit Apostile")),
+            'capabilities' => array_merge($withNotApplicableViewOwn, array("applicant_view" => "Global Applicant View Only", "delete_documents" => "Delete Documents", 'activity_logs' => "Activity Logs", "return_document" => "Orignal Document Return", "payment_action" => "Payment Action", "quotation_create" => "Quotation Create",  "quotation_delete" => "Quotation Delete", "applicant_view_document" => "Global Applicant Documents View Only", "appostile_edit" => "Edit Apostile")),
             'help'         => [
                 'view_own' => _l('permission_customers_based_on_admins'),
             ],
@@ -69,6 +69,13 @@ function get_available_staff_permissions($data = [])
         'external_visa' => [
             'name'         => "External Visa",
             'capabilities' => $allPermissionsArray,
+        ],
+
+        'fees_structure' => [
+            'name'         => "Fees Structure",
+            'capabilities' => [
+                'create' => _l('permission_create'),
+            ]
         ],
         'external_ticket' => [
             'name'         => "External Ticket",
