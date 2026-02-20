@@ -27,7 +27,7 @@ class Fees_model extends App_Model
     function countries()
     {
         $query = $this->s_db
-            ->select("id, segment_id, country_name, country_icon")
+            ->select("id, segment_id, country_name, country_icon,fees_structure")
             ->from("countries")
             ->get()
             ->result_array();
@@ -35,10 +35,11 @@ class Fees_model extends App_Model
         $countries = [];
         foreach ($query as $row) {
             $segment_id = $row['segment_id'];
+            $country_id = $row['id'];
             if (!isset($countries[$segment_id])) {
-                $countries[$segment_id] = [];
+                $countries[$segment_id][$country_id] = [];
             }
-            $countries[$segment_id][] = $row;
+            $countries[$segment_id][$country_id] = $row;
         }
         return $countries;
     }

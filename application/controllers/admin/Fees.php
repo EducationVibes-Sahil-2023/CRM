@@ -23,6 +23,7 @@ class Fees extends AdminController
         $data['segment']     = $this->fees_model->segment();
         $data['countries']     = $this->fees_model->countries();
         $data['universities']     = $this->fees_model->universities();
+
         // Always get all
         $allFees = $this->fees_model->getFeesStructure();
         $data["feesStructure"] = [];
@@ -50,6 +51,10 @@ class Fees extends AdminController
         $country_id     = $this->input->post('country_id');
         $university_id  = $this->input->post('university_id');
         $region_id  = $this->input->post('region_id');
+        $setDefault  = $this->input->post('setDefault');
+
+        unset($_POST["setDefault"]);
+
 
         if (!$segment_id || !$country_id || !$university_id || !$region_id) {
             echo json_encode([
@@ -87,6 +92,14 @@ class Fees extends AdminController
 
         if ($exists) {
 
+            if (!empty($country_id) && $this->input->post('sections')) {
+                // Update database
+                $this->s_db->where('id', $country_id);
+                $updated = $this->s_db->update('countries', [
+                    'fees_structure' => json_encode($this->input->post('sections'), true)
+                ]);
+            }
+
             if (empty($_POST["id"])) {
                 echo json_encode([
                     'resp_code' => 'ERR',
@@ -114,6 +127,14 @@ class Fees extends AdminController
                 ]);
             }
         } else {
+
+            if (!empty($setDefault) && $setDefault == 1 && !empty($country_id) && $this->input->post('sections')) {
+                // Update database
+                $this->s_db->where('id', $country_id);
+                $updated = $this->s_db->update('countries', [
+                    'fees_structure' => json_encode($this->input->post('sections'), true)
+                ]);
+            }
 
 
             $data["created_by"]      = get_staff_user_id();
@@ -183,7 +204,7 @@ class Fees extends AdminController
                 $relativePath = "uploads/knowledge_base/fees_structures/" . $countryName . "/" . $region_name . "/" . $university_name . "/" . $filename;
                 $relativePath = base_url() . str_replace(" ", "_", $relativePath);
                 // Call knowledge_base function
-                knowledge_base($countryName, $university_name, $relativePath, "Fees Structure/" . $segmentType);
+                knowledge_base_from_path($relativePath, "Fees Structure/" . $segmentType);
 
                 echo json_encode([
                     'status' => true,
