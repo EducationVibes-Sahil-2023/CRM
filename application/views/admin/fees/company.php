@@ -1974,6 +1974,7 @@ $contactInfo = !empty($feesStructure["contact_data"])
                     // Prepare FormData
                     const formData = new FormData();
                     const filename = pdfData["university_name"].replace(/ /g, "_") + ".pdf";
+                     pdf.save(filename);
                     formData.append("pdf_file", pdfBlob, filename);
 
                     // Correct CSRF token append
