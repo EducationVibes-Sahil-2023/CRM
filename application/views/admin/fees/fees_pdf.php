@@ -568,10 +568,10 @@
                                  <?= $row['tuition'] == 0 ? '0' : number_format($row['tuition']) ?>
                              </td>
                              <td>
-                                 <?= $row['hostel'] == 0 ? '0' : number_format($row['hostel']) ?>
+                                 <?= $row['hostel'] == 0 ? '0' : ($row['hostel']) ?>
                              </td>
                              <td>
-                                 <?= $row['development'] == 0 ? '0' : number_format($row['development']) ?>
+                                 <?= $row['development'] == 0 ? '0' : ($row['development']) ?>
                              </td>
                          </tr>
                      <?php endforeach; ?>

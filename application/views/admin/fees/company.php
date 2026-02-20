@@ -485,12 +485,12 @@ $contactInfo = !empty($feesStructure["contact_data"])
                                                 </td>
 
                                                 <td>
-                                                    <input type="number" class="form-control" name="fees[hostel][]"
+                                                    <input type="text" class="form-control" name="fees[hostel][]"
                                                         value="<?= $fData['hostel'] ?? 0 ?>" onchange="calculateFeesTotals()">
                                                 </td>
 
                                                 <td>
-                                                    <input type="number" class="form-control" name="fees[development][]"
+                                                    <input type="text" class="form-control" name="fees[development][]"
                                                         value="<?= $fData['development'] ?? 0 ?>"
                                                         onchange="calculateFeesTotals()">
                                                 </td>
@@ -511,12 +511,12 @@ $contactInfo = !empty($feesStructure["contact_data"])
                                             </td>
 
                                             <td>
-                                                <input type="number" class="form-control" name="fees[hostel][]" value="0"
+                                                <input type="text" class="form-control" name="fees[hostel][]" value="0"
                                                     onchange="calculateFeesTotals()">
                                             </td>
 
                                             <td>
-                                                <input type="number" class="form-control" name="fees[development][]"
+                                                <input type="text" class="form-control" name="fees[development][]"
                                                     value="0" onchange="calculateFeesTotals()">
                                             </td>
                                         </tr>
@@ -1368,8 +1368,8 @@ $contactInfo = !empty($feesStructure["contact_data"])
         newRow.innerHTML = `
         <td><input type="text" class="form-control year-text" name="fees[year][]" value="${rowCount + 1}${yearSuffix} Year"></td>
         <td><input type="number" class="form-control tuition-input" name="fees[tuition][]" value="0" onchange="calculateFeesTotals()"></td>
-        <td><input type="number" class="form-control hostel-input" name="fees[hostel][]" value="0" onchange="calculateFeesTotals()"></td>
-        <td><input type="number" class="form-control dev-input" name="fees[development][]" value="0" onchange="calculateFeesTotals()"></td>
+        <td><input type="text" class="form-control hostel-input" name="fees[hostel][]" value="0" onchange="calculateFeesTotals()"></td>
+        <td><input type="text" class="form-control dev-input" name="fees[development][]" value="0" onchange="calculateFeesTotals()"></td>
         `;
 
         calculateFeesTotals();
@@ -1650,8 +1650,8 @@ $contactInfo = !empty($feesStructure["contact_data"])
                 formData.sections.fees.data.push({
                     year: year,
                     tuition: parseFloat($(this).find('td:eq(1) input').val()) || 0,
-                    hostel: parseFloat($(this).find('td:eq(2) input').val()) || 0,
-                    development: parseFloat($(this).find('td:eq(3) input').val()) || 0
+                    hostel: ($(this).find('td:eq(2) input').val()) || 0,
+                    development: ($(this).find('td:eq(3) input').val()) || 0
                 });
             }
         });
@@ -1974,7 +1974,7 @@ $contactInfo = !empty($feesStructure["contact_data"])
                     // Prepare FormData
                     const formData = new FormData();
                     const filename = pdfData["university_name"].replace(/ /g, "_") + ".pdf";
-                     pdf.save(filename);
+                    pdf.save(filename);
                     formData.append("pdf_file", pdfBlob, filename);
 
                     // Correct CSRF token append
