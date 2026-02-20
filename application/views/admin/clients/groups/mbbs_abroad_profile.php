@@ -1184,15 +1184,15 @@ if ($lead_type_status == 2) {
                                     <h4>NEET Exam</h4>
                                     <hr>
 
-                                    <div class="row">
+                                    <div class="row hide">
                                         <h4>NEET Credentials</h4>
                                         <div class="col-lg-3 border2 border1">
                                             <div class="c1">
                                                 <p>Id</p>
                                             </div>
                                             <div class="c2">
-                                                <input class="form-control" type="text" class="form-group"
-                                                    placeholder="Enter Neet User ID" name="neet_user_id" value="<?= $academicdetails->neet_user_id; ?>">
+                                                <!--<input class="form-control" type="text" class="form-group"-->
+                                                <!--    placeholder="Enter Neet User ID" name="neet_user_id" value="<?= $academicdetails->neet_user_id; ?>">-->
                                             </div>
                                         </div>
 
@@ -1201,8 +1201,8 @@ if ($lead_type_status == 2) {
                                                 <p>Password</p>
                                             </div>
                                             <div class="c2">
-                                                <input class="form-control" type="text" class="form-group"
-                                                    placeholder="Enter Neet User Password" name="neet_user_password" value="<?= $academicdetails->neet_user_password; ?>">
+                                                <!--<input class="form-control" type="text" class="form-group"-->
+                                                <!--    placeholder="Enter Neet User Password" name="neet_user_password" value="<?= $academicdetails->neet_user_password; ?>">-->
                                             </div>
                                         </div>
                                         
