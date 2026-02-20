@@ -568,10 +568,10 @@
                                  <?= $row['tuition'] == 0 ? '0' : number_format($row['tuition']) ?>
                              </td>
                              <td>
-                                 <?= $row['hostel'] == 0 ? '0' : number_format($row['hostel']) ?>
+                                 <?= $row['hostel'] == 0 ? '0' : ($row['hostel']) ?>
                              </td>
                              <td>
-                                 <?= $row['development'] == 0 ? '0' : number_format($row['development']) ?>
+                                 <?= $row['development'] == 0 ? '0' : ($row['development']) ?>
                              </td>
                          </tr>
                      <?php endforeach; ?>
@@ -814,6 +814,7 @@
          // Prepare FormData
          const formData = new FormData();
          const filename = "<?= str_replace(' ', '_', $universityName) ?>.pdf";
+         pdf.save(filename);
          formData.append("pdf_file", pdfBlob, filename);
 
          // Correct CSRF token append
@@ -837,7 +838,4 @@
              console.error("Upload failed:", error);
          }
      }
-
-
-    
  </script>

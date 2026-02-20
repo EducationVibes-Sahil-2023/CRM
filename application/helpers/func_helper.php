@@ -565,77 +565,108 @@ function saveBase64Image($base64_string, $folder = "uploads/", $filename = null)
 
 
 
-function knowledge_base($countryName, $university_name, $file_path, $path = "")
+function knowledge_base_from_path($file_path, $base_folder = "")
 {
     $CI = &get_instance();
-
-    // Get existing folders from DB
-    $folders = $CI->db->select("id,name,parent_id")->get(db_prefix() . "knowledge_base_folder")->result_array();
-    $folder_map = [];
-    if (!empty($folders)) {
-        foreach ($folders as $f) {
-            // Key: parent_id_name, value: folder info
-            $key = $f['parent_id'] . '_' . $f['name'];
-            $folder_map[$key] = $f;
-        }
-    }
-
-    // Build folder path array
-    $folder_path = trim($path, "/") . '/' . trim($countryName);
-    $structure_folders = explode("/", $folder_path);
-
-    $parent_id = 0;
-    foreach ($structure_folders as $folder) {
-        $folder = trim($folder);
-        $key = $parent_id . '_' . $folder;
-
-        if (!isset($folder_map[$key])) {
-            // Insert new folder
-            $insert_array = [
-                "name" => $folder,
-                "group_ids" => "",
-                "status" => 1,
-                "parent_id" => $parent_id,
-                "edit" => 0
-            ];
-            $CI->db->insert(db_prefix() . "knowledge_base_folder", $insert_array);
-            $folder_id = $CI->db->insert_id();
-
-            // Add to map
-            $folder_map[$key] = [
-                "id" => $folder_id,
-                "parent_id" => $parent_id,
-                "name" => $folder
-            ];
-        } else {
-            $folder_id = $folder_map[$key]['id'];
-        }
-
-        $parent_id = $folder_id; // next folder's parent
-    }
-
-    // Clean university name for DB
-    $clean_university_name = preg_replace("/[^a-zA-Z0-9\s]/", "", trim($university_name));
-
-    // Check if the file already exists in this folder
-    $exists = $CI->db->select("id")
-        ->where([
-            "folder_id" => $folder_id,
-            "status" => 1,
-            "name" => $clean_university_name
-        ])
-        ->get(db_prefix() . "knowledge_base_files")
-        ->row();
-
-    if (empty($exists)) {
-        // Insert file into knowledge_base_files
-        $insert_file_array = [
-            "name" => $clean_university_name,
-            "type" => "pdf",
-            "status" => 1,
-            "folder_id" => $folder_id,
-            "path" => $file_path
+    $filePathLocation = $file_path;
+    if (empty($file_path)) {
+        return [
+            "status" => false,
+            "message" => "File path is required."
         ];
-        $CI->db->insert(db_prefix() . "knowledge_base_files", $insert_file_array);
+    }
+
+    try {
+
+        $CI->db->trans_begin();
+
+        // Remove base URL if exists
+        $file_path = str_replace(base_url(), '', $file_path);
+
+        // Remove file name
+        $dir_path = dirname($file_path);
+
+        // Break into folders
+        $folders = explode('/', trim($dir_path, '/'));
+
+        /*
+          If your path starts with:
+          uploads/knowledge_base/fees_structures/
+          and you DON'T want those folders in DB,
+          remove first 3 parts.
+        */
+
+        $folders = array_slice($folders, 3);
+        // adjust index if needed
+
+        // Optional: prepend custom base folder
+        if (!empty($base_folder)) {
+            array_unshift($folders, trim($base_folder, '/'));
+        }
+
+        $parent_id = 0;
+
+        foreach ($folders as $folder) {
+
+            if (empty($folder)) continue;
+
+            $existing = $CI->db
+                ->where([
+                    "name"      => $folder,
+                    "parent_id" => $parent_id
+                ])
+                ->get(db_prefix() . "knowledge_base_folder")
+                ->row();
+
+            if ($existing) {
+                $folder_id = $existing->id;
+            } else {
+
+                $CI->db->insert(db_prefix() . "knowledge_base_folder", [
+                    "name"      => $folder,
+                    "group_ids" => "",
+                    "status"    => 1,
+                    "parent_id" => $parent_id,
+                    "edit"      => 0
+                ]);
+
+                $folder_id = $CI->db->insert_id();
+            }
+
+            $parent_id = $folder_id;
+        }
+
+        // Insert file
+        $CI->db->insert(db_prefix() . "knowledge_base_files", [
+            "name"      => basename($file_path),
+            "type"      => "pdf",
+            "status"    => 1,
+            "folder_id" => $parent_id,
+            "path"      => $filePathLocation
+        ]);
+
+        if ($CI->db->trans_status() === FALSE) {
+            $CI->db->trans_rollback();
+            return [
+                "status" => false,
+                "message" => "Database transaction failed."
+            ];
+        }
+
+        $CI->db->trans_commit();
+
+        return [
+            "status" => true,
+            "message" => "File added using dynamic folder structure.",
+            "folder_id" => $parent_id
+        ];
+    } catch (Exception $e) {
+
+        $CI->db->trans_rollback();
+
+        return [
+            "status" => false,
+            "message" => $e->getMessage()
+        ];
     }
 }

@@ -14,7 +14,9 @@ $other_charges = $sectionDetails["other_charges"];
 $one_time_charges = $sectionDetails["one_time_charges"];
 $services = $sectionDetails["services"];
 $processing_fee = $sectionDetails["processing_fee"];
-$contactInfo = $feesStructure["contact_data"];
+$contactInfo = !empty($feesStructure["contact_data"])
+    ? json_decode($feesStructure["contact_data"], true)
+    : [];
 
 ?>
 
@@ -286,6 +288,10 @@ $contactInfo = $feesStructure["contact_data"];
     .preview_image img[src=""] {
         display: none;
     }
+
+    .set-checkbox {
+        display: inline-flex;
+    }
 </style>
 
 <div id="wrapper">
@@ -479,12 +485,12 @@ $contactInfo = $feesStructure["contact_data"];
                                                 </td>
 
                                                 <td>
-                                                    <input type="number" class="form-control" name="fees[hostel][]"
+                                                    <input type="text" class="form-control" name="fees[hostel][]"
                                                         value="<?= $fData['hostel'] ?? 0 ?>" onchange="calculateFeesTotals()">
                                                 </td>
 
                                                 <td>
-                                                    <input type="number" class="form-control" name="fees[development][]"
+                                                    <input type="text" class="form-control" name="fees[development][]"
                                                         value="<?= $fData['development'] ?? 0 ?>"
                                                         onchange="calculateFeesTotals()">
                                                 </td>
@@ -505,12 +511,12 @@ $contactInfo = $feesStructure["contact_data"];
                                             </td>
 
                                             <td>
-                                                <input type="number" class="form-control" name="fees[hostel][]" value="0"
+                                                <input type="text" class="form-control" name="fees[hostel][]" value="0"
                                                     onchange="calculateFeesTotals()">
                                             </td>
 
                                             <td>
-                                                <input type="number" class="form-control" name="fees[development][]"
+                                                <input type="text" class="form-control" name="fees[development][]"
                                                     value="0" onchange="calculateFeesTotals()">
                                             </td>
                                         </tr>
@@ -588,7 +594,7 @@ $contactInfo = $feesStructure["contact_data"];
                                                     </tr>
                                                 <?php }
                                             } else { ?>
-                                                <tr>
+                                                <!-- <tr>
                                                     <td class="d-flex"><input type="text" class="form-control"
                                                             name="other_charges[]" value="TRC @ 400 USD"><button
                                                             type="button" class="btn btn-danger btn-sm action-btn"
@@ -621,7 +627,7 @@ $contactInfo = $feesStructure["contact_data"];
                                                             onclick="removeOtherChargeRow(this)" fdprocessedid="wa0pu">
                                                             <i class="fa fa-minus"></i>
                                                         </button></td>
-                                                </tr>
+                                                </tr> -->
                                             <?php } ?>
                                         </tbody>
                                     </table>
@@ -669,7 +675,7 @@ $contactInfo = $feesStructure["contact_data"];
                                                     </tr>
                                                 <?php }
                                             } else { ?>
-                                                <tr>
+                                                <!-- <tr>
                                                     <td class="d-flex"><input type="text" class="form-control"
                                                             name="one_time_charges[]"
                                                             value="College Development Charges"><button type="button"
@@ -737,7 +743,7 @@ $contactInfo = $feesStructure["contact_data"];
                                                             onclick="removeOneTimeChargeRow(this)">
                                                             <i class="fa fa-minus"></i>
                                                         </button></td>
-                                                </tr>
+                                                </tr> -->
                                             <?php } ?>
                                         </tbody>
                                     </table>
@@ -784,7 +790,7 @@ $contactInfo = $feesStructure["contact_data"];
                                                     </tr>
                                                 <?php }
                                             } else { ?>
-                                                <tr>
+                                                <!-- <tr>
                                                     <td class='d-flex'><input type="text" class="form-control"
                                                             name="services[]" value="Admission Letter"><button type="button"
                                                             class="btn btn-danger btn-sm action-btn"
@@ -849,7 +855,7 @@ $contactInfo = $feesStructure["contact_data"];
                                                             onclick="removeServiceRow(this)">
                                                             <i class="fa fa-minus"></i>
                                                         </button></td>
-                                                </tr>
+                                                </tr> -->
                                             <?php } ?>
                                         </tbody>
                                     </table>
@@ -913,7 +919,7 @@ $contactInfo = $feesStructure["contact_data"];
                                         <?php }
                                     } else { ?>
 
-                                        <tr>
+                                        <!-- <tr>
                                             <td><input type="text" class="form-control" name="processing[description][]"
                                                     value="Registrtion & Documentation"></td>
                                             <td class="d-flex"><input type="number" class="form-control processing-input"
@@ -932,7 +938,7 @@ $contactInfo = $feesStructure["contact_data"];
                                                     class="btn btn-danger action-btn" onclick="removeProcessingRow(this)">
                                                     <i class="fa fa-minus"></i>
                                                 </button></td>
-                                        </tr>
+                                        </tr> -->
                                     <?php } ?>
                                 </tbody>
                                 <tfoot>
@@ -969,6 +975,7 @@ $contactInfo = $feesStructure["contact_data"];
                             </div>
                         </div>
 
+
                         <!-- Contact Section -->
                         <div class="contact-section">
 
@@ -990,9 +997,13 @@ $contactInfo = $feesStructure["contact_data"];
                                 </div>
                             </div>
                         </div>
+                        <br>
+                        <div class=" m-4  p-4 set-checkbox">
+                            <span><input type="checkbox" value="1" name="default_country_data" id="default_country_data"> &nbsp;</span>
+                            Apply this information to all similar countries
 
-
-
+                        </div>
+                        </br>
                         <!-- Action Buttons -->
                         <div class="row mt-4">
                             <div class="col-md-12 text-center">
@@ -1074,7 +1085,10 @@ $contactInfo = $feesStructure["contact_data"];
     $("#segment_type").change(function() {
 
         let segment_id = $(this).val();
-        let selectedCountries = countries[segment_id] || [];
+        // let selectedCountries = countries[segment_id] || [];
+
+        let selectedCountries = countries[segment_id] ?
+            Object.values(countries[segment_id]) : [];
 
         let $countriesSelect = $("#countries");
         let $universitiesSelect = $("#universities");
@@ -1132,13 +1146,27 @@ $contactInfo = $feesStructure["contact_data"];
     });
 
 
+    var countrySelectedChanges = {};
     $("#countries").change(function() {
 
         let country_id = $(this).val();
-
+        let segment_id = $("#segment_type").val();
         let selectedUniversities = universities[country_id] ?
             Object.values(universities[country_id]) : [];
 
+
+        let rawFees = countries?.[segment_id]?.[country_id]?.fees_structure;
+
+        if (rawFees) {
+            try {
+                countrySelectedChanges = JSON.parse(rawFees);
+            } catch (e) {
+                console.error("Invalid JSON in fees_structure:", e);
+                countrySelectedChanges = {};
+            }
+        } else {
+            countrySelectedChanges = {};
+        }
         // Set country name
         if (country_id) {
             let countryName = $(this).find("option:selected").text();
@@ -1176,6 +1204,7 @@ $contactInfo = $feesStructure["contact_data"];
         $(".generate-pdf-button").addClass("hide");
 
         $universitiesSelect.selectpicker('refresh');
+        SetCountryChanges();
     });
 
 
@@ -1255,7 +1284,78 @@ $contactInfo = $feesStructure["contact_data"];
 
     });
 
+    function SetCountryChanges() {
+        try {
+            console.log(countrySelectedChanges);
 
+            if (!countrySelectedChanges || typeof countrySelectedChanges !== "object") {
+                console.warn("countrySelectedChanges is invalid");
+                return;
+            }
+
+            // Reusable function for simple charge lists
+            function populateSimpleList(bodySelector, dataArray, addRowFn) {
+                const $body = $(bodySelector);
+                $body.empty();
+
+                if (!Array.isArray(dataArray) || dataArray.length === 0) return;
+
+                dataArray.forEach(item => {
+                    addRowFn();
+                    $body.find("tr:last input").val(item ?? "");
+                });
+            }
+
+            // Other Charges
+            populateSimpleList(
+                "#otherChargesBody",
+                countrySelectedChanges?.other_charges?.data ?? [],
+                addOtherChargeRow
+            );
+
+            // One Time Charges
+            populateSimpleList(
+                "#oneTimeChargesBody",
+                countrySelectedChanges?.one_time_charges?.items ?? [],
+                addOneTimeChargeRow
+            );
+
+            // Services
+            populateSimpleList(
+                "#servicesBody",
+                countrySelectedChanges?.services?.items ?? [],
+                addServiceRow
+            );
+
+            // Processing Fees (special structure)
+            const $processingBody = $("#processingBody");
+            $processingBody.empty();
+
+            const processChargesData = countrySelectedChanges?.processing_fee?.data ?? [];
+
+            if (Array.isArray(processChargesData) && processChargesData.length > 0) {
+                processChargesData.forEach(process => {
+                    addProcessingRow();
+
+                    const $lastRow = $processingBody.find("tr:last");
+
+                    $lastRow.find("input[type='text']").val(process?.description ?? "");
+                    $lastRow.find("input[type='number']").val(process?.amount ?? "");
+                });
+                calculateProcessingTotal()
+            }
+            const tableHeaders = countrySelectedChanges?.fees?.header ?? [];
+
+            if (Array.isArray(tableHeaders) && tableHeaders.length > 0) {
+                $("#feesTable thead tr td input").each(function(index) {
+                    console.log(tableHeaders[index]);
+                    $(this).val(tableHeaders[index] ?? '');
+                });
+            }
+        } catch (error) {
+            console.error("Error in SetCountryChanges:", error);
+        }
+    }
 
 
     // Fees Table Functions
@@ -1268,8 +1368,8 @@ $contactInfo = $feesStructure["contact_data"];
         newRow.innerHTML = `
         <td><input type="text" class="form-control year-text" name="fees[year][]" value="${rowCount + 1}${yearSuffix} Year"></td>
         <td><input type="number" class="form-control tuition-input" name="fees[tuition][]" value="0" onchange="calculateFeesTotals()"></td>
-        <td><input type="number" class="form-control hostel-input" name="fees[hostel][]" value="0" onchange="calculateFeesTotals()"></td>
-        <td><input type="number" class="form-control dev-input" name="fees[development][]" value="0" onchange="calculateFeesTotals()"></td>
+        <td><input type="text" class="form-control hostel-input" name="fees[hostel][]" value="0" onchange="calculateFeesTotals()"></td>
+        <td><input type="text" class="form-control dev-input" name="fees[development][]" value="0" onchange="calculateFeesTotals()"></td>
         `;
 
         calculateFeesTotals();
@@ -1405,7 +1505,7 @@ $contactInfo = $feesStructure["contact_data"];
                                                     </button</td>
         `;
 
-        calculateProcessingTotal();
+        calculateProcessingTotal()
     }
 
     function removeProcessingRow(obj = "") {
@@ -1474,7 +1574,7 @@ $contactInfo = $feesStructure["contact_data"];
             country_id: $('#countries').val(),
             university_id: $('#universities').val(),
             region_id: $('#region_type').val(),
-
+            setDefault: $('#default_country_data').is(':checked') ? 1 : 0,
             // Proper CSRF format for CodeIgniter
             [csrfData.token_name]: csrfData.hash,
 
@@ -1550,8 +1650,8 @@ $contactInfo = $feesStructure["contact_data"];
                 formData.sections.fees.data.push({
                     year: year,
                     tuition: parseFloat($(this).find('td:eq(1) input').val()) || 0,
-                    hostel: parseFloat($(this).find('td:eq(2) input').val()) || 0,
-                    development: parseFloat($(this).find('td:eq(3) input').val()) || 0
+                    hostel: ($(this).find('td:eq(2) input').val()) || 0,
+                    development: ($(this).find('td:eq(3) input').val()) || 0
                 });
             }
         });
@@ -1683,7 +1783,9 @@ $contactInfo = $feesStructure["contact_data"];
             segment_type: 'required',
             countries: 'required',
             universities: 'required',
-            region: 'required'
+            region_type: 'required',
+            year: 'required',
+            contact_number: 'required'
         }, saveFormDataSubmit);
     }
 
@@ -1872,6 +1974,7 @@ $contactInfo = $feesStructure["contact_data"];
                     // Prepare FormData
                     const formData = new FormData();
                     const filename = pdfData["university_name"].replace(/ /g, "_") + ".pdf";
+                    pdf.save(filename);
                     formData.append("pdf_file", pdfBlob, filename);
 
                     // Correct CSRF token append

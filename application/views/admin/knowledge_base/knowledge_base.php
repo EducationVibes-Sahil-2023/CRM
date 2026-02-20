@@ -1083,7 +1083,7 @@ $has_permission_delete = has_permission('knowledge_base', '', 'delete');
                         let check_dir = pathInfo_info ? pathInfo_info[pathInfo_info.length - 1] : [];
                         if (pathInfo_info_.includes(id + "_" + fileName) && check_ == fileName) {} else {
                             if (filePath && filePath !== "") {
-                                container.append(`<div class='hover-show-edit'>${editHtml} &nbsp; <i class="images-list dx-icon dx-icon-download" onclick="download_file('${filePath}','${fileName}')"></i></div>`);
+                                container.append(`<div class='hover-show-edit'>${editHtml} &nbsp;<i class="images-list dx-icon fa fa-eye" onclick="preview_file('${filePath}','${fileName}')"></i>&nbsp; <i class="images-list dx-icon dx-icon-download" onclick="download_file('${filePath}','${fileName}')"></i></div>`);
                             } else {
                                 container.append(`<div class='hover-show-edit'>${editHtml}</div>`);
                             }
@@ -1102,7 +1102,16 @@ $has_permission_delete = has_permission('knowledge_base', '', 'delete');
 
     }
 
+    function preview_file(path, fileName) {
+        if (!path || !fileName) {
+            console.warn("Invalid file path or name");
+            return;
+        }
 
+        const fileUrl = path;
+
+        window.open(fileUrl, "_blank");
+    }
 
 
     function checkEmptyDirectory() {
