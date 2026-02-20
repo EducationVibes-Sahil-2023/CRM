@@ -155,6 +155,7 @@
              font-family: 'Lato', sans-serif;
              font-weight: 600;
              color: #136db9;
+                 word-spacing: 8px !important;
              /* solid color for PDF */
          }
 
