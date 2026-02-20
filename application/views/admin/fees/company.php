@@ -1411,45 +1411,82 @@ $contactInfo = !empty($feesStructure["contact_data"])
         $('#summaryDev').text('$' + formatNumber(devTotal));
     }
 
-    // Other Charges Table Functions
     function addOtherChargeRow() {
-        var tableBody = document.getElementById('otherChargesBody');
-        var rowCount = tableBody.rows.length;
-        var newRow = tableBody.insertRow();
 
+        var tableBody = document.getElementById('otherChargesBody');
+        if (!tableBody) return;
+
+        var rowCount = tableBody.rows.length;
+
+        // Check BEFORE inserting row
         if (rowCount >= 4) {
+            alert("Maximum 4 other charges allowed.");
             return false;
         }
-        newRow.innerHTML =
-            `
-        <td class="d-flex"><input type="text" class="form-control" name="other_charges[]" value="New Charge"><button type="button" class="btn btn-danger btn-sm action-btn" onclick="removeOtherChargeRow(this)" fdprocessedid="wa0pu"><i class="fa fa-minus"></i></button></td>`;
+
+        var newRow = tableBody.insertRow();
+
+        newRow.innerHTML = `
+        <td class="d-flex">
+            <input type="text"
+                   class="form-control"
+                   name="other_charges[]"
+                   value="New Charge">
+
+            <button type="button"
+                    class="btn btn-danger btn-sm action-btn"
+                    onclick="removeOtherChargeRow(this)">
+                <i class="fa fa-minus"></i>
+            </button>
+        </td>
+    `;
     }
 
-    function removeOtherChargeRow(obj = "") {
+    function removeOtherChargeRow(obj) {
 
         if (obj) {
-            $(obj).closest("tr").remove(); // find nearest <tr>
+            // Remove the closest <tr> of the clicked element
+            obj.closest("tr").remove();
         } else {
-            let tableBody = document.getElementById('otherChargesBody');
+            // Remove the last row from tbody
+            let tableBody = document.getElementById("otherChargesBody");
 
-            if (tableBody.rows.length > 0) {
+            if (tableBody && tableBody.rows.length > 0) {
                 tableBody.deleteRow(tableBody.rows.length - 1);
             }
         }
     }
 
 
-    // One Time Charges Table Functions
     function addOneTimeChargeRow() {
+
         var tableBody = document.getElementById('oneTimeChargesBody');
+        if (!tableBody) return;
+
         var rowCount = tableBody.rows.length;
+
+        // Maximum 12 rows allowed
+        if (rowCount >= 12) {
+            alert("Maximum 12 one-time charges allowed.");
+            return false;
+        }
+
         var newRow = tableBody.insertRow();
 
         newRow.innerHTML = `
-        <td class='flex'><input type="text" class="form-control" name="one_time_charges[]" value="New One Time Charge"><button type="button" class="btn btn-danger btn-sm action-btn" onclick="removeOneTimeChargeRow(this)">
-                                                                <i class="fa fa-minus"></i>
-                                                            </button></td>
-        `;
+        <td class="d-flex">
+            <input type="text"
+                   class="form-control"
+                   name="one_time_charges[]"
+                   value="New One Time Charge">
+
+            <button type="button"
+                    class="btn btn-danger btn-sm action-btn"
+                    onclick="removeOneTimeChargeRow(this)">
+                <i class="fa fa-minus"></i>
+            </button>
+        </td>
+    `;
     }
 
     function removeOneTimeChargeRow(obj = "") {
@@ -1466,15 +1503,33 @@ $contactInfo = !empty($feesStructure["contact_data"])
 
     // Services Table Functions
     function addServiceRow() {
+
         var tableBody = document.getElementById('servicesBody');
+        if (!tableBody) return;
+
         var rowCount = tableBody.rows.length;
+
+        // Optional: limit number of rows (example: max 5)
+        if (rowCount >= 5) {
+            return false;
+        }
+
         var newRow = tableBody.insertRow();
 
         newRow.innerHTML = `
-        <td class='d-flex'><input type="text" class="form-control" name="services[]" value="New Service"><button type="button" class="btn btn-danger btn-sm action-btn" onclick="removeServiceRow(this)">
-                                                                <i class="fa fa-minus"></i>
-                                                            </button></td>
-        `;
+        <td class="d-flex">
+            <input type="text" 
+                   class="form-control" 
+                   name="services[]" 
+                   value="New Service">
+                   
+            <button type="button" 
+                    class="btn btn-danger btn-sm action-btn" 
+                    onclick="removeServiceRow(this)">
+                <i class="fa fa-minus"></i>
+            </button>
+        </td>
+    `;
     }
 
     function removeServiceRow(obj = "") {
@@ -1491,30 +1546,55 @@ $contactInfo = !empty($feesStructure["contact_data"])
 
     // Processing Fee Table Functions
     function addProcessingRow() {
+
         var tableBody = document.getElementById('processingBody');
+        if (!tableBody) return;
+
         var rowCount = tableBody.rows.length;
-        var newRow = tableBody.insertRow();
+
+        // Stop if already 4 rows
         if (rowCount >= 4) {
             return false;
         }
-        newRow.innerHTML = `
-        <td ><input type="text" class="form-control" name="processing[description]" value="New Processing Fee"></td>
-        <td class="d-flex"><input type="number" class="form-control processing-input" name="processing[amount]" value="0" onchange="calculateProcessingTotal()"><button type="button"
-                                                        class="btn btn-danger action-btn" onclick="removeProcessingRow(this)">
-                                                        <i class="fa fa-minus"></i>
-                                                    </button</td>
-        `;
 
-        calculateProcessingTotal()
+        var newRow = tableBody.insertRow();
+
+        newRow.innerHTML = `
+        <td>
+            <input type="text" class="form-control" 
+                   name="processing[${rowCount}][description]" 
+                   value="New Processing Fee">
+        </td>
+        <td class="d-flex">
+            <input type="number" 
+                   class="form-control processing-input" 
+                   name="processing[${rowCount}][amount]" 
+                   value="0" 
+                   onchange="calculateProcessingTotal()">
+            <button type="button"
+                    class="btn btn-danger action-btn"
+                    onclick="removeProcessingRow(this)">
+                <i class="fa fa-minus"></i>
+            </button>
+        </td>
+    `;
+
+        calculateProcessingTotal();
     }
 
-    function removeProcessingRow(obj = "") {
+    function removeProcessingRow(obj) {
+
         var tableBody = document.getElementById('processingBody');
-        if (tableBody.rows.length > 1) {
-            // tableBody.deleteRow(tableBody.rows.length - 1);
-            $(obj).closest("tr").remove(); // find nearest <tr>
-            calculateProcessingTotal();
+        if (!tableBody) return;
+
+        if (tableBody.rows.length <= 1) {
+            return; // prevent deleting last row
         }
+
+        // Remove the clicked row
+        obj.closest("tr").remove();
+
+        calculateProcessingTotal();
     }
 
     function calculateProcessingTotal() {
