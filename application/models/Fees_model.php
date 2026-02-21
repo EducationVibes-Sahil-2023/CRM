@@ -112,13 +112,13 @@ class Fees_model extends App_Model
     public function getFeesStructure($id = "")
     {
         if (!empty($id)) {
-            return $this->db
+            return $this->db->select("*,CONCAT(university_name,' (',region_name,')')university_name_reagion")
                 ->where('id', $id)
                 ->get(db_prefix() . 'fees_structure_data')
                 ->row_array();
         }
 
-        return $this->db
+        return $this->db->select("*,CONCAT(university_name,' (',region_name,')')university_name_reagion")
             ->get(db_prefix() . 'fees_structure_data')
             ->result_array();
     }
