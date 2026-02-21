@@ -1510,7 +1510,9 @@ $contactInfo = !empty($feesStructure["contact_data"])
         var rowCount = tableBody.rows.length;
 
         // Optional: limit number of rows (example: max 5)
-        if (rowCount >= 5) {
+        if (rowCount >= 12) {
+             alert("Maximum 12 Services allowed.");
+            return false;
             return false;
         }
 
@@ -1554,6 +1556,7 @@ $contactInfo = !empty($feesStructure["contact_data"])
 
         // Stop if already 4 rows
         if (rowCount >= 4) {
+             alert("Maximum 4 Processing Fees allowed.");
             return false;
         }
 

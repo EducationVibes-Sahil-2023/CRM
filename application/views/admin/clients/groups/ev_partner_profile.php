@@ -1097,10 +1097,10 @@ if ($lead_type_status == 2) {
 									<?php
 
 									?>
-									<div id="entrance_exam_div" class="row accadmic-education-div hide ">
+									<div id="entrance_exam_div" class="row accadmic-education-div  ">
 										<h4>NEET Exam</h4>
 										<hr>
-										<div class="col-lg-12 row">
+										<div class="col-lg-12 row hide">
 											<h4 class="col-lg-12">NEET Credentials</h4>
 											<div class="col-lg-3 border2 border1">
 												<div class="c1">
