@@ -88,7 +88,7 @@ class Fees extends AdminController
 
 
         // Check if record exists
-        $exists = $this->fees_model->checkRecord($segment_id, $country_id, $university_id);
+        $exists = $this->fees_model->checkRecord($segment_id, $country_id, $university_id,$region_id);
 
         if ($exists) {
 
