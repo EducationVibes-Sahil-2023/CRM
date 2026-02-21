@@ -58,11 +58,20 @@ class Fees_model extends App_Model
     ");
 
         $this->s_db->from("universities u");
+         $this->s_db->join(
+            "countries c",
+            "c.id = u.country_id"
+        );
+        
+         $this->s_db->join(
+            "course s",
+            "s.id = c.segment_id"
+        );
         $this->s_db->join(
             "university_banner ub",
-            "ub.university_id = u.id AND ub.status = 0",
-            "left"
+            "ub.university_id = u.id"
         );
+       
 
         $this->s_db->where("u.status", 0);
 
@@ -87,11 +96,12 @@ class Fees_model extends App_Model
     }
 
 
-    public function checkRecord($segment_id, $country_id, $university_id)
+    public function checkRecord($segment_id, $country_id, $university_id,$region_id)
     {
         return $this->db->where('segment_id', $segment_id)
             ->where('country_id', $country_id)
             ->where('university_id', $university_id)
+            ->where('region_id', $region_id)
             ->get(db_prefix() . 'fees_structure_data')  // 👈 your table name
             ->row();
     }
