@@ -307,7 +307,7 @@ $contactInfo = !empty($feesStructure["contact_data"])
                 <div class="panel-body">
                     <div class="row col-12">
                         <div class="col-lg-12">
-                            <?php echo render_select('created_universities', $feesStructure_data, array('id', 'university_name'), 'Created Fees Structures', [$id]); ?>
+                            <?php echo render_select('created_universities', $feesStructure_data, array('id', 'university_name_reagion'), 'Created Fees Structures', [$id]); ?>
                         </div>
                     </div>
                     <form id="feesStructure-form" onsubmit="return false;">
@@ -1996,28 +1996,72 @@ $contactInfo = !empty($feesStructure["contact_data"])
     });
 
     var pdfData = [];
-    async function generatePDFAndUpload(id) {
-
-        const csrfName = '<?= $this->security->get_csrf_token_name(); ?>';
-        let csrfHash = '<?= $this->security->get_csrf_hash(); ?>';
-
-        const frame = document.getElementById("pdfFrame");
+    async function generatePDFAndUpload(id_ = null) {
 
         try {
 
+            /* -------------------------
+               1️⃣ RESOLVE ID SAFELY
+            -------------------------- */
+
+            let pdf_id = null;
+
+            if (id_ !== null && id_ !== undefined && id_ !== "") {
+                pdf_id = id_;
+            } else if (typeof id !== "undefined" && id !== null && id !== "") {
+                pdf_id = id;
+            }
+
+            // Convert to integer safely
+            pdf_id = Number(pdf_id);
+
+            if (!Number.isInteger(pdf_id) || pdf_id <= 0) {
+                console.error("Invalid PDF ID:", pdf_id);
+                alert_float("danger", "Invalid or missing ID.");
+                return;
+            }
+
+            console.log("PDF ID:", pdf_id);
+
+            /* -------------------------
+               2️⃣ VALIDATE FRAME
+            -------------------------- */
+
+            const frame = document.getElementById("pdfFrame");
+
+            if (!frame) {
+                alert_float("danger", "PDF frame not found.");
+                return;
+            }
+
+            const csrfName = '<?= $this->security->get_csrf_token_name(); ?>';
+            let csrfHash = '<?= $this->security->get_csrf_hash(); ?>';
+
             show_loader();
 
-            frame.src = "<?= admin_url('Fees/generate'); ?>/" + id;
+            /* -------------------------
+               3️⃣ LOAD FRAME
+            -------------------------- */
+
+            frame.onload = null; // reset previous handler
+            frame.src = "<?= admin_url('Fees/generate'); ?>/" + pdf_id;
 
             frame.onload = async function() {
 
+                frame.onload = null; // prevent multiple triggers
+
                 try {
 
-                    const element = frame.contentWindow.document.getElementById("feeStructures");
+                    const frameDoc = frame.contentWindow.document;
+                    const element = frameDoc.getElementById("feeStructures");
 
                     if (!element) {
                         throw new Error("Fee structure element not found.");
                     }
+
+                    /* -------------------------
+                       4️⃣ GENERATE PDF
+                    -------------------------- */
 
                     const canvas = await html2canvas(element, {
                         scale: 2,
@@ -2029,43 +2073,59 @@ $contactInfo = !empty($feesStructure["contact_data"])
                         jsPDF
                     } = window.jspdf;
                     const pdf = new jsPDF("p", "mm", "a4");
-                    const imgData = canvas.toDataURL("image/jpeg", 1.2);
+
+                    const imgData = canvas.toDataURL("image/jpeg", 1.0);
+
                     const imgWidth = 210;
                     const pageHeight = 297;
                     const imgHeight = (canvas.height * imgWidth) / canvas.width;
 
-                    if (imgHeight <= pageHeight) {
-                        pdf.addImage(imgData, "JPEG", 0, 0, imgWidth, imgHeight);
-                    } else {
-                        let heightLeft = imgHeight;
-                        let position = 0;
+                    let heightLeft = imgHeight;
+                    let position = 0;
 
+                    pdf.addImage(imgData, "JPEG", 0, position, imgWidth, imgHeight);
+                    heightLeft -= pageHeight;
+
+                    while (heightLeft > 0) {
+                        position = heightLeft - imgHeight;
+                        pdf.addPage();
                         pdf.addImage(imgData, "JPEG", 0, position, imgWidth, imgHeight);
                         heightLeft -= pageHeight;
-
-                        while (heightLeft > 0) {
-                            position = heightLeft - imgHeight;
-                            pdf.addPage();
-                            pdf.addImage(imgData, "JPEG", 0, position, imgWidth, imgHeight);
-                            heightLeft -= pageHeight;
-                        }
                     }
-
 
                     const pdfBlob = pdf.output("blob");
 
-                    // Prepare FormData
-                    const formData = new FormData();
-                    const filename = pdfData["university_name"].replace(/ /g, "_") + ".pdf";
-                    pdf.save(filename);
-                    formData.append("pdf_file", pdfBlob, filename);
+                    /* -------------------------
+                       5️⃣ VALIDATE PDF DATA
+                    -------------------------- */
 
-                    // Correct CSRF token append
+                    if (typeof pdfData === "undefined" || !pdfData) {
+                        throw new Error("PDF metadata not available.");
+                    }
+
+                    const filename =
+                        (pdfData.university_name || "University")
+                        .replace(/\s+/g, "_")
+                        .replace(/[^\w\-]/g, "") +
+                        ".pdf";
+
+
+                    pdf.save(filename);
+                    /* -------------------------
+                       6️⃣ PREPARE FORM DATA
+                    -------------------------- */
+
+                    const formData = new FormData();
+                    formData.append("pdf_file", pdfBlob, filename);
                     formData.append(csrfName, csrfHash);
-                    formData.append("country_name", pdfData["country_name"]);
-                    formData.append("university_name", pdfData["university_name"]);
-                    formData.append("segment_type", pdfData["segment_type"]);
-                    formData.append("region_name", pdfData["region_name"]);
+                    formData.append("country_name", pdfData.country_name || "");
+                    formData.append("university_name", pdfData.university_name || "");
+                    formData.append("segment_type", pdfData.segment_type || "");
+                    formData.append("region_name", pdfData.region_name || "");
+
+                    /* -------------------------
+                       7️⃣ UPLOAD PDF
+                    -------------------------- */
 
                     const response = await fetch("<?= base_url('admin/Fees/savePdf') ?>", {
                         method: "POST",
@@ -2078,25 +2138,31 @@ $contactInfo = !empty($feesStructure["contact_data"])
                     }
 
                     const result = await response.text();
+
+                    /* -------------------------
+                       8️⃣ SUCCESS
+                    -------------------------- */
+
                     hide_loader();
                     alert_float("success", "PDF generated and uploaded successfully!");
-
                     console.log("Server response:", result);
+
+                    // Optional: download locally
+                    // pdf.save(filename);
 
                 } catch (innerError) {
 
+                    hide_loader();
                     alert_float("danger", innerError.message);
                     console.error(innerError);
-
                 }
             };
 
         } catch (error) {
-            hide_loader();
 
+            hide_loader();
             alert_float("danger", "Something went wrong while generating PDF.");
             console.error(error);
-
         }
     }
 </script>
