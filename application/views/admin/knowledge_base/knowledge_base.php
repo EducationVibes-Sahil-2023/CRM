@@ -1108,7 +1108,7 @@ $has_permission_delete = has_permission('knowledge_base', '', 'delete');
             return;
         }
 
-        const fileUrl = path;
+        const fileUrl = path+ Math.floor(Math.random() * 99999);
 
         window.open(fileUrl, "_blank");
     }

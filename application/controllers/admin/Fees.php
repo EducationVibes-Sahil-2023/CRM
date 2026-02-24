@@ -224,4 +224,65 @@ class Fees extends AdminController
             ]);
         }
     }
+    
+    
+   public function auto_feesStructure($id="")
+    {
+        if (!has_permission('customers', '', 'view')) {
+            return ajax_access_denied();
+        }
+
+          $table = db_prefix() . 'fees_structure_data';
+
+    $this->db->select('id')
+             ->from($table)
+             ->order_by('id', 'ASC');
+
+    if (!empty($id)) {
+        // If ID is provided, fetch only that record
+        $this->db->where('id', $id);
+    } else {
+        // If no ID, fetch only not updated records
+        $this->db->where('auto_update', 0);
+    }
+     $feesData = $this->db->get()->result_array();
+
+        if (empty($feesData)) {
+            echo "No records found.";
+            return;
+        }
+
+        // Collect IDs
+        $ids = array_column($feesData, 'id');
+
+        // Update all selected IDs at once
+        $this->db->where_in('id', $ids);
+        $this->db->update($table, ['auto_update' => 1]);
+
+?>
+        <!DOCTYPE html>
+        <html>
+
+        <head>
+            <title>Opening PDFs...</title>
+        </head>
+
+        <body>
+
+            <script>
+                <?php foreach ($ids as $id) { ?>
+                    window.open(
+                        "<?= base_url('admin/Fees/generate/') ?>" + <?= $id ?> + "?download=1",
+                        "_blank"
+                    );
+                <?php } ?>
+            </script>
+
+            <h3>Opening <?= count($ids); ?> PDFs...</h3>
+
+        </body>
+
+        </html>
+<?php
+    }
 }
