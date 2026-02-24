@@ -1996,12 +1996,13 @@ $contactInfo = !empty($feesStructure["contact_data"])
     });
 
     var pdfData = [];
+
     async function generatePDFAndUpload(id_ = null) {
 
         try {
 
             /* -------------------------
-               1️⃣ RESOLVE ID SAFELY
+              1️⃣ RESOLVE ID SAFELY
             -------------------------- */
 
             let pdf_id = null;
@@ -2024,7 +2025,7 @@ $contactInfo = !empty($feesStructure["contact_data"])
             console.log("PDF ID:", pdf_id);
 
             /* -------------------------
-               2️⃣ VALIDATE FRAME
+              2️⃣ VALIDATE FRAME
             -------------------------- */
 
             const frame = document.getElementById("pdfFrame");
@@ -2034,13 +2035,19 @@ $contactInfo = !empty($feesStructure["contact_data"])
                 return;
             }
 
+
+                    window.open(
+                    "<?= base_url('admin/Fees/generate/') ?>" + pdf_id + "?download=1",
+                    "_blank"
+                    );
+                    return false;
             const csrfName = '<?= $this->security->get_csrf_token_name(); ?>';
             let csrfHash = '<?= $this->security->get_csrf_hash(); ?>';
 
             show_loader();
 
             /* -------------------------
-               3️⃣ LOAD FRAME
+              3️⃣ LOAD FRAME
             -------------------------- */
 
             frame.onload = null; // reset previous handler
@@ -2060,7 +2067,7 @@ $contactInfo = !empty($feesStructure["contact_data"])
                     }
 
                     /* -------------------------
-                       4️⃣ GENERATE PDF
+                      4️⃣ GENERATE PDF
                     -------------------------- */
 
                     const canvas = await html2canvas(element, {
@@ -2096,7 +2103,7 @@ $contactInfo = !empty($feesStructure["contact_data"])
                     const pdfBlob = pdf.output("blob");
 
                     /* -------------------------
-                       5️⃣ VALIDATE PDF DATA
+                      5️⃣ VALIDATE PDF DATA
                     -------------------------- */
 
                     if (typeof pdfData === "undefined" || !pdfData) {
@@ -2112,7 +2119,7 @@ $contactInfo = !empty($feesStructure["contact_data"])
 
                     pdf.save(filename);
                     /* -------------------------
-                       6️⃣ PREPARE FORM DATA
+                      6️⃣ PREPARE FORM DATA
                     -------------------------- */
 
                     const formData = new FormData();
@@ -2124,7 +2131,7 @@ $contactInfo = !empty($feesStructure["contact_data"])
                     formData.append("region_name", pdfData.region_name || "");
 
                     /* -------------------------
-                       7️⃣ UPLOAD PDF
+                      7️⃣ UPLOAD PDF
                     -------------------------- */
 
                     const response = await fetch("<?= base_url('admin/Fees/savePdf') ?>", {
@@ -2140,7 +2147,7 @@ $contactInfo = !empty($feesStructure["contact_data"])
                     const result = await response.text();
 
                     /* -------------------------
-                       8️⃣ SUCCESS
+                      8️⃣ SUCCESS
                     -------------------------- */
 
                     hide_loader();

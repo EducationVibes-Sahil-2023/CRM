@@ -51,6 +51,8 @@
              margin: 0;
              font-family: 'Poppins', sans-serif;
              background: #f3f6f8;
+                 width: 1095px;
+    height: 1523px;
 
          }
 
@@ -155,7 +157,7 @@
              font-family: 'Lato', sans-serif;
              font-weight: 600;
              color: #136db9;
-                 word-spacing: 8px !important;
+             word-spacing: 8px !important;
              /* solid color for PDF */
          }
 
@@ -454,7 +456,7 @@
              border-radius: 0px 20px 20px 0px;
              position: absolute;
              object-fit: contain;
-             left: -5px;
+             left: -5px;;
              top: 400px;
          }
 
@@ -478,7 +480,7 @@
              border-radius: 20px 0px 0px 20px;
              position: absolute;
              object-fit: contain;
-             right: -305px;
+             left:1090px;
              top: 400px;
          }
 
@@ -490,7 +492,7 @@
              border-radius: 20px 0px 0px 20px;
              position: absolute;
              object-fit: contain;
-             right: -305px;
+              left:1090px;
              top: 1030px;
          }
 
@@ -498,6 +500,10 @@
              position: absolute;
              top: 1434px;
              width: 1095px;
+         }
+
+         table.fee-table tbody tr td {
+             /* word-spacing:0px !important;  */
          }
      </style>
  </head>
@@ -562,9 +568,14 @@
 
                  <!-- TBODY -->
                  <tbody>
-                     <?php foreach ($feesDetails['data'] as $row) : ?>
+                     <?php foreach ($feesDetails['data'] as $row) :
+                            preg_replace('/\s+/', ' ', $row['year']);
+                            $parts = explode(' ', $row['year']);
+                        ?>
                          <tr>
-                             <td><?= htmlspecialchars($row['year']) ?></td>
+                             <td><span class="yearText"><?= trim($parts[0]) ?></span>&nbsp;
+                                 <span class="yearText_prefix"><?= trim($parts[1]) ?></span>
+                             </td>
                              <td>
                                  <?= $row['tuition'] == 0 ? '0' : number_format($row['tuition']) ?>
                              </td>

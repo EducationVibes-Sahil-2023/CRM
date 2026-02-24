@@ -478,9 +478,9 @@ $last_lead_request = last_lead_request($lead->id);
                   <div class="form-group">
                      <select name="smsTemplate" id="smsTemplate" class="form-control">
                         <option value="">Select an SMS Template</option>
-                        <option value="Noida Office: 1114 World Trade Tower, WTT Sec 16, Plot No.1, Noida, Uttar Pradesh 201301">Send Noida Office Address</option>
+                        <option value="Tower B, First Floor 51/2 The Corenthum, Sector 62, Noida, Uttar Pradesh 201309">Send Noida Office Address</option>
                         <option value="Diamond Chambers, 9N, 9th floor,Block-1&2, 4, Chowringhee Ln,Park Street area, Kolkata, 700016">Send Kolkata Office Address</option>
-                        <option value="Education Vibes, Aditya Centeegra Office no - 19/Second floor, Dhaneshwar Paduka chowk, F.C. Road , Shivajinagar, Pune - 411005">Send Noida Office Address</option>
+                        <option value="Office no 19, Second Floor, Aditya Centeegra, FC road next to Mantri house, Shivaji Nagar, Pune - 411004">Send Pune Office Address</option>
                      </select>
                   </div>
                   <div class="form-group">
@@ -1161,7 +1161,7 @@ $last_lead_request = last_lead_request($lead->id);
    }
 
    function set_search_location() {
-       const suggestions = ["Education Vibes, Aditya Centeegra Office no - 19/Second floor, Dhaneshwar Paduka chowk, F.C. Road , Shivajinagar, Pune - 411005", "Office No. 303, 4th Floor, Sapphire Twins, AB Rd, opposite C21 Mall, Vijay Nagar, Scheme No 54, Indore, Madhya Pradesh 452011", "Tower B, First Floor 51/2 The Corenthum, Sector 62, Noida, Uttar Pradesh 201309", "9th floor, Rajhans Helix, 901, 3, Lal Bahadur Shastri Marg, near Shreyas, Ghatkopar West, Mumbai, Maharashtra 400086", "Office no 1, Shivling smriti, opposite Udyog Bhavan, near urban co-op Bank Ltd, Shivaji Nagar, Narayan Nagar, Latur, Maharashtra 413531", "EducationVibes, Office no 408, Vishwakarma Sankul, near Gold City Hospital, The Co-operative Housieng Society, Jalgaon, Maharashtra 425001", "4th floor, Central Plaza, Door no. 6, 3-902/A, Raj Bhavan Rd, Somajiguda, Hyderabad, Telangana 500082","5 Th Floor, Akarshan Busiplex, Central Bazar Road, above ICICI Bank, Ramdaspeth, Nagpur, Maharashtra 440010"];
+       const suggestions = ["Office no 19, Second Floor, Aditya Centeegra, FC road next to Mantri house, Shivaji Nagar, Pune - 411004", "Office No. 303, 4th Floor, Sapphire Twins, AB Rd, opposite C21 Mall, Vijay Nagar, Scheme No 54, Indore, Madhya Pradesh 452011", "Tower B, First Floor 51/2 The Corenthum, Sector 62, Noida, Uttar Pradesh 201309", "9th floor, Rajhans Helix, 901, 3, Lal Bahadur Shastri Marg, near Shreyas, Ghatkopar West, Mumbai, Maharashtra 400086", "Office no 1, Shivling smriti, opposite Udyog Bhavan, near urban co-op Bank Ltd, Shivaji Nagar, Narayan Nagar, Latur, Maharashtra 413531", "EducationVibes, Office no 408, Vishwakarma Sankul, near Gold City Hospital, The Co-operative Housieng Society, Jalgaon, Maharashtra 425001", "4th floor, Central Plaza, Door no. 6, 3-902/A, Raj Bhavan Rd, Somajiguda, Hyderabad, Telangana 500082","5 Th Floor, Akarshan Busiplex, Central Bazar Road, above ICICI Bank, Ramdaspeth, Nagpur, Maharashtra 440010"];
 
       const textarea = document.getElementById("address");
       const suggestionList = document.getElementById("suggestion-list");

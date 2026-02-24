@@ -220,7 +220,7 @@ class knowledge_base_group_model extends App_Model
 
         // return array_merge($folder_data, $file_data);
 
-
+$t=time();
         $folder_data = $this->db->select("
         f.id as key,
         f.name as name,
@@ -243,30 +243,28 @@ class knowledge_base_group_model extends App_Model
             ->where($where_folder)
             ->get()
             ->result_array();
-
-        $file_data = $this->db->select(
-            "
-        fs.id as key,
-        fs.name as name,
-        CONCAT(fs.name,'.',type) as show_name,
-        type as _type,
-        'false' as isDirectory,
-        'false' as hasSubDirectories,
-        updated_date as lastModifiedDate,
-        created_date as creationDate,
-        size as size,
-        path as file_path,
-        fs.created_by,
-        fs.updated_by,
-        'file' as type,
-        'file' as file_type
-        "
-
-        )
-            ->from(db_prefix() . "knowledge_base_files fs")
-            ->where($where_file)
-            ->get()
-            ->result_array();
+$file_data = $this->db->select("
+    fs.id as `key`,
+    fs.name as name,
+    CONCAT(fs.name,'.',fs.type) as show_name,
+    fs.type as _type,
+    'false' as isDirectory,
+    'false' as hasSubDirectories,
+    fs.updated_date as lastModifiedDate,
+    fs.created_date as creationDate,
+    fs.size as size,
+    CONCAT(fs.path,'?{$t}') as file_path,
+    fs.created_by,
+    fs.updated_by,
+    'file' as type,
+    'file' as file_type
+")
+->from(db_prefix() . "knowledge_base_files fs")
+->where($where_file)
+->group_by("fs.path")
+->order_by("fs.updated_date", "DESC") // choose one
+->get()
+->result_array();
 
         $data =  array_merge($folder_data, $file_data);
         $data_array = [];
