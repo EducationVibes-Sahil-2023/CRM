@@ -16,7 +16,7 @@ $orignal_document_list_georgia = get_orignal_document_list(0, 1);
 $orignal_document_visa_rest = get_orignal_document_list(0, 0, 0, "", 1);
 $orignal_document_visa_georgia = get_orignal_document_list(0, 0, 0, "", 0, 1);
 $apostille_documents = get_orignal_document_list(0, 0, 1);
-$apostille_visa_apostile_documents = get_orignal_document_list(0, 0, 0, 0, 0, 0, 1, ["status" => 0]);
+$apostille_visa_apostile_documents = get_orignal_document_list(0, 0, 0, 0, 0, 0, 1);
 $get_currencies = get_currencies();
 $get_currencies = array_column($get_currencies, null, 'id');
 // Ensure both are arrays before merging

@@ -4928,49 +4928,49 @@ WHERE s.client_id = " . (int)$client_id . "
                     if (!empty($media_upload_data["doc_type"])) {
                         $this->media_upload($media_upload_data, $_FILES);
                     }
-                    if (!empty($orignal_doc_id)) {
-                        $batch_update = [];
-                        $batch_insert = [];
-                        $location = $this->db
-                            ->select("office_location")
-                            ->where("staffid", get_staff_user_id())
-                            ->get(db_prefix() . 'staff')
-                            ->row()->office_location ?? 0;
+                    // if (!empty($orignal_doc_id)) {
+                    //     $batch_update = [];
+                    //     $batch_insert = [];
+                    //     $location = $this->db
+                    //         ->select("office_location")
+                    //         ->where("staffid", get_staff_user_id())
+                    //         ->get(db_prefix() . 'staff')
+                    //         ->row()->office_location ?? 0;
 
-                        $exitData = $this->db
-                            ->select("id")
-                            ->from(db_prefix() . "orignal_documents_received")
-                            ->where([
-                                "doc_id"  => $orignal_doc_id,
-                                "userid"  => $client_id
-                            ])->get()->row();
-
-
-                        if ($exitData) {
-                            // ✅ Collect update data
-                            $batch_update[] = [
-                                "id"            => $exitData->id,
-                                "doc_id"        => $orignal_doc_id,
-                                "userid"        => $client_id,
-                                "received_by"   => get_staff_user_id(),
-                                "received_date" => date('Y-m-d H:i:s'),
-                                "location_id"   => $location,
-                                "in_transit"    => ""
-                            ];
-                        } else {
-                            // ✅ Collect insert data
-                            $batch_insert[] = [
-                                "doc_id"        => $orignal_doc_id,
-                                "userid"        => $client_id,
-                                "received_by"   => get_staff_user_id(),
-                                "received_date" => date('Y-m-d H:i:s'),
-                                "location_id"   => $location
-                            ];
-                        }
+                    //     $exitData = $this->db
+                    //         ->select("id")
+                    //         ->from(db_prefix() . "orignal_documents_received")
+                    //         ->where([
+                    //             "doc_id"  => $orignal_doc_id,
+                    //             "userid"  => $client_id
+                    //         ])->get()->row();
 
 
-                        $this->clients_model->document_update_insert($batch_insert, $batch_update);
-                    }
+                    //     if ($exitData) {
+                    //         // ✅ Collect update data
+                    //         $batch_update[] = [
+                    //             "id"            => $exitData->id,
+                    //             "doc_id"        => $orignal_doc_id,
+                    //             "userid"        => $client_id,
+                    //             "received_by"   => get_staff_user_id(),
+                    //             "received_date" => date('Y-m-d H:i:s'),
+                    //             "location_id"   => $location,
+                    //             "in_transit"    => ""
+                    //         ];
+                    //     } else {
+                    //         // ✅ Collect insert data
+                    //         $batch_insert[] = [
+                    //             "doc_id"        => $orignal_doc_id,
+                    //             "userid"        => $client_id,
+                    //             "received_by"   => get_staff_user_id(),
+                    //             "received_date" => date('Y-m-d H:i:s'),
+                    //             "location_id"   => $location
+                    //         ];
+                    //     }
+
+
+                    //     $this->clients_model->document_update_insert($batch_insert, $batch_update);
+                    // }
 
                     // handle_custom_fields_post($client_id, $update_applicant_custom_data);
                     applicant_last_update($client_id);
