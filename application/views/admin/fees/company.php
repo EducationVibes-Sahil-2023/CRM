@@ -1286,7 +1286,10 @@ $contactInfo = !empty($feesStructure["contact_data"])
 
     function SetCountryChanges() {
         try {
-            console.log(countrySelectedChanges);
+          if(id>0 && id!='')
+          {
+              return false;
+          }
 
             if (!countrySelectedChanges || typeof countrySelectedChanges !== "object") {
                 console.warn("countrySelectedChanges is invalid");
