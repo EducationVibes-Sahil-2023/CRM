@@ -336,6 +336,14 @@ function app_init_customer_profile_tabs()
         'position' => 95,
         'leadType' => '2'
     ]);
+
+    $CI->app_tabs->add_customer_profile_tab('translation', [
+        'name'     => _l('Translation Documents'),
+        'icon'     => 'fa fa-book',
+        'view'     => 'admin/clients/groups/translation',
+        'position' => 95,
+        'leadType' => '2'
+    ]);
     $CI->app_tabs->add_customer_profile_tab('tracker', [
         'name'     => _l('customer_tracker'),
         'icon'     => 'fa fa-map-marker',
@@ -1975,7 +1983,7 @@ function get_orignal_document_list(
 
     // Always active records
     if (!empty($where) || !empty($where_or)) {
-        $CI->db->where($where);
+        // $CI->db->where($where);
     } else {
         // Default filter only if user has NOT passed status
         // $CI->db->where("status", 1);
@@ -2138,8 +2146,9 @@ function checkName_aff($client_ids, $document_ids)
         }
     }
 }
-function get_orignal_document_data_list_apostille($client_ids_array = [], $document_ids = [], $check_status = 0, $vendor_id = "", $apostille_document_vendor = [])
+function get_orignal_document_data_list_apostille($client_ids_array = [], $document_ids = [], $check_status = 0, $vendor_id = "", $apostille_document_vendor = [], $table_name = "client_apostille_data", $textType = "Apostille")
 {
+
     $CI = &get_instance();
     $client_ids = array_map('intval', $client_ids_array);
     checkName_aff($client_ids, $document_ids);
@@ -2163,7 +2172,7 @@ function get_orignal_document_data_list_apostille($client_ids_array = [], $docum
                 $valid_doc_ids = array_column($all_documents, 'doc_id');
 
                 $CI->db->select("r.userid, r.doc_id")
-                    ->from(db_prefix() . 'client_apostille_data r')
+                    ->from(db_prefix() . $table_name . ' r')
                     ->where_in('r.userid', $client_ids);
 
                 if (!empty($valid_doc_ids)) {
@@ -2183,13 +2192,13 @@ function get_orignal_document_data_list_apostille($client_ids_array = [], $docum
 
                     return [
                         "error" => true,
-                        "message" => "User '{$client_name}' has already apostilled original document '{$doc_name}'."
+                        "message" => "User '{$client_name}' has already " . $textType . " original document '{$doc_name}'."
                     ];
                 }
             } else if ($check_status == 2) {
                 // Step 1: Fetch existing combinations from DB
                 $CI->db->select("r.id,r.userid, r.doc_id")
-                    ->from(db_prefix() . 'client_apostille_data r')
+                    ->from(db_prefix() . $table_name . ' r')
                     ->where_in('r.userid', $client_ids);
 
                 if (!empty($_POST["apostile_id"])) {
@@ -2222,7 +2231,7 @@ function get_orignal_document_data_list_apostille($client_ids_array = [], $docum
 
                             return [
                                 "error" => true,
-                                "message" => "No apostille sent record found for client '{$client_name}' and document '{$doc_name}'."
+                                "message" => "No " . $textType . " sent record found for client '{$client_name}' and document '{$doc_name}'."
                             ];
 
                             die;
@@ -2260,7 +2269,7 @@ function get_orignal_document_data_list_apostille($client_ids_array = [], $docum
     if (empty($all_documents)) {
         return [
             "error" => true,
-            "message" => "No valid documents found with Apostille status."
+            "message" => "No valid documents found with " . $textType . " status."
         ];
     }
 
@@ -2284,7 +2293,7 @@ function get_orignal_document_data_list_apostille($client_ids_array = [], $docum
     // Step 2: Check if document already apostilled
     if ($check_status == 1) {
         $CI->db->select("r.userid, r.doc_id")
-            ->from(db_prefix() . 'client_apostille_data r')
+            ->from(db_prefix() . $table_name . ' r')
             ->where_in('r.userid', $client_ids);
 
         if (!empty($document_ids)) {
@@ -2303,13 +2312,13 @@ function get_orignal_document_data_list_apostille($client_ids_array = [], $docum
 
             return [
                 "error" => true,
-                "message" => "User '{$client_name}' has already apostilled original document '{$doc_name}'."
+                "message" => "User '{$client_name}' has already " . $textType . " original document '{$doc_name}'."
             ];
         }
     } else if ($check_status == 2) {
         // Step 1: Fetch existing combinations from DB
         $CI->db->select("r.id,r.userid, r.doc_id")
-            ->from(db_prefix() . 'client_apostille_data r')
+            ->from(db_prefix() . $table_name . ' r')
             ->where_in('r.userid', $client_ids);
 
         if (!empty($document_ids)) {
@@ -2342,7 +2351,7 @@ function get_orignal_document_data_list_apostille($client_ids_array = [], $docum
 
                     return [
                         "error" => true,
-                        "message" => "No apostille sent record found for client '{$client_name}' and document '{$doc_name}'."
+                        "message" => "No " . $textType . " sent record found for client '{$client_name}' and document '{$doc_name}'."
                     ];
 
                     die;
@@ -2520,6 +2529,33 @@ function get_apostille_document_data($client_id, $visa_apostile = 0)
     return $CI->db->order_by("o.id", "asc")->get()->result_array();
 }
 
+
+function get_translation_document_data($client_id, $visa_apostile = 0)
+{
+    $CI = &get_instance();
+    $CI->db->select("r.*, 
+        o.name, 
+        v.name AS vendor_name, 
+        CONCAT(s.firstname, ' ', s.lastname) AS created_by, 
+        CASE 
+             WHEN r.id IS NULL THEN 'Pending'  
+    WHEN r.received_status = 1 THEN 'Received'  
+    WHEN r.received_status = 0 THEN 'Sent'     
+    ELSE 'Pending'          
+        END AS apostille_status,
+        IF(ord.id IS NULL, 'No', 'Yes') AS original_received")
+        ->from(db_prefix() . 'orignal_documents o')
+        ->join(db_prefix() . 'client_translation_data r', "o.id = r.doc_id AND r.userid = {$client_id}", "LEFT")
+        ->join(db_prefix() . 'orignal_documents_received ord', "ord.doc_id = o.id AND ord.userid = {$client_id}", "LEFT")
+        ->join(db_prefix() . 'vendor_list v', "v.id = r.vendor_id", "LEFT")
+        ->join(db_prefix() . 'staff s', "s.staffid = r.created_by", "LEFT");
+
+    $CI->db->where("o.translation_status", 1);
+
+
+    return $CI->db->order_by("o.id", "asc")->get()->result_array();
+}
+
 function activity_apostille_document($id)
 {
     $CI = &get_instance();
@@ -2527,6 +2563,16 @@ function activity_apostille_document($id)
     $CI->db->where('client_id', $id);
     $CI->db->order_by('date', $sorting);
     return $CI->db->get(db_prefix() . 'apostille_document_activity')->result_array();
+}
+
+
+function activity_translation_document($id)
+{
+    $CI = &get_instance();
+    $sorting = hooks()->apply_filters('lead_activity_log_default_sort', 'DESC');
+    $CI->db->where('client_id', $id);
+    $CI->db->order_by('date', $sorting);
+    return $CI->db->get(db_prefix() . 'translation_document_activity')->result_array();
 }
 
 function get_approval_documents($userid)
@@ -3790,6 +3836,5 @@ function check_neet_credentials($clientid, $select = 'id')
 
     $query = $CI->db->get();
 
-    return $query->row()->id??0; // returns single row
+    return $query->row()->id ?? 0; // returns single row
 }
-

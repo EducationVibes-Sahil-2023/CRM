@@ -1825,6 +1825,7 @@ class Clients extends AdminController
                 echo json_encode($data);
                 die;
             }
+         
 
             // Handle Mass Delete
             if ($this->input->post('mass_delete') == "true") {
@@ -2333,6 +2334,260 @@ class Clients extends AdminController
                         'resp_desc' => 'Visa data not updated.',
                     ];
                 }
+            } else if ($this->input->post('translation_status') == "true") {
+
+
+                $translation_documents = array_column(get_orignal_document_list(0, 0, 0, 0, 0, 0, 0, ["translation_status" => 1]), null, "id");
+                $translation_vendors = $apostille_vendors;
+                $documents_id = $this->input->post('translation_document') ?? [];
+                $translation_document_vendor = $this->input->post('translation_document_vendor') ?? [];
+                $document_cost = $this->input->post('document_cost') ?? [];
+
+                // Required fields
+                $vendor_id = $this->input->post('translation_vendor');
+                $courier_date = $this->input->post('translation_date');
+                $receiving_date = $this->input->post('translation_receiving_date');
+                $payment_date = $this->input->post('translation_payment_date');
+                $currency_id_translation = $this->input->post('currency_id_translation');
+                $currency_text_translation = $this->input->post('currency_text_translation');
+
+                if (!empty($courier_date) && !empty($receiving_date)) {
+                    if (strtotime($receiving_date) < strtotime($courier_date)) {
+                        $error_message = "Receiving date cannot be earlier than courier date.";
+                        $data = [
+                            'resp_code' => 'ERR',
+                            'resp_desc' => $error_message,
+                        ];
+                        echo json_encode($data);
+                        die;
+                    }
+                }
+
+                // Get original document data and validate
+                $check_status = 1;
+                if (!empty($courier_date) && !empty($documents_id)) {
+                    $check_status = 1; // insert new translation data 
+                } else {
+                    $check_status = 2; // update translation data 
+                }
+
+                if (!empty($receiving_date)) {
+                    $this->db->select('r.id, r.userid, r.doc_id')
+                        ->from(db_prefix() . 'client_translation_data r')
+                        ->where_in('r.userid', $ids)
+                        ->where_in('r.doc_id', $documents_id)
+                        ->where('r.courier_date >', $receiving_date);
+
+                    if (!empty($_POST['translation_id'])) {
+                        $this->db->where_in('r.id', $_POST['translation_id']);
+                    }
+
+                    $query = $this->db->get();
+
+
+                    if ($query->num_rows() > 0) {
+                        $ddata = $query->result_array();
+
+                        // Safely extract first row
+                        $userid   = $ddata[0]['userid'] ?? null;
+                        $doc_id   = $ddata[0]['doc_id'] ?? null;
+
+                        $client_name = $userid ? get_client_name($userid) : '';
+                        $doc_details = $doc_id ? (get_orignal_document_list('', '', '', $doc_id)[0] ?? []) : [];
+                        $doc_name = !empty($doc_details["name"]) ? $doc_details["name"] : "Unknown";
+                        $data = [
+                            'resp_code' => 'ERR',
+                            'resp_desc' => "{$client_name} {$doc_name} records already exist after the receiving date!",
+                            'client_name' => $client_name,
+                            'doc_details' => $doc_name,
+                        ];
+
+                        echo json_encode($data);
+                        exit; // use exit instead of die for cleaner code
+                    }
+                }
+
+
+                if (!empty($_POST["translation_id"])) {
+                    $check_status = 2;
+                }
+
+
+                // else if (empty($courier_date) && empty($documents_id) && (!empty($receiving_date) || !empty($payment_date))) {
+                //     $check_status = 2; // update translation data 
+                // }
+
+                $get_data_from_document = get_orignal_document_data_list_apostille($ids, $documents_id, $check_status, $vendor_id, $translation_document_vendor, "client_translation_data", "Translation");
+
+
+                if (isset($get_data_from_document["error"]) && $get_data_from_document["error"] == 1) {
+                    $data = [
+                        'resp_code' => 'ERR',
+                        'resp_desc' => $get_data_from_document["message"],
+                    ];
+                    echo json_encode($data);
+                    exit;
+                }
+
+                if ($check_status == 1) {
+                    $insert_translation_data = [];
+                    $activity_data = [];
+                    foreach ($ids as $applicant_id) {
+                        foreach ($documents_id as $doc_id) {
+                            // Validate document cost
+                            if (!isset($document_cost[$doc_id]) || !is_numeric($document_cost[$doc_id])) {
+                            }
+                            $by_vendor = 0;
+                            if (in_array($doc_id, $translation_document_vendor)) {
+                                $by_vendor = 1;
+                            }
+
+                            $insert_translation_data[] = [
+                                "userid" => $applicant_id,
+                                "vendor_id" => $vendor_id,
+                                "doc_id" => $doc_id,
+                                "courier_date" => $courier_date,
+                                "translation_received" => $receiving_date,
+                                "translation_cost" => !empty($document_cost[$doc_id]) ? $document_cost[$doc_id] : 0,
+                                "payment_date" => $payment_date,
+                                "created_at" => date('Y-m-d H:i:s'),
+                                "created_by" => get_staff_user_id(),
+                                "received_status" => !empty($receiving_date) ? 1 : 0,
+                                "by_vendor" => $by_vendor,
+                                "currency_type" => ($document_cost[$doc_id] != "") ? $currency_id_translation : '',
+                                "currency_text" => ($document_cost[$doc_id] != "") ? $currency_text_translation : '',
+                                "bulk" => empty($_POST["manual_status"]) ? 1 : 0,
+                            ];
+                            $doc_name = !empty($translation_documents[$doc_id]['name']) ? $translation_documents[$doc_id]['name'] : 'Unknown Document';
+                            $cost = !empty($document_cost[$doc_id]) ? " with cost ₹{$document_cost[$doc_id]}" : '';
+                            $vendor = !empty($translation_vendors[$vendor_id]['name']) ? ", vendor: {$translation_vendors[$vendor_id]['name']}" : '';
+                            $courier = !empty($courier_date) ? ", courier date: {$courier_date}" : '';
+                            $received = !empty($receiving_date) ? ", receiving date: {$receiving_date}" : '';
+                            $payment = !empty($payment_date) ? ", payment date: {$payment_date}" : '';
+
+                            $message = "Sent translation for document \"{$doc_name}\"{$cost}{$vendor}{$courier}{$received}{$payment}.";
+
+                            $activity_data[] = [
+                                "date" => date('Y-m-d H:i:s'),
+                                "staffid" => get_staff_user_id(),
+                                "client_id" => $applicant_id,
+                                "description" => $message
+                            ];
+                        }
+                    }
+
+
+                    // Insert into DB
+                    if (!empty($insert_translation_data)) {
+                        $inserted = $this->db->insert_batch(db_prefix() . "client_translation_data", $insert_translation_data);
+                        if ($inserted) {
+
+                            $this->db->insert_batch(db_prefix() . 'translation_document_activity', $activity_data);
+                            $data = [
+                                'resp_code' => 'RCS',
+                                'resp_desc' => 'Translation document bulk updated successfully.',
+                            ];
+                        } else {
+                            $data = [
+                                'resp_code' => 'ERR',
+                                'resp_desc' => 'Database insert failed.',
+                            ];
+                        }
+                    }
+
+                    echo json_encode($data);
+                    exit;
+                } else if ($check_status == 2) {
+
+                    $update_translation_data = [];
+                    $activity_data = [];
+                    foreach ($get_data_from_document as $rec_translation) {
+
+                        $row = [
+                            "id" => $rec_translation["id"],
+                            "updated_at" => date('Y-m-d H:i:s'),
+                            "updated_by" => get_staff_user_id(),
+                        ];
+
+                        if (!empty($receiving_date)) {
+                            $row["translation_received"] = $receiving_date;
+                            $row["received_status"] = 1;
+                        }
+
+                        if ($document_cost[$rec_translation['doc_id']] != '') {
+                            $row["translation_cost"] = $document_cost[$rec_translation['doc_id']];
+                            $row["currency_type"] = $currency_id_translation;
+                            $row["currency_text"] = $currency_text_translation;
+                        }
+
+                        if (!empty($payment_date)) {
+                            $row["payment_date"] = $payment_date;
+                        }
+
+                        if (!empty($courier_date)) {
+                            $row["courier_date"] = $courier_date;
+                        }
+
+                        if (!empty($_POST["manual_status"])) {
+                            $row["bulk"] = 0;
+                        }
+
+
+
+                        $update_translation_data[] = $row;
+
+
+                        $doc_name = !empty($translation_documents[$rec_translation['doc_id']]['name']) ? $translation_documents[$rec_translation['doc_id']]['name'] : 'Unknown Document';
+                        $cost = $document_cost[$rec_translation['doc_id']] != '' ? " with cost ₹{$document_cost[$rec_translation['doc_id']]}" : '';
+                        $vendor = !empty($translation_vendors[$vendor_id]['name']) ? ", vendor: {$translation_vendors[$vendor_id]['name']}" : '';
+                        $courier = !empty($courier_date) ? ", courier date: {$courier_date}" : '';
+                        $received = !empty($receiving_date) ? ", receiving date: {$receiving_date}" : '';
+                        $payment = !empty($payment_date) ? ", payment date: {$payment_date}" : '';
+
+                        $message = "Update translation for document \"{$doc_name}\"{$cost}{$vendor}{$courier}{$received}{$payment}.";
+
+                        $activity_data[] = [
+                            "date" => date('Y-m-d H:i:s'),
+                            "staffid" => get_staff_user_id(),
+                            "client_id" => $rec_translation["userid"],
+                            "description" => $message
+                        ];
+                    }
+
+
+                    // Perform batch update
+                    if (!empty($update_translation_data)) {
+                        $updated = $this->db->update_batch(db_prefix() . "client_translation_data", $update_translation_data, "id");
+
+                        $this->db->insert_batch(db_prefix() . 'translation_document_activity', $activity_data);
+                        if ($updated) {
+                            $data = [
+                                'resp_code' => 'RCS',
+                                'resp_desc' => 'Translation document bulk updated successfully.',
+                            ];
+                        } else {
+                            $data = [
+                                'resp_code' => 'ERR',
+                                'resp_desc' => 'Translation document update failed.',
+                            ];
+                        }
+
+                        echo json_encode($data);
+                        die;
+                    } else {
+                        $data = [
+                            'resp_code' => 'ERR',
+                            'resp_desc' => 'No translation records to update.',
+                        ];
+                        echo json_encode($data);
+                        die;
+                    }
+                } else {
+                    $data = [
+                        'resp_code' => 'ERR',
+                        'resp_desc' => 'Translation data not updated.',
+                    ];
+                }
             } else if (
                 ($this->input->post('in_transit') === true ||
                     (empty($this->input->post('office_location')) && empty($this->input->post('document_status')))) ||
@@ -2396,6 +2651,9 @@ class Clients extends AdminController
                 echo json_encode($data);
                 die;
             }
+
+
+            die;
         }
 
         echo json_encode($data);
@@ -4928,49 +5186,49 @@ WHERE s.client_id = " . (int)$client_id . "
                     if (!empty($media_upload_data["doc_type"])) {
                         $this->media_upload($media_upload_data, $_FILES);
                     }
-                    // if (!empty($orignal_doc_id)) {
-                    //     $batch_update = [];
-                    //     $batch_insert = [];
-                    //     $location = $this->db
-                    //         ->select("office_location")
-                    //         ->where("staffid", get_staff_user_id())
-                    //         ->get(db_prefix() . 'staff')
-                    //         ->row()->office_location ?? 0;
+                    if (!empty($orignal_doc_id)) {
+                        $batch_update = [];
+                        $batch_insert = [];
+                        $location = $this->db
+                            ->select("office_location")
+                            ->where("staffid", get_staff_user_id())
+                            ->get(db_prefix() . 'staff')
+                            ->row()->office_location ?? 0;
 
-                    //     $exitData = $this->db
-                    //         ->select("id")
-                    //         ->from(db_prefix() . "orignal_documents_received")
-                    //         ->where([
-                    //             "doc_id"  => $orignal_doc_id,
-                    //             "userid"  => $client_id
-                    //         ])->get()->row();
-
-
-                    //     if ($exitData) {
-                    //         // ✅ Collect update data
-                    //         $batch_update[] = [
-                    //             "id"            => $exitData->id,
-                    //             "doc_id"        => $orignal_doc_id,
-                    //             "userid"        => $client_id,
-                    //             "received_by"   => get_staff_user_id(),
-                    //             "received_date" => date('Y-m-d H:i:s'),
-                    //             "location_id"   => $location,
-                    //             "in_transit"    => ""
-                    //         ];
-                    //     } else {
-                    //         // ✅ Collect insert data
-                    //         $batch_insert[] = [
-                    //             "doc_id"        => $orignal_doc_id,
-                    //             "userid"        => $client_id,
-                    //             "received_by"   => get_staff_user_id(),
-                    //             "received_date" => date('Y-m-d H:i:s'),
-                    //             "location_id"   => $location
-                    //         ];
-                    //     }
+                        $exitData = $this->db
+                            ->select("id")
+                            ->from(db_prefix() . "orignal_documents_received")
+                            ->where([
+                                "doc_id"  => $orignal_doc_id,
+                                "userid"  => $client_id
+                            ])->get()->row();
 
 
-                    //     $this->clients_model->document_update_insert($batch_insert, $batch_update);
-                    // }
+                        if ($exitData) {
+                            // ✅ Collect update data
+                            $batch_update[] = [
+                                "id"            => $exitData->id,
+                                "doc_id"        => $orignal_doc_id,
+                                "userid"        => $client_id,
+                                "received_by"   => get_staff_user_id(),
+                                "received_date" => date('Y-m-d H:i:s'),
+                                "location_id"   => $location,
+                                "in_transit"    => ""
+                            ];
+                        } else {
+                            // ✅ Collect insert data
+                            $batch_insert[] = [
+                                "doc_id"        => $orignal_doc_id,
+                                "userid"        => $client_id,
+                                "received_by"   => get_staff_user_id(),
+                                "received_date" => date('Y-m-d H:i:s'),
+                                "location_id"   => $location
+                            ];
+                        }
+
+
+                        $this->clients_model->document_update_insert($batch_insert, $batch_update);
+                    }
 
                     // handle_custom_fields_post($client_id, $update_applicant_custom_data);
                     applicant_last_update($client_id);
@@ -8607,7 +8865,7 @@ WHERE s.client_id = " . (int)$client_id . "
                 return $data;
                 die;
             }
-//check neet 
+            //check neet 
             // $admissionpreferences = $this->clients_model->getAdmissionPreferences($client_id);
             // if (strtolower($admissionpreferences->primary_country) == "georgia") {
             //     $checkNeet = check_neet_credentials($client_id);
