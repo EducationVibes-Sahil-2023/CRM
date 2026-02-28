@@ -560,6 +560,13 @@ $contactInfo = !empty($feesStructure["contact_data"])
                             </textarea>
                         </div>
 
+                        <br>
+                        <div>
+                            <label>Notes / Instructions</label>
+                            <textarea class="ckeditor note" id="note">
+<?= $sectionDetails["note"] ?? '' ?>
+                            </textarea>
+                        </div>
                         <!-- Three Column Section for Other Charges, One Time Charges, Our Services -->
                         <div class="row">
                             <!-- Other Charges Section -->
@@ -1833,6 +1840,8 @@ $contactInfo = !empty($feesStructure["contact_data"])
                 });
             }
         });
+
+        formData.sections.note = myEditor ? myEditor.getData() || "" : "";
 
         formData.sections.note = myEditor ? myEditor.getData() || "" : "";
 
