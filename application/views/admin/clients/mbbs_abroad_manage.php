@@ -1982,6 +1982,7 @@ init_tail();
       // $(".document_status_update").hide();
 
       $(".doc-cost-section").html('');
+      resetCommonSections(sectionsDataShow);
 
    });
 

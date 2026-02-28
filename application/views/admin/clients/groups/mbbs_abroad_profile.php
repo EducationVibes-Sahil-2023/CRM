@@ -30,41 +30,41 @@ array_push($documents_type, array("id" => "visa", "disabled" => 1, "disabledd" =
 
 
 $visasectionDetails = $this->db
-	->select("file,tracking_receipt,application_form")
-	->from(db_prefix() . "visa_details")
-	->where(array("userid" => $client_id))
-	->order_by("id", "ASC")
-	->get()
-	->result_array();
+    ->select("file,tracking_receipt,application_form")
+    ->from(db_prefix() . "visa_details")
+    ->where(array("userid" => $client_id))
+    ->order_by("id", "ASC")
+    ->get()
+    ->result_array();
 
 if (!empty($visasectionDetails)) {
 
-	foreach ($visasectionDetails as $k => $visaInfo) {
+    foreach ($visasectionDetails as $k => $visaInfo) {
 
-		foreach ($visaInfo as $key => $value) {
+        foreach ($visaInfo as $key => $value) {
 
-			if (!empty($value)) {   // skip empty columns
+            if (!empty($value)) {   // skip empty columns
 
-				// Custom display name
-				if ($key == "file") {
-					$display_name = "Visa Stamp";
-				} else {
-					$display_name = ucfirst(str_replace("_", " ", $key));
-				}
+                // Custom display name
+                if ($key == "file") {
+                    $display_name = "Visa Stamp";
+                } else {
+                    $display_name = ucfirst(str_replace("_", " ", $key));
+                }
 
-				$display_name .= " " . ($k + 1);
+                $display_name .= " " . ($k + 1);
 
-				$documents_type[] = array(
-					"id"        => "Visa Section",
-					"disabled"  => 1,
-					"disabledd" => 1,
-					"stage"     => "Visa",
-					"name"      => $display_name,
-					"file_type" => ".pdf,image/*"
-				);
-			}
-		}
-	}
+                $documents_type[] = array(
+                    "id"        => "Visa Section",
+                    "disabled"  => 1,
+                    "disabledd" => 1,
+                    "stage"     => "Visa",
+                    "name"      => $display_name,
+                    "file_type" => ".pdf,image/*"
+                );
+            }
+        }
+    }
 }
 
 
@@ -487,6 +487,12 @@ if ($lead_type_status == 2) {
                                     <div class="row">
                                         <?php
                                         foreach ($profile_section["student_details"] as $s_stage) {
+                                            if (!empty($s_stage["neet_intake"])) {
+
+                                                if ($s_stage["neet_intake"] > $admissionpreferences->session_intake) {
+                                                    continue;
+                                                }
+                                            }
                                             $doc_type = $s_stage["name"] ?? '';
                                             $doc_id = $s_stage["id"] ?? '';
                                             $info = $s_stage["info"] ?? '';
@@ -1183,30 +1189,31 @@ if ($lead_type_status == 2) {
                                 <div id="entrance_exam_div" class="row accadmic-education-div ">
                                     <h4>NEET Exam</h4>
                                     <hr>
+                                    <?php if ($admissionpreferences->session_intake >= "2026-09") { ?>
+                                        <div class="row col-lg-12">
+                                            <h4>NEET Credentials</h4>
+                                            <div class="col-lg-3 border2 border1">
+                                                <div class="c1">
+                                                    <p>Id</p>
+                                                </div>
+                                                <div class="c2">
+                                                    <input class="form-control" type="text" class="form-group"
+                                                        placeholder="Enter Neet User ID" name="neet_user_id" value="<?= $academicdetails->neet_user_id; ?>">
+                                                </div>
+                                            </div>
 
-                                    <div class="row hide">
-                                        <h4>NEET Credentials</h4>
-                                        <div class="col-lg-3 border2 border1">
-                                            <div class="c1">
-                                                <p>Id</p>
+                                            <div class="col-lg-3 border2 border1">
+                                                <div class="c1">
+                                                    <p>Password</p>
+                                                </div>
+                                                <div class="c2">
+                                                    <input class="form-control" type="text" class="form-group"
+                                                        placeholder="Enter Neet User Password" name="neet_user_password" value="<?= $academicdetails->neet_user_password; ?>">
+                                                </div>
                                             </div>
-                                            <div class="c2">
-                                                <!--<input class="form-control" type="text" class="form-group"-->
-                                                <!--    placeholder="Enter Neet User ID" name="neet_user_id" value="<?= $academicdetails->neet_user_id; ?>">-->
-                                            </div>
-                                        </div>
 
-                                        <div class="col-lg-3 border2 border1" >
-                                            <div class="c1">
-                                                <p>Password</p>
-                                            </div>
-                                            <div class="c2">
-                                                <!--<input class="form-control" type="text" class="form-group"-->
-                                                <!--    placeholder="Enter Neet User Password" name="neet_user_password" value="<?= $academicdetails->neet_user_password; ?>">-->
-                                            </div>
                                         </div>
-                                        
-                                    </div>
+                                    <?php } ?>
                                     <div class="col-lg-2 border2 border1">
                                         <div class="c1">
                                             <p>Result Status <?= $text_danger_mbbs ?></p>

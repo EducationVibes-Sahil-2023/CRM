@@ -1825,7 +1825,7 @@ class Clients extends AdminController
                 echo json_encode($data);
                 die;
             }
-         
+
 
             // Handle Mass Delete
             if ($this->input->post('mass_delete') == "true") {
@@ -3424,6 +3424,7 @@ WHERE s.client_id = " . (int)$client_id . "
 
         if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
+
             try {
                 $client_id = $this->input->post("clientid");
                 $update_student_data = [];
@@ -3451,6 +3452,7 @@ WHERE s.client_id = " . (int)$client_id . "
                 $_update["date_of_payment"] = !empty($_POST["date_of_payment"]) ? $_POST["date_of_payment"] : '';
                 $_update["registration_slip_cash_status"] = !empty($_POST["registration_slip_cash_status"]) ? $_POST["registration_slip_cash_status"] : '';
                 $_update["payment_recevied_from"] = !empty($_POST["payment_recevied_from"]) ? $_POST["payment_recevied_from"] : '';
+                $_update["w_location"] = !empty($_POST["w_location"]) ? $_POST["w_location"] : '';
                 $this->db->where("userid", $client_id);
                 $this->db->update(db_prefix() . 'clients', $_update);
 
@@ -9478,7 +9480,7 @@ WHERE s.client_id = " . (int)$client_id . "
         $client = $this->clients_model->getBasicDetails($client_id);
 
         if (!$client || empty($client->email)) {
-            http_response_code(404); // Not Found
+            http_response_code(200); // Not Found
             echo json_encode([
                 'success' => false,
                 'message' => 'Client email not found.'
@@ -9491,12 +9493,14 @@ WHERE s.client_id = " . (int)$client_id . "
             1 => 'Applicant_documentation_notification',
             2 => 'Applicant_entrance_exam',
             3 => 'Applicant_invitation_notification',
-            4 => 'Applicant_visa_notification'
+            4 => 'Applicant_visa_notification',
+            5 => 'Applicant_legalization_notification',
+            6 => 'Applicant_bank_statement_notification'
         ];
 
         // Validate email type
         if (!array_key_exists($type, $email_templates)) {
-            http_response_code(400); // Bad Request
+            http_response_code(200); // Bad Request
             echo json_encode([
                 'success' => false,
                 'message' => 'Invalid email type provided.'
@@ -9506,6 +9510,19 @@ WHERE s.client_id = " . (int)$client_id . "
 
         // Attempt to send the email
         try {
+
+            if (!empty($type) && $type == 5) {
+                $legalization =  $this->clients_model->legalization_data($client_id);
+                if ($legalization[0]["leg_applied_date"] == "0000-00-00" || empty($legalization[0]["leg_applied_date"])) {
+                    http_response_code(200); // Bad Request
+                    echo json_encode([
+                        'success' => false,
+                        'message' => 'Leg Applied Date is required to send legalization email.'
+                    ]);
+                    return;
+                }
+            }
+
             $email_sent = send_mail_template($email_templates[$type], $client->email, $client_id, get_staff_user_id(), "", $university_id, $university_name);
 
             if ($email_sent) {
@@ -9515,14 +9532,14 @@ WHERE s.client_id = " . (int)$client_id . "
                     'message' => 'Email sent successfully.'
                 ]);
             } else {
-                http_response_code(500); // Internal Server Error
+                http_response_code(200); // Internal Server Error
                 echo json_encode([
                     'success' => false,
                     'message' => 'Failed to send email. Please try again later.'
                 ]);
             }
         } catch (Exception $e) {
-            http_response_code(500); // Internal Server Error
+            http_response_code(200); // Internal Server Error
             echo json_encode([
                 'success' => false,
                 'message' => 'An error occurred: ' . $e->getMessage()

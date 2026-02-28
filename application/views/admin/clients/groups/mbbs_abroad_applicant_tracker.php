@@ -1208,6 +1208,10 @@ if (empty($staff_list[get_staff_user_id()]["post_sales"]) && !is_admin()) {
 
                             </form>
                         <?php } else if ($track["show_div_name"] == "legalization_div") { ?>
+
+
+
+
                             <form id="legalization-form" class="form-disabled" onsubmit=" return false;">
                                 <div class="legalization_div">
                                     <?php if (!empty($legalization)) : ?>
@@ -1220,8 +1224,18 @@ if (empty($staff_list[get_staff_user_id()]["post_sales"]) && !is_admin()) {
                                                 $mand_re = "required required-check";
                                             }
                                         ?>
+
                                             <div class="legalization-item card shadow-sm p-3 mb-3">
-                                                <h4 class="university-name"><?= htmlspecialchars($leg["university_name"], ENT_QUOTES, 'UTF-8') ?> <span class="pull-right h6 fw-bold">Fees Deposite Proof Uploaded : <?= !empty($file_url_payment) ? "Yes" : "No" ?></span></h4>
+                                                <h4 class="university-name"><?= htmlspecialchars($leg["university_name"], ENT_QUOTES, 'UTF-8') ?> <span class="pull-right h6 fw-bold">Fees Deposite Proof Uploaded : <?= !empty($file_url_payment) ? "Yes" : "No" ?> &nbsp; <?php if (!empty($leg["leg_applied_date"]) && $leg["leg_applied_date"] != "0000-00-00") { ?>
+
+                                                            <?= getLastEmailWhatsappDate("email", LEGALIZATION_TEMPLATE_ID, $client_id) ?>
+                                                            <button type="button" class="btn btn-primary btn-xs" onclick="email_send(<?= $client_id ?>,5)"><i class="fa fa-envelope hide-client-type"></i> </button>
+
+                                                        <?php } ?></span>
+
+                                                </h4>
+                                                <br>
+                                                <hr>
 
                                                 <input type="hidden" name="id" value="<?= htmlspecialchars($leg["id"], ENT_QUOTES, 'UTF-8') ?>">
                                                 <?php if (!empty($leg["country_name"]) && $leg["country_name"] == "Georgia") : ?>
@@ -1395,12 +1409,22 @@ if (empty($staff_list[get_staff_user_id()]["post_sales"]) && !is_admin()) {
                                             <div class="invitation-item card shadow-sm p-3 mb-3">
                                                 <h4 class="university-name">
                                                     <?= htmlspecialchars($leg["university_name"], ENT_QUOTES, 'UTF-8') ?>
+                                                    <span class="text-right">
+                                                        <?php if (!empty($file_url)) { ?>
+                                                            <button type="button" class="btn btn-primary btn-xs hide" onclick="whatsapp_message_send(<?= !empty($client_id) ? $client_id : '' ?>, 4,'','<?= htmlspecialchars($university) ?>')"><i class="fa fa-whatsapp hide-client-type"></i> </button>
 
+                                                            <button type="button" class="btn btn-primary btn-xs hide" onclick="email_send(<?= !empty($client_id) ? $client_id : '' ?>, 3,<?= $leg['invitation_letter'] ?>)"><i class="fa fa-envelope hide-client-type"></i></button>
+
+                                                            <?= getLastEmailWhatsappDate("email", BANK_STATEMENT_TEMPLATE_ID, $client_id) ?>
+                                                            <button type="button" class="btn btn-primary btn-xs" onclick="email_send(<?= $client_id ?>,6)"><i class="fa fa-envelope hide-client-type"></i> </button>
+
+                                                        <?php } ?>
+                                                    </span>
                                                 </h4>
-                                                <div class="text-right">
-                                                    <button type="button" class="btn btn-primary btn-xs hide" onclick="whatsapp_message_send(<?= !empty($client_id) ? $client_id : '' ?>, 4,'','<?= htmlspecialchars($university) ?>')"><i class="fa fa-whatsapp hide-client-type"></i> </button>
-                                                    <button type="button" class="btn btn-primary btn-xs hide" onclick="email_send(<?= !empty($client_id) ? $client_id : '' ?>, 3,<?= $leg['invitation_letter'] ?>)"><i class="fa fa-envelope hide-client-type"></i></button>
-                                                </div>
+                                                <br>
+                                                <hr>
+
+
                                                 <input type="hidden" name="id" value="<?= htmlspecialchars($leg["id"], ENT_QUOTES, 'UTF-8') ?>">
 
                                                 <div class="row mt-2">
@@ -3105,11 +3129,16 @@ if (empty($staff_list[get_staff_user_id()]["post_sales"]) && !is_admin()) {
                         file_url_university_payment = base_url + leg.invitation_letter;
                     }
                 }
-                let email_button = `<div class="text-right"><button type="button" class="btn btn-primary btn-xs hide" onclick="whatsapp_message_send(${client_id}, 4,'','${leg.id}')"><i class="fa fa-whatsapp hide-client-type"></i></button> <button type="button" class="btn btn-primary btn-xs hide" onclick="email_send(${client_id}, 3,${leg.id})"><i class="fa fa-envelope hide-client-type"></i></button> </div>`;
+                let email_button = ``;
+                if (invitation_letter != '') {
+                    email_button = `<div class="pull-right"><button type="button" class="btn btn-primary btn-xs hide" onclick="whatsapp_message_send(${client_id}, 4,'','${leg.id}')"><i class="fa fa-whatsapp hide-client-type"></i></button> <button type="button" class="btn btn-primary btn-xs hide" onclick="email_send(${client_id}, 3,${leg.id})"><i class="fa fa-envelope hide-client-type"></i></button><?= getLastEmailWhatsappDate("email", BANK_STATEMENT_TEMPLATE_ID, $client_id) ?><button type="button" class="btn btn-primary btn-xs" onclick="email_send(${client_id},6)"><i class="fa fa-envelope hide-client-type"></i> </button>
+                                                        </div>`;
+                }
                 let card = `
                 <div class="invitation-item card shadow-sm p-3 mb-3">
-                    <h4 class="university-name">${leg.university_name}</h4>
-            ${email_button}
+                    <h4 class="university-name">${leg.university_name} ${email_button}</h4>
+            <br>
+                                                        <hr>
                     <input type="hidden" name="id" value="${leg.id}">
 
                     <div class="row mt-2">

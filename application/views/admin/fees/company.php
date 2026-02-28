@@ -24,6 +24,7 @@ $contactInfo = !empty($feesStructure["contact_data"])
 <!-- <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css"> -->
 <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+
 <style>
     /* General Styles */
     table {
@@ -53,6 +54,7 @@ $contactInfo = !empty($feesStructure["contact_data"])
         box-sizing: border-box;
         border: 1px solid #ddd;
         border-radius: 3px;
+        height: 30px;
     }
 
     input:focus,
@@ -550,6 +552,13 @@ $contactInfo = !empty($feesStructure["contact_data"])
                                 </tfoot>
                             </table>
                         </div>
+                        <br>
+                        <div>
+                            <label>Notes / Instructions</label>
+                            <textarea class="ckeditor note" id="note">
+<?= $sectionDetails["note"] ?? '' ?>
+                            </textarea>
+                        </div>
 
                         <!-- Three Column Section for Other Charges, One Time Charges, Our Services -->
                         <div class="row">
@@ -1037,8 +1046,22 @@ $contactInfo = !empty($feesStructure["contact_data"])
 
 
 <?php init_tail(); ?>
+<script src="https://cdn.ckeditor.com/ckeditor5/39.0.1/classic/ckeditor.js"></script>
 
 <script>
+    let myEditor;
+
+    ClassicEditor
+        .create(document.querySelector('.ckeditor'))
+        .then(editor => {
+            myEditor = editor; // ✅ store real instance
+        })
+        .catch(error => console.error(error));
+
+    function getValue() {
+        const data = myEditor.getData();
+        console.log(data);
+    }
     var id = "<?= $id ?? '' ?>";
 
     function previewData() {
@@ -1286,10 +1309,9 @@ $contactInfo = !empty($feesStructure["contact_data"])
 
     function SetCountryChanges() {
         try {
-          if(id>0 && id!='')
-          {
-              return false;
-          }
+            if (id > 0 && id != '') {
+                return false;
+            }
 
             if (!countrySelectedChanges || typeof countrySelectedChanges !== "object") {
                 console.warn("countrySelectedChanges is invalid");
@@ -1514,7 +1536,7 @@ $contactInfo = !empty($feesStructure["contact_data"])
 
         // Optional: limit number of rows (example: max 5)
         if (rowCount >= 12) {
-             alert("Maximum 12 Services allowed.");
+            alert("Maximum 12 Services allowed.");
             return false;
             return false;
         }
@@ -1559,7 +1581,7 @@ $contactInfo = !empty($feesStructure["contact_data"])
 
         // Stop if already 4 rows
         if (rowCount >= 4) {
-             alert("Maximum 4 Processing Fees allowed.");
+            alert("Maximum 4 Processing Fees allowed.");
             return false;
         }
 
@@ -1684,7 +1706,7 @@ $contactInfo = !empty($feesStructure["contact_data"])
                     data: [],
                     footer: []
                 },
-
+                note: "",
                 other_charges: {
                     title: $('#other_charges_title').val(),
                     data: []
@@ -1812,6 +1834,8 @@ $contactInfo = !empty($feesStructure["contact_data"])
             }
         });
 
+        formData.sections.note = myEditor ? myEditor.getData() || "" : "";
+
         return formData;
     }
 
@@ -1937,6 +1961,8 @@ $contactInfo = !empty($feesStructure["contact_data"])
     }
 
 
+
+
     // Reset form
     function resetForm() {
         if (confirm('Reset all fields to default?')) {
@@ -2039,11 +2065,11 @@ $contactInfo = !empty($feesStructure["contact_data"])
             }
 
 
-                    window.open(
-                    "<?= base_url('admin/Fees/generate/') ?>" + pdf_id + "?download=1",
-                    "_blank"
-                    );
-                    return false;
+            window.open(
+                "<?= base_url('admin/Fees/generate/') ?>" + pdf_id + "?download=1",
+                "_blank"
+            );
+            return false;
             const csrfName = '<?= $this->security->get_csrf_token_name(); ?>';
             let csrfHash = '<?= $this->security->get_csrf_hash(); ?>';
 
