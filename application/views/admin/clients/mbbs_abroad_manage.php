@@ -1,5 +1,6 @@
 <?php defined('BASEPATH') or exit('No direct script access allowed'); ?>
-<?php init_head();
+<?php
+init_head();
 $tbllead_performance_column = $this->leads_model->tblma_applicant_tracker();
 // Filter out columns where the value is 1
 $filtered_columns = array_filter($tbllead_performance_column, function ($row) {
@@ -16,6 +17,8 @@ $orignal_document_list_georgia = get_orignal_document_list(0, 1);
 $orignal_document_visa_rest = get_orignal_document_list(0, 0, 0, "", 1);
 $orignal_document_visa_georgia = get_orignal_document_list(0, 0, 0, "", 0, 1);
 $apostille_documents = get_orignal_document_list(0, 0, 1);
+$translation_documents = get_orignal_document_list(0, 0, 0, 0, 0, 0, 0, ["translation_status" => "1"]);
+
 $apostille_visa_apostile_documents = get_orignal_document_list(0, 0, 0, 0, 0, 0, 1);
 $get_currencies = get_currencies();
 $get_currencies = array_column($get_currencies, null, 'id');
@@ -46,6 +49,7 @@ $apostille_vendors = get_vendor_list(1);
 
 $visa_vendors = get_vendor_list(2);
 $fly_vendors = get_vendor_list(3);
+$translation_vendors = get_vendor_list(4);
 $courier_type = get_courier_list();
 $payment_mode = get_payment_mode();
 // $fly_batch = fly_batch();
@@ -763,6 +767,71 @@ $client_type = [
                   </div>
                </div>
             </div>
+
+            <div class="translation_update">
+               <div class="checkbox checkbox-danger">
+                  <input type="checkbox" name="translation_status_check" id="translation_status_check" onchange="update_translation(this)">
+                  <label for="translation_status">Translation</label>
+               </div>
+
+               <div class="translation_status_update" style="display:none;">
+                  <div class="row">
+                     <div class="col-md-4">
+                        <label>Translation Vendor <small class='text-danger'>*</small></label>
+                        <?php
+                        array_unshift($translation_vendors, array());
+                        echo render_select('translation_vendor', $translation_vendors, ['id', 'name'], '', [], [
+                           'data-width' => '100%',
+                           'data-none-selected-text' => 'Vendor',
+                           'data-actions-box' => true,
+                           'required-check' => 'required-check',
+                           'required' => 'required',
+                        ], [], 'no-mbot', '', false, 'translation_vendor'); ?>
+                     </div>
+                     <div class="col-md-4">
+                        <label>Translation Documents <small class='text-danger'>*</small></label>
+                        <?php echo render_select('translation_document[]', $translation_documents, ['id', 'name'], '', [], [
+                           'data-width' => '100%',
+                           'data-none-selected-text' => 'Documents',
+                           'multiple' => true,
+                           'data-actions-box' => true,
+                           'required-check' => 'required-check',
+                           'required' => 'required',
+                           'onchange' => 'document_cost_div(this)'
+
+                        ], [], 'no-mbot', '', false, 'translation_document'); ?>
+                     </div>
+                     <div class="col-md-4">
+                        <label>Documents By Vender</label>
+                        <?php echo render_select('translation_document_vendor[]', $translation_documents, ['id', 'name'], '', [], [
+                           'data-width' => '100%',
+                           'data-none-selected-text' => 'Documents',
+                           'multiple' => true,
+                           'data-actions-box' => true,
+
+                        ], [], 'no-mbot', '', false, 'translation_document_vendor'); ?>
+                     </div>
+                     <div class="col-md-4">
+                        <label>Courier Date</label>
+                        <?php echo render_input('translation_date', '', '', 'date'); ?>
+                     </div>
+                     <div class="col-md-4">
+                        <label>Translation Received</label>
+                        <?php echo render_input('translation_receiving_date', '', '', 'date'); ?>
+                     </div>
+
+                     <div class="col-md-4">
+                        <label>Payment Date</label>
+                        <?php echo render_input('translation_payment_date', '', '', 'date'); ?>
+                     </div>
+                     <div class="clearfix"></div>
+                     <div class="doc-cost-section">
+
+
+                     </div>
+                  </div>
+               </div>
+            </div>
             <div class="visa_update">
                <div class="checkbox checkbox-danger">
                   <input type="checkbox" name="visa_status_check" id="visa_status_check" onchange="Update_visa(this)">
@@ -1396,98 +1465,226 @@ init_tail();
       childDropdown.selectpicker('refresh');
    }
 
-   $('#mass_delete').change(function() {
-      let documentStatusUpdate = $('.document_status_update');
-      documentStatusUpdate.find("select").val("").trigger("change");
-      documentStatusUpdate.find("input[type=checkbox]").prop("checked", false);
-      $('.visa_update').toggle();
-      $(".visa_update").find("select").val("").selectpicker('refresh');
-      $(".visa_update").find("input[type=checkbox]").prop("checked", false);
-      $(".apostille_update").toggle();
-      $(".apostille_status_update").find("select").val("").selectpicker('refresh');
-      $(".apostille_status_update").find("input[type=checkbox]").prop("checked", false);
-      documentStatusUpdate.toggle();
+   // $('#mass_delete').change(function() {
+   //    let documentStatusUpdate = $('.document_status_update');
+   //    documentStatusUpdate.find("select").val("").trigger("change");
+   //    documentStatusUpdate.find("input[type=checkbox]").prop("checked", false);
+   //    $('.visa_update').toggle();
+   //    $(".visa_update").find("select").val("").selectpicker('refresh');
+   //    $(".visa_update").find("input[type=checkbox]").prop("checked", false);
+   //    $(".apostille_update").toggle();
+   //    $(".apostille_status_update").find("select").val("").selectpicker('refresh');
+   //    $(".apostille_status_update").find("input[type=checkbox]").prop("checked", false);
+   //    documentStatusUpdate.toggle();
 
-   });
+   // });
 
-   function Update_apostille(obj) {
+   // function Update_apostille(obj) {
+   //    $(".doc-cost-section").html('');
+   //    // Check if the checkbox is checked
+   //    if ($(obj).prop('checked')) {
+   //       // Hide elements related to document status update
+   //       $('.mass_delete').hide();
+   //       $(".mass_delete").find("select").val("").selectpicker('refresh');
+   //       $(".mass_delete").find("input[type=checkbox]").prop("checked", false);
+   //       $('.document_status_update').hide();
+   //       $(".document_status_update").find("select").val("").selectpicker('refresh');
+   //       $(".document_status_update").find("input[type=checkbox]").prop("checked", false);
+
+   //       $('.visa_update').hide();
+   //       $(".visa_update").find("select").val("").selectpicker('refresh');
+   //       $(".visa_update").find("input[type=checkbox]").prop("checked", false);
+
+   //       // Toggle visibility of transition location elements
+   //       $(".is_transist_location").hide();
+   //       $(".no_is_transist_location").show();
+   //       $(".apostille_status_update").show();
+   //    } else {
+   //       // Hide elements related to document status update
+   //       $('.document_status_update').show();
+   //       $('.visa_update').show();
+   //       $('.mass_delete').show();
+   //       $(".mass_delete").find("select").val("").selectpicker('refresh');
+   //       $(".mass_delete").find("input[type=checkbox]").prop("checked", false);
+   //       // Toggle visibility of transition location elements
+   //       $(".is_transist_location").hide();
+   //       $(".no_is_transist_location").show();
+   //       $(".apostille_status_update").hide();
+   //       $(".apostille_status_update").find("select").val("").selectpicker('refresh');
+   //       $(".apostille_status_update").find("input").val("");
+   //       $(".apostille_status_update").find("input[type=checkbox]").prop("checked", false);
+
+   //    }
+   // }
+
+   // function update_translation(obj) {
+   //    $(".doc-cost-section").html('');
+   //    if ($(obj).prop('checked')) {
+   //       $('.mass_delete').hide();
+   //       $(".mass_delete").find("select").val("").selectpicker('refresh');
+   //       $(".mass_delete").find("input[type=checkbox]").prop("checked", false);
+
+   //       $('.document_status_update').hide();
+   //       $(".document_status_update").find("select").val("").selectpicker('refresh');
+   //       $(".document_status_update").find("input[type=checkbox]").prop("checked", false);
+
+   //       $(".apostille_status_update").hide();
+   //       $(".apostille_status_update").find("select").val("").selectpicker('refresh');
+   //       $(".apostille_status_update").find("input").val("");
+   //       $(".apostille_status_update").find("input[type=checkbox]").prop("checked", false);
+
+   //       $('.visa_update').hide();
+   //       $(".visa_update").find("select").val("").selectpicker('refresh');
+   //       $(".visa_update").find("input[type=checkbox]").prop("checked", false);
+
+   //       $(".translation_status_update").show();
+   //       $(".is_transist_location").hide();
+   //    } else {
+   //       // Hide elements related to document status update
+   //       $('.document_status_update').show();
+   //       $('.visa_update').show();
+   //       $('.mass_delete').show();
+   //       $(".mass_delete").find("select").val("").selectpicker('refresh');
+   //       $(".mass_delete").find("input[type=checkbox]").prop("checked", false);
+   //       // Toggle visibility of transition location elements
+   //       $(".is_transist_location").hide();
+   //       $(".no_is_transist_location").show();
+   //       $(".translation_status_update").hide();
+   //       $(".apostille_status_update").hide();
+   //       $(".apostille_status_update").find("select").val("").selectpicker('refresh');
+   //       $(".apostille_status_update").find("input").val("");
+   //       $(".apostille_status_update").find("input[type=checkbox]").prop("checked", false);
+   //    }
+   // }
+
+
+   // function Update_visa(obj) {
+   //    // Check if the checkbox is checked
+   //    if ($(obj).prop('checked')) {
+   //       // Hide elements related to document status update
+   //       $('.mass_delete').hide();
+   //       $(".mass_delete").find("select").val("").selectpicker('refresh');
+   //       $(".mass_delete").find("input[type=checkbox]").prop("checked", false);
+
+   //       $('.document_status_update').hide();
+   //       $(".document_status_update").find("select").val("").selectpicker('refresh');
+   //       $(".document_status_update").find("input[type=checkbox]").prop("checked", false);
+
+   //       $('.apostille_update').hide();
+   //       $(".apostille_update").find("select").val("").selectpicker('refresh');
+   //       $(".apostille_update").find("input[type=checkbox]").prop("checked", false);
+
+   //       // Toggle visibility of transition location elements
+   //       $(".is_transist_location").hide();
+   //       $(".no_is_transist_location").show();
+   //       $(".visa_status_update").show();
+   //    } else {
+   //       // Hide elements related to document status update
+   //       $('.document_status_update').show();
+   //       $('.visa_update').show();
+   //       $('.mass_delete').show();
+   //       $('.apostille_update').show();
+   //       $(".mass_delete").find("select").val("").selectpicker('refresh');
+   //       $(".mass_delete").find("input[type=checkbox]").prop("checked", false);
+
+   //       // Toggle visibility of transition location elements
+   //       $(".is_transist_location").hide();
+   //       $(".no_is_transist_location").show();
+   //       $(".apostille_update").show();
+   //       $(".visa_status_update").find("select").val("").selectpicker('refresh');
+   //       $(".visa_status_update").find("input").val("");
+   //       $(".visa_status_update").find("input[type=checkbox]").prop("checked", false);
+   //       $(".visa_status_update").hide();
+
+
+   //    }
+   // }
+
+
+   // Helper to reset and toggle sections
+   // Helper to toggle and reset a section
+   // Helper to toggle and reset a section
+   // Helper to toggle and reset a section
+   function toggleSection(sectionSelector, show = true, resetInputs = true) {
+      const section = $(sectionSelector);
+
+      section.toggle(show);
+
+      if (resetInputs) {
+         section.find("select").val("").selectpicker('refresh');
+         section.find("input[type=checkbox]").prop("checked", false);
+         section.find("input[type=text], input[type=number], input[type=date]").val("");
+      }
+   }
+
+
+   const sectionsData = [
+      '.mass_delete',
+      '.document_status_update',
+      '.visa_update',
+      '.apostille_update',
+      '.translation_status_update',
+      '.translation_update',
+      '.visa_status_update',
+      '.apostille_status_update',
+      '.is_transist_location'
+   ];
+
+   var sectionsDataShow = ['.mass_delete', '.visa_update', '.apostille_update', '.translation_update', '.document_status_update'];
+
+   // Reset all common Data, optionally keeping some visible
+   function resetCommonSections(keepVisibleSelectors = []) {
+
+      sectionsData.forEach(section => {
+         const shouldShow = keepVisibleSelectors.includes(section);
+         toggleSection(section, shouldShow, !shouldShow);
+      });
+
+      $(".is_transist_location").hide();
+      $(".no_is_transist_location").show();
       $(".doc-cost-section").html('');
-      // Check if the checkbox is checked
+   }
+
+   // Update Apostille
+   function Update_apostille(obj) {
       if ($(obj).prop('checked')) {
-         // Hide elements related to document status update
-         $('.mass_delete').hide();
-         $(".mass_delete").find("select").val("").selectpicker('refresh');
-         $(".mass_delete").find("input[type=checkbox]").prop("checked", false);
-         $('.document_status_update').hide();
-         $(".document_status_update").find("select").val("").selectpicker('refresh');
-         $(".document_status_update").find("input[type=checkbox]").prop("checked", false);
-
-         $('.visa_update').hide();
-         $(".visa_update").find("select").val("").selectpicker('refresh');
-         $(".visa_update").find("input[type=checkbox]").prop("checked", false);
-
-         // Toggle visibility of transition location elements
-         $(".is_transist_location").hide();
-         $(".no_is_transist_location").show();
-         $(".apostille_status_update").show();
+         resetCommonSections(['.apostille_status_update', '.apostille_update']);
       } else {
-         // Hide elements related to document status update
-         $('.document_status_update').show();
-         $('.visa_update').show();
-         $('.mass_delete').show();
-         $(".mass_delete").find("select").val("").selectpicker('refresh');
-         $(".mass_delete").find("input[type=checkbox]").prop("checked", false);
-         // Toggle visibility of transition location elements
-         $(".is_transist_location").hide();
-         $(".no_is_transist_location").show();
-         $(".apostille_status_update").hide();
-         $(".apostille_status_update").find("select").val("").selectpicker('refresh');
-         $(".apostille_status_update").find("input").val("");
-         $(".apostille_status_update").find("input[type=checkbox]").prop("checked", false);
-
+         resetCommonSections(sectionsDataShow);
       }
    }
 
+   // Update Translation
+   function update_translation(obj) {
+      if ($(obj).prop('checked')) {
+         resetCommonSections(['.translation_update', '.translation_status_update']);
+      } else {
+         resetCommonSections(sectionsDataShow);
+      }
+   }
 
+   // Update Visa
    function Update_visa(obj) {
-      // Check if the checkbox is checked
       if ($(obj).prop('checked')) {
-         // Hide elements related to document status update
-         $('.mass_delete').hide();
-         $(".mass_delete").find("select").val("").selectpicker('refresh');
-         $(".mass_delete").find("input[type=checkbox]").prop("checked", false);
-
-         $('.document_status_update').hide();
-         $(".document_status_update").find("select").val("").selectpicker('refresh');
-         $(".document_status_update").find("input[type=checkbox]").prop("checked", false);
-
-         $('.apostille_update').hide();
-         $(".apostille_update").find("select").val("").selectpicker('refresh');
-         $(".apostille_update").find("input[type=checkbox]").prop("checked", false);
-
-         // Toggle visibility of transition location elements
-         $(".is_transist_location").hide();
-         $(".no_is_transist_location").show();
-         $(".visa_status_update").show();
+         resetCommonSections(['.visa_update', '.visa_status_update']);
       } else {
-         // Hide elements related to document status update
-         $('.document_status_update').show();
-         $('.mass_delete').show();
-         $(".mass_delete").find("select").val("").selectpicker('refresh');
-         $(".mass_delete").find("input[type=checkbox]").prop("checked", false);
-
-         // Toggle visibility of transition location elements
-         $(".is_transist_location").hide();
-         $(".no_is_transist_location").show();
-         $(".apostille_update").show();
-         $(".visa_status_update").find("select").val("").selectpicker('refresh');
-         $(".visa_status_update").find("input").val("");
-         $(".visa_status_update").find("input[type=checkbox]").prop("checked", false);
-         $(".visa_status_update").hide();
-
-
+         resetCommonSections(sectionsDataShow);
       }
    }
+
+   // Mass Delete Change Event
+   $('#mass_delete').change(function() {
+
+      const toggle = $('.document_status_update, .visa_update, .apostille_update');
+
+      toggle.find("select").val("").selectpicker('refresh');
+      toggle.find("input[type=checkbox]").prop("checked", false);
+
+      toggle.toggle();
+
+      $(".is_transist_location").hide();
+      $(".no_is_transist_location").show();
+   });
 
    function customers_bulk_action(event) {
 
@@ -1506,8 +1703,18 @@ init_tail();
       var is_valid = true;
       var apostille_data = {};
       var visa_data = {};
+      var translation_data = {};
+
+
+      var translation_status = $("#translation_status_check").prop('checked');
+
       // Get value of the first select
       var currency_id_apostile = $(".currency-selector-currency_type").first().val();
+
+
+      var currency_id_translation = $(".currency-selector-currency_type").first().val();
+      // Get text of the selected option
+      var currency_text_translation = $(".currency-selector-currency_type option:selected").first().text();
 
       // Get text of the selected option
       var currency_text_apostile = $(".currency-selector-currency_type option:selected").first().text();
@@ -1584,6 +1791,49 @@ init_tail();
          });
       }
 
+
+
+      if (translation_status === true) {
+         $('.translation_status_update').find('input, select').each(function() {
+            var name = $(this).attr("name");
+            var show_name = $(this).data("name") || $(this).attr("name");
+            var value = $(this).val();
+            var required = $(this).attr('required') || $(this).attr('requried');
+            if (name) {
+               translation_data[name] = value;
+            }
+            // console.log(value);
+            // console.log(required);
+            if (required && !String(value).trim()) {
+               $(this).focus();
+               alert_float("warning", "Please fill the required field: " + show_name);
+               is_valid = false;
+               return false; // Exit loop early
+            }
+         });
+
+         let ApostileDocuments = $("#translation_document").val() || [];
+         let ApostileDocumentVendor = $("#translation_document_vendor").val() || [];
+
+         // Ensure both are arrays
+         ApostileDocuments = Array.isArray(ApostileDocuments) ? ApostileDocuments.map(String) : [String(ApostileDocuments)];
+         ApostileDocumentVendor = Array.isArray(ApostileDocumentVendor) ? ApostileDocumentVendor.map(String) : [String(ApostileDocumentVendor)];
+
+         // Find vendor docs not in selected docs
+         let notFound = ApostileDocumentVendor.filter(id => !ApostileDocuments.includes(id));
+
+         if (notFound.length > 0) {
+            let docName = translation_documents_list[notFound[0]]['name'] || `ID ${notFound[0]}`;
+            alert_float("warning", `Please select the Translation document: ${docName} before choosing a vendor documents.`);
+            is_valid = false;
+            return false; // Exit loop early
+         }
+
+
+
+
+      }
+
       // console.log(apostille_status);
 
       if (!is_valid) return false;
@@ -1617,9 +1867,12 @@ init_tail();
          status_text,
          locations_name,
          apostille_status,
+         translation_status,
          visa_status,
          currency_id_apostile,
-         currency_text_apostile
+         currency_text_apostile,
+         currency_id_translation,
+         currency_text_translation,
       };
 
       if (mass_delete == 1 && !confirm("Are you sure you want to delete the selected applicants?")) {
@@ -1629,6 +1882,7 @@ init_tail();
       // Merge Apostille data
       Object.assign(data, apostille_data);
       Object.assign(data, visa_data);
+      Object.assign(data, translation_data);
 
       $(event.target).prop('disabled', true);
 
@@ -1637,6 +1891,8 @@ init_tail();
             .done(function(response) {
                try {
                   var res = JSON.parse(response);
+                  console.log("check e", response);
+                  console.log("check e", res);
                   if (res.resp_code === "ERR") {
                      alert_float("danger", res.resp_desc);
                   } else {
@@ -1726,6 +1982,7 @@ init_tail();
       // $(".document_status_update").hide();
 
       $(".doc-cost-section").html('');
+      resetCommonSections(sectionsDataShow);
 
    });
 

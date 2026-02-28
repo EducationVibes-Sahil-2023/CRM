@@ -1,23 +1,20 @@
 <?php defined('BASEPATH') or exit('No direct script access allowed'); ?>
 <?php
-$apostille_document  = get_apostille_document_data($client_id, 1);
+$translation_document  = get_translation_document_data($client_id);
 $orignal_document_status  = orignal_document_status();
 $office_location  = $this->staff_model->office_location();
-$activity_apostille_document = activity_apostille_document($client_id);
-$apostille_documents = get_orignal_document_list(0, 0, 1);
-$apostille_visa_apostile_documents = get_orignal_document_list(0, 0, 0, 0, 0, 0, 1, ["status" => 0]);
-$apostille_vendors = get_vendor_list(1);
+$activity_translation_document = activity_translation_document($client_id);
+$translation_documents = get_orignal_document_list(0, 0, 0, 0, 0, 0, 0, ["translation_status" => 1]);
+$translation_vendors = get_vendor_list(4);
 $get_currencies = get_currencies();
 $get_currencies = array_column($get_currencies, null, 'id');
-if (!is_array($apostille_documents)) {
-    $apostille_documents = [];
-}
-if (!is_array($apostille_visa_apostile_documents)) {
-    $apostille_visa_apostile_documents = [];
+if (!is_array($translation_documents)) {
+    $translation_documents = [];
 }
 
-$apostille_documents_new = array_merge($apostille_documents, $apostille_visa_apostile_documents);
-array_unshift($apostille_vendors, array());
+
+$translation_documents_new = array_merge($translation_documents);
+array_unshift($translation_vendors, array());
 
 // $client = $this->clients_model->get($id);
 
@@ -33,7 +30,7 @@ array_unshift($office_location, array());
 <?php
 if (!is_postSale() && !is_admin()) {
 ?>
-    <h2 class="text-center">Apostille Document - Accessible Only for Post-Sale & Admin</h2>
+    <h2 class="text-center">Translation Document - Accessible Only for Post-Sale & Admin</h2>
 <?php
     die;
 }
@@ -41,7 +38,7 @@ if (!is_postSale() && !is_admin()) {
 <div class="row">
     <div class="col-md-12">
         <div class="form-container">
-            <h4 class="fs-title">Apostille Documents</h4>
+            <h4 class="fs-title">Translation Documents</h4>
             <!-- <div class="text-right">
                 <?php
                 if ($client_infomation->orignal_document_status == 3) { ?>
@@ -76,10 +73,10 @@ if (!is_postSale() && !is_admin()) {
                         </thead>
                         <tbody class="document_upload_div">
 
-                            <?php if (!empty($apostille_document)) : ?>
+                            <?php if (!empty($translation_document)) : ?>
                                 <?php
                                 $index = 1;
-                                foreach ($apostille_document as $key => $doc) :;
+                                foreach ($translation_document as $key => $doc) :;
                                 ?>
                                     <tr>
 
@@ -94,21 +91,21 @@ if (!is_postSale() && !is_admin()) {
                                                 <br>
                                                 <a href="#"
                                                     data-toggle="modal"
-                                                    data-target="#customers_apostille"
-                                                    onclick='updateApostileData(<?= $doc["id"] ?>, "<?= base64_encode(json_encode($doc)) ?>")'>
+                                                    data-target="#translation"
+                                                    onclick='updateTranslationData(<?= $doc["id"] ?>, "<?= base64_encode(json_encode($doc)) ?>")'>
                                                     Edit
                                                 </a>
                                             <?php endif; ?>
                                         </td>
 
                                         <td><?= !empty($doc["original_received"]) ? $doc["original_received"] : '' ?></td>
-                                        <td><?= !empty($doc["apostille_cost"]) ? $doc["apostille_cost"] : '' ?></td>
+                                        <td><?= !empty($doc["translation_cost"]) ? $doc["translation_cost"] : '' ?></td>
                                         <td><?= !empty($doc["currency_text"]) ? $doc["currency_text"] : '' ?></td>
-                                        <td><?= !empty($doc["apostille_status"]) ? $doc["apostille_status"] : '' ?></td>
+                                        <td><?= !empty($doc["translation_status"]) ? $doc["translation_status"] : '' ?></td>
                                         <td><?= !empty($doc["vendor_name"]) ? $doc["vendor_name"] : '' ?></td>
                                         <td><?= !empty($doc["by_vendor"]) ? 'Yes' : 'No' ?></td>
                                         <td><?= !empty($doc["courier_date"]) ? $doc["courier_date"] : '' ?></td>
-                                        <td><?= !empty($doc["apostille_received"]) & $doc["apostille_received"] != "0000-00-00"  ? $doc["apostille_received"] : '' ?></td>
+                                        <td><?= !empty($doc["translation_received"]) & $doc["translation_received"] != "0000-00-00"  ? $doc["translation_received"] : '' ?></td>
                                         <td><?= !empty($doc["payment_date"]) && $doc["payment_date"] != "0000-00-00" ? $doc["payment_date"] : '' ?></td>
                                         <td><?= !empty($doc["created_by"]) ? $doc["created_by"] : '' ?></td>
                                         <td><?= !empty($doc["created_at"]) ? $doc["created_at"] : '' ?></td>
@@ -119,7 +116,7 @@ if (!is_postSale() && !is_admin()) {
                             <?php else : ?>
                                 <tr>
                                     <td colspan="4" class="text-center">
-                                        <h5>No Apostille Documents Available</h5>
+                                        <h5>No Translation Documents Available</h5>
                                     </td>
                                 </tr>
                             <?php endif; ?>
@@ -134,7 +131,7 @@ if (!is_postSale() && !is_admin()) {
                     <div class="pull-right">
                         <!-- <button type="button" class="btn btn-primary" onclick="check_update()">Update</button> -->
                         <?php if (is_postsale() || is_admin()) { ?>
-                            <a href="#" data-toggle="modal" data-target="#customers_apostille" onclick="updateApostileData()" class="bulk-actions-btn table-btn btn btn-primary ">processed</a>
+                            <a href="#" data-toggle="modal" data-target="#translation" onclick="updateTranslationData()" class="bulk-actions-btn table-btn btn btn-primary ">processed</a>
                         <?php } ?>
                     </div>
                     <!-- <div class="col-md-3 pull-right">
@@ -154,7 +151,7 @@ if (!is_postSale() && !is_admin()) {
             <br>
             <br>
             <div class="activity-feed">
-                <?php foreach ($activity_apostille_document as $log) { ?>
+                <?php foreach ($activity_translation_document as $log) { ?>
                     <div class="feed-item">
                         <div class="date">
                             <span class="text-has-action" data-toggle="tooltip" data-title="<?php echo _dt($log['date']); ?>">
@@ -181,40 +178,40 @@ if (!is_postSale() && !is_admin()) {
     </div>
 </div>
 
-<div class="modal fade customers_apostille" id="customers_apostille" tabindex="-1" role="dialog">
+<div class="modal fade translation" id="translation" tabindex="-1" role="dialog">
     <div class="modal-dialog" role="document">
         <div class="modal-content">
             <div class="modal-header">
                 <button type="button" class="close" data-dismiss="modal" aria-label="Close">
                     <span aria-hidden="true">&times;</span>
                 </button>
-                <h4 class="modal-title">Apostille update</h4>
+                <h4 class="modal-title">Translation update</h4>
             </div>
-            <form id="apostille-document-form" class="form-disabled" onsubmit="return false;">
+            <form id="translation-document-form" class="form-disabled" onsubmit="return false;">
 
                 <div class="modal-body h-auto">
 
                     <?php array_unshift($orignal_document_status, array()); ?>
-                    <!-- Apostille Section -->
-                    <div class="apostille_update">
-                        <div class="apostille_status_update">
+                    <!-- Translation Section -->
+                    <div class="translation_update">
+                        <div class="translation_status_update">
                             <div class="row">
                                 <div class="col-md-4">
-                                    <input type="hidden" name="apostile_id" id="apostile_id" value="">
-                                    <label>Apostille Vendor <small class='text-danger'>*</small></label>
+                                    <input type="hidden" name="translation_id" id="translation_id" value="">
+                                    <label>Translation Vendor <small class='text-danger'>*</small></label>
                                     <?php
-                                    array_unshift($apostille_vendors, array());
-                                    echo render_select('apostille_vendor', $apostille_vendors, ['id', 'name'], '', [], [
+                                    array_unshift($translation_vendors, array());
+                                    echo render_select('translation_vendor', $translation_vendors, ['id', 'name'], '', [], [
                                         'data-width' => '100%',
                                         'data-none-selected-text' => 'Vendor',
                                         'data-actions-box' => true,
                                         'required-check' => 'required-check',
                                         'required' => 'required',
-                                    ], [], 'no-mbot', '', false, 'apostille_vendor'); ?>
+                                    ], [], 'no-mbot', '', false, 'translation_vendor'); ?>
                                 </div>
                                 <div class="col-md-4">
-                                    <label>Apostille Documents <small class='text-danger'>*</small></label>
-                                    <?php echo render_select('apostille_document[]', $apostille_documents_new, ['id', 'name'], '', [], [
+                                    <label>Translation Documents <small class='text-danger'>*</small></label>
+                                    <?php echo render_select('translation_document[]', $translation_documents_new, ['id', 'name'], '', [], [
                                         'data-width' => '100%',
                                         'data-none-selected-text' => 'Documents',
                                         'multiple' => true,
@@ -223,30 +220,30 @@ if (!is_postSale() && !is_admin()) {
                                         'required' => 'required',
                                         'onchange' => 'document_cost_div(this)'
 
-                                    ], [], 'no-mbot', '', false, 'apostille_document'); ?>
+                                    ], [], 'no-mbot', '', false, 'translation_document'); ?>
                                 </div>
                                 <div class="col-md-4">
                                     <label>Documents By Vender</label>
-                                    <?php echo render_select('apostille_document_vendor[]', $apostille_documents_new, ['id', 'name'], '', [], [
+                                    <?php echo render_select('translation_document_vendor[]', $translation_documents_new, ['id', 'name'], '', [], [
                                         'data-width' => '100%',
                                         'data-none-selected-text' => 'Documents',
                                         'multiple' => true,
                                         'data-actions-box' => true,
 
-                                    ], [], 'no-mbot', '', false, 'apostille_document_vendor'); ?>
+                                    ], [], 'no-mbot', '', false, 'translation_document_vendor'); ?>
                                 </div>
                                 <div class="col-md-4">
                                     <label>Courier Date</label>
-                                    <?php echo render_input('apostille_date', '', '', 'date'); ?>
+                                    <?php echo render_input('translation_date', '', '', 'date'); ?>
                                 </div>
                                 <div class="col-md-4">
-                                    <label>Apostille Received</label>
-                                    <?php echo render_input('apostille_receiving_date', '', '', 'date'); ?>
+                                    <label>Translation Received</label>
+                                    <?php echo render_input('translation_receiving_date', '', '', 'date'); ?>
                                 </div>
 
                                 <div class="col-md-4">
                                     <label>Payment Date</label>
-                                    <?php echo render_input('apostille_payment_date', '', '', 'date'); ?>
+                                    <?php echo render_input('translation_payment_date', '', '', 'date'); ?>
                                 </div>
                                 <div class="clearfix"></div>
                                 <div class="doc-cost-section">
@@ -261,7 +258,7 @@ if (!is_postSale() && !is_admin()) {
                 </div>
                 <div class="modal-footer">
                     <button type="button" class="btn btn-default" data-dismiss="modal"><?php echo _l('close'); ?></button>
-                    <a href="#" class="btn btn-info" onclick="customers_apostille(this); return false;"><?php echo _l('confirm'); ?></a>
+                    <a href="#" class="btn btn-info" onclick="translation(this); return false;"><?php echo _l('confirm'); ?></a>
                 </div>
             </form>
 
@@ -289,75 +286,75 @@ if (!is_postSale() && !is_admin()) {
 
     let currencyHtml = `<?= $currencyHtml ?>`;
 
-    var apostille_documents_list = <?= !empty($apostille_documents_new) ? json_encode(array_column($apostille_documents_new, null, 'id'), JSON_UNESCAPED_UNICODE) : '[]' ?>;
+    var translation_documents_list = <?= !empty($translation_documents_new) ? json_encode(array_column($translation_documents_new, null, 'id'), JSON_UNESCAPED_UNICODE) : '[]' ?>;
     var complete_application = " <?= !empty($client->sc_100) && $client->sc_100 == 1 ? 1 : 0 ?>";
 
     if (complete_application == 1) {
 
     }
 
-    function updateApostileData(id = "", encodedDoc = "") {
+    function updateTranslationData(id = "", encodedDoc = "") {
         // Reset the form
-        $("#apostille-document-form")[0].reset();
+        $("#translation-document-form")[0].reset();
         $(".doc-cost-section").html('');
 
         // Reset and refresh all selectpickers inside the form
-        $('#apostille-document-form .selectpicker').val('').prop("disabled", false).selectpicker('refresh');
+        $('#translation-document-form .selectpicker').val('').prop("disabled", false).selectpicker('refresh');
 
         setTimeout(() => {
-            $("#apostile_id").val(id);
-            const apostileData = JSON.parse(atob(encodedDoc));
-
+            $("#translation_id").val(id);
+            const translationData = JSON.parse(atob(encodedDoc));
+            console.log(translationData);
             let {
                 doc_id,
                 vendor_id,
                 by_vendor,
                 courier_date,
-                apostille_received,
+                translation_received,
                 payment_date,
-                apostille_cost,
+                translation_cost,
                 currency_type
-            } = apostileData;
+            } = translationData;
 
             // Vendor dropdown
-            if ($("#apostille_vendor").length) {
-                $("#apostille_vendor")
+            if ($("#translation_vendor").length) {
+                $("#translation_vendor")
                     .val(vendor_id)
                     .selectpicker("refresh");
             }
 
             // Document dropdown
-            if ($("#apostille_document").length) {
-                $("#apostille_document")
+            if ($("#translation_document").length) {
+                $("#translation_document")
                     .val(doc_id)
                     .prop("disabled", true) // disable select
                     .selectpicker("refresh").trigger("change");
             }
 
             // Vendor-specific document dropdown
-            if (by_vendor == 1 && $("#apostille_document_vendor").length) {
-                $("#apostille_document_vendor")
+            if (by_vendor == 1 && $("#translation_document_vendor").length) {
+                $("#translation_document_vendor")
                     .val(doc_id)
                     .prop("disabled", true)
                     .selectpicker("refresh");
             }
 
             // Dates
-            $("#apostille_date").val(courier_date || "");
-            $("#apostille_receiving_date").val(apostille_received || "");
-            $("#apostille_payment_date").val(payment_date || "");
+            $("#translation_date").val(courier_date || "");
+            $("#translation_receiving_date").val(translation_received || "");
+            $("#translation_payment_date").val(payment_date || "");
 
             setTimeout(() => {
                 // Cost input
                 let costInput = $(`input[name='document_cost[${doc_id}]']`);
                 if (costInput.length) {
-                    costInput.val(apostille_cost || "");
+                    costInput.val(translation_cost || "");
                 }
 
                 // Currency type input (assuming it's a separate input/select aligned with cost)
                 let currencyInput = $(`#cost-doc-div-${doc_id} .currency-selector-currency_type`);
-                // let currencyInput = $(`select[name='currency_type[${doc_id}]'], input[name='currency_type[${doc_id}]']`);
                 if (currencyInput.length) {
+                    console.log("Setting currency type for doc_id", doc_id, "to", currency_type);
                     currencyInput.val(currency_type || "");
                 }
             }, 200);
@@ -376,7 +373,7 @@ if (!is_postSale() && !is_admin()) {
 
         // Re-add only the selected ones
         selected_documents.forEach(function(doc_id) {
-            let doc = apostille_documents_list[doc_id];
+            let doc = translation_documents_list[doc_id];
 
             $(".doc-cost-section").append(`
             <div class='col-md-4' id='cost-doc-div-${doc_id}'>
@@ -391,21 +388,21 @@ if (!is_postSale() && !is_admin()) {
         });
     }
 
-    function customers_apostille(event) {
-        var apostille_status = true;
-        var apostille_data = {};
+    function translation(event) {
+        var translation_status = true;
+        var translation_data = {};
         var is_valid = true;
-        var currency_id_apostile = $(".currency-selector-currency_type").first().val();
+        var currency_id_translation = $(".currency-selector-currency_type").first().val();
         // Get text of the selected option
-        var currency_text_apostile = $(".currency-selector-currency_type option:selected").first().text();
+        var currency_text_translation = $(".currency-selector-currency_type option:selected").first().text();
 
-        $('.apostille_status_update').find('input, select').each(function() {
+        $('.translation_status_update').find('input, select').each(function() {
             var name = $(this).attr("name");
             var show_name = $(this).data("name") || $(this).attr("name");
             var value = $(this).val();
             var required = $(this).attr('required') || $(this).attr('requried');
             if (name) {
-                apostille_data[name] = value;
+                translation_data[name] = value;
             }
             // console.log(value);
             // console.log(required);
@@ -416,23 +413,23 @@ if (!is_postSale() && !is_admin()) {
                 return false; // Exit loop early
             }
         });
-        apostille_data["manual_status"] = 1;
-        apostille_data["apostile_id"] = $("#apostile_id").val();
+        translation_data["manual_status"] = 1;
+        translation_data["translation_id"] = $("#translation_id").val();
 
 
-        let ApostileDocuments = $("#apostille_document").val() || [];
-        let ApostileDocumentVendor = $("#apostille_document_vendor").val() || [];
+        let TranslationDocuments = $("#translation_document").val() || [];
+        let TranslationDocumentVendor = $("#translation_document_vendor").val() || [];
 
         // Ensure both are arrays
-        ApostileDocuments = Array.isArray(ApostileDocuments) ? ApostileDocuments.map(String) : [String(ApostileDocuments)];
-        ApostileDocumentVendor = Array.isArray(ApostileDocumentVendor) ? ApostileDocumentVendor.map(String) : [String(ApostileDocumentVendor)];
+        TranslationDocuments = Array.isArray(TranslationDocuments) ? TranslationDocuments.map(String) : [String(TranslationDocuments)];
+        TranslationDocumentVendor = Array.isArray(TranslationDocumentVendor) ? TranslationDocumentVendor.map(String) : [String(TranslationDocumentVendor)];
 
         // Find vendor docs not in selected docs
-        let notFound = ApostileDocumentVendor.filter(id => !ApostileDocuments.includes(id));
+        let notFound = TranslationDocumentVendor.filter(id => !TranslationDocuments.includes(id));
 
         if (notFound.length > 0) {
-            let docName = apostille_documents_list[notFound[0]]['name'] || `ID ${notFound[0]}`;
-            alert_float("warning", `Please select the Apostille document: ${docName} before choosing a vendor documents.`);
+            let docName = translation_documents_list[notFound[0]]['name'] || `ID ${notFound[0]}`;
+            alert_float("warning", `Please select the Translation document: ${docName} before choosing a vendor documents.`);
             is_valid = false;
             return false; // Exit loop early
         }
@@ -449,10 +446,10 @@ if (!is_postSale() && !is_admin()) {
 
         var data = {
             ids,
-            apostille_status,
-            ...apostille_data,
-            currency_id_apostile,
-            currency_text_apostile
+            translation_status,
+            ...translation_data,
+            currency_id_translation,
+            currency_text_translation
         };
 
         $(event.target).prop('disabled', true);
@@ -464,7 +461,7 @@ if (!is_postSale() && !is_admin()) {
                         var res = JSON.parse(response);
                         if (res.resp_code === "RCS") {
                             alert_float("success", res.resp_desc);
-                            $("#customers_apostille").modal('hide');
+                            $("#translation").modal('hide');
                             location.reload();
 
                         } else {
