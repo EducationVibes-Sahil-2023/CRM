@@ -527,7 +527,7 @@
     }
 
     function check_registration_cash_status(element, className) {
-        $("." + className+' input').val('');
+        $("." + className + ' input').val('');
         if ($(element).is(":checked")) {
             $("." + className).toggle();
             $(element).val(1); // Show elements if checkbox is checked
@@ -639,8 +639,7 @@
             let doc_type = row.find("input[name='doc_type[]']").val(); // Get doc_type from the row
             let doc_name = row.find("input[name='doc_name[]']").val(); // Get doc_name from the row
             let doc_url = row.find("input[name='doc_url[]']").val(); // Get doc_url from the row
-
-
+            formData.append("sample_collect_date", $('#sample_collect_date').val()); // Append
             if (files.length > 0) {
                 file_upload_status = true;
                 // Handle files
@@ -866,7 +865,7 @@
         }
         $(".disabledd").attr("disabled", true);
         $("#documents-form input[name='files[61]']:not(.disabledd)").attr("disabled", false);
-         setTimeout(() => {
+        setTimeout(() => {
             handleActivityChange();
         }, 300);
 
@@ -1467,7 +1466,7 @@
         }
     }
 
-    function delete_documents(type, tracker_id, id,docType="") {
+    function delete_documents(type, tracker_id, id, docType = "") {
         // Basic field validation before confirmation
         if (!client_id || !tracker_id || !type || !id) {
             alert_float("danger", "Missing required information. Please refresh the page and try again.");

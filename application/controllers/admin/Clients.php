@@ -3281,6 +3281,7 @@ class Clients extends AdminController
             $doc_ids = $this->input->post("doc_type_id");
             $doc_names = $this->input->post("doc_type_name");
             $document_url = $this->input->post("doc_url");
+            $sample_collect_date = $this->input->post("sample_collect_date");
             $documents_type =  get_documents("", [], 1);
             $documents_type =  array_column($documents_type, null, 'id');
 
@@ -3331,6 +3332,12 @@ WHERE s.client_id = " . (int)$client_id . "
                         $doc_name = $documents_type[$doc_ids[$i]]["name"];
 
                         $this->db->insert(db_prefix() . 'application_activity_log', array("description" => "{$doc_name} document uploaded by - ", "date" => date('Y-m-d H:i:s'), "staffid" => get_staff_user_id(), "client_id" => $client_id));
+
+                        if (!empty($applicant_status) && $applicant_status > 0) {
+                            $this->db->where("userid", $client_id);
+                            $this->db->update(db_prefix() . 'clients', array("applicant_status" => $applicant_status, "applicant_stage" => 2, "applicant_sub_status" => 6));
+                            get_applicant_status($applicant_status, $client_id);
+                        }
                     }
                 } else if (!empty($document_url[$i])) {
                     if (!empty($already_data[$doc_ids[$i]])) {
@@ -3338,8 +3345,9 @@ WHERE s.client_id = " . (int)$client_id . "
                     }
                 }
             }
+            $this->db->update(db_prefix() . 'clients', array("sample_collect_date" => $sample_collect_date), array("userid" => $client_id));
 
-
+         
             $this->db->select("id");
             $this->db->where('client_id', $client_id);
             $check_ = $this->db->get(db_prefix() . 'client_documents')->row();
