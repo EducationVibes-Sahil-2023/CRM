@@ -30,41 +30,41 @@ array_push($documents_type, array("id" => "visa", "disabled" => 1, "disabledd" =
 
 
 $visasectionDetails = $this->db
-	->select("file,tracking_receipt,application_form")
-	->from(db_prefix() . "visa_details")
-	->where(array("userid" => $client_id))
-	->order_by("id", "ASC")
-	->get()
-	->result_array();
+    ->select("file,tracking_receipt,application_form")
+    ->from(db_prefix() . "visa_details")
+    ->where(array("userid" => $client_id))
+    ->order_by("id", "ASC")
+    ->get()
+    ->result_array();
 
 if (!empty($visasectionDetails)) {
 
-	foreach ($visasectionDetails as $k => $visaInfo) {
+    foreach ($visasectionDetails as $k => $visaInfo) {
 
-		foreach ($visaInfo as $key => $value) {
+        foreach ($visaInfo as $key => $value) {
 
-			if (!empty($value)) {   // skip empty columns
+            if (!empty($value)) {   // skip empty columns
 
-				// Custom display name
-				if ($key == "file") {
-					$display_name = "Visa Stamp";
-				} else {
-					$display_name = ucfirst(str_replace("_", " ", $key));
-				}
+                // Custom display name
+                if ($key == "file") {
+                    $display_name = "Visa Stamp";
+                } else {
+                    $display_name = ucfirst(str_replace("_", " ", $key));
+                }
 
-				$display_name .= " " . ($k + 1);
+                $display_name .= " " . ($k + 1);
 
-				$documents_type[] = array(
-					"id"        => "Visa Section",
-					"disabled"  => 1,
-					"disabledd" => 1,
-					"stage"     => "Visa",
-					"name"      => $display_name,
-					"file_type" => ".pdf,image/*"
-				);
-			}
-		}
-	}
+                $documents_type[] = array(
+                    "id"        => "Visa Section",
+                    "disabled"  => 1,
+                    "disabledd" => 1,
+                    "stage"     => "Visa",
+                    "name"      => $display_name,
+                    "file_type" => ".pdf,image/*"
+                );
+            }
+        }
+    }
 }
 
 
@@ -318,6 +318,7 @@ if ($lead_type_status == 2) {
         <div class="col-md-3 pull-right" style="top: -10px;">
             <?php echo render_select('view_assigned[]', $staff_list, array('staffid', array('firstname', 'lastname')), '', [$client->addedfrom], array('data-width' => '100%', 'data-none-selected-text' => _l('leads_dt_assigned'), 'data-actions-box' => true, "onchange" => "ChangeAssignation(this)"), array(), 'no-mbot', '', false, 'view_assigned'); ?>
         </div>
+
     <?php } ?>
 </h4>
 <div class="row">
@@ -487,6 +488,12 @@ if ($lead_type_status == 2) {
                                     <div class="row">
                                         <?php
                                         foreach ($profile_section["student_details"] as $s_stage) {
+                                            if (!empty($s_stage["neet_intake"])) {
+
+                                                if ($s_stage["neet_intake"] > $admissionpreferences->session_intake) {
+                                                    continue;
+                                                }
+                                            }
                                             $doc_type = $s_stage["name"] ?? '';
                                             $doc_id = $s_stage["id"] ?? '';
                                             $info = $s_stage["info"] ?? '';
@@ -1183,30 +1190,31 @@ if ($lead_type_status == 2) {
                                 <div id="entrance_exam_div" class="row accadmic-education-div ">
                                     <h4>NEET Exam</h4>
                                     <hr>
+                                    <?php if ($admissionpreferences->session_intake >= "2026-09") { ?>
+                                        <div class="row col-lg-12">
+                                            <h4>NEET Credentials</h4>
+                                            <div class="col-lg-3 border2 border1">
+                                                <div class="c1">
+                                                    <p>Id</p>
+                                                </div>
+                                                <div class="c2">
+                                                    <input class="form-control" type="text" class="form-group"
+                                                        placeholder="Enter Neet User ID" name="neet_user_id" value="<?= $academicdetails->neet_user_id; ?>">
+                                                </div>
+                                            </div>
 
-                                    <div class="row hide">
-                                        <h4>NEET Credentials</h4>
-                                        <div class="col-lg-3 border2 border1">
-                                            <div class="c1">
-                                                <p>Id</p>
+                                            <div class="col-lg-3 border2 border1">
+                                                <div class="c1">
+                                                    <p>Password</p>
+                                                </div>
+                                                <div class="c2">
+                                                    <input class="form-control" type="text" class="form-group"
+                                                        placeholder="Enter Neet User Password" name="neet_user_password" value="<?= $academicdetails->neet_user_password; ?>">
+                                                </div>
                                             </div>
-                                            <div class="c2">
-                                                <!--<input class="form-control" type="text" class="form-group"-->
-                                                <!--    placeholder="Enter Neet User ID" name="neet_user_id" value="<?= $academicdetails->neet_user_id; ?>">-->
-                                            </div>
-                                        </div>
 
-                                        <div class="col-lg-3 border2 border1" >
-                                            <div class="c1">
-                                                <p>Password</p>
-                                            </div>
-                                            <div class="c2">
-                                                <!--<input class="form-control" type="text" class="form-group"-->
-                                                <!--    placeholder="Enter Neet User Password" name="neet_user_password" value="<?= $academicdetails->neet_user_password; ?>">-->
-                                            </div>
                                         </div>
-                                        
-                                    </div>
+                                    <?php } ?>
                                     <div class="col-lg-2 border2 border1">
                                         <div class="c1">
                                             <p>Result Status <?= $text_danger_mbbs ?></p>
@@ -1464,17 +1472,17 @@ if ($lead_type_status == 2) {
 
                                                         <?php if (is_admin() || !empty($staff_list[get_staff_user_id()]["post_sales"])) {
                                                         ?>
-                                                            <input type="file" name="files[<?= $doc_id ?>]" value="<?= $file_url ?>" class="form-control <?= (!empty($doc_files['disabledd']) && $doc_files['disabledd'] == 1) ||
-                                                                                                                                                                (!is_admin() && !empty($upload_assign) && !in_array(get_staff_user_id(), $upload_assign))
-                                                                                                                                                                ? 'disabledd'
-                                                                                                                                                                : ''; ?>" accept="<?= htmlspecialchars($accept, ENT_QUOTES, 'UTF-8') ?>" <?= $required_attr ?>>
-                                                        <?php
-                                                        } else {
-                                                        ?>
-                                                            <input type="file" <?= !empty($doc_files["disabled"] == 1) ? 'disabled' : '' ?> name="files[<?= $doc_id ?>]" value="<?= $file_url ?>" class="form-control  <?= (!empty($doc_files['disabledd']) && $doc_files['disabledd'] == 1) ||
+                                                            <input type="file" onchange="updateDate(this,<?= $doc_files['upload_date'] ?>)" name="files[<?= $doc_id ?>]" value="<?= $file_url ?>" class="form-control <?= (!empty($doc_files['disabledd']) && $doc_files['disabledd'] == 1) ||
                                                                                                                                                                                                                             (!is_admin() && !empty($upload_assign) && !in_array(get_staff_user_id(), $upload_assign))
                                                                                                                                                                                                                             ? 'disabledd'
                                                                                                                                                                                                                             : ''; ?>" accept="<?= htmlspecialchars($accept, ENT_QUOTES, 'UTF-8') ?>" <?= $required_attr ?>>
+                                                        <?php
+                                                        } else {
+                                                        ?>
+                                                            <input type="file" onchange="updateDate(this,<?= $doc_files['upload_date'] ?>)" <?= !empty($doc_files["disabled"] == 1) ? 'disabled' : '' ?> name="files[<?= $doc_id ?>]" value="<?= $file_url ?>" class="form-control  <?= (!empty($doc_files['disabledd']) && $doc_files['disabledd'] == 1) ||
+                                                                                                                                                                                                                                                                                        (!is_admin() && !empty($upload_assign) && !in_array(get_staff_user_id(), $upload_assign))
+                                                                                                                                                                                                                                                                                        ? 'disabledd'
+                                                                                                                                                                                                                                                                                        : ''; ?>" accept="<?= htmlspecialchars($accept, ENT_QUOTES, 'UTF-8') ?>" <?= $required_attr ?>>
                                                         <?php
                                                         }
                                                         ?>
@@ -1486,6 +1494,9 @@ if ($lead_type_status == 2) {
                                                         if (!empty($file_url)) {
                                                         ?>
                                                             <div class="margin-top">
+                                                                <?php if (!empty($doc_files['upload_date']) && $doc_files['upload_date'] != '') { ?>
+                                                                    <i class="fa fa-calendar  btn btn-xs btn-primary" onclick="$('#sample_collect_modal').modal('show');"></i>
+                                                                <?php } ?>
                                                                 <i class="fa fa-eye  btn btn-xs btn-primary" onclick="show_media_files('<?= base_url($file_url) ?>');"></i>
                                                                 <i class="fa fa-download  btn btn-xs btn-primary" onclick="download_media_files(`<?= base_url($file_url) ?>`, '_blank');"></i>
                                                             </div>
@@ -1937,6 +1948,37 @@ if ($lead_type_status == 2) {
         </div>
     </div>
 </div>
+<div class="modal fade" id="sample_collect_modal" data-backdrop="static" data-backdrop="true" tabindex="-1" role="dialog">
+    <form method="POST" onsubmit="return false;" id="sample_form">
+        <div class="modal-dialog" role="document">
+            <div class="modal-content">
+
+                <div class="modal-header">
+                    <h4 class="modal-title">Sample Collect Date</h4>
+                </div>
+
+                <div class="modal-body">
+
+                    <div class="form-group">
+                        <label for="sample_collect_date">Sample Collect Date</label>
+                        <input type="date" class="form-control"
+                            name="sample_collect_date" value="<?= !empty($client->sample_collect_date) ? $client->sample_collect_date : '' ?>"
+                            id="sample_collect_date" required>
+                    </div>
+
+                </div>
+
+                <div class="modal-footer">
+                    <button type="button" onclick="checkCollectionDate()" class="btn btn-info">
+                        Save
+                    </button>
+                </div>
+
+            </div>
+        </div>
+    </form>
+</div>
+
 <script>
     var activity_url = "<?= base_url() ?>admin/clients/activity_logs/<?= $client_id ?>";
 
@@ -2271,5 +2313,37 @@ if ($lead_type_status == 2) {
             // console.log('New passport not applied');
             $(".new-passport-info").hide();
         }
+    }
+
+    function updateDate(obj, status) {
+
+        if (status == 1) {
+
+            if (!obj.files || obj.files.length === 0) {
+                // alert('Please select file first');
+                $('#sample_collect_date').val("");
+                return false;
+            }
+            $('#sample_collect_modal').modal('show');
+
+        }
+    }
+
+
+
+    $('#sample_collect_modal').modal({
+        backdrop: 'static',
+        keyboard: false
+    });
+
+    function checkCollectionDate() {
+        var selectedDate = $('#sample_collect_date').val();
+        if (!selectedDate) {
+            alert('Please select a date.');
+            return;
+        }
+
+        $('#sample_collect_modal').modal('hide');
+        // You can also perform additional actions here, such as sending the selected date to the server
     }
 </script>
