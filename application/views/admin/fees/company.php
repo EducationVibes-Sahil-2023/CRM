@@ -551,6 +551,13 @@ $contactInfo = !empty($feesStructure["contact_data"])
                             </table>
                         </div>
 
+     <br>
+                        <div>
+                            <label>Notes / Instructions</label>
+                            <textarea class="ckeditor note" id="note">
+<?= $sectionDetails["note"] ?? '' ?>
+                            </textarea>
+                        </div>
                         <!-- Three Column Section for Other Charges, One Time Charges, Our Services -->
                         <div class="row">
                             <!-- Other Charges Section -->
@@ -1037,8 +1044,22 @@ $contactInfo = !empty($feesStructure["contact_data"])
 
 
 <?php init_tail(); ?>
+<script src="https://cdn.ckeditor.com/ckeditor5/39.0.1/classic/ckeditor.js"></script>
 
 <script>
+ let myEditor;
+
+    ClassicEditor
+        .create(document.querySelector('.ckeditor'))
+        .then(editor => {
+            myEditor = editor; // ✅ store real instance
+        })
+        .catch(error => console.error(error));
+
+    function getValue() {
+        const data = myEditor.getData();
+        console.log(data);
+    }
     var id = "<?= $id ?? '' ?>";
 
     function previewData() {
@@ -1684,7 +1705,7 @@ $contactInfo = !empty($feesStructure["contact_data"])
                     data: [],
                     footer: []
                 },
-
+ note: "",
                 other_charges: {
                     title: $('#other_charges_title').val(),
                     data: []
@@ -1811,6 +1832,8 @@ $contactInfo = !empty($feesStructure["contact_data"])
                 });
             }
         });
+        
+           formData.sections.note = myEditor ? myEditor.getData() || "" : "";
 
         return formData;
     }

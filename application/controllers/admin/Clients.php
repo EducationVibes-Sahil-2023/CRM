@@ -3193,6 +3193,7 @@ WHERE s.client_id = " . (int)$client_id . "
                 $_update["date_of_payment"] = !empty($_POST["date_of_payment"]) ? $_POST["date_of_payment"] : '';
                 $_update["registration_slip_cash_status"] = !empty($_POST["registration_slip_cash_status"]) ? $_POST["registration_slip_cash_status"] : '';
                 $_update["payment_recevied_from"] = !empty($_POST["payment_recevied_from"]) ? $_POST["payment_recevied_from"] : '';
+                $_update["w_location"] = !empty($_POST["w_location"]) ? $_POST["w_location"] : '';
                 $this->db->where("userid", $client_id);
                 $this->db->update(db_prefix() . 'clients', $_update);
 

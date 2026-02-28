@@ -51,8 +51,8 @@
              margin: 0;
              font-family: 'Poppins', sans-serif;
              background: #f3f6f8;
-                 width: 1095px;
-    height: 1523px;
+             width: 1095px;
+             height: 1548px;
 
          }
 
@@ -69,7 +69,7 @@
          .hero {
              position: relative;
              text-align: center;
-             width: 96%;
+             width: 2% 2% 0% 2%;
              margin: 2%;
              border-radius: 20px;
              /* overflow: hidden; */
@@ -179,7 +179,7 @@
 
          .fee-table th,
          .fee-table td {
-             padding: 10px;
+             padding: 8px;
              font-size: 13px;
              font-weight: 600;
              text-align: center;
@@ -201,7 +201,7 @@
          /* OTHER CHARGES */
          .other-charges {
              width: 95%;
-             margin: 25px auto;
+             margin: 15px 25px 15px auto;
              border: 2px solid #2aa7c9;
              /* border-left: 1px solid #2aa7c9; */
              font-weight: 600;
@@ -423,7 +423,7 @@
          #feeStructures {
              background: white;
              width: 1095px;
-             height: 1523px;
+             height: 1548px;
              /* A4 height */
              display: flex;
              flex-direction: column;
@@ -456,7 +456,8 @@
              border-radius: 0px 20px 20px 0px;
              position: absolute;
              object-fit: contain;
-             left: -5px;;
+             left: -5px;
+             ;
              top: 400px;
          }
 
@@ -480,7 +481,7 @@
              border-radius: 20px 0px 0px 20px;
              position: absolute;
              object-fit: contain;
-             left:1090px;
+             left: 1090px;
              top: 400px;
          }
 
@@ -492,13 +493,13 @@
              border-radius: 20px 0px 0px 20px;
              position: absolute;
              object-fit: contain;
-              left:1090px;
+             left: 1090px;
              top: 1030px;
          }
 
          .footer-section {
              position: absolute;
-             top: 1434px;
+             top: 1460px;
              width: 1095px;
          }
 
@@ -607,6 +608,21 @@
 
          <?php endif; ?>
 
+         <?php
+            if (!empty(trim($sectionData["note"]))) {
+            ?>
+             <div class="note-section" style="width:95%; margin: 15px 25px 0px auto; border: 2px solid #2aa7c9; border-radius: 15px;">
+                 <div class="note-title" style="padding: 8px 20px; font-weight: 600; border-radius: 10px;">
+                     <div style="font-size:14px; font-weight:600;">
+                         <?= ($sectionData["note"]) ?>
+                     </div>
+                 </div>
+
+             </div>
+         <?php
+
+            }
+            ?>
 
          <?php if (!empty($otherchargeDetails['data'])) : ?>
 

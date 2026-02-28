@@ -131,6 +131,12 @@ foreach ($result as $row) {
                     ]);
                     return true;
                 }
+                
+                
+// $this->db->insert(
+//     db_prefix() . 'call_data',
+//     ['data' => json_encode($post_data)]
+// );
 
                 $call_data = array();
                 $required  = [];
@@ -153,6 +159,8 @@ foreach ($result as $row) {
 
 
                 if (empty($post_data['callassignee']) && !empty($post_data['auto_assign'])  && $post_data['auto_assign'] == 1) {
+               
+                    
                     $form->responsible = 1;
                     $ip = $_SERVER['REMOTE_ADDR'];
                     $ipdetails = json_decode(file_get_contents("http://ipinfo.io/{$ip}/json"));
@@ -218,8 +226,6 @@ foreach ($result as $row) {
                         }
                     }
                 }
-
-
 
                 if (!empty($form->auto_assign)) {
                     $auto_assign = array_filter(explode(",", $form->auto_assign));
