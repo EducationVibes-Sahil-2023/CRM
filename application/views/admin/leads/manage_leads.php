@@ -1601,26 +1601,33 @@ $reference_name = $this->db
 
 
    $(function() {
-      function updateDateText(element, start, end) {
 
+      function updateDateText(element, start, end) {
 
          let from = element.data("from");
          let to = element.data("to");
-         if (start._isValid) {
+
+         if (start && end) {
+
             $("#" + from).val(start.format("YYYY-MM-DD"));
             $("#" + to).val(end.format("YYYY-MM-DD"));
 
-            element.find("span").html(start.format("YYYY-MM-DD") + " - " + end.format("YYYY-MM-DD"));
+            element.find("span").html(
+               start.format("YYYY-MM-DD") + " - " + end.format("YYYY-MM-DD")
+            );
+
          } else {
+
             $("#" + from).val('');
             $("#" + to).val('');
-            let label_name = element.find("span").data('label');
+
+            let label_name = element.find("span").data('label') || "Select Date Range";
             element.find("span").html(label_name);
          }
       }
 
 
-      // function initDatePicker(selector, extraRanges = {}) {
+      //  function initDatePicker(selector, extraRanges = {}) {
       //    $(selector).daterangepicker({
       //       autoUpdateInput: false,
       //       locale: {
@@ -1674,57 +1681,88 @@ $reference_name = $this->db
       // }
 
 
-
       function initDatePicker(selector, extraRanges = {}) {
 
          const $el = $(selector);
 
          $el.daterangepicker({
+
+            // autoUpdateInput: false,
+            // autoApply: true,
+            // showDropdowns: true,
+            // linkedCalendars: false,
+            // alwaysShowCalendars: true,
+
             autoUpdateInput: false,
             autoApply: false,
-            showDropdowns: true, // year dropdown
-            linkedCalendars: false, // independent calendar navigation
+            showDropdowns: true, // Year & Month dropdown
+            linkedCalendars: false, // Both calendars independent
+            alwaysShowCalendars: true,
+
+            minDate: moment("2023-01-01"), // 🔥 Start from Jan 1, 2023
+            maxDate: moment(),
+
+            startDate: moment("2023-01-01"),
+            endDate: moment("2023-01-01"),
+
             opens: "left",
             parentEl: "body",
+
             locale: {
                cancelLabel: "Clear",
                format: "YYYY-MM-DD"
             },
+
             ranges: Object.assign({
+
                "Today": [moment(), moment()],
+
                "Yesterday": [
                   moment().subtract(1, "days"),
                   moment().subtract(1, "days")
                ],
+
                "Last 7 Days": [
                   moment().subtract(6, "days"),
                   moment()
                ],
+
                "Last 30 Days": [
                   moment().subtract(29, "days"),
                   moment()
                ],
+
                "This Month": [
                   moment().startOf("month"),
                   moment().endOf("month")
                ],
+
                "Last Month": [
                   moment().subtract(1, "month").startOf("month"),
                   moment().subtract(1, "month").endOf("month")
                ]
+
             }, extraRanges)
+
          });
 
-         // APPLY
+         // APPLY EVENT
          $el.on("apply.daterangepicker", function(ev, picker) {
-            updateDateText(
-               $el,
-               picker.startDate,
-               picker.endDate
-            );
+
+            let start = picker.startDate;
+            let end = picker.endDate;
+
+            // 🔥 Allow reverse selection (fix main issue)
+            if (end.isBefore(start)) {
+               let temp = start;
+               start = end;
+               end = temp;
+            }
+
+            updateDateText($el, start, end);
          });
 
-         // CANCEL
+         // CANCEL EVENT
          $el.on("cancel.daterangepicker", function() {
 
             const from = $el.data("from");
@@ -1738,21 +1776,23 @@ $reference_name = $this->db
 
             $el.find("span").html(defaultLabel);
          });
+
       }
+
 
       // Initialize all inputs
       initDatePicker("#from_date_right");
       initDatePicker("#update_date_right");
       initDatePicker("#assign_date_right");
 
-      // Initialize with extra ranges for follow_date_right
+      // With extra ranges
       initDatePicker("#follow_date_right", {
          "Tomorrow": [moment().add(1, 'days'), moment().add(1, 'days')],
          "Next 7 Days": [moment(), moment().add(6, 'days')],
          "Next 15 Days": [moment(), moment().add(14, 'days')]
       });
-   });
 
+   });
 
    function right_filter(className) {
       $("." + className).toggle();
