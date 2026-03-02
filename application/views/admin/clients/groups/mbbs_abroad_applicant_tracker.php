@@ -677,6 +677,7 @@ if (empty($staff_list[get_staff_user_id()]["post_sales"]) && !is_admin()) {
         <!-- <form id="msform" onsubmit="return false;"> -->
         <ul id="progressbar" class="d-flex justify-content-center">
             <?php
+
             foreach ($applicant_tracker as $key => $track) {
             ?>
                 <li data-id="<?= $track['id'] ?>" onclick="goToStep(<?= $key ?>)" data-show="<?= !empty($track["show_div_name"]) ? $track["show_div_name"] : '' ?>"><?= $track["name"] ?></li>
@@ -1226,7 +1227,7 @@ if (empty($staff_list[get_staff_user_id()]["post_sales"]) && !is_admin()) {
                                         ?>
 
                                             <div class="legalization-item card shadow-sm p-3 mb-3">
-                                                <h4 class="university-name"><?= htmlspecialchars($leg["university_name"], ENT_QUOTES, 'UTF-8') ?> <span class="pull-right h6 fw-bold">Fees Deposite Proof Uploaded : <?= !empty($file_url_payment) ? "Yes" : "No" ?> &nbsp; <?php if (!empty($leg["leg_applied_date"]) && $leg["leg_applied_date"] != "0000-00-00" && $client_infomation->client_type == 1) { ?>
+                                                <h4 class="university-name"><?= htmlspecialchars($leg["university_name"], ENT_QUOTES, 'UTF-8') ?> <span class="pull-right h6 fw-bold">Fees Deposite Proof Uploaded : <?= !empty($file_url_payment) ? "Yes" : "No" ?> &nbsp; <?php if ((!empty($leg["leg_applied_date"]) && $leg["leg_applied_date"] != "0000-00-00" && $client_infomation->client_type == 1 && $admissionpreferences->session_intake >= SESSION_INTAKE && !empty($staff_list[get_staff_user_id()]["post_sales"])) || is_admin()) { ?>
 
                                                             <?= getLastEmailWhatsappDate("email", LEGALIZATION_TEMPLATE_ID, $client_id) ?>
                                                             <button type="button" class="btn btn-primary btn-xs" onclick="email_send(<?= $client_id ?>,5)"><i class="fa fa-envelope hide-client-type"></i> </button>
@@ -1410,7 +1411,7 @@ if (empty($staff_list[get_staff_user_id()]["post_sales"]) && !is_admin()) {
                                                 <h4 class="university-name">
                                                     <?= htmlspecialchars($leg["university_name"], ENT_QUOTES, 'UTF-8') ?>
                                                     <span class="pull-right">
-                                                        <?php if (!empty($file_url) && $client_infomation->client_type == 1) { ?>
+                                                        <?php if ((!empty($file_url) && $client_infomation->client_type == 1  && $admissionpreferences->session_intake >= SESSION_INTAKE && !empty($staff_list[get_staff_user_id()]["post_sales"])) || is_admin()) { ?>
                                                             <button type="button" class="btn btn-primary btn-xs hide" onclick="whatsapp_message_send(<?= !empty($client_id) ? $client_id : '' ?>, 4,'','<?= htmlspecialchars($university) ?>')"><i class="fa fa-whatsapp hide-client-type"></i> </button>
 
                                                             <button type="button" class="btn btn-primary btn-xs hide" onclick="email_send(<?= !empty($client_id) ? $client_id : '' ?>, 3,<?= $leg['invitation_letter'] ?>)"><i class="fa fa-envelope hide-client-type"></i></button>
