@@ -487,10 +487,15 @@ if ($lead_type_status == 2) {
                                     </div>
                                     <div class="row">
                                         <?php
+                                        
                                         foreach ($profile_section["student_details"] as $s_stage) {
                                             if (!empty($s_stage["neet_intake"])) {
 
-                                                if ($s_stage["neet_intake"] > $admissionpreferences->session_intake) {
+                                               if (
+    !empty($s_stage["neet_intake"]) &&
+    isset($admissionpreferences->session_intake) &&
+    $admissionpreferences->session_intake < $s_stage["neet_intake"]
+) {
                                                     continue;
                                                 }
                                             }
