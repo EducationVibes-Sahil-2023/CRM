@@ -674,7 +674,7 @@ if (empty($staff_list[get_staff_user_id()]["post_sales"]) && !is_admin()) {
 ?>
 <div class="row">
     <div id="msform" class="col-md-12 ">
-        =
+        
         <!-- <form id="msform" onsubmit="return false;"> -->
         <ul id="progressbar" class="d-flex justify-content-center">
             <?php
