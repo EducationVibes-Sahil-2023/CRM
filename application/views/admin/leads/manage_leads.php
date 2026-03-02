@@ -1697,7 +1697,7 @@ $reference_name = $this->db
             autoApply: false,
             showDropdowns: true, // Year & Month dropdown
             linkedCalendars: false, // Both calendars independent
-            alwaysShowCalendars: true,
+            alwaysShowCalendars: false, // Show calendars only when opened
 
             minDate: moment("2023-01-01"), // 🔥 Start from Jan 1, 2023
             maxDate: moment(),
