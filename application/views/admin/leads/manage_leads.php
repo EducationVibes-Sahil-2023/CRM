@@ -1777,6 +1777,16 @@ $reference_name = $this->db
             $el.find("span").html(defaultLabel);
          });
 
+         $el.on('show.daterangepicker', function(ev, picker) {
+
+            // When opening picker, show current month & year
+            picker.leftCalendar.month = moment();
+            picker.rightCalendar.month = moment();
+
+            picker.updateCalendars();
+
+         });
+
       }
 
 
