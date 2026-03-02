@@ -8912,6 +8912,23 @@ WHERE s.client_id = " . (int)$client_id . "
                 echo json_encode($data);
                 die;
             }
+            
+             $check_documents = $this->check_documents(8);
+                if (!empty($check_documents)) {
+                    // If required documents are missing
+                    $doc_names = implode(", ", $check_documents);
+                    $message = "{$doc_names} are mandatory to proceed to the next step.";
+
+                    $data = [
+                        'resp_code'               => 'ERR',
+                        'resp_desc'               => "Document requried " . $message,
+                    ];
+
+                    set_alert('danger', "Document requried " . $message);
+
+                    echo json_encode($data);
+                    return;
+                }
 
 
             $update_client_data = [
