@@ -676,7 +676,7 @@ $reference_name = $this->db
                                  'name' => _l('Connected'),
                                  'th_attrs' => array('class' => 'toggleable', 'id' => 'th-number')
                               ),
-                               array(
+                              array(
                                  'name' => _l('First Conn Diff'),
                                  'th_attrs' => array('class' => 'toggleable', 'id' => 'th-number')
                               ),
@@ -990,10 +990,9 @@ $reference_name = $this->db
             <i class="fa fa-chevron-down"></i>
          </div>
       </li>
-      <?php if(is_admin())
-      {
-          ?>
-          <?php 
+      <?php if (is_admin()) {
+      ?>
+      <?php
       }
       ?>
       <li class="">
@@ -1621,57 +1620,124 @@ $reference_name = $this->db
       }
 
 
+      // function initDatePicker(selector, extraRanges = {}) {
+      //    $(selector).daterangepicker({
+      //       autoUpdateInput: false,
+      //       locale: {
+      //          cancelLabel: "Clear"
+      //       },
+      //       opens: "left",
+      //       parentEl: "body",
+      //       ranges: Object.assign({
+      //          "Today": [moment(), moment()],
+      //          "Yesterday": [moment().subtract(1, "days"), moment().subtract(1, "days")],
+      //          "Last 7 Days": [moment().subtract(6, "days"), moment()],
+      //          "Last 30 Days": [moment().subtract(29, "days"), moment()],
+      //          "This Month": [moment().startOf("month"), moment().endOf("month")],
+      //          "Last Month": [
+      //             moment().subtract(1, "month").startOf("month"),
+      //             moment().subtract(1, "month").endOf("month")
+      //          ],
+      //          "Clear": [null, null]
+      //       }, extraRanges)
+      //    }, function(start, end, label) {
+      //       if (label === "Clear") {
+      //          const from = this.element.data("from");
+      //          const to = this.element.data("to");
+      //          $("#" + from).val('');
+      //          $("#" + to).val('');
+      //          let label_name = this.element.find("span").data('label');
+      //          this.element.find("span").html(label_name);
+      //       } else {
+      //          updateDateText(this.element, start, end);
+      //       }
+      //    });
+
+      //    // Cancel button click handler
+      //    $(selector).on('cancel.daterangepicker', function(ev, picker) {
+      //       const $this = $(this); // jQuery wrapper
+      //       const from = $this.data("from");
+      //       const to = $this.data("to");
+
+      //       $("#" + from).val('');
+      //       $("#" + to).val('');
+
+      //       let label_name = $this.find("span").data('label') || 'Select Date Range';
+      //       $this.find("span").html(label_name);
+      //    });
+
+      //    $(selector).on("apply.daterangepicker", function(ev, picker) {
+      //       const $this = $(this); // Wrap the DOM element with jQuery
+      //       updateDateText($this, picker.startDate, picker.endDate);
+      //    });
+
+      // }
+
+
+
       function initDatePicker(selector, extraRanges = {}) {
-         $(selector).daterangepicker({
+
+         const $el = $(selector);
+
+         $el.daterangepicker({
             autoUpdateInput: false,
-            locale: {
-               cancelLabel: "Clear"
-            },
+            autoApply: false,
+            showDropdowns: true, // year dropdown
+            linkedCalendars: false, // independent calendar navigation
             opens: "left",
             parentEl: "body",
+            locale: {
+               cancelLabel: "Clear",
+               format: "YYYY-MM-DD"
+            },
             ranges: Object.assign({
                "Today": [moment(), moment()],
-               "Yesterday": [moment().subtract(1, "days"), moment().subtract(1, "days")],
-               "Last 7 Days": [moment().subtract(6, "days"), moment()],
-               "Last 30 Days": [moment().subtract(29, "days"), moment()],
-               "This Month": [moment().startOf("month"), moment().endOf("month")],
+               "Yesterday": [
+                  moment().subtract(1, "days"),
+                  moment().subtract(1, "days")
+               ],
+               "Last 7 Days": [
+                  moment().subtract(6, "days"),
+                  moment()
+               ],
+               "Last 30 Days": [
+                  moment().subtract(29, "days"),
+                  moment()
+               ],
+               "This Month": [
+                  moment().startOf("month"),
+                  moment().endOf("month")
+               ],
                "Last Month": [
                   moment().subtract(1, "month").startOf("month"),
                   moment().subtract(1, "month").endOf("month")
-               ],
-               "Clear": [null, null]
+               ]
             }, extraRanges)
-         }, function(start, end, label) {
-            if (label === "Clear") {
-               const from = this.element.data("from");
-               const to = this.element.data("to");
-               $("#" + from).val('');
-               $("#" + to).val('');
-               let label_name = this.element.find("span").data('label');
-               this.element.find("span").html(label_name);
-            } else {
-               updateDateText(this.element, start, end);
-            }
          });
 
-         // Cancel button click handler
-         $(selector).on('cancel.daterangepicker', function(ev, picker) {
-            const $this = $(this); // jQuery wrapper
-            const from = $this.data("from");
-            const to = $this.data("to");
-
-            $("#" + from).val('');
-            $("#" + to).val('');
-
-            let label_name = $this.find("span").data('label') || 'Select Date Range';
-            $this.find("span").html(label_name);
+         // APPLY
+         $el.on("apply.daterangepicker", function(ev, picker) {
+            updateDateText(
+               $el,
+               picker.startDate,
+               picker.endDate
+            );
          });
 
-         $(selector).on("apply.daterangepicker", function(ev, picker) {
-            const $this = $(this); // Wrap the DOM element with jQuery
-            updateDateText($this, picker.startDate, picker.endDate);
-         });
+         // CANCEL
+         $el.on("cancel.daterangepicker", function() {
 
+            const from = $el.data("from");
+            const to = $el.data("to");
+
+            if (from) $("#" + from).val("");
+            if (to) $("#" + to).val("");
+
+            const defaultLabel =
+               $el.find("span").data("label") || "Select Date Range";
+
+            $el.find("span").html(defaultLabel);
+         });
       }
 
       // Initialize all inputs
