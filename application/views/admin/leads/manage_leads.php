@@ -1698,12 +1698,12 @@ $reference_name = $this->db
             showDropdowns: true, // Year & Month dropdown
             linkedCalendars: false, // Both calendars independent
             alwaysShowCalendars: false, // Show calendars only when opened
+            startDate: moment("2023-01-01"),
+            endDate: moment("2023-01-01"),
 
             minDate: moment("2023-01-01"), // 🔥 Start from Jan 1, 2023
             maxDate: moment(),
 
-            startDate: moment("2023-01-01"),
-            endDate: moment("2023-01-01"),
 
             opens: "left",
             parentEl: "body",
@@ -1740,11 +1740,13 @@ $reference_name = $this->db
                "Last Month": [
                   moment().subtract(1, "month").startOf("month"),
                   moment().subtract(1, "month").endOf("month")
-               ]
-
+               ],
+               "Clear": [null, null], // 👈 add this first
             }, extraRanges)
 
          });
+
+
 
          // APPLY EVENT
          $el.on("apply.daterangepicker", function(ev, picker) {
@@ -1784,6 +1786,31 @@ $reference_name = $this->db
             picker.rightCalendar.month = moment();
 
             picker.updateCalendars();
+
+         });
+         $el.on("apply.daterangepicker", function(ev, picker) {
+
+            const label = picker.chosenLabel;
+
+            if (label === "Clear") {
+
+               const from = $el.data("from");
+               const to = $el.data("to");
+
+               if (from) $("#" + from).val('');
+               if (to) $("#" + to).val('');
+
+               // Reset internal dates
+               picker.setStartDate(moment());
+               picker.setEndDate(moment());
+
+               // Reset UI text
+               $el.find("span").html("Select Date Range");
+
+               return;
+            }
+
+            updateDateText($el, picker.startDate, picker.endDate);
 
          });
 
