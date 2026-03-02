@@ -7355,6 +7355,7 @@ WHERE s.client_id = " . (int)$client_id . "
                     die;
                 }
             }
+
             if ($tracker_id == 6) {
                 $check_documents = $this->check_documents(8);
                 if (!empty($check_documents)) {
