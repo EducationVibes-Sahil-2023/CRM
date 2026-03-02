@@ -60,20 +60,20 @@ class Fees_model extends App_Model
         $this->s_db->from("universities u");
          $this->s_db->join(
             "countries c",
-            "c.id = u.country_id"
+            "c.id = u.country_id","Left"
         );
         
          $this->s_db->join(
             "course s",
-            "s.id = c.segment_id"
+            "s.id = c.segment_id","LEFT"
         );
         $this->s_db->join(
             "university_banner ub",
-            "ub.university_id = u.id"
+            "ub.university_id = u.id","LEFT"
         );
        
 
-        $this->s_db->where("u.status", 0);
+        // $this->s_db->where("u.status", 0);
 
         $query = $this->s_db->get();
         $result = $query->result_array();
