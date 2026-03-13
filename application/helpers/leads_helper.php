@@ -9381,3 +9381,505 @@ function get_country_code()
         return []; // Return an empty array to ensure function fails gracefully
     }
 }
+
+function holiday_list()
+{
+    $CI = &get_instance();
+
+    try {
+        // Fetch data from the `document_upload_type` table with a join to the `file_type` table
+        $holidayList = ['2026-03-04', '2026-08-15', '2026-08-28', "2026-09-04", "2026-10-02", "2026-10-20", "2026-11-08", "2026-11-09", "2026-11-10", "2026-11-11", "2026-12-25"];
+
+        return $holidayList; // Return the fetched data
+    } catch (Exception $e) {
+        // Log the error message if an exception occurs
+        log_message('error', 'Error fetching RelationShip: ' . $e->getMessage());
+
+        return []; // Return an empty array to ensure function fails gracefully
+    }
+}
+
+
+function calculate_business_seconds($start, $end)
+{
+    
+    if (!$start) return 0;
+
+    $start = new DateTime($start);
+    $end   = new DateTime($end);
+
+    $totalSeconds = 0;
+
+    $holidayDates = holiday_list();
+
+
+    while ($start < $end) {
+
+        $currentDate = $start->format('Y-m-d');
+
+        // Skip Sunday
+        if ($start->format('N') == 7) {
+            $start->modify('+1 day')->setTime(11,0,0);
+            continue;
+        }
+
+        // Skip Holiday
+        if (in_array($currentDate, $holidayDates)) {
+            $start->modify('+1 day')->setTime(11,0,0);
+            continue;
+        }
+
+        $workStart = clone $start;
+        $workStart->setTime(11,0,0);
+
+        $workEnd = clone $start;
+        $workEnd->setTime(20,0,0);
+
+        if ($start < $workStart) {
+            $start = clone $workStart;
+        }
+
+        if ($start > $workEnd) {
+            $start->modify('+1 day')->setTime(11,0,0);
+            continue;
+        }
+
+        $periodEnd = min($workEnd, $end);
+
+        $totalSeconds += $periodEnd->getTimestamp() - $start->getTimestamp();
+
+        $start->modify('+1 day')->setTime(11,0,0);
+    }
+
+    return $totalSeconds;
+}
+
+
+
+
+function send_whatsaap_notification_lead_transfer($contact_number,$whatsapp_template_id,$informationData)
+{
+    try {
+
+        $CI = &get_instance();
+
+        if(empty($contact_number) || empty($whatsapp_template_id)){
+            throw new Exception("Contact number or template id missing.");
+        }
+
+        $informationData = !empty($informationData) ? json_decode($informationData,true) : [];
+
+        $productToken      = WHATSAAP_PRODUCT_KEY;
+        $fromNumber        = WHATSAAP_FROM_NUMBER;
+        $templateNamespace = WHATSAAP_NAMESPACE;
+        $toNumber          = "0091".getLast10Digits($contact_number);
+
+        $whatsapp = $CI->db
+        ->where('status',1)
+        ->where('id',$whatsapp_template_id)
+        ->get(db_prefix().'whatsapptemplates')
+        ->row();
+
+        if(!$whatsapp){
+            throw new Exception("WhatsApp template not found.");
+        }
+
+        $templateName = $whatsapp->template_name;
+        $languageCode = $whatsapp->languageCode ?? "en";
+
+        $variables = str_replace(
+            [
+                "{time}",
+                "{time_45}",
+                "{lead_name}",
+                "{phonenumber}",
+                "{lead_source}",
+                "{left_time}",
+                "{counsellor}"
+            ],
+            [
+                "01 Hour 30",
+                "01 Hour 45",
+                $informationData['name'] ?? 'unknown',
+                $informationData['phonenumber'] ?? '',
+                $informationData['source_name'] ?? '',
+                "30",
+                $informationData['assigned_name']
+            ],
+            $whatsapp->variables_name ?? ""
+        );
+
+        $parameters = [];
+
+        if(!empty($variables)){
+            $variables_array = array_map('trim', explode(",", $variables));
+
+            foreach ($variables_array as $data) {
+
+                if(empty($data)) continue;
+
+                $parameters[] = [
+                    "type"=>"text",
+                    "text"=>$data
+                ];
+            }
+        }
+
+        $payload = [
+            "messages"=>[
+                "authentication"=>[
+                    "producttoken"=>$productToken
+                ],
+                "msg"=>[
+                    [
+                        "from"=>$fromNumber,
+                        "to"=>[
+                            ["number"=>$toNumber]
+                        ],
+                        "body"=>[
+                            "type"=>"auto",
+                            "content"=>$templateName
+                        ],
+                        "allowedChannels"=>["WhatsApp"],
+                        "richContent"=>[
+                            "conversation"=>[
+                                [
+                                    "template"=>[
+                                        "whatsapp"=>[
+                                            "namespace"=>$templateNamespace,
+                                            "element_name"=>$templateName,
+                                            "language"=>[
+                                                "policy"=>"deterministic",
+                                                "code"=>$languageCode
+                                            ],
+                                            "components"=>[
+                                                [
+                                                    "type"=>"body",
+                                                    "parameters"=>$parameters
+                                                ]
+                                            ]
+                                        ]
+                                    ]
+                                ]
+                            ]
+                        ]
+                    ]
+                ]
+            ]
+        ];
+
+
+        $curl = curl_init();
+
+        curl_setopt_array($curl,[
+            CURLOPT_URL=>'https://gw.messaging.cm.com/v1.0/message',
+            CURLOPT_RETURNTRANSFER=>true,
+            CURLOPT_TIMEOUT=>15,
+            CURLOPT_POST=>true,
+            CURLOPT_POSTFIELDS=>json_encode($payload),
+            CURLOPT_HTTPHEADER=>[
+                'Content-Type: application/json'
+            ]
+        ]);
+
+        $response = curl_exec($curl);
+        $curlError = curl_error($curl);
+        $httpCode = curl_getinfo($curl, CURLINFO_HTTP_CODE);
+
+        curl_close($curl);
+
+        if($curlError){
+            throw new Exception("cURL Error: ".$curlError);
+        }
+
+        $responseArray = json_decode($response,true);
+
+        if($httpCode != 200){
+            throw new Exception("WhatsApp API HTTP Error: ".$httpCode);
+        }
+
+        if(isset($responseArray['error'])){
+            throw new Exception("WhatsApp API Error");
+        }
+
+        return [
+            "status"=>true,
+            "message"=>"Message sent successfully",
+            "contact"=>$toNumber,
+            "response"=>$responseArray
+        ];
+
+    } catch(Exception $e){
+
+        log_message('error','WhatsApp Send Error: '.$e->getMessage());
+
+        return [
+            "status"=>false,
+            "message"=>$e->getMessage()
+        ];
+    }
+}
+
+function sec_to_hms_label($seconds)
+{
+    $hours = floor($seconds / 3600);
+    $minutes = floor(($seconds % 3600) / 60);
+    $secs = $seconds % 60;
+
+    return sprintf('%02dh:%02dm:%02ds', $hours, $minutes, $secs);
+}
+
+
+
+function update_lead_performace_feedback($leadid)
+{
+    $CI = &get_instance();
+
+    if (!class_exists('leads_model')) {
+        $CI->load->model('leads_model');
+    }
+    if(empty($leadid))
+    {
+        return false;
+    }
+
+    $lead = $CI->leads_model->get($leadid);
+
+    if (empty($lead)) {
+        return [
+            'status' => false,
+            'message' => 'Lead not found'
+        ];
+    }
+    
+
+if (
+    ($lead->dateadded > CAPI_DATE_START || $lead->upcomming_date > CAPI_DATE_START) &&
+    $lead->from_form_id > 0 &&
+    (
+        strtotime($lead->dateadded) >= strtotime('-1 year') ||
+        strtotime($lead->upcomming_date) >= strtotime('-1 year')
+    )
+) {
+    $feedback_name = check_feedback($lead);
+
+    if (empty($feedback_name)) {
+        return [
+            'status' => false,
+            'message' => 'Feedback rule not matched'
+        ];
+    }
+
+    if ($lead->source != 35 && $lead->source != 39) {
+        return [
+            'status' => false,
+            'message' => 'Lead source not valid'
+        ];
+    }
+
+    // ✅ Check if already sent
+   
+
+if($lead->source == 35){
+     if (check_meta_feedback_log($lead->phonenumber, $feedback_name)) {
+        return [
+            'status' => false,
+            'message' => 'Meta event already sent'
+        ];
+    }
+    return metaFeedback_Api($lead, $feedback_name);
+}
+else if($lead->source == 39){
+    
+     if (check_google_feedback_log($lead->phonenumber, $feedback_name)) {
+        return [
+            'status' => false,
+            'message' => 'Google event already sent'
+        ];
+    }
+    return googleFeedback_Api($lead, $feedback_name);
+}
+}
+return true;
+}
+
+function check_meta_feedback_log($phonenumber, $feedback_name)
+{
+    $CI = &get_instance();
+
+    $CI->db->where('phonenumber', $phonenumber);
+    $CI->db->where('feedback_name', $feedback_name);
+
+    $row = $CI->db
+        ->get(db_prefix() . 'lead_performace_logs')
+        ->row();
+
+    return !empty($row);
+}
+
+function check_google_feedback_log($phonenumber, $feedback_name)
+{
+    $CI = &get_instance();
+
+    $CI->db->where('phonenumber', $phonenumber);
+    $CI->db->where('feedback_name', $feedback_name);
+
+    $row = $CI->db
+        ->get(db_prefix() . 'leads_google_performnce_logs')
+        ->row();
+
+    return !empty($row);
+}
+function check_feedback($lead)
+{
+    $CI = &get_instance();
+
+    $CI->db->where('id', $lead->type);
+    $CI->db->where('feedback_status', 1);
+    $CI->db->where("FIND_IN_SET(" . $lead->status . ", lead_status) !=", 0, false);
+    $CI->db->where("FIND_IN_SET(" . $lead->source . ", lead_source) !=", 0, false);
+
+    $data = $CI->db
+        ->get(db_prefix() . 'leads_type')
+        ->row();
+
+if($lead->source ==35){
+    return $data->meta_qualified_name ?? false;
+}
+else if($lead->source ==39){
+     return $data->google_qualified_name ?? false;
+}
+}
+function metaFeedback_Api($lead, $event_name)
+{
+    $meta_feedback_token = META_FEEDBACK_TOKEN;
+    $meta_access_token   = META_FEEDBACK_ACCESS_TOKEN;
+
+    $url = "https://graph.facebook.com/v18.0/" . $meta_feedback_token . "/events?access_token=" . $meta_access_token;
+
+    $email = strtolower(trim($lead->email));
+    $phone = preg_replace('/[^0-9]/', '', $lead->phonenumber);
+
+    $hashed_email = hash('sha256', $email);
+    $hashed_phone = hash('sha256', $phone);
+
+    $payload = [
+        "data" => [
+            [
+                "event_name" => $event_name,
+                "event_time" => time(),
+                "action_source" => "system_generated",
+                "user_data" => [
+                    "em" => $hashed_email,
+                    "ph" => $hashed_phone
+                ]
+            ]
+        ]
+    ];
+
+    try {
+
+        $curl = curl_init();
+
+        curl_setopt_array($curl, [
+            CURLOPT_URL => $url,
+            CURLOPT_RETURNTRANSFER => true,
+            CURLOPT_POST => true,
+            CURLOPT_POSTFIELDS => json_encode($payload),
+            CURLOPT_HTTPHEADER => ['Content-Type: application/json'],
+            CURLOPT_TIMEOUT => 30
+        ]);
+
+        $response = curl_exec($curl);
+
+        if (curl_errno($curl)) {
+
+            $error = curl_error($curl);
+            curl_close($curl);
+
+            log_message('error', 'Meta CURL Error: ' . $error);
+
+            return [
+                'status' => false,
+                'message' => 'Curl error',
+                'data' => $error
+            ];
+        }
+
+        $http = curl_getinfo($curl, CURLINFO_HTTP_CODE);
+        curl_close($curl);
+
+        $response_data = json_decode($response, true);
+
+        if ($http != 200) {
+
+            log_message('error', 'Meta API Error: ' . $response);
+
+            return [
+                'status' => false,
+                'message' => 'Meta API failed',
+                'data' => $response_data
+            ];
+        }
+
+        // ✅ Save log after success
+        insert_lead_performance_feedback($lead, $event_name, $response);
+
+        return [
+            'status' => true,
+            'message' => 'Meta event sent successfully',
+            'data' => $response_data
+        ];
+    } catch (Exception $e) {
+
+        log_message('error', 'Meta API Exception: ' . $e->getMessage());
+
+        return [
+            'status' => false,
+            'message' => 'Exception occurred',
+            'data' => $e->getMessage()
+        ];
+    }
+}
+
+function insert_lead_performance_feedback($lead, $feedback_name, $response)
+{
+    $CI = &get_instance();
+
+    $data = [
+        'leadid' => $lead->id,
+        'source' => $lead->source,
+        'status' => $lead->status,
+        'phonenumber' => $lead->phonenumber,
+        'type' => $lead->type,
+        'data' => json_encode($lead),
+        'api_response' => $response,
+        'feedback_name' => $feedback_name,
+        'created_at' => date('Y-m-d H:i:s')
+    ];
+
+    $CI->db->insert(db_prefix() . 'lead_performace_logs', $data);
+}
+
+
+function googleFeedback_Api($lead, $feedback_name)
+{
+    $CI = &get_instance();
+
+    $data = [
+        'lead_id' => $lead->id,
+        'source' => $lead->source,
+        'status' => $lead->status,
+        'phonenumber' => $lead->phonenumber,
+        'email' => $lead->email,
+        'type' => $lead->type,
+        'data' => json_encode($lead),
+        'lead_created_date' => $lead->dateadded,
+        'feedback_name' => $feedback_name,
+        'created_at' => date('Y-m-d H:i:s')
+    ];
+
+    $CI->db->insert(db_prefix() . 'leads_google_performnce_logs', $data);
+}
+
+

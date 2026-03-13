@@ -602,6 +602,15 @@ $reference_name = $this->db
                                              echo render_select('assign_to_leads_bulk', $staff, array('staffid', array('firstname', 'lastname')), 'leads_dt_assigned');
                                           }
                                           ?>
+                                          
+                                           <?php
+                                          if (has_permission('leads', '', 'assign')) {
+                                          ?>
+                                          <div class="bulk_reference_name">
+                                                <label for="bulk_reference_name">Reference Name</label>
+                                                <input type="text"  class="form-control" placeholder="Reference Name" name="bulk_reference_name" id="bulk_reference_name">
+                                             </div>
+                                          <?php } ?>
                                           <?php
                                           if (has_permission('leads', '', 'assign')) {
                                           ?>
@@ -612,6 +621,7 @@ $reference_name = $this->db
                                           <?php
                                           }
                                           ?>
+                                          
                                           <div class="form-group">
                                              <?php echo '<p><b><i class="fa fa-tag" aria-hidden="true"></i> ' . _l('tags') . ':</b></p>'; ?>
                                              <input type="text" class="tagsinput" id="tags_bulk" name="tags_bulk" value="" data-role="tagsinput">
@@ -786,6 +796,11 @@ $reference_name = $this->db
                                  'th_attrs' => array('class' => 'date-created toggleable', 'id' => 'th-period')
                               );
                            }
+                           
+                            $_table_data[] = array(
+                                 'name' => _l('Lead Counts'),
+                                 'th_attrs' => array('class' => 'date-created toggleable', 'id' => 'th-counts')
+                              );
 
                            foreach ($_table_data as $_t) {
                               array_push($table_data, $_t);
@@ -1085,6 +1100,7 @@ $reference_name = $this->db
       $("#bulk_change").removeClass("hide").show();
       $('.delete_created_date').addClass('hide');
       $('#delete_created_date').prop("checked", false);
+    $('#bulk_reference_name').val('');
    })
 
 
@@ -1097,6 +1113,7 @@ $reference_name = $this->db
          $("#re-assignation_div").hide();
          $("#bulk_change").hide();
          $('#delete_created_date').prop("checked", false);
+          $('#bulk_reference_name').val('');
 
       } else {
 
@@ -1124,12 +1141,16 @@ $reference_name = $this->db
          $bulkChange.find('select').selectpicker('val', '');
          $('#delete_created_date').prop("checked", false);
          $('.delete_created_date').removeClass('hide');
+         
+          $('#bulk_reference_name').val('');
          // $bulkChange.hide();
          // $("#re-assignation_div").show();
       } else {
          $("#re-assignation_div").find('select').selectpicker('val', '');
          $('#delete_created_date').prop("checked", false);
          $('.delete_created_date').addClass('hide');
+          $('#bulk_reference_name').val('');
+         
          // $("#re-assignation_div").hide();
          // $bulkChange.show();
       }

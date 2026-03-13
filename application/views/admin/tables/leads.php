@@ -305,7 +305,7 @@ if ($this->ci->input->post('followup_to_date')) {
 } else {
     $aColumns[] = '(SELECT date FROM ' . db_prefix() . 'reminders  WHERE rel_id = ' . $sTable . '.id and rel_type="lead" ORDER by id DESC LIMIT 1) as followup';
 }
-
+  $aColumns[] =  $sTable . '.upcomming_count as upcomming_count';
 $aColumns = hooks()->apply_filters('leads_table_sql_columns', $aColumns);
 
 $additionalColumns = [];
@@ -416,8 +416,8 @@ $additionalColumns = hooks()->apply_filters('leads_table_additional_columns_sql'
                     ) AS diff_sec
             ) AS t
         )
-END AS first_connect_difference
-"
+END AS first_connect_difference",
+  
 ]);
 
 
@@ -442,6 +442,8 @@ if (is_admin()) {
     if (!empty($_POST["order"][0]["column"]) && ($_POST["order"][0]["column"] == 5)) {
         $_POST["order"][0]["column"] = 0;
     }
+    
+    //  $_POST["order"][0]["column"] = 25;
 } else {
     if (!empty($_POST["order"][0]["column"])) {
         //   $_POST["order"][0]["column"] =0;
@@ -698,6 +700,8 @@ foreach ($rResult as $aRow) {
     if ($role != 1) {
         $row[] = ($aRow['followup'] == '0000-00-00 00:00:00' || !is_date($aRow['followup']) ? '' : '<span data-toggle="tooltip" data-title="' . _dt($aRow['followup']) . '" class="text-has-action is-date">' .  date("Y-m-d", strtotime($aRow['followup'])) . "<br>" . date("H:i:s", strtotime($aRow['followup'])) . '</span>');
     }
+    
+     $row[] = $aRow['upcomming_count'];
 
     $row['DT_RowId'] = 'lead_' . $aRow['id'];
 

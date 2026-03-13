@@ -1484,6 +1484,10 @@ function data_tables_init_($aColumns, $sIndexColumn, $sTable, $join = [], $where
 
 // if(is_admin())
 // {
+//     // echo $__post['order'][$key]['column'];
+//     // die;
+//     // print_r($aColumns);
+//     // echo $aColumns[intval($__post['order'][$key]['column'])];
 //     echo $sQuery;
 //     die;
 // }

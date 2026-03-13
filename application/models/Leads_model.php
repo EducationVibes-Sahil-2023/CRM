@@ -332,7 +332,7 @@ class Leads_model extends App_Model
 
 
 
-    public function lead_assigned_member_notification($lead_id, $assigned, $integration = false, $skip = false)
+    public function lead_assigned_member_notification($lead_id, $assigned, $integration = false, $skip = false,$systemGenerated=false)
 
     {
 
@@ -409,7 +409,7 @@ class Leads_model extends App_Model
 
             $not_additional_data = [
 
-                get_staff_full_name(),
+                $systemGenerated==false?get_staff_full_name():"CRM Generated",
 
                 '<a href="' . admin_url('profile/' . $assigned) . '" target="_blank">' . get_staff_full_name($assigned) . '</a>',
 
@@ -604,6 +604,10 @@ class Leads_model extends App_Model
         $this->db->update(db_prefix() . 'leads', $data);
 
         if ($this->db->affected_rows() > 0) {
+            // if(is_admin()){
+             update_lead_performace_feedback($id);
+            // }
+
 
             $affectedRows++;
 
@@ -763,6 +767,9 @@ class Leads_model extends App_Model
         $this->db->where('id', $id);
         $this->db->update(db_prefix() . 'leads', $data);
         if ($this->db->affected_rows() > 0) {
+        // if(is_admin()){
+        update_lead_performace_feedback($id);
+        // }
 
             log_activity('Lead Updated [ID: ' . $id . ']');
             return true;
@@ -2822,6 +2829,44 @@ class Leads_model extends App_Model
         if (!empty($staff_ids)) {
             $sql .= " and st.staffid in (" . implode(",", $staff_ids) . ") ";
         }
+     
+     
+   if (ACTIVE_STAFF_ONLY == 1) {
+
+            $currentTime = date('H:i');
+            $today       = date('Y-m-d');
+            $dayOfWeek   = date('w'); // 0 = Sunday
+
+
+            // Example holiday array (you can fetch from DB)
+            $holidays = holiday_list();
+            $isHoliday = in_array($today, $holidays);
+
+            if ($dayOfWeek == 0 || $isHoliday) {
+                // Sunday or Holiday → check last login date
+                $sql .= " AND DATE(st.last_login) = (
+                    SELECT MAX(DATE(last_login))
+                    FROM tblstaff
+                    WHERE DATE(last_login) < '$today'
+                 ) ";
+            } else {
+
+                if ($currentTime >= '11:00') {
+                    // Between 10 AM and 11 AM → check today only
+                    $sql .= " AND (DATE(st.last_login) = '$today' 
+                       OR DATE(st.last_activity) = '$today') ";
+                } else {
+                    // Before 10 AM → check today OR yesterday
+                    $yesterday = date('Y-m-d', strtotime('-1 day'));
+
+                    $sql .= " AND (
+                        DATE(st.last_login) IN ('$today','$yesterday')
+                        OR DATE(st.last_activity) IN ('$today','$yesterday')
+                     ) ";
+                }
+            }
+        }
+
         $sql .= " group by st.staffid,last_lead.dateassigned order by last_lead.dateassigned asc ";
         if (!empty($facebook_lead)) {
         } else {
@@ -2864,6 +2909,43 @@ class Leads_model extends App_Model
         if (!empty($staff_ids)) {
             $sql .= " and st.staffid in (" . implode(",", $staff_ids) . ") ";
         }
+        
+      if (ACTIVE_STAFF_ONLY == 1) {
+
+            $currentTime = date('H:i');
+            $today       = date('Y-m-d');
+            $dayOfWeek   = date('w'); // 0 = Sunday
+
+
+            // Example holiday array (you can fetch from DB)
+            $holidays = holiday_list();
+            $isHoliday = in_array($today, $holidays);
+
+            if ($dayOfWeek == 0 || $isHoliday) {
+                // Sunday or Holiday → check last login date
+                $sql .= " AND DATE(st.last_login) = (
+                    SELECT MAX(DATE(st.last_login))
+                    FROM tblstaff
+                    WHERE DATE(st.last_login) < '$today'
+                 ) ";
+            } else {
+
+                if ($currentTime >= '11:00') {
+                    // Between 10 AM and 11 AM → check today only
+                    $sql .= " AND (DATE(st.last_login) = '$today' 
+                       OR DATE(st.last_activity) = '$today') ";
+                } else {
+                    // Before 10 AM → check today OR yesterday
+                    $yesterday = date('Y-m-d', strtotime('-1 day'));
+
+                    $sql .= " AND (
+                        DATE(st.last_login) IN ('$today','$yesterday')
+                        OR DATE(st.last_activity) IN ('$today','$yesterday')
+                     ) ";
+                }
+            }
+        }
+
         $sql .= " group by st.staffid order by (select dateassigned from " . db_prefix() . "leads where assigned = st.staffid order by dateassigned desc limit 1) asc ";
         if (!empty($facebook_lead)) {
         } else {
@@ -3373,4 +3455,474 @@ class Leads_model extends App_Model
 
         return $this->db->get()->result_array();
     }
+    
+    
+ public function check_lead_auto_transfer_lead()
+{
+ 
+    $this->load->library('merge_fields/App_merge_fields');
+    $this->load->library('app_object_cache');
+    $this->load->library('mails/App_mail_template');
+  
+    
+    //  $this->load->library('mails/Lead_assigned');
+        // $this->load->helper('google');
+    
+
+    try {
+
+        $cache_key = 'auto_transfer_leads_cache';
+
+        // Load cache driver
+        $this->load->driver('cache', ['adapter' => 'file']);
+
+        // Check cache (60 seconds)
+        if ($cached = $this->cache->get($cache_key)) {
+            // return $this->output
+            //     ->set_content_type('application/json')
+            //     ->set_output(json_encode([
+            //         "status" => true,
+            //         "message" => "Loaded from cache",
+            //         "data" => $cached
+            //     ]));
+        }
+
+        $now = date('Y-m-d H:i:s');
+
+        $this->db->select('
+            l.id,
+            l.name,
+            l.phonenumber,
+            l.alternative_phonenumber,
+            l.email,
+            l.dateadded,
+            l.lastcontact,
+            l.dateassigned,
+            l.lastupdate_date,
+            l.update_count,
+            l.call_duration,
+            l.auto_transfer_status,
+            l.assigned,
+            l.website,
+            l.status,
+            l.from_form_id,
+            l.type,
+               l.state,
+               l.city,
+            s.name as status_name,
+            src.name as source_name,
+            t.name as type_name,
+            st.phonenumber as staff_contact,
+            stt.phonenumber as team_leader_contact,
+            CONCAT(st.firstname," ",st.lastname) as assigned_name,
+            CONCAT(stt.firstname," ",stt.lastname) as team_leader,
+            FROM_UNIXTIME(c.call_start + 19800) AS call_time,
+            TIMESTAMPDIFF(MINUTE, l.dateassigned, "'.$now.'") AS diff_minutes
+        ', false);
+
+        $this->db->from('tblleads l');
+
+        $this->db->join('tblstaff st', 'st.staffid = l.assigned', 'left');
+
+        $this->db->join(
+            'tblstaff stt',
+            'stt.staffid = if(st.reporting_person>0,st.reporting_person,1)',
+            'left',
+            false
+        );
+
+        $this->db->join(
+            '(SELECT contact, staffid, MAX(call_start) AS call_start 
+              FROM tblcalls_activity_logs 
+              GROUP BY contact, staffid) c',
+            'c.staffid = l.assigned 
+             AND c.contact IN (
+                COALESCE(NULLIF(l.phonenumber,""), NULL),
+                COALESCE(NULLIF(l.alternative_phonenumber,""), NULL)
+             )',
+            'left',
+            false
+        );
+
+        $this->db->join('tblleads_status s', 's.id = l.status');
+        $this->db->join('tblleads_sources src', 'src.id = l.source AND src.lead_transfer_status = 1');
+        $this->db->join('tblleads_type t', 't.id = l.type');
+
+        $this->db->where('l.update_count', 0);
+        $this->db->where('l.call_duration', 0);
+
+        $this->db->where('(l.lastupdate_date = "0000-00-00" OR l.lastupdate_date >= l.dateassigned)', NULL, FALSE);
+        $this->db->where('c.call_start IS NULL', NULL, FALSE);
+
+        $this->db->where("TIMESTAMPDIFF(MINUTE, l.dateassigned, '$now') >= 90", NULL, FALSE);
+
+        $this->db->where('l.status', 2);
+        $this->db->where('l.auto_transfer_status!=', 2);
+
+        // $this->db->where_in('l.id', [447809 ,447874]);
+
+        $this->db->where('DATE(l.dateassigned) >=', START_AUTO_LEAD_TRANSFER_DATE);
+
+        $this->db->order_by('l.dateassigned', 'DESC');
+
+        $query = $this->db->get();
+        $result = $query->result_array();
+echo "<pre>";
+print_r($result);
+die;
+        $filtered = [];
+ 
+
+        foreach ($result as $res) {
+
+            $seconds = calculate_business_seconds(
+                $res['dateassigned'],
+                date('Y-m-d H:i:s')
+            );
+
+            $res['diff_minutes'] = $seconds;
+
+          if ($seconds >= 7200 && $res['auto_transfer_status']== 2) {
+
+        $transferData = [];
+        $staffId = 1; // default staff
+
+        if (!empty($res['from_form_id'])) {
+
+            $form = $this->get_form([
+                'id' => $res['from_form_id']
+            ]);
+
+            if (!empty($form) && !empty($form->assigned)) {
+                $staffId = $form->assigned;
+            }
+            
+            if (!empty($form->facebook_status) && $form->facebook_status == 1) {
+                
+                 $state_name = !empty($res['state']) ? $res['state'] : '';
+                    $lead_type = !empty($res['type']) ? $res['type'] : '';
+                    
+                    
+                    if (!empty($lead_type)) {
+                        $facebook_lead_name = !empty($res['website']) ? $res['website'] : '';
+                        $assign_staff_id = $this->automatic_assign_staff('', $lead_type, '', $facebook_lead_name);
+                        $status_fb_lead_assign = false;
+                        if (!empty($assign_staff_id)) {
+                            foreach ($assign_staff_id as $fl) {
+                                if (!empty($fl["facebook_lead_name"])) {
+                                    $fb_form_name = explode(",", $fl["facebook_lead_name"]);
+                                    if (!empty($fb_form_name)) {
+                                        foreach ($fb_form_name as $fb_name) {
+                                            if (!empty($fb_name) && $status_fb_lead_assign == false) {
+                                                if (strpos(strtolower(trim($facebook_lead_name)), strtolower(trim($fb_name))) !== false) {
+                                                    $staffId = $fl["staffid"];
+                                                    $status_fb_lead_assign = true;
+                                                }
+                                            }
+                                            if ($status_fb_lead_assign == true) {
+                                                break;
+                                            }
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                        if ($status_fb_lead_assign == false) {
+                            if (!empty($lead_type)) {
+                                $assign_staff_id = $this->automatic_assign_staff('', $lead_type, 1);
+                                if (!empty($assign_staff_id[0]["staffid"])) {
+                                    $staffId = $assign_staff_id[0]["staffid"];
+                                }
+                            }
+                        }
+                    }
+                
+            }
+            
+              if (!empty($form->auto_assign)) {
+                    $auto_assign = array_filter(explode(",", $form->auto_assign));
+                    $assign_staff_id = $this->automatic_assign_staff('', '', '', '', $auto_assign);
+                    if (!empty($assign_staff_id[0]["staffid"])) {
+                        $staffId = $assign_staff_id[0]["staffid"];
+                    }
+                }
+                
+                
+                   if (!empty($form->state_wise)  && $form->state_wise == 1) {
+                    $staffId = 1;
+
+                    if (!empty($form->allow_state_location) && $form->allow_state_location == 1) {
+                        $state_name = !empty($res['state']) ? trim($res['state']) : '';
+                        $city_name = !empty($res['city']) ? trim($res['city']) : '';
+                    } else {
+                        $ip = $_SERVER['REMOTE_ADDR'];
+                        $ipdetails = json_decode(file_get_contents("http://ipinfo.io/{$ip}/json"));
+                        $state_name = !empty($ipdetails->region) ? trim($ipdetails->region) : '';
+                        $city_name = !empty($ipdetails->city) ? trim($ipdetails->city) : '';
+                    }
+                    $lead_type = !empty($res["type"]) ? trim($res["type"]) : '';
+                    if (empty($lead_type)) {
+                        $lead_type = !empty($form->lead_type) ? trim($form->lead_type) : '';
+                    }
+                    $status_assign = false;
+
+                    if (!empty($city_name) && $status_assign == false) {
+                        $assign_staff_id = $this->leads_model->automatic_assign_staff_city($city_name, $lead_type, '', '', '', $google_source);
+                        if (!empty($assign_staff_id[0]["staffid"])) {
+                            $form->responsible = $assign_staff_id[0]["staffid"];
+                            $status_assign = true;
+                        }
+                    }
+
+                    if (!empty($state_name)  && $status_assign == false) {
+                        $assign_staff_id = $this->leads_model->automatic_assign_staff($state_name, $lead_type, '', '', '', $google_source);
+                        if (!empty($assign_staff_id[0]["staffid"])) {
+                            $form->responsible = $assign_staff_id[0]["staffid"];
+                            $status_assign = true;
+                        }
+                    } else if (!empty($lead_type)  && $status_assign == false) {
+                        $assign_staff_id = $this->leads_model->automatic_assign_staff('', $lead_type, 1);
+                        if (!empty($assign_staff_id[0]["staffid"])) {
+                            $staffId = $assign_staff_id[0]["staffid"];
+                        }
+                    }
+                }
+            
+
+        } else {
+
+            $assign_staff_id = $this->automatic_assign_staff('', $res['type']);
+
+            if (is_array($assign_staff_id) && !empty($assign_staff_id[0]['staffid'])) {
+                $staffId = $assign_staff_id[0]['staffid'];
+            }
+        }
+
+        $transferData = [
+            'assigned' => $staffId,
+            'last_status_change' => date('Y-m-d H:i:s'),
+            'dateassigned' => date('Y-m-d H:i:s'),
+            'auto_transfer_status'=>0,
+            'status' => 2
+        ];
+
+        // Send notification only if staff changed
+        if (!empty($res['assigned']) && $res['assigned'] != $staffId && $staffId != 0) {
+            $this->lead_assigned_member_notification($res['id'], $staffId,'','',1);
+        }
+
+        if (!empty($res['id'])) {
+
+            $this->db->where('id', $res['id']);
+            $update = $this->db->update(db_prefix() . 'leads', $transferData);
+
+            if (!$update) {
+                log_message('error', 'Lead update failed for ID: ' . $res['id']);
+            }
+        }
+
+
+
+    continue;
+}
+            else if ($seconds >= 6300 || 1==1) {
+
+                $res['warning'] = 2;
+
+                if ($res['auto_transfer_status'] != 2) {
+
+                    $res['channel_type'] = 11;
+                    $filtered[] = $res;
+
+                    $res['staff_contact'] = $res['team_leader_contact'];
+                    $res['channel_type'] = 10;
+                    $filtered[] = $res;
+                }
+
+            } elseif ($seconds >= 5400 ) {
+
+                $res['warning'] = 1;
+                $res['channel_type'] = 9;
+
+                if ($res['auto_transfer_status'] != 1) {
+                    $filtered[] = $res;
+                }
+            }
+        }
+       
+
+        $this->auto_transfer_lead_notification($filtered);
+
+        return $this->output
+            ->set_content_type('application/json')
+            ->set_output(json_encode([
+                "status" => true,
+                "total_records" => count($result),
+                "filtered_records" => count($filtered),
+                "data" => $filtered
+            ]));
+
+    } catch (Exception $e) {
+
+        log_message('error', 'Lead Auto Transfer Error: '.$e->getMessage());
+
+        return $this->output
+            ->set_status_header(500)
+            ->set_content_type('application/json')
+            ->set_output(json_encode([
+                "status" => false,
+                "message" => $e->getMessage()
+            ]));
+    }
+}
+    
+    
+public function auto_transfer_lead_notification($filtered)
+{
+    $insert_Data = [];
+    $leadId_Data = [];
+
+    foreach ($filtered as $key => $data)
+    {
+        // Insert data
+        $insert_Data[$key]["phonenumber"]  = $data["phonenumber"];
+        $insert_Data[$key]["contact"]  = $data["staff_contact"];
+        $insert_Data[$key]["status"]       = 2;
+        $insert_Data[$key]["staff_id"]     = $data["assigned"];
+        $insert_Data[$key]["channel_type"] = $data["channel_type"];
+        $insert_Data[$key]["data"]         = json_encode($data, true);
+        $insert_Data[$key]["created_at"]   = date('Y-m-d H:i:s');
+
+        // Update data
+        $leadId_Data[$key]["id"] = $data["id"];
+        $leadId_Data[$key]["auto_transfer_status"] = $data["warning"];
+    }
+
+    // Batch insert
+    if (!empty($insert_Data)) {
+        $this->db->insert_batch(db_prefix().'lead_auto_transfer_notification_whatsapp_log', $insert_Data);
+    }
+
+    // Batch update
+    if (!empty($leadId_Data)) {
+        $this->db->update_batch(db_prefix().'leads', $leadId_Data, 'id');
+    }
+}
+
+public function transfer_whatsapp_notification()
+{
+    $success = 0;
+    $failed  = 0;
+    $total   = 0;
+
+    try {
+
+        $this->db->where('status', 2);
+        $this->db->where('cron_time <', date('Y-m-d H:i:s'));
+
+        $query  = $this->db->get(db_prefix().'lead_auto_transfer_notification_whatsapp_log');
+        $result = $query->result();
+
+        if (empty($result)) {
+            return $this->output
+                ->set_content_type('application/json')
+                ->set_output(json_encode([
+                    'status'  => true,
+                    'message' => 'No pending notifications',
+                    'data'    => []
+                ]));
+        }
+
+        $total = count($result);
+$leadId_Data =[];
+        foreach ($result as $key => $row) {
+
+            try {
+
+                $this->db->trans_begin();
+
+                $response = send_whatsaap_notification_lead_transfer(
+                    $row->contact,
+                    $row->channel_type,
+                    $row->data
+                );
+
+                if (empty($response)) {
+                    throw new Exception('WhatsApp sending failed for ID: '.$row->id);
+                }
+
+                // mark success
+                $this->db->where('id', $row->id)
+                    ->update(db_prefix().'lead_auto_transfer_notification_whatsapp_log', [
+                        'status'     => 1,
+                        'updated_at' => date('Y-m-d H:i:s')
+                    ]);
+
+                if ($this->db->trans_status() === FALSE) {
+                    throw new Exception('DB update failed for ID: '.$row->id);
+                }
+
+                $this->db->trans_commit();
+                $success++;
+
+            } catch (Exception $e) {
+
+                $this->db->trans_rollback();
+
+                $this->db->where('id', $row->id)
+                    ->update(db_prefix().'lead_auto_transfer_notification_whatsapp_log', [
+                        'status'     => 0,
+                        'updated_at' => date('Y-m-d H:i:s'),
+                        'cron_time' => date('Y-m-d H:i:s')
+                    ]);
+
+                log_message('error','WhatsApp Notification Error : '.$e->getMessage());
+                $failed++;
+            }
+        }
+
+        return $this->output
+            ->set_content_type('application/json')
+            ->set_output(json_encode([
+                'status'  => true,
+                'message' => 'WhatsApp notification process completed',
+                'summary' => [
+                    'total'   => $total,
+                    'success' => $success,
+                    'failed'  => $failed
+                ]
+            ]));
+
+    } catch (Exception $e) {
+
+        log_message('error','Cron WhatsApp Transfer Error : '.$e->getMessage());
+
+        return $this->output
+            ->set_status_header(500)
+            ->set_content_type('application/json')
+            ->set_output(json_encode([
+                'status'  => false,
+                'message' => 'Server Error',
+                'error'   => $e->getMessage()
+            ]));
+    }
+}
+
+function google_qualified_leads($type, $start = 0)
+{
+    $this->db->select("DATE_FORMAT(created_at, '%m/%d/%Y %l:%i:%s %p') AS formatted_date, email, phonenumber");
+    $this->db->from(db_prefix().'leads_google_performnce_logs');
+    $this->db->where('source', '39');
+    $this->db->where('type', $type);
+    $this->db->limit(100, $start); // limit, offset
+
+    $query = $this->db->get();
+
+    // Debug query (optional)
+    // echo $this->db->last_query();
+
+    return $query->result_array();
+}
+
+
 }

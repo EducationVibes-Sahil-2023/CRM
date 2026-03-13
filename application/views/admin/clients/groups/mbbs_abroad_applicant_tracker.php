@@ -1992,7 +1992,7 @@ if (empty($staff_list[get_staff_user_id()]["post_sales"]) && !is_admin()) {
     var activity_url = "";
     var check_offer_letter = true;
     var fee_status = "<?= !empty($short_list["fee_status"]) ? $short_list["fee_status"] : 0 ?> ";
-    let client_type = <?= (int)$client_infomation->client_type ?>;
+    // let client_type = <?= (int)$client_infomation->client_type ?>;
     let lastEmailDateHtml_leg = `<?php echo addslashes(getLastEmailWhatsappDate("email", LEGALIZATION_TEMPLATE_ID, $client_id)) ?>`;
     let lastEmailDateHtml_invitation = `<?php echo addslashes(getLastEmailWhatsappDate("email", BANK_STATEMENT_TEMPLATE_ID, $client_id)) ?>`;
 

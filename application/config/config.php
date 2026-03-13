@@ -589,7 +589,10 @@ $config['csrf_exclude_uris'] = array_merge($config['csrf_exclude_uris'], array('
 $config['csrf_exclude_uris'] = array_merge($config['csrf_exclude_uris'], array('external/re_assign_cron'));
 $config['csrf_exclude_uris'] = array_merge($config['csrf_exclude_uris'], array('facebook_leads_integration/linkedin_webhook'));
 $config['csrf_exclude_uris'] = array_merge($config['csrf_exclude_uris'], array('facebook_leads_integration/webhook_shikshalogy_google_form'));
-
+$config['csrf_exclude_uris'] = array_merge($config['csrf_exclude_uris'], array('external/update_excelData'));
+$config['csrf_exclude_uris'] = array_merge($config['csrf_exclude_uris'], array('external/transfer_whatsapp_notification'));
+$config['csrf_exclude_uris'] = array_merge($config['csrf_exclude_uris'], array('external/tbl_call_sync'));
+$config['csrf_exclude_uris'] = array_merge($config['csrf_exclude_uris'], array('external/google_qualified_leads'));
 
 $config['log_threshold'] = 3; // Logs error messages and debug information
 $db['default']['save_queries'] = TRUE;

@@ -55,6 +55,16 @@ function app_init_admin_sidebar_menu_items()
                 // ]);
         }
 
+       if (has_permission('auto_transfer', '', 'view') && is_admin()) {
+                $CI->app_menu->add_sidebar_menu_item('auto_transfer', [
+                        'slug'     => 'Leads/auto_transfer',
+                        'icon'     => 'fa fa-user-times',
+                        'name'     => "Lead Transfer",
+                        'href'     => admin_url('leads/auto_transfer'),
+                        'position' => 1,
+                ]);
+        }
+
 
         if (
                 has_permission('customers', '', 'view')

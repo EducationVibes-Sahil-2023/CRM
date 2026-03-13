@@ -1075,7 +1075,16 @@ $has_permission_delete = has_permission('knowledge_base', '', 'delete');
 
                         <?php if (is_admin()) { ?>
                             if (fileType === "folder") {
-                                editHtml = `<i class='fa fa-edit show-hover' data-toggle="modal" data-target="#create_dir" onclick="edit_folder(${id},'${fileName}','${groupId}')"></i>`;
+                          const encodedPath = btoa(fileName.toLowerCase().replace(/ /g,'_'));
+
+// editHtml = `<i class='fa fa-edit show-hover' data-toggle="modal" data-target="#create_dir"
+// onclick="edit_folder(${id},'${fileName}','${groupId}')"></i>
+
+// <i class='fa fa-download show-hover'
+// onclick="downloadFolder('${encodedPath}')"></i>`;
+
+editHtml = `<i class='fa fa-edit show-hover' data-toggle="modal" data-target="#create_dir"
+onclick="edit_folder(${id},'${fileName}','${groupId}')"></i>`;
                             }
                             editHtml += `&nbsp;<i class='fa fa-trash text-danger show-hover' onclick="delete_(${id},'${file_type}')"></i>`;
                         <?php } ?>
@@ -1187,6 +1196,16 @@ $has_permission_delete = has_permission('knowledge_base', '', 'delete');
     }
 
 
+ function downloadFolder(folderName) {
+        if (!folderName) {
+            console.warn("Invalid folder name");
+            return;
+        }
+        const downloadUrl = `<?php echo admin_url("Knowledge_base/download_folder"); ?>?folder=${encodeURIComponent(folderName)}`;
+        window.open(downloadUrl, "_blank");
+    }
+    
+    
     function refresh() {
         setTimeout(() => {
             $('.dx-toolbar-items-container .dx-filemanager-i-refresh').trigger('dxclick');
