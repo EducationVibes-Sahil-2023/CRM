@@ -39,7 +39,7 @@ class Api_Model extends CI_Model
 
                         return  $response = array(
                             "status" => 0,
-                            "message" => "Incorrect password."
+                            "message" => "Authentication failed. Please verify your credentials."
                         );
                     }
                 } else {
@@ -53,7 +53,7 @@ class Api_Model extends CI_Model
 
                     return  $response = array(
                         "status" => 0,
-                        "message" => "Non Existing User."
+                        "message" => "No account found with the provided details."
                     );
                 }
 
@@ -66,7 +66,7 @@ class Api_Model extends CI_Model
 
                     return  $response = array(
                         "status" => 0,
-                        "message" => "User is Inactive."
+                        "message" => "Account access denied. The user account is inactive."
                     );
                 }
 
@@ -111,7 +111,7 @@ class Api_Model extends CI_Model
             } else {
                 $response = array(
                     "status" => 0,
-                    "message" => "Invalid user."
+                    "message" => "Authentication failed. Invalid user."
                 );
             }
         } catch (Exception $e) {

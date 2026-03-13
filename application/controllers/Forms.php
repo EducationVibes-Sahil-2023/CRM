@@ -106,6 +106,20 @@ foreach ($result as $row) {
             $data['form_fields'] = [];
         }
         
+        
+    if($key == "834681a14c5d64a07d1fabcd11a5f9a8"){
+        /* Get JSON body */
+$json = file_get_contents('php://input');
+$json_data = json_decode($json, true);
+
+/* Convert JSON to POST */
+if (is_array($json_data)) {
+    $_POST = array_merge($_POST, $json_data);
+}
+
+}
+
+        
           //  if($key == "c04d2a1fda6448b12c7fe55c5f2184f2"){
         //       $this->db->insert(db_prefix() . 'facebook_webhook_data', ['data' => json_encode($post_data, JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES),"form_id"=>"whatsapp"]);
         //         }
@@ -288,6 +302,16 @@ foreach ($result as $row) {
                     // If staff exists and is active, update the responsible staff ID
                     if (!empty($check_staff)) {
                         $form->responsible = $check_staff->staffid;
+                    }
+                }
+                
+                
+                if($key == "834681a14c5d64a07d1fabcd11a5f9a8"){
+                    
+                      $auto_assign = array_filter(explode(",", $form->auto_assign));
+                    $assign_staff_id = $this->leads_model->automatic_assign_staff('', '', '', '', $auto_assign);
+                     if (!empty($assign_staff_id[0]["staffid"])) {
+                        $form->responsible = $assign_staff_id[0]["staffid"];
                     }
                 }
 
@@ -711,6 +735,15 @@ foreach ($result as $row) {
                                         ]);
                                     }
                                 }
+                                
+                                $updateStatus_dup = [];
+                                
+                                              $updateStatus_dup['upcomming_date'] = date('Y-m-d H:i:s');
+$updateStatus_dup['upcomming_count'] = ($duplicateLead->upcomming_count ?? 1) + 1;
+                            $this->db->where('id', $duplicateLead->id);
+                            $this->db->update(db_prefix() . 'leads', $updateStatus_dup);
+                            
+                            
                                 if ($form->responsible == $duplicateLead->assigned) {
                                     echo json_encode(['success' => true, 'message' => "Lead Transfer Request Generate successfully"]);
                                     die;
@@ -850,6 +883,10 @@ foreach ($result as $row) {
                                     ]));
                                 }
                             }
+                            
+                            
+                       $updateStatus['upcomming_date'] = date('Y-m-d H:i:s');
+$updateStatus['upcomming_count'] = ($duplicateLead->upcomming_count ?? 1) + 1;
                             $this->db->where('id', $duplicateLead->id);
                             $this->db->update(db_prefix() . 'leads', $updateStatus);
 

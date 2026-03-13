@@ -24,7 +24,16 @@ class Leads extends AdminController
 
 
     /* List all leads */
-
+public function test()
+{
+//     error_reporting(E_ALL);
+// ini_set('display_errors', 1);
+// ini_set('display_startup_errors', 1);
+//     update_lead_performace_feedback(448812);
+//     echo "okkkkkk";
+    
+//     die;
+}
     public function index($id = '')
 
     {
@@ -94,6 +103,17 @@ class Leads extends AdminController
         $this->load->view('admin/leads/manage_leads', $data);
     }
 
+   public function auto_transfer()
+    {
+        $data['title']    = "Lead Transfer";
+        $this->load->view('admin/leads/auto_transfer', $data);
+    }
+
+    public function auto_transfer_table($table_leads)
+    {
+        $data =   $this->app->get_table_data($table_leads);
+        echo json_encode($data);
+    }
     public function leads_new($id = '')
     {
         close_setup_menu();
@@ -3146,6 +3166,10 @@ class Leads extends AdminController
             $tags                  = $this->input->post('tags');
 
             $last_contact          = $this->input->post('last_contact');
+            
+            $reference_name          = $this->input->post('reference_name');
+            $reference_name = preg_replace('/\s+/', ' ', trim($reference_name));
+
 
             $lost                  = $this->input->post('lost');
 
@@ -3154,6 +3178,8 @@ class Leads extends AdminController
             $has_permission_mass_assign = has_permission('leads', '', 'mass_assign');
             $notifiedUsers = [];
             $re_assign_array = [];
+            
+       
 
             if (!empty($this->input->post('mass_assign')) && !empty($this->input->post('assigned')) && !empty($ids)) {
                 if ($has_permission_mass_assign) {
@@ -3179,6 +3205,9 @@ class Leads extends AdminController
                                     }
                                     if (!empty($this->input->post('leadtype'))) {
                                         $lead_data[$key]["type"] = $this->input->post('leadtype');
+                                    }
+                                     if (!empty($this->input->post('reference_name'))) {
+                                        $lead_data[$key]["reference_name"] = $this->input->post('reference_name');
                                     }
                                 }
                             }
@@ -3279,7 +3308,7 @@ class Leads extends AdminController
 
 
 
-                        if ($status || $source || $assigned || $last_contact || $visibility || $lead_type) {
+                        if ($status || $source || $assigned || $last_contact || $visibility || $lead_type || $reference_name) {
 
                             $update = [];
 
@@ -3339,6 +3368,11 @@ class Leads extends AdminController
 
                                 $update['type'] = $lead_type;
                             }
+                            
+
+if ($reference_name !== '') {
+    $update['reference_name'] = $reference_name;
+}
 
                             if ($assigned) {
 
@@ -3432,12 +3466,15 @@ class Leads extends AdminController
                                     $update['is_public'] = 0;
                                 }
                             }
+                            
+                      
 
                             if (count($update) > 0) {
 
                                 $this->db->where('id', $id);
 
                                 $this->db->update(db_prefix() . 'leads', $update);
+                      
                             }
                         }
 
@@ -3452,6 +3489,8 @@ class Leads extends AdminController
                         }
                     }
                 }
+                           echo json_encode(array("status" => 1, "message" => "Lead update successfully."));
+                        die;
             }
         }
 

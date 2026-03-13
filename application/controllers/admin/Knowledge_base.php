@@ -156,6 +156,47 @@ class Knowledge_base extends AdminController
         $data['knowledge_group']     = $this->knowledge_base_group_model->get_knowledge_groups('', ['status' => 1]);
         $this->load->view('admin/knowledge_base/create_knowledge_base', $data);
     }
+    
+public function download_folder()
+{
+    if (!isset($_GET['folder'])) {
+        show_error('Folder parameter missing');
+    }
+
+    // decode folder
+    $folder_name = base64_decode($_GET['folder']);
+    $folder_name = str_replace(['..'], '', $folder_name);
+
+    $basePath = FCPATH . "uploads/knowledge_base/fees_structures";
+    $folderPath = $basePath;
+
+    if (!is_dir($folderPath)) {
+        show_error('Folder not found');
+    }
+
+    $zipName = basename($folder_name) . ".zip";
+    $zipPath = sys_get_temp_dir() . "/" . $zipName;
+
+    // create zip using server command (VERY FAST)
+    $command = "cd " . escapeshellarg(dirname($folderPath)) .
+               " && zip -r " . escapeshellarg($zipPath) .
+               " " . escapeshellarg(basename($folderPath));
+
+    exec($command);
+
+    if (!file_exists($zipPath)) {
+        show_error("Zip creation failed");
+    }
+
+    header('Content-Type: application/zip');
+    header('Content-Disposition: attachment; filename="'.$zipName.'"');
+    header('Content-Length: ' . filesize($zipPath));
+
+    readfile($zipPath);
+
+    unlink($zipPath);
+    exit;
+}
 
     public function manage_knowledge_groups()
     {
