@@ -7779,6 +7779,72 @@ function calculate_call_duration_new($params = false, $max_status = 0)
     $sql .= "SELECT   SUM(IF(call_status IN ('answered', 'status_unknown'), IFNULL(duration, 0), 0)) AS total_call_duration,adjusted_call_start,
     COUNT(DISTINCT CONCAT(calls.contact, '-', adjusted_call_start)) AS update_count FROM " . db_prefix() . "leads l ";
 
+ if (
+    isset($params['time_condition'], $params['time_minutes']) &&
+    $params['time_condition'] !== '' &&
+    is_numeric($params['time_minutes'])
+) {
+
+    $condition = $params['time_condition'];
+    $minutes   = (int)$params['time_minutes'];
+
+    // Allow only safe operators
+    if (!in_array($condition, ['>', '<', '=', '>=', '<='])) {
+        $condition = '>';
+    }
+
+    // Required joins
+    $sql .= ' JOIN ' . db_prefix() . 'staff ON ' . db_prefix() . 'staff.staffid = l.assigned ';
+    $sql .= ' JOIN ' . db_prefix() . 'staff_department 
+              ON ' . db_prefix() . 'staff_department.id = ' . db_prefix() . 'staff.department ';
+
+    $sql .= " AND (
+        TIMESTAMPDIFF(
+            SECOND,
+
+            CASE 
+                WHEN DAYNAME(l.dateassigned) = 'Sunday'
+                THEN CONCAT(
+                    DATE_ADD(DATE(l.dateassigned), INTERVAL 1 DAY),
+                    ' ',
+                    COALESCE(" . db_prefix() . "staff_department.office_start_time,'10:00:00')
+                )
+
+                WHEN TIME(l.dateassigned) >
+                    COALESCE(" . db_prefix() . "staff_department.office_end_time,'20:00:00')
+
+                THEN CONCAT(
+                    DATE_ADD(DATE(l.dateassigned), INTERVAL 1 DAY),
+                    ' ',
+                    COALESCE(" . db_prefix() . "staff_department.office_start_time,'10:00:00')
+                )
+
+                WHEN TIME(l.dateassigned) <
+                    COALESCE(" . db_prefix() . "staff_department.office_start_time,'10:00:00')
+
+                THEN CONCAT(
+                    DATE(l.dateassigned),
+                    ' ',
+                    COALESCE(" . db_prefix() . "staff_department.office_start_time,'10:00:00')
+                )
+
+                ELSE l.dateassigned
+            END,
+
+            FROM_UNIXTIME(
+                (
+                    SELECT MIN(call_start + 19800)
+                    FROM " . db_prefix() . "calls_activity_logs c
+                    WHERE c.contact = l.phonenumber
+                    AND (c.call_start + 19800) > UNIX_TIMESTAMP(l.dateassigned)
+                    AND c.staffid = l.assigned
+                )
+            )
+        ) / 60
+    ) {$condition} {$minutes} ";
+}
+
+
     if (!empty($params['followup_to_date'])) {
         $check_today = false;
         $sql .= ' join tblreminders  on  tblreminders.rel_id = l.id ';
@@ -7786,6 +7852,8 @@ function calculate_call_duration_new($params = false, $max_status = 0)
     $sql .= "JOIN " . db_prefix() . "calls_activity_logs calls ON (calls.contact IN (REPLACE(TRIM(REPLACE(l.phonenumber, '+91', '')),
         ' ',
         '') ) AND l.assigned = calls.staffid ";
+        
+        
 
     if (!empty($params['assigned'])) {
         $check_today = false;
@@ -7896,6 +7964,9 @@ function calculate_call_duration_new($params = false, $max_status = 0)
         $assign_to_date = $params['assign_to_date'];
         $sql .= ' AND DATE(dateassigned) BETWEEN "' . $CI->db->escape_str($assign_from_date) . '" AND "' . $CI->db->escape_str($assign_to_date) . '"';
     }
+    
+    
+    
 
 
 
@@ -7948,6 +8019,10 @@ function calculate_call_duration_new($params = false, $max_status = 0)
 
 
     $sql .= " GROUP BY calls.contact" . $grup_by . " " . $having . $sql_add;
+//     if(is_admin())
+// {
+//     echo $sql; die;
+// }
 
     // . ") AS subquery";
 
@@ -8168,9 +8243,24 @@ function get_leads_summary_filter_neww($params)
     }
 
     // Base query
-    $sql = 'SELECT IFNULL(' . db_prefix() . 'leads_status.id, "unknown") AS status_id, COUNT(DISTINCT ' . $tblleads . '.id) AS total ';
+    // $sql = 'SELECT IFNULL(' . db_prefix() . 'leads_status.id, "unknown") AS status_id, COUNT(DISTINCT ' . $tblleads . '.id) AS total ';
+    // if(is_admin())
+    // {
+          $sql = 'SELECT  tblleads.id,
+        tblleads.status,
+        COUNT(tblcalls_activity_logs.id) AS call_count ';
+    // }
     $sql .= 'FROM ' . $tblleads . ' ';
     $sql .= 'LEFT JOIN ' . db_prefix() . 'leads_status ON ' . $tblleads . '.status = ' . db_prefix() . 'leads_status.id ';
+    if (!empty($params['up_to_date']) || (isset($params['update_count_min']) && $params['update_count_min'] != '')) {
+        
+         $sql .= ' JOIN ' . db_prefix() . 'calls_activity_logs ON  ' . db_prefix() . 'calls_activity_logs.contact = ' . $tblleads . '.phonenumber AND ' . db_prefix() . 'calls_activity_logs.staffid = ' . $tblleads . '.assigned ';
+    }
+    else{
+     $sql .= 'LEFT JOIN ' . db_prefix() . 'calls_activity_logs ON  ' . db_prefix() . 'calls_activity_logs.contact = ' . $tblleads . '.phonenumber AND ' . db_prefix() . 'calls_activity_logs.staffid = ' . $tblleads . '.assigned ';
+    }
+     
+    
 
 
     // Conditional joins based on parameters
@@ -8189,8 +8279,18 @@ function get_leads_summary_filter_neww($params)
     }
 
 
-    if (!empty($params['location']) || !empty($params['department'])) {
+    // if (!empty($params['location']) || !empty($params['department'])) {
+    //     $sql .= 'JOIN ' . db_prefix() . 'staff ON ' . db_prefix() . 'staff.staffid = ' . $tblleads . '.assigned ';
+    // }
+    
+      if (!empty($params['location']) || !empty($params['department'])) {
         $sql .= 'JOIN ' . db_prefix() . 'staff ON ' . db_prefix() . 'staff.staffid = ' . $tblleads . '.assigned ';
+    } else if ((isset($params['time_condition']) && $params['time_condition'] != '') && (isset($params['time_minutes']) && $params['time_minutes'] >= 0)) {
+        $sql .= 'JOIN ' . db_prefix() . 'staff ON ' . db_prefix() . 'staff.staffid = ' . $tblleads . '.assigned ';
+    }
+
+    if ((isset($params['time_condition']) && $params['time_condition'] != '') && (isset($params['time_minutes']) && $params['time_minutes'] >= 0)) {
+        $sql .= ' JOIN  ' . db_prefix() . 'staff_department on ' . db_prefix() . 'staff_department.id = ' . db_prefix() . 'staff.department ';
     }
 
     // WHERE clause
@@ -8239,10 +8339,21 @@ function get_leads_summary_filter_neww($params)
     if (!empty($params['last_update_date'])) {
         $conditions[] = 'DATE(' . $tblleads . '.lastupdate_date) <= "' . $CI->db->escape_str($params['last_update_date']) . '"';
     }
+    
+    $having_query ="";
 
-    if (isset($params['update_count_min']) && $params['update_count_min'] != '') {
-        $conditions[] =  $tblleads . '.update_count Between "' . $CI->db->escape_str($params['update_count_min']) . '" AND "' . $CI->db->escape_str($params['update_count_max']) . '"';
-    }
+// if(is_admin()){
+     if (isset($params['update_count_min']) && $params['update_count_min'] != '') {
+   $having_query = ' having call_count BETWEEN "' . $CI->db->escape_str($params['update_count_min']) . '" AND "' . $CI->db->escape_str($params['update_count_max']) . '" ';
+     }
+// }
+// else{
+//      if (isset($params['update_count_min']) && $params['update_count_min'] != '') {
+//         $conditions[] =  $tblleads . '.update_count Between "' . $CI->db->escape_str($params['update_count_min']) . '" AND "' . $CI->db->escape_str($params['update_count_max']) . '"';
+//     }
+// }
+   
+    
 
 
     if (!empty($params["utm_status"]) && $params["utm_status"] == 1) {
@@ -8296,67 +8407,178 @@ function get_leads_summary_filter_neww($params)
 
         $conditions[] = " " . $tblleads . ".reference_name IN (" . implode(',', $escaped_reference_name) . ")";
     }
+    
+    //     if(is_admin())
+    // {
+//         ini_set('display_errors', 1);
+// ini_set('display_startup_errors', 1);
+// error_reporting(E_ALL);
+        if (!empty($params['up_to_date'])) {
+                        $up_to_date = $params['up_to_date'];
+                        $up_from_date   = $params['up_from_date'];
+                        $up_from_date = $CI->db->escape_str($up_from_date); // Start date
+                        $up_to_date = $CI->db->escape_str($up_to_date);     // End date
+                        
+                        $conditions[] =  " ".db_prefix(). "calls_activity_logs.adjusted_call_start BETWEEN '{$up_from_date}' AND '{$up_to_date}' ";
+    
+        }
+    // }
 
+    
+    
 
-    if (!empty($params['up_to_date'])) {
-        $up_to_date = $params['up_to_date'];
-        $up_from_date   = $params['up_from_date'];
+     if ((isset($params['time_condition']) && $params['time_condition'] != '') && (isset($params['time_minutes']) && $params['time_minutes'] >= 0)) {
 
-        $up_from_date = $CI->db->escape_str($up_from_date); // Start date
-        $up_to_date = $CI->db->escape_str($up_to_date);     // End date
+        $condition = $params['time_condition'];
+        $minutes   = $params['time_minutes'];
 
-
-        $where_c = "";
-        $join_type = "";
-        if ($params['update_count_min']  && $params['update_count_min'] != '') {
-
-            $min = isset($params['update_count_min']) ? $params['update_count_min'] : 0;
-            $max = isset($params['update_count_max']) ? $params['update_count_max'] : 0;
-            $where_c = " AND ifnull(calls.update_count,0) between {$min} AND {$max} ";
-
-
-            if ($min == 0) {
-                $join_type = "RIGHT";
-            }
+          if (!in_array($condition, ['>', '<', '=', '>=', '<='])) {
+            $condition = '>';
         }
 
-        if (!empty($params['assigned'])) {
-            $where_c .= " AND calls.staffid IN (" . implode(',', $params['assigned']) . ") ";
+        $minutes = (int)$minutes;
+        if (!empty($condition) && is_numeric($minutes)) {
+            $conditions[] = " (
+        TIMESTAMPDIFF(
+        SECOND,
+
+        CASE 
+        WHEN DAYNAME(" . db_prefix() . "leads.dateassigned) = 'Sunday'
+        THEN CONCAT(
+        DATE_ADD(DATE(" . db_prefix() . "leads.dateassigned), INTERVAL 1 DAY),
+        ' ',
+        COALESCE(" . db_prefix() . "staff_department.office_start_time,'10:00:00')
+        )
+
+        WHEN TIME(" . db_prefix() . "leads.dateassigned) >
+        COALESCE(" . db_prefix() . "staff_department.office_end_time,'20:00:00')
+
+        THEN CONCAT(
+        DATE_ADD(DATE(" . db_prefix() . "leads.dateassigned), INTERVAL 1 DAY),
+        ' ',
+        COALESCE(" . db_prefix() . "staff_department.office_start_time,'10:00:00')
+        )
+
+        WHEN TIME(" . db_prefix() . "leads.dateassigned) <
+        COALESCE(" . db_prefix() . "staff_department.office_start_time,'10:00:00')
+
+        THEN CONCAT(
+        DATE(" . db_prefix() . "leads.dateassigned),
+        ' ',
+        COALESCE(" . db_prefix() . "staff_department.office_start_time,'10:00:00')
+        )
+
+        ELSE " . db_prefix() . "leads.dateassigned
+        END,
+
+        FROM_UNIXTIME(
+        (
+        SELECT MIN(call_start + 19800)
+        FROM " . db_prefix() . "calls_activity_logs c
+        WHERE c.contact = " . db_prefix() . "leads.phonenumber
+        AND (c.call_start + 19800) > UNIX_TIMESTAMP(" . db_prefix() . "leads.dateassigned)
+        AND c.staffid = " . db_prefix() . "leads.assigned
+        )
+        )
+
+        )/60
+        ) {$condition} {$minutes}";
         }
-
-        $where_c .= " AND calls.staffid = leads.assigned";
-
-        // SQL Queries
-        $sql_p1 = " SELECT id 
-    FROM  ( SELECT leads.id FROM {$tblleads} leads  {$join_type} JOIN " . db_prefix() . "calls_activity_logs calls ON (calls.contact IN (leads.phonenumber)  AND DATE(calls.adjusted_call_start) BETWEEN '{$up_from_date}' AND '{$up_to_date}'  {$where_c}) WHERE 1=1
-    {$where_c} ";
-
-        $sql_p1 .= " UNION ALL ";
-
-        $sql_p1 .= "SELECT leads.id FROM {$tblleads} leads  {$join_type} JOIN " . db_prefix() . "calls_activity_logs calls ON ( calls.contact IN (leads.alternative_phonenumber) AND DATE(calls.adjusted_call_start) BETWEEN '{$up_from_date}' AND '{$up_to_date}'  {$where_c}) WHERE 1=1
-     AND '{$up_to_date}' {$where_c} ";
-
-        $sql_p1 .= " ) AS combined_result ";
-
-        $conditions[] = "  {$tblleads}.id IN ($sql_p1) ";
     }
+    
+
+
+    // if (!empty($params['up_to_date'])) {
+    //     $up_to_date = $params['up_to_date'];
+    //     $up_from_date   = $params['up_from_date'];
+
+    //     $up_from_date = $CI->db->escape_str($up_from_date); // Start date
+    //     $up_to_date = $CI->db->escape_str($up_to_date);     // End date
+
+
+    //     $where_c = "";
+    //     $join_type = "";
+    //     if ($params['update_count_min']  && $params['update_count_min'] != '') {
+
+    //         $min = isset($params['update_count_min']) ? $params['update_count_min'] : 0;
+    //         $max = isset($params['update_count_max']) ? $params['update_count_max'] : 0;
+    //         $where_c = " AND ifnull(calls.update_count,0) between {$min} AND {$max} ";
+
+
+    //         if ($min == 0) {
+    //             $join_type = "RIGHT";
+    //         }
+    //     }
+
+    //     if (!empty($params['assigned'])) {
+    //         $where_c .= " AND calls.staffid IN (" . implode(',', $params['assigned']) . ") ";
+    //     }
+
+    //     $where_c .= " AND calls.staffid = leads.assigned";
+
+    //     // SQL Queries
+    //     $sql_p1 = " SELECT id 
+    // FROM  ( SELECT leads.id FROM {$tblleads} leads  {$join_type} JOIN " . db_prefix() . "calls_activity_logs calls ON (calls.contact IN (leads.phonenumber)  AND DATE(calls.adjusted_call_start) BETWEEN '{$up_from_date}' AND '{$up_to_date}'  {$where_c}) WHERE 1=1
+    // {$where_c} ";
+
+    //     $sql_p1 .= " UNION ALL ";
+
+    //     $sql_p1 .= "SELECT leads.id FROM {$tblleads} leads  {$join_type} JOIN " . db_prefix() . "calls_activity_logs calls ON ( calls.contact IN (leads.alternative_phonenumber) AND DATE(calls.adjusted_call_start) BETWEEN '{$up_from_date}' AND '{$up_to_date}'  {$where_c}) WHERE 1=1
+    //  AND '{$up_to_date}' {$where_c} ";
+
+    //     $sql_p1 .= " ) AS combined_result ";
+
+    //     $conditions[] = "  {$tblleads}.id IN ($sql_p1) ";
+    // }
 
     // Apply conditions to WHERE clause
     if (!empty($conditions)) {
         $sql .= 'WHERE ' . implode(' AND ', $conditions) . ' ';
     }
 
-    // GROUP BY and ORDER BY
-    $sql .= 'GROUP BY ' . $tblleads . '.status ';
+// if(is_admin())
+// {
+    $sql .= 'GROUP BY ' . $tblleads . '.id '.$having_query.' ';
+// } else{
+//     // GROUP BY and ORDER BY
+//     $sql .= 'GROUP BY ' . $tblleads . '.status ';
+    
+// }
+    
     $sql .= 'ORDER BY ' . db_prefix() . 'leads_status.statusorder';
+    
+    // if(is_admin())
+    // {
+    $oldSql = " ( ".$sql." ) UNION ALL ( ".str_replace('phonenumber','alternative_phonenumber',$sql)." ) " ;
+    $sql ="SELECT 
+    IFNULL(tblleads_status.id, 'unknown') AS status_id,
+    COUNT(*) AS total FROM ( 
+     SELECT 
+        combined.id,
+        combined.status,
+        SUM(combined.call_count) AS total_calls
+    FROM (
+    $oldSql
+    ) AS combined
 
+    GROUP BY combined.id
+    ) AS lead_data
+
+LEFT JOIN tblleads_status 
+    ON lead_data.status = tblleads_status.id
+
+GROUP BY lead_data.status
+";
+    // }
+
+//   if (is_admin()) {
+//         echo $sql;
+//         die;
+//     }
     // Execute query
     $result = $CI->db->query($sql)->result();
 
-    if (is_admin()) {
-        // echo $sql;
-        // die;
-    }
+  
     // Prepare results
     if (!empty($result)) {
         $result = array_column($result, "total", "status_id");

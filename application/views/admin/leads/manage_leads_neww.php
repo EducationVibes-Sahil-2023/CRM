@@ -809,10 +809,10 @@ $reference_name = $this->db
                            $table_data = hooks()->apply_filters('leads_table_columns', $table_data);
                            render_datatable(
                               $table_data,
-                              'leads',
+                              'leads-new',
                               array('customizable-table sticky-header'),
                               array(
-                                 'id' => 'table-leads',
+                                 'id' => 'table-leads-new',
                                  'data-last-order-identifier' => 'leads',
                                  'data-default-order' => get_table_last_order('leads'),
                               )
@@ -1031,7 +1031,7 @@ $reference_name = $this->db
          <input type="text" class="form-control datepicker set_disabled_date" onchange="set_disabled_date(this.value)" name="last_update_date" id="last_update_date" placeholder="Last Updated Date" autocomplete="off">
       </li>
     <li class="row">
-   <div class="leads-filter-column col-md-12 hide " style="margin-bottom:20px;">
+   <div class="leads-filter-column col-md-12 hide" style="margin-bottom:20px;">
       
       <label>Time Filter</label>
 
@@ -1300,7 +1300,7 @@ $reference_name = $this->db
    function periodFilter() {
       return new Promise((resolve, reject) => {
          try {
-            table_leads.DataTable().page(0).draw(false).ajax.reload(null, false).on('draw.dt', function() {
+            table_leads_new.DataTable().page(0).draw(false).ajax.reload(null, false).on('draw.dt', function() {
                hide_loader("apply_filter");
                $("#leadSum").innerHTML = "";
                $("#leadSum").html('')
@@ -1449,16 +1449,16 @@ $reference_name = $this->db
    function set_datatable_string() {
 
       setTimeout(function() {
-         var table_leads = $('table.table-leads').DataTable();
+         var table_leads_new = $('table.table-leads-new').DataTable();
 
          // Check if there is data to update the text
-         if (table_leads.page.info().recordsTotal === 0) {
+         if (table_leads_new.page.info().recordsTotal === 0) {
             // Change the 'Showing 0 to 0' text dynamically
             $('div.dataTables_info').text('Showing 0 to 0');
          } else {
 
             // For cases where data exists, update the text
-            $('div.dataTables_info').text('Showing ' + (table_leads.page.info().start + 1) + ' to ' + table_leads.page.info().end);
+            $('div.dataTables_info').text('Showing ' + (table_leads_new.page.info().start + 1) + ' to ' + table_leads_new.page.info().end);
 
             // Once data is set, clear the interval
             // clearInterval(dataCheckInterval);
@@ -1791,7 +1791,7 @@ $reference_name = $this->db
             endDate: moment("2023-01-01"),
 
             minDate: moment("2023-01-01"), // 🔥 Start from Jan 1, 2023
-            maxDate: moment(),
+           maxDate: moment().add(15, 'days'),
 
 
             opens: "left",

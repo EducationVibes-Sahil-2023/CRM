@@ -105,6 +105,28 @@ class Fees_model extends App_Model
             ->get(db_prefix() . 'fees_structure_data')  // 👈 your table name
             ->row();
     }
+    
+    public function checkRecord_partner($segment_id, $country_id, $university_id)
+    {
+        return $this->db->where('segment_id', $segment_id)
+            ->where('country_id', $country_id)
+            ->where('university_id', $university_id)
+            // ->where('region_id', $region_id)
+            ->get(db_prefix() . 'fees_structure_data_partner')  // 👈 your table name
+            ->row();
+    }
+    
+        public function updateRecord_partner($id, $data)
+    {
+        return $this->db->where('id', $id)
+            ->update('fees_structure_data_partner', $data);
+    }
+    
+      public function insertRecord_partner($data)
+    {
+        return $this->db->insert(db_prefix() . 'fees_structure_data_partner', $data);
+    }
+
 
     public function updateRecord($id, $data)
     {
@@ -130,6 +152,21 @@ class Fees_model extends App_Model
 
         return $this->db->select("*,CONCAT(university_name,' (',region_name,')')university_name_reagion")
             ->get(db_prefix() . 'fees_structure_data')
+            ->result_array();
+    }
+    
+    
+      public function getFeesStructure_partner($id = "")
+    {
+        if (!empty($id)) {
+            return $this->db->select("*,university_name university_name_reagion")
+                ->where('id', $id)
+                ->get(db_prefix() . 'fees_structure_data_partner')
+                ->row_array();
+        }
+
+        return $this->db->select("*,university_name university_name_reagion")
+            ->get(db_prefix() . 'fees_structure_data_partner')
             ->result_array();
     }
 

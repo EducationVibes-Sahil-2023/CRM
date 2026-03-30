@@ -103,6 +103,48 @@ public function test()
         $this->load->view('admin/leads/manage_leads', $data);
     }
 
+
+  public function index_new($id = '')
+
+    {
+//         error_reporting(E_ALL);
+// error_reporting(-1);
+// ini_set('error_reporting', E_ALL);
+
+        close_setup_menu();
+
+
+
+        if (!is_staff_member()) {
+
+            access_denied('Leads');
+        }
+
+
+
+        $data['switch_kanban'] = true;
+        $data['staff'] = $this->staff_model->get('', ['active' => 1]);
+
+        if (is_gdpr() && get_option('gdpr_enable_consent_for_leads') == '1') {
+            $this->load->model('gdpr_model');
+            $data['consent_purposes'] = $this->gdpr_model->get_consent_purposes();
+        }
+
+
+
+        $data['statuses'] = $this->leads_model->get_status();
+        $data['degrees'] = $this->leads_model->get_customfieldsvalues('20');
+        $data['courses'] = $this->leads_model->get_customfieldsvalues('16');
+        $data['sources']  = $this->leads_model->get_source();
+        $data['type']  = $this->leads_model->get_type();
+        $data['view_form']  = $this->leads_model->view_form();
+        $data['title']    = _l('leads');
+
+
+        $data['leadid'] = $id;
+
+        $this->load->view('admin/leads/manage_leads_neww', $data);
+    }
    public function auto_transfer()
     {
         $data['title']    = "Lead Transfer";
@@ -384,14 +426,39 @@ public function test()
     public function table()
 
     {
-        $this->output->enable_profiler(TRUE);
+        // $this->output->enable_profiler(TRUE);
+        // if(is_admin())
+        // {
+        //     print_r($_GET['check']);
+        //     die;
+        // }
 
+// if(is_admin() && $_SERVER['REMOTE_ADDR']=="38.254.176.81")
+// {
+//      $this->app->get_table_data('leads_new');
+//      die;
+// }
         if (!is_staff_member()) {
 
             ajax_access_denied();
         }
 
         $this->app->get_table_data('leads');
+    }
+    
+    
+        public function table_neww()
+
+    {
+        // $this->output->enable_profiler(TRUE);
+  
+
+        if (!is_staff_member()) {
+
+            ajax_access_denied();
+        }
+
+        $this->app->get_table_data('leads_new');
     }
 
     public function lead_performance_table()
@@ -725,12 +792,48 @@ public function test()
                 ]);
 
                 $insert_ = $this->db->insert(db_prefix() . 'lead_transfer_request', $data);
+                  $transfer_lead_id = $this->db->insert_id();
                 $this->lead_transfer_notification($lead_id, 1);
+                
+              
+                 if ($transfer_lead_id) {
+                           if (!empty($type) && !empty($assigned)) {
+                    $data = array_merge($data, [
+                        "updated_by" => get_staff_user_id(),
+                        "updated_at" => date('Y-m-d H:i:s'),
+                        "status" => 1,
+                        "approved_by" => get_staff_user_id(),
+                        "approved_date" => date('Y-m-d H:i:s'),
+                    ]);
+                }
+                
+                $update_transfer = $this->db->update(db_prefix() . 'lead_transfer_request', $data, "id = " . $transfer_lead_id);
 
-                if ($insert_) {
-                    $message = "Lead transfer request submitted successfully.";
-                    $success = true;
+                $update_array = [
+                    'assigned' => $assigned,
+                    "type" => $type,
+                    "status" => 2
+                ];
+                $success = $this->leads_model->update_leads($update_array, $lead_id);
+
+                if ($success) {
+                    echo json_encode([
+                        'success' => true,
+                        'message' => 'Lead transfer request updated and approved successfully.',
+                        'lead_id' => $lead_id,
+                    ]);
+                    return;
                 } else {
+                    throw new Exception("Failed to take action on the lead transfer request.");
+                     echo json_encode([
+                        'success' => false,
+                        'message' => 'Something bad happen',
+                        'lead_id' => $lead_id,
+                    ]);
+                    return;
+                    
+                }
+                 }else {
                     throw new Exception("Failed to submit lead transfer request.");
                 }
             } else {
@@ -3209,6 +3312,8 @@ public function test()
                                      if (!empty($this->input->post('reference_name'))) {
                                         $lead_data[$key]["reference_name"] = $this->input->post('reference_name');
                                     }
+                                     $lead_data[$key]["mass_assigned_status"] = 1;
+                                    
                                 }
                             }
 

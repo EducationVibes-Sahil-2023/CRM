@@ -2756,7 +2756,16 @@ class Leads_model extends App_Model
     // }
 
 
-    function automatic_assign_staff($state_name = "", $lead_type = "", $deprtment_head_status = "", $facebook_lead = "", $staff_ids = array(), $google_source = '')
+ function getLastWorkingDay($date, $holidays) {
+        do {
+            $date = date('Y-m-d', strtotime($date . ' -1 day'));
+            $day  = date('w', strtotime($date));
+        } while ($day == 0 || in_array($date, $holidays)); // skip Sunday & holidays
+
+        return $date;
+    }
+    
+    function automatic_assign_staff($state_name = "", $lead_type = "", $deprtment_head_status = "", $facebook_lead = "", $staff_ids = array(), $google_source = '',$staff_not='')
     {
 
         //   $sql = "Select s.name,st.staffid ,CONCAT(st.firstname,' ',st.lastname) staff_name,(select dateassigned from " . db_prefix() . "leads where assigned = st.staffid order by dateassigned  desc limit 1) dateassigned,st.facebook_lead_name from  " . db_prefix() . "staff st LEFT JOIN " . db_prefix() . "states s ON (FIND_IN_SET(s.id,st.assign_state) ";
@@ -2829,6 +2838,11 @@ class Leads_model extends App_Model
         if (!empty($staff_ids)) {
             $sql .= " and st.staffid in (" . implode(",", $staff_ids) . ") ";
         }
+        
+         if (!empty($staff_not)) {
+            $sql .= " and st.staffid !='".$staff_not."' ";
+        }
+     
      
      
    if (ACTIVE_STAFF_ONLY == 1) {
@@ -2851,13 +2865,14 @@ class Leads_model extends App_Model
                  ) ";
             } else {
 
-                if ($currentTime >= '11:00') {
+                if ($currentTime >= '12:00') {
                     // Between 10 AM and 11 AM → check today only
                     $sql .= " AND (DATE(st.last_login) = '$today' 
                        OR DATE(st.last_activity) = '$today') ";
                 } else {
                     // Before 10 AM → check today OR yesterday
-                    $yesterday = date('Y-m-d', strtotime('-1 day'));
+                    // $yesterday = date('Y-m-d', strtotime('-1 day'));
+                     $yesterday = $this->getLastWorkingDay($today, $holidays);
 
                     $sql .= " AND (
                         DATE(st.last_login) IN ('$today','$yesterday')
@@ -2879,8 +2894,12 @@ class Leads_model extends App_Model
         return $this->db->query($sql)->result_array();
     }
 
+public function holiday_list()
+{
+    return holiday_list();
+}
 
-    function automatic_assign_staff_city($city_name = "", $lead_type = "", $deprtment_head_status = "", $facebook_lead = "", $staff_ids = array(), $google_source = '')
+    function automatic_assign_staff_city($city_name = "", $lead_type = "", $deprtment_head_status = "", $facebook_lead = "", $staff_ids = array(), $google_source = '',$staff_not='')
     {
 
         $sql = "Select s.name,st.staffid ,CONCAT(st.firstname,' ',st.lastname) staff_name,(select dateassigned from " . db_prefix() . "leads where assigned = st.staffid order by dateassigned  desc limit 1) dateassigned,group_concat(DISTINCT(f.name)) facebook_lead_name from  " . db_prefix() . "staff st LEFT JOIN " . db_prefix() . "cities s ON (FIND_IN_SET(s.id,st.assign_city)";
@@ -2909,6 +2928,9 @@ class Leads_model extends App_Model
         if (!empty($staff_ids)) {
             $sql .= " and st.staffid in (" . implode(",", $staff_ids) . ") ";
         }
+          if (!empty($staff_not)) {
+            $sql .= " and st.staffid !='".$staff_not."' ";
+        }
         
       if (ACTIVE_STAFF_ONLY == 1) {
 
@@ -2936,7 +2958,8 @@ class Leads_model extends App_Model
                        OR DATE(st.last_activity) = '$today') ";
                 } else {
                     // Before 10 AM → check today OR yesterday
-                    $yesterday = date('Y-m-d', strtotime('-1 day'));
+                    // $yesterday = date('Y-m-d', strtotime('-1 day'));
+                     $yesterday = $this->getLastWorkingDay($today, $holidays);
 
                     $sql .= " AND (
                         DATE(st.last_login) IN ('$today','$yesterday')
@@ -3549,7 +3572,7 @@ class Leads_model extends App_Model
         $this->db->join('tblleads_type t', 't.id = l.type');
 
         $this->db->where('l.update_count', 0);
-        $this->db->where('l.call_duration', 0);
+        // $this->db->where('l.call_duration', 0);
 
         $this->db->where('(l.lastupdate_date = "0000-00-00" OR l.lastupdate_date >= l.dateassigned)', NULL, FALSE);
         $this->db->where('c.call_start IS NULL', NULL, FALSE);
@@ -3558,6 +3581,8 @@ class Leads_model extends App_Model
 
         $this->db->where('l.status', 2);
         $this->db->where('l.auto_transfer_status!=', 2);
+         $this->db->where('l.from_form_id!=', 0);
+          $this->db->where('l.mass_assigned_status', 0);
 
         // $this->db->where_in('l.id', [447809 ,447874]);
 
@@ -3568,7 +3593,9 @@ class Leads_model extends App_Model
         $query = $this->db->get();
         $result = $query->result_array();
 echo "<pre>";
+print_r(count($result));
 print_r($result);
+
 die;
         $filtered = [];
  
@@ -3605,7 +3632,7 @@ die;
                     
                     if (!empty($lead_type)) {
                         $facebook_lead_name = !empty($res['website']) ? $res['website'] : '';
-                        $assign_staff_id = $this->automatic_assign_staff('', $lead_type, '', $facebook_lead_name);
+                        $assign_staff_id = $this->automatic_assign_staff('', $lead_type, '', $facebook_lead_name,'','',$res['assigned']);
                         $status_fb_lead_assign = false;
                         if (!empty($assign_staff_id)) {
                             foreach ($assign_staff_id as $fl) {
@@ -3629,7 +3656,7 @@ die;
                         }
                         if ($status_fb_lead_assign == false) {
                             if (!empty($lead_type)) {
-                                $assign_staff_id = $this->automatic_assign_staff('', $lead_type, 1);
+                                $assign_staff_id = $this->automatic_assign_staff('', $lead_type, 1,'','','',$res['assigned']);
                                 if (!empty($assign_staff_id[0]["staffid"])) {
                                     $staffId = $assign_staff_id[0]["staffid"];
                                 }
@@ -3641,7 +3668,7 @@ die;
             
               if (!empty($form->auto_assign)) {
                     $auto_assign = array_filter(explode(",", $form->auto_assign));
-                    $assign_staff_id = $this->automatic_assign_staff('', '', '', '', $auto_assign);
+                    $assign_staff_id = $this->automatic_assign_staff('', '', '', '', $auto_assign,'',$res['assigned']);
                     if (!empty($assign_staff_id[0]["staffid"])) {
                         $staffId = $assign_staff_id[0]["staffid"];
                     }
@@ -3667,7 +3694,7 @@ die;
                     $status_assign = false;
 
                     if (!empty($city_name) && $status_assign == false) {
-                        $assign_staff_id = $this->leads_model->automatic_assign_staff_city($city_name, $lead_type, '', '', '', $google_source);
+                        $assign_staff_id = $this->leads_model->automatic_assign_staff_city($city_name, $lead_type, '', '', '', $google_source,$res['assigned']);
                         if (!empty($assign_staff_id[0]["staffid"])) {
                             $form->responsible = $assign_staff_id[0]["staffid"];
                             $status_assign = true;
@@ -3675,13 +3702,13 @@ die;
                     }
 
                     if (!empty($state_name)  && $status_assign == false) {
-                        $assign_staff_id = $this->leads_model->automatic_assign_staff($state_name, $lead_type, '', '', '', $google_source);
+                        $assign_staff_id = $this->leads_model->automatic_assign_staff($state_name, $lead_type, '', '', '', $google_source,$res['assigned']);
                         if (!empty($assign_staff_id[0]["staffid"])) {
                             $form->responsible = $assign_staff_id[0]["staffid"];
                             $status_assign = true;
                         }
                     } else if (!empty($lead_type)  && $status_assign == false) {
-                        $assign_staff_id = $this->leads_model->automatic_assign_staff('', $lead_type, 1);
+                        $assign_staff_id = $this->leads_model->automatic_assign_staff('', $lead_type, 1,'','','',$res['assigned']);
                         if (!empty($assign_staff_id[0]["staffid"])) {
                             $staffId = $assign_staff_id[0]["staffid"];
                         }
@@ -3691,7 +3718,7 @@ die;
 
         } else {
 
-            $assign_staff_id = $this->automatic_assign_staff('', $res['type']);
+            $assign_staff_id = $this->automatic_assign_staff('', $res['type'],'','','','',$res['assigned']);
 
             if (is_array($assign_staff_id) && !empty($assign_staff_id[0]['staffid'])) {
                 $staffId = $assign_staff_id[0]['staffid'];
@@ -3775,6 +3802,735 @@ die;
             ]));
     }
 }
+
+
+
+
+    function transferLeadAssignation($lead_type,$staff_not,$locationRegion='',$leadRegion='')
+    {
+
+        $sql = "Select 
+    st.staffid,
+    CONCAT(st.firstname, ' ', st.lastname) AS staff_name,
+    last_lead.dateassigned
+    from  " . db_prefix() . "staff st ";
+       
+        $sql .= " LEFT JOIN 
+    (
+        SELECT 
+            assigned, 
+            MAX(dateassigned) AS dateassigned
+        FROM 
+            " . db_prefix() . "leads
+        GROUP BY 
+            assigned
+    ) AS last_lead 
+    ON st.staffid = last_lead.assigned ";
+
+        $sql .= " where 1=1 ";
+       
+        if (!empty($lead_type)) {
+            $sql .= " and st.lead_type = '" . trim($lead_type) . "' ";
+        }
+        
+        if (!empty($leadRegion)) {
+        $sql .= " and st.office_state_region = '" . trim($leadRegion) . "' ";
+        }else if (!empty($lead_type)) {
+        $sql .= " and st.office_location_region = '" . trim($lead_type) . "' ";
+        }
+    
+         if (!empty($staff_not)) {
+            $sql .= " and st.staffid !='".$staff_not."' ";
+        }
+     
+     
+     
+   if (ACTIVE_STAFF_ONLY == 1) {
+
+            $currentTime = date('H:i');
+            $today       = date('Y-m-d');
+            $dayOfWeek   = date('w'); // 0 = Sunday
+
+
+            // Example holiday array (you can fetch from DB)
+            $holidays = holiday_list();
+            $isHoliday = in_array($today, $holidays);
+
+            if ($dayOfWeek == 0 || $isHoliday) {
+                // Sunday or Holiday → check last login date
+                $sql .= " AND DATE(st.last_login) = (
+                    SELECT MAX(DATE(last_login))
+                    FROM tblstaff
+                    WHERE DATE(last_login) < '$today'
+                 ) ";
+            } else {
+
+                if ($currentTime >= '12:00') {
+                    // Between 10 AM and 11 AM → check today only
+                    $sql .= " AND (DATE(st.last_login) = '$today' 
+                       OR DATE(st.last_activity) = '$today') ";
+                } else {
+                    // Before 10 AM → check today OR yesterday
+                    // $yesterday = date('Y-m-d', strtotime('-1 day'));
+                     $yesterday = $this->getLastWorkingDay($today, $holidays);
+
+                    $sql .= " AND (
+                        DATE(st.last_login) IN ('$today','$yesterday')
+                        OR DATE(st.last_activity) IN ('$today','$yesterday')
+                     ) ";
+                }
+            }
+        }
+
+        $sql .= " group by st.staffid,last_lead.dateassigned order by last_lead.dateassigned asc ";
+        if (!empty($facebook_lead)) {
+        } else {
+            $sql .= " limit 1 ";
+        }
+        
+    
+        // $sql = "Select s.name,st.staffid ,CONCAT(st.firstname,' ',st.lastname) staff_name,(select dateassigned from " . db_prefix() . "leads where assigned = st.staffid order by dateassigned  desc limit 1) dateassigned from " . db_prefix() . "states s join " . db_prefix() . "staff st ON (FIND_IN_SET(s.id,st.assign_state) and st.lead_type = '" . trim($lead_type) . "'  and st.active = '1') where LOWER(TRIM(s.name)) = '" . strtolower(trim($state_name)) . "' order by (select dateassigned from " . db_prefix() . "leads where assigned = st.staffid order by dateassigned desc limit 1) asc limit 1";
+        return $this->db->query($sql)->result_array();
+    }
+function autoTransferLeads($leadData, $leadconvertStatus = 2)
+{
+    
+//     ini_set('display_errors', 1);
+// ini_set('display_startup_errors', 1);
+// error_reporting(E_ALL);
+
+    // Get form details
+    $check_form = $this->get_form([
+        'id' => $leadData['from_form_id'],
+    ]);
+
+    if (empty($check_form)) {
+        return true;
+    }
+
+    // Determine Facebook status
+    $check_form->facebook_status = !empty($leadData['website']) ? 1 : 0;
+
+    $google_source = !empty($check_form->lead_source) ? $check_form->lead_source : '';
+
+  $transferType = $leadData["trnasfer_type"]??0;
+ 
+
+
+    /*
+    |--------------------------------------------------------------------------
+    | Facebook Lead Assignment
+    |--------------------------------------------------------------------------
+    */
+    // if (!empty($check_form->facebook_status) && $check_form->facebook_status == 1) {
+
+    //     $check_form->responsible = 1;
+    //     $lead_type = $leadData['type'] ?? '';
+
+    //     if (!empty($lead_type)) {
+
+    //         $facebook_lead_name = $leadData['website'] ?? '';
+    //         $assign_staff_id = $this->automatic_assign_staff(
+    //             '',
+    //             $lead_type,
+    //             '',
+    //             $facebook_lead_name,
+    //             '',
+    //             '',
+    //             $leadData['assigned'] ?? ''
+    //         );
+
+    //         $status_fb_lead_assign = false;
+
+    //         if (!empty($assign_staff_id)) {
+    //             foreach ($assign_staff_id as $fl) {
+
+    //                 if (!empty($fl["facebook_lead_name"])) {
+    //                     $fb_form_names = explode(",", $fl["facebook_lead_name"]);
+
+    //                     foreach ($fb_form_names as $fb_name) {
+    //                         if (
+    //                             !empty($fb_name) &&
+    //                             !$status_fb_lead_assign &&
+    //                             strpos(strtolower(trim($facebook_lead_name)), strtolower(trim($fb_name))) !== false
+    //                         ) {
+    //                             $check_form->responsible = $fl["staffid"];
+    //                             $status_fb_lead_assign = true;
+    //                             break;
+    //                         }
+    //                     }
+    //                 }
+
+    //                 if ($status_fb_lead_assign) {
+    //                     break;
+    //                 }
+    //             }
+    //         }
+
+    //         // Fallback assignment
+    //         if (!$status_fb_lead_assign) {
+    //             $assign_staff_id = $this->automatic_assign_staff(
+    //                 '',
+    //                 $lead_type,
+    //                 1,
+    //                 '',
+    //                 '',
+    //                 '',
+    //                 $leadData['assigned'] ?? ''
+    //             );
+
+    //             if (!empty($assign_staff_id[0]["staffid"])) {
+    //                 $check_form->responsible = $assign_staff_id[0]["staffid"];
+    //             }
+    //         }
+    //     }
+
+    // /*
+    // |--------------------------------------------------------------------------
+    // | Auto Assign
+    // |--------------------------------------------------------------------------
+    // */
+    // } elseif (!empty($check_form->auto_assign)) {
+
+    //     $auto_assign = array_filter(explode(",", $check_form->auto_assign));
+
+    //     $assign_staff_id = $this->automatic_assign_staff(
+    //         '',
+    //         '',
+    //         '',
+    //         '',
+    //         $auto_assign,
+    //         '',
+    //         $leadData['assigned'] ?? ''
+    //     );
+
+    //     if (!empty($assign_staff_id[0]["staffid"])) {
+    //         $check_form->responsible = $assign_staff_id[0]["staffid"];
+    //     }
+
+    // /*
+    // |--------------------------------------------------------------------------
+    // | State-wise Assignment
+    // |--------------------------------------------------------------------------
+    // */
+    // } elseif (!empty($check_form->state_wise) && $check_form->state_wise == 1) {
+
+    //     $check_form->responsible = 1;
+
+    //     if (!empty($check_form->allow_state_location) && $check_form->allow_state_location == 1) {
+    //         $state_name = trim($leadData['state'] ?? '');
+    //         $city_name  = trim($leadData['city'] ?? '');
+    //     } else {
+    //         $ip = $_SERVER['REMOTE_ADDR'];
+    //         $ipdetails = json_decode(file_get_contents("http://ipinfo.io/{$ip}/json"));
+
+    //         $state_name = trim($ipdetails->region ?? '');
+    //         $city_name  = trim($ipdetails->city ?? '');
+    //     }
+
+    //     $lead_type = trim($leadData["type"] ?? $check_form->lead_type ?? '');
+    //     $status_assign = false;
+
+    //     // City-based assignment
+    //     if (!empty($city_name) && !$status_assign) {
+    //         $assign_staff_id = $this->automatic_assign_staff_city(
+    //             $city_name,
+    //             $lead_type,
+    //             '',
+    //             '',
+    //             '',
+    //             $google_source,
+    //             $leadData['assigned'] ?? ''
+    //         );
+
+    //         if (!empty($assign_staff_id[0]["staffid"])) {
+    //             $check_form->responsible = $assign_staff_id[0]["staffid"];
+    //             $status_assign = true;
+    //         }
+    //     }
+
+    //     // State-based assignment
+    //     if (!empty($state_name) && !$status_assign) {
+    //         $assign_staff_id = $this->automatic_assign_staff(
+    //             $state_name,
+    //             $lead_type,
+    //             '',
+    //             '',
+    //             '',
+    //             $google_source,
+    //             $leadData['assigned'] ?? ''
+    //         );
+
+    //         if (!empty($assign_staff_id[0]["staffid"])) {
+    //             $check_form->responsible = $assign_staff_id[0]["staffid"];
+    //             $status_assign = true;
+    //         }
+    //     }
+
+    //     // Fallback
+    //     if (!$status_assign && !empty($lead_type)) {
+    //         $assign_staff_id = $this->automatic_assign_staff(
+    //             '',
+    //             $lead_type,
+    //             1,
+    //             '',
+    //             '',
+    //             '',
+    //             $leadData['assigned'] ?? ''
+    //         );
+
+    //         if (!empty($assign_staff_id[0]["staffid"])) {
+    //             $check_form->responsible = $assign_staff_id[0]["staffid"];
+    //         }
+    //     }
+    // }
+    
+     $check_form->responsible = 1;
+    //  echo "okkkk";
+  $assign_staff_id =   $this->transferLeadAssignation($leadData['type'],$leadData['assigned']??'',$leadData['office_location_region']??'',$leadData['office_state_region']??'');
+//   echo $this->db->last_query();
+    //  echo  "okkkkkkkkk";
+    //  print_r($assign_staff_id);
+     
+    //  return true;
+    //  die;
+    //  print_r($assign_staff_id);
+        if (!empty($assign_staff_id[0]["staffid"])) {
+         $check_form->responsible = $assign_staff_id[0]["staffid"];
+        }
+
+    /*
+    |--------------------------------------------------------------------------
+    | Update Lead Status
+    |--------------------------------------------------------------------------
+    */
+    $this->update_lead_status([
+        "leadid" => $leadData['id'],
+        "status" => $leadconvertStatus ?? 2
+    ]);
+
+    /*
+    |--------------------------------------------------------------------------
+    | Update Assignment
+    |--------------------------------------------------------------------------
+    */
+    
+   
+    if (!empty($leadData['id']) && (int)$leadData['id'] > 0) {
+
+        $responsible = $check_form->responsible ?? 1;
+        
+        $leadDataUpdate = [
+        'assigned' => $responsible
+        ];
+        
+        if (!empty($transferType) && $transferType == 1) {
+        $leadDataUpdate['transfer_count'] = !empty($leadData['update_count']) 
+            ? $leadData['update_count'] + 1 
+            : 1;
+        }
+        
+        $this->db->where('id', (int)$leadData['id']);
+        $update = $this->db->update(db_prefix() . 'leads', $leadDataUpdate);
+
+        if ($update && $this->db->affected_rows() > 0) {
+    
+    $insert_Data_Logs = [
+        "leadid"=>$leadData["id"],
+        "phonenumber"=>$leadData["phonenumber"],
+        "name"=>$leadData["name"],
+        "old_status"=>$leadData['status'],
+        "new_status"=> $leadconvertStatus,
+        "old_assignation"=>$leadData['assigned'],
+        "new_assignation"=>$check_form->responsible??1,
+        "old_assignation_date"=>$leadData['dateassigned'],
+        "new_assignation_date"=>date('Y-m-d H:i:s'),
+        "update_count"=>$leadData["update_count"],
+        "created_at"=>date('Y-m-d H:i:s')
+        ];
+
+  $this->db->insert(db_prefix().'leads_transfer_logs', $insert_Data_Logs);
+  
+            if (
+                !empty($leadData['assigned']) &&
+                $leadData['assigned'] != $responsible &&
+                $responsible != 0
+            ) {
+                $this->lead_assigned_member_notification(
+                    $leadData['id'],
+                    $responsible,
+                    '',
+                    '',
+                    1
+                );
+            }
+
+        } else {
+            log_message('error', 'Lead update failed or no changes. ID: ' . $leadData['id']);
+        }
+    }
+}
+
+// Not Reachable Leads
+public function check_lead_auto_assignation_lead()
+{
+
+     $this->load->library('merge_fields/App_merge_fields');
+    $this->load->library('app_object_cache');
+    $this->load->library('mails/App_mail_template');
+    
+ 
+
+
+$holidays = holiday_list();
+$ignoreDates = [];
+
+// ✅ Add last Sunday
+$ignoreDates[] = date('Y-m-d', strtotime('last sunday'));
+
+if (!empty($holidays)) {
+    foreach ($holidays as $h) {
+
+        // normalize date
+        if (is_array($h) && isset($h['date'])) {
+            $hDate = date('Y-m-d', strtotime($h['date']));
+        } elseif (is_object($h) && isset($h->date)) {
+            $hDate = date('Y-m-d', strtotime($h->date));
+        } else {
+            $hDate = date('Y-m-d', strtotime($h));
+        }
+
+        // ✅ ONLY include if within last 7 days
+        if (
+            strtotime($hDate) >= strtotime('-7 days') &&
+            strtotime($hDate) <= strtotime('today')
+        ) {
+            $ignoreDates[] = $hDate;
+        }
+    }
+}
+
+// remove duplicates
+$ignoreDates = array_unique($ignoreDates);
+
+$sqlAdditional='';
+if(!empty($ignoreDates))
+{
+    $ignoreDates = "'" . implode("','", $ignoreDates) . "'";
+    $sqlAdditional = " AND date(l.dateassigned) Not In ($ignoreDates) ";
+}
+
+      $workingDays = 0;
+$offset = 0;
+
+while ($workingDays < 4) {
+
+    $day  = date('w', strtotime($date)); // 0 = Sunday
+
+    if ($day != 0 && !in_array($date, $holidays)) {
+        // ✅ valid working day
+        $workingDays++;
+    }
+
+    $offset++;
+}
+
+
+
+
+
+
+   $sql = "SELECT 
+  l.id, 
+  l.name, 
+  l.phonenumber, 
+  l.alternative_phonenumber, 
+  l.email, 
+  l.dateadded, 
+  l.lastcontact, 
+  l.dateassigned, 
+  l.lastupdate_date, 
+  IFNULL(c.call_update_count, 0) AS update_count,
+  l.call_duration, 
+  l.auto_transfer_status, 
+  l.assigned, 
+  l.website, 
+  l.status, 
+  l.from_form_id, 
+  l.type, 
+  l.state, 
+  l.city, 
+  1 as trnasfer_type,
+  s.name AS status_name, 
+  src.name AS source_name, 
+  t.name AS type_name, 
+  l.transfer_count,
+  st.phonenumber AS staff_contact, 
+  st.office_state_region,
+  st.office_location_region,
+  CONCAT(st.firstname, ' ', st.lastname) AS assigned_name, 
+  FROM_UNIXTIME(c.call_start + 19800) AS call_time, 
+  TIMESTAMPDIFF(MINUTE, l.dateassigned, NOW()) AS diff_minutes,
+  IFNULL(c.call_update_count, 0) AS call_update_count,
+  date(DATE_SUB(NOW(), INTERVAL $offset DAY) )
+
+FROM tblleads l
+
+LEFT JOIN tblstaff st 
+  ON st.staffid = l.assigned 
+
+
+LEFT JOIN (
+    SELECT 
+        contact, 
+        staffid,
+        MAX(call_start) AS call_start,
+        COUNT(*) AS call_update_count
+    FROM tblcalls_activity_logs
+    GROUP BY contact, staffid
+) c 
+  ON c.staffid = l.assigned 
+  AND (
+        c.contact = l.phonenumber 
+        OR c.contact = l.alternative_phonenumber
+      )
+
+JOIN tblleads_status s 
+  ON s.id = l.status 
+
+JOIN tblleads_sources src 
+  ON src.id = l.source 
+
+JOIN tblleads_type t 
+  ON t.id = l.type 
+
+WHERE 
+  l.dateassigned >= '".START_AUTO_LEAD_TRANSFER_DATE."'
+
+  AND IFNULL(c.call_update_count, 0) < 5
+  AND l.from_form_id != 0
+  AND l.type IN (1,2)
+  AND l.status IN (20)
+  and l.mass_assigned_status!=1
+AND l.dateadded >= '".START_AUTO_LEAD_TRANSFER_DATE."'
+and st.not_transfer_lead_status !=1
+   AND date(l.dateassigned) < date(DATE_SUB(NOW(), INTERVAL $offset DAY)) ".$sqlAdditional."
+  ORDER BY l.id limit 50 "; 
+
+
+
+
+// ✅ Execute query
+$query = $this->db->query($sql);
+$result = $query->result_array();
+// echo "<pre>";
+
+//     foreach ($result as $leadData)
+// {
+    // print_r($result);
+//     print_r($this->autoTransferLeads($leadData));
+// }
+
+
+if (empty($result)) {
+    echo json_encode(['status' => true]);
+    die;
+}
+
+    foreach ($result as $leadData)
+{
+    $this->autoTransferLeads($leadData);
+}
+
+
+
+// ✅ Debug output
+
+}
+
+// Monday cron
+public function weekend_lead_assignation()
+{
+
+
+    $today       = date('Y-m-d');
+    $createdDate = date('Y-m-d H:i:s');
+    $holidays = holiday_list();
+
+  // Get last working day
+     $last_working_day = $this->getLastWorkingDay($today, $holidays);
+
+
+    // Format holidays for SQL
+    $holidays_str = !empty($holidays) ? "'" . implode("','", $holidays) . "'" : "''";
+
+
+    // Get staff who logged in on last working day
+  $staff_result = $this->db->query("
+    SELECT staffid
+    FROM " . db_prefix() . "staff
+    WHERE active = 1
+      AND admin != 1
+      AND DATE(last_login) != CURDATE()
+      AND DATE(last_login) != (
+          SELECT MAX(DATE(last_login))
+          FROM " . db_prefix() . "staff
+          WHERE active = 1
+            AND admin != 1
+            AND DAYOFWEEK(last_login) != 1
+            AND DATE(last_login) NOT IN ({$holidays_str})
+      )
+")->result_array();
+         
+    
+    $staff_ids = array_column($staff_result, 'staffid');
+
+
+
+
+if (!empty($staff_ids)) {
+    $staff_ids_str = implode(',', $staff_ids);
+    
+    // Get leads assigned to these staff
+     $sql = "
+   Select * From ( (SELECT l.id as leadid, l.assigned, '$createdDate' as created_date,count(calls.id) update_count,l.phonenumber,l.name,l.status,l.dateassigned
+    FROM " . db_prefix() . "leads l
+    LEFT JOIN " . db_prefix() . "calls_activity_logs calls on (calls.contact = l.phonenumber and calls.staffid = l.assigned  AND (calls.call_start + 19800) >= UNIX_TIMESTAMP(l.dateassigned))
+    JOIN " . db_prefix() . "staff s ON s.staffid = l.assigned
+    
+    WHERE
+            l.lost = 0 
+      AND l.junk = 0
+      AND l.assigned IN ({$staff_ids_str})
+      AND ( l.status = 2 or l.status=33 )
+      AND l.mass_assigned_status != 1
+      AND (
+          DATE(l.dateadded) >= '$last_working_day' 
+          OR DATE(l.dateassigned) >= '$last_working_day'
+      )
+      AND update_count = 0  GROUP by l.id
+    ORDER BY l.id ) UNION ALL  (SELECT l.id as leadid, l.assigned, '$createdDate' as created_date,count(calls.id) update_count,l.phonenumber,l.name,l.status,l.dateassigned
+    FROM " . db_prefix() . "leads l
+    LEFT JOIN " . db_prefix() . "calls_activity_logs calls on (calls.contact = l.alternative_phonenumber and calls.staffid = l.assigned  AND (calls.call_start + 19800) >= UNIX_TIMESTAMP(l.dateassigned))
+    JOIN " . db_prefix() . "staff s ON s.staffid = l.assigned
+    
+    WHERE
+            l.lost = 0 
+      AND l.junk = 0
+      AND l.assigned IN ({$staff_ids_str})
+      AND ( l.status = 2 or l.status=33 )
+      AND l.mass_assigned_status != 1
+      AND (
+          DATE(l.dateadded) >= '$last_working_day' 
+          OR DATE(l.dateassigned) >= '$last_working_day'
+      )
+      AND update_count = 0  GROUP by l.id
+    ORDER BY l.id ) ) leadsData  GROUP by leadsData.leadid
+    
+";
+
+
+
+
+$result = $this->db->query($sql)->result_array();
+
+
+} else {
+    $result = [];
+}
+
+
+// Get counts summary
+$counts_by_staff = [];
+
+foreach ($result as $lead) {
+    $staff_id = $lead['assigned'];
+
+    if (!isset($counts_by_staff[$staff_id])) {
+        $counts_by_staff[$staff_id] = ['lead_count' => 0];
+    }
+
+    $counts_by_staff[$staff_id]['lead_count']++;
+}
+
+// Display counts
+foreach ($counts_by_staff as $key => $staff) {
+    echo "Staff ID: {$key} - Total Leads: {$staff['lead_count']}<br>";
+}
+
+die;
+  $this->db->insert_batch(db_prefix().'weekend_lead_transfer', $result);
+  return true;
+
+}
+
+public function weekend_lead_assignation_auto()
+{
+    
+      $this->load->library('merge_fields/App_merge_fields');
+    $this->load->library('app_object_cache');
+    $this->load->library('mails/App_mail_template');
+    
+    
+    ini_set('display_errors', 1);
+ini_set('display_startup_errors', 1);
+error_reporting(E_ALL);
+
+    // Validate date
+    $today = date('Y-m-d');
+    if (empty($today)) {
+        log_message('error', 'Invalid date in weekend_lead_assignation_auto');
+        return false;
+    }
+
+    // Build query
+    $this->db->select('tl.id as id,tl.phonenumber,tl.name,tl.dateassigned,tl.update_count,tl.from_form_id,tl.website,tl.state,tl.type,tl.website,tl.type,tl.city,tl.assigned,tl.status,2 trnasfer_type');
+    $this->db->from(db_prefix().'weekend_lead_transfer wlt');
+    $this->db->join(db_prefix().'leads tl', 'tl.id = wlt.leadid', 'left');
+    $this->db->where('DATE(wlt.created_date)', $today);
+    $this->db->where('wlt.leadid', 456237);
+
+    $query = $this->db->get();
+    
+    
+    echo "<pre>";
+    print_r($query->result_array());
+die;        
+
+    // Check query execution
+    if (!$query) {
+        log_message('error', 'DB error: '.$this->db->last_query());
+        return false;
+    }
+
+    $consents = $query->result_array();
+
+    // Validate result
+    if (empty($consents)) {
+        log_message('info', 'No weekend leads found for date: '.$today);
+        return true; // nothing to process
+    }
+    
+    
+
+    foreach ($consents as $leadData) {
+
+        // Validate required fields
+        if (empty($leadData['id'])) {
+            log_message('error', 'Missing id: '.json_encode($leadData));
+            continue;
+        }
+
+        try {
+            $this->autoTransferLeads($leadData,$leadData['status']??'');
+        } catch (Exception $e) {
+            log_message('error', 'Error in autoTransferLeads: '.$e->getMessage());
+            continue;
+        }
+    }
+
+    return true;
+}
     
     
 public function auto_transfer_lead_notification($filtered)
@@ -3834,7 +4590,7 @@ public function transfer_whatsapp_notification()
         }
 
         $total = count($result);
-$leadId_Data =[];
+        $leadId_Data =[];
         foreach ($result as $key => $row) {
 
             try {
@@ -3923,6 +4679,8 @@ function google_qualified_leads($type, $start = 0)
 
     return $query->result_array();
 }
+
+
 
 
 }

@@ -46,13 +46,13 @@ function app_init_admin_sidebar_menu_items()
                 ]);
 
 
-                // $CI->app_menu->add_sidebar_children_item('fees_structure', [
-                //         'slug'     => 'Fees/partner',
-                //         'icon'     => 'fa fa-user-times',
-                //         'name'     => "Partner Fees Structures",
-                //         'href'     => admin_url('Fees/partner'),
-                //         'position' => 1,
-                // ]);
+                $CI->app_menu->add_sidebar_children_item('fees_structure', [
+                        'slug'     => 'Fees/partner',
+                        'icon'     => 'fa fa-user-times',
+                        'name'     => "Partner Fees Structures",
+                        'href'     => admin_url('Fees/partner'),
+                        'position' => 1,
+                ]);
         }
 
        if (has_permission('auto_transfer', '', 'view') && is_admin()) {

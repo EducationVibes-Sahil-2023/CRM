@@ -19,6 +19,10 @@ class Api_Model extends CI_Model
 
     public function login($email, $password)
     {
+        
+//         ini_set('display_errors', 1);
+// ini_set('display_startup_errors', 1);
+// error_reporting(E_ALL);
         try {
             $response = [];
             if ((!empty($email)) and (!empty($password))) {
@@ -56,7 +60,137 @@ class Api_Model extends CI_Model
                         "message" => "No account found with the provided details."
                     );
                 }
+              
+              
+                  
+                  if (isset($_POST['primary_sim_number'])) {
 
+    // ✅ Sanitize POST number
+    $primary_number = trim($_POST['primary_sim_number']);
+    $primary_number = preg_replace('/\D/', '', $primary_number); // keep only digits
+
+    // ✅ Validate empty
+    if ($primary_number === '') {
+        return [
+            "status" => 0,
+            "message" => "Primary number is required"
+        ];
+    }
+
+    // ✅ Ensure last 10 digits (handles +91 etc.)
+    $primary_number = substr($primary_number, -10);
+
+    // ✅ Validate 10 digit number
+    if (!preg_match('/^[6-9][0-9]{9}$/', $primary_number)) {
+        return [
+            "status" => 0,
+            "message" => "Enter valid 10 digit mobile number"
+        ];
+    }
+
+    // ✅ Check user exists
+    if (empty($user)) {
+        return [
+            "status" => 0,
+            "message" => "User not found"
+        ];
+    }
+
+    // ✅ Normalize DB number also
+    $user_number = preg_replace('/\D/', '', $user->phonenumber);
+    $user_number = substr($user_number, -10);
+
+    // ✅ Match number
+    if ($user_number !== $primary_number) {
+        return [
+            "status" => 0,
+            "message" => "Primary number does not match"
+        ];
+    }
+
+    // ✅ Generate OTP
+    $otp = rand(1000, 9999);
+    // $otp = 1234;
+    $expiry_time = date('Y-m-d H:i:s', strtotime('+5 minutes'));
+
+    // ✅ Save OTP
+    $this->update_data(
+        db_prefix() . 'staff',
+        [
+            "login_otp" => $otp,
+            "login_otp_expire" => $expiry_time
+        ],array("staffid" => $user->staffid)
+    );
+
+     otpGenerate($primary_number, $otp);
+    return [
+        "status" => 1,
+        "otp_length" => strlen($otp),
+        "message" => "OTP generated for your CRM profile primary phone number"
+    ];
+}
+                    
+                    if (isset($_POST['otp'])) {
+
+    // ✅ Sanitize OTP
+    $otp_input = trim($_POST['otp']);
+     $fcm_token = trim($_POST['fcm_token'])??'';
+
+    // ✅ Check empty OTP
+    if ($otp_input === '') {
+        return [
+            "status" => 0,
+            "message" => "OTP is required"
+        ];
+    }
+
+    // ✅ Validate OTP format (4 digits)
+    if (!preg_match('/^[0-9]{4}$/', $otp_input)) {
+        return [
+            "status" => 0,
+            "message" => "Invalid OTP format"
+        ];
+    }
+
+    // ✅ Check user exists
+    if (empty($user)) {
+        return [
+            "status" => 0,
+            "message" => "User not found"
+        ];
+    }
+
+    // ✅ Check OTP expiry
+    if (empty($user->login_otp_expire) || strtotime($user->login_otp_expire) < time()) {
+        return [
+            "status" => 0,
+            "message" => "OTP expired"
+        ];
+    }
+
+    // ✅ Validate OTP match
+    if ($user->login_otp == $otp_input) {
+
+        // ✅ Clear OTP after success
+        $this->update_data(
+            db_prefix() . 'staff',
+            [
+                "fcm_token"=>$fcm_token,
+                "login_otp" => ""
+            ],array("staffid" => $user->staffid)
+        );
+
+        // return [
+        //     "status" => 1,
+        //     "message" => "OTP verified successfully"
+        // ];
+    } else {
+        return [
+            "status" => 0,
+            "message" => "Invalid OTP"
+        ];
+    }
+}
                 if ($user->active == 0) {
                     hooks()->do_action('inactive_user_login_attempt', [
                         'user'            => $user,
@@ -121,6 +255,9 @@ class Api_Model extends CI_Model
 
         return $response;
     }
+    
+    
+ 
 
     public function insert_data($table, $data)
     {
@@ -366,6 +503,34 @@ class Api_Model extends CI_Model
         return $response;
     }
 
+  public function update_call_data_bulk_temp_new($call_data)
+    {
+        $response = [];
+        try {
+
+            // $call_activity_temp = $this->insert_data_batch(db_prefix() . 'calls_activity_temp_logs', $call_data);
+            //  $call_activity_temp = $this->insert_data_batch(db_prefix() . 'calls_activity_temp_logs', $call_data);
+            $call_activity_temp = $this->insert_data_batch(db_prefix() . 'calls_activity_logs', $call_data);
+            // $this->db->query("UPDATE " . db_prefix() . "calls_activity_temp_logs SET contact = RIGHT(TRIM(contact), 10) WHERE LENGTH(TRIM(contact)) > 10");
+
+            if ($call_activity_temp["status"] == 1) {
+
+                $response = array(
+                    "status" => 1,
+                    "message" => "Call data update successfully.",
+                );
+            } else {
+                $response = array(
+                    "status" => 1,
+                    "message" => "Call data update successfully.",
+                );
+            }
+        } catch (Exception $e) {
+            $response["status"] = 0;
+            $response["message"] = $e->getMessage();
+        }
+        return $response;
+    }
     public function update_call_activity()
     {
 

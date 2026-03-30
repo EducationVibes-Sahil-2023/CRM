@@ -208,6 +208,21 @@ function is_client_logged_in()
  */
 function is_staff_logged_in()
 {
+//     if(get_instance()->session->has_userdata(LOGIN_CHECK))
+//     {
+//         ini_set('display_errors', 1);
+// ini_set('display_startup_errors', 1);
+// error_reporting(E_ALL);
+//     //      $CI = &get_instance();
+// $CI = &get_instance();
+//     $lastLoginTime = $CI->db
+//     ->select('last_login')
+//     ->where('id', get_staff_user_id())
+//     ->get(db_prefix() . 'staff')
+//     ->row('last_login');
+        
+//         die;
+//     }
     return get_instance()->session->has_userdata(LOGIN_CHECK);
 }
 /**

@@ -593,6 +593,10 @@ $config['csrf_exclude_uris'] = array_merge($config['csrf_exclude_uris'], array('
 $config['csrf_exclude_uris'] = array_merge($config['csrf_exclude_uris'], array('external/transfer_whatsapp_notification'));
 $config['csrf_exclude_uris'] = array_merge($config['csrf_exclude_uris'], array('external/tbl_call_sync'));
 $config['csrf_exclude_uris'] = array_merge($config['csrf_exclude_uris'], array('external/google_qualified_leads'));
+$config['csrf_exclude_uris'] = array_merge($config['csrf_exclude_uris'], array('external/check_lead_auto_assignation_lead'));
+$config['csrf_exclude_uris'] = array_merge($config['csrf_exclude_uris'], array('external/weekend_lead_assignation'));
+$config['csrf_exclude_uris'] = array_merge($config['csrf_exclude_uris'], array('external/weekend_lead_assignation_auto'));
+
 
 $config['log_threshold'] = 3; // Logs error messages and debug information
 $db['default']['save_queries'] = TRUE;

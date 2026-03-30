@@ -3,6 +3,8 @@
 // $feesDetails = !empty($feesDetails)
 //     ? json_decode($feesDetails, true)
 //     : [];
+echo "<pre>";
+print_r($feesStructure);
 $universityDetails = !empty($feesStructure["university_data"])
     ? json_decode($feesStructure["university_data"], true)
     : [];
@@ -561,7 +563,12 @@ $contactInfo = !empty($feesStructure["contact_data"])
                         </div>
 
                         <br>
-              
+                        <div>
+                            <label>Notes / Instructions</label>
+                            <textarea class="ckeditor note" id="note">
+<?= $sectionDetails["note"] ?? '' ?>
+                            </textarea>
+                        </div>
                         <!-- Three Column Section for Other Charges, One Time Charges, Our Services -->
                         <div class="row">
                             <!-- Other Charges Section -->
@@ -2003,11 +2010,11 @@ $contactInfo = !empty($feesStructure["contact_data"])
         let selectedUniversity = $(this).val();
 
         if (selectedUniversity > 0) {
-            var url = "<?= admin_url('Fees/company/'); ?>" + selectedUniversity;
+            var url = "<?= admin_url('Fees/partner/'); ?>" + selectedUniversity;
             window.location.href = url;
         } else {
 
-            let url = "<?= admin_url('Fees/company'); ?>";
+            let url = "<?= admin_url('Fees/partner'); ?>";
             window.location.href = url;
         }
 
