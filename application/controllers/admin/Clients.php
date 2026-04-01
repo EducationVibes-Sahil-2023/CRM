@@ -8877,25 +8877,25 @@ WHERE s.client_id = " . (int)$client_id . "
                 die;
             }
             //check neet 
-            // $admissionpreferences = $this->clients_model->getAdmissionPreferences($client_id);
-            // if (strtolower($admissionpreferences->primary_country) == "georgia") {
-            //     $checkNeet = check_neet_credentials($client_id);
-            //     if ($checkNeet == 0) {
+            $admissionpreferences = $this->clients_model->getAdmissionPreferences($client_id);
+            if (strtolower($admissionpreferences->primary_country) == "georgia" && $admissionpreferences->session_intake >= "2026-09") {
+                $checkNeet = check_neet_credentials($client_id);
+                if ($checkNeet == 0) {
 
-            //         $data = [
-            //             'resp_code' => 'ERR',
-            //             'resp_desc' => 'NEET credentials are missing. Please check academic details in the profile section.',
+                    $data = [
+                        'resp_code' => 'ERR',
+                        'resp_desc' => 'NEET credentials are missing. Please check academic details in the profile section.',
 
-            //         ];
+                    ];
 
 
-            //         $this->db->where("userid", $client_id);
-            //         $this->db->update(db_prefix() . 'clients', $update_client_data);
+                    $this->db->where("userid", $client_id);
+                    $this->db->update(db_prefix() . 'clients', $update_client_data);
 
-            //         echo json_encode($data);
-            //         die;
-            //     }
-            // }
+                    echo json_encode($data);
+                    die;
+                }
+            }
 
             $legalization_data = $this->clients_model->legalization_data($client_id);
 

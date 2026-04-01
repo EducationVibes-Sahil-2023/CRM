@@ -12,6 +12,8 @@ array_unshift($location, array());
 
 $last_lead_request = last_lead_request($lead->id);
 
+$officeAddress = get_office_locations();
+$streets = json_encode(array_column($officeAddress, 'street'))??[];
 
 ?>
 <style>
@@ -478,9 +480,19 @@ $last_lead_request = last_lead_request($lead->id);
                   <div class="form-group">
                      <select name="smsTemplate" id="smsTemplate" class="form-control">
                         <option value="">Select an SMS Template</option>
-                        <option value="4th floor, The Corenthum, Tower-B, Educationvibes ,34/2, Sector 62, Noida, Uttar Pradesh 201309">Send Noida Office Address</option>
-                        <option value="Diamond Chambers, 9N, 9th floor,Block-1&2, 4, Chowringhee Ln,Park Street area, Kolkata, 700016">Send Kolkata Office Address</option>
-                        <option value="Office no 19, Second Floor, Aditya Centeegra, FC road next to Mantri house, Shivaji Nagar, Pune - 411004">Send Pune Office Address</option>
+                        <?php 
+                        foreach($officeAddress as $address)
+                        {
+                            
+                            ?>
+                             <option value="<?=$address['street']?>">Send <?=$address['city']?> Office Address</option>
+                            <?php
+                        }
+                        
+                        ?>
+                        <!--<option value="4th floor, The Corenthum, Tower-B, Educationvibes ,34/2, Sector 62, Noida, Uttar Pradesh 201309">Send Noida Office Address</option>-->
+                        <!--<option value="Diamond Chambers, 9N, 9th floor,Block-1&2, 4, Chowringhee Ln,Park Street area, Kolkata, 700016">Send Kolkata Office Address</option>-->
+                        <!--<option value="Office no 19, Second Floor, Aditya Centeegra, FC road next to Mantri house, Shivaji Nagar, Pune - 411004">Send Pune Office Address</option>-->
                      </select>
                   </div>
                   <div class="form-group">
@@ -1160,8 +1172,10 @@ $last_lead_request = last_lead_request($lead->id);
       <?php endif; ?>
    }
 
+var suggestions = <?=$streets??[]?>;
    function set_search_location() {
-       const suggestions = ["Office no 19, Second Floor, Aditya Centeegra, FC road next to Mantri house, Shivaji Nagar, Pune - 411004", "Office No. 303, 4th Floor, Sapphire Twins, AB Rd, opposite C21 Mall, Vijay Nagar, Scheme No 54, Indore, Madhya Pradesh 452011", "4th floor, The Corenthum, Tower-B, Educationvibes ,34/2, Sector 62, Noida, Uttar Pradesh 201309", "9th floor, Rajhans Helix, 901, 3, Lal Bahadur Shastri Marg, near Shreyas, Ghatkopar West, Mumbai, Maharashtra 400086", "Office no 1, Shivling smriti, opposite Udyog Bhavan, near urban co-op Bank Ltd, Shivaji Nagar, Narayan Nagar, Latur, Maharashtra 413531", "EducationVibes, Office no 408, Vishwakarma Sankul, near Gold City Hospital, The Co-operative Housieng Society, Jalgaon, Maharashtra 425001", "4th floor, Central Plaza, Door no. 6, 3-902/A, Raj Bhavan Rd, Somajiguda, Hyderabad, Telangana 500082","5 Th Floor, Akarshan Busiplex, Central Bazar Road, above ICICI Bank, Ramdaspeth, Nagpur, Maharashtra 440010"];
+       
+    //   const suggestions = ["Office no 19, Second Floor, Aditya Centeegra, FC road next to Mantri house, Shivaji Nagar, Pune - 411004", "Office No. 303, 4th Floor, Sapphire Twins, AB Rd, opposite C21 Mall, Vijay Nagar, Scheme No 54, Indore, Madhya Pradesh 452011", "4th floor, The Corenthum, Tower-B, Educationvibes ,34/2, Sector 62, Noida, Uttar Pradesh 201309", "9th floor, Rajhans Helix, 901, 3, Lal Bahadur Shastri Marg, near Shreyas, Ghatkopar West, Mumbai, Maharashtra 400086", "Office no 1, Shivling smriti, opposite Udyog Bhavan, near urban co-op Bank Ltd, Shivaji Nagar, Narayan Nagar, Latur, Maharashtra 413531", "EducationVibes, Office no 408, Vishwakarma Sankul, near Gold City Hospital, The Co-operative Housieng Society, Jalgaon, Maharashtra 425001", "4th floor, Central Plaza, Door no. 6, 3-902/A, Raj Bhavan Rd, Somajiguda, Hyderabad, Telangana 500082","5 Th Floor, Akarshan Busiplex, Central Bazar Road, above ICICI Bank, Ramdaspeth, Nagpur, Maharashtra 440010"];
 
       const textarea = document.getElementById("address");
       const suggestionList = document.getElementById("suggestion-list");

@@ -323,13 +323,13 @@ $contactInfo = !empty($feesStructure["contact_data"])
                                         placeholder="University Name" name="university_name" id="university_name"
                                         style="font-size: 24px; height: auto;">
                                 </div>
-                                <div class="col-md-2">
-                                    <label>Region</label>
-                                    <div class="region-badge">
-                                        <input type="text" class="form-control form-control-lg" readonly name="region_name" value="<?= $universityDetails["region_name"] ?? '' ?> "
-                                            placeholder="Regionḍ year" id="region_name">
-                                    </div>
-                                </div>
+                                <!--<div class="col-md-2">-->
+                                <!--    <label>Region</label>-->
+                                <!--    <div class="region-badge">-->
+                                <!--        <input type="text" class="form-control form-control-lg" readonly name="region_name" value="<?= $universityDetails["region_name"] ?? '' ?> "-->
+                                <!--            placeholder="Regionḍ year" id="region_name">-->
+                                <!--    </div>-->
+                                <!--</div>-->
                                 <div class="col-md-2">
                                     <label>Founded Year</label>
                                     <div class="duration-badge">
@@ -369,15 +369,18 @@ $contactInfo = !empty($feesStructure["contact_data"])
                                 <?php echo render_select('universities', [], array('id', 'name'), 'Universities', []); ?>
                             </div>
 
-                            <div class="col-lg-3">
-                                <?php echo render_select('region_type', $regions, array('id', 'name'), 'Region Type', [$feesStructure["region_id"] ?? '']); ?>
+                            <!--<div class="col-lg-3">-->
+                            <!--    <?php echo render_select('region_type', $regions, array('id', 'name'), 'Region Type', [$feesStructure["region_id"] ?? '']); ?>-->
+                            <!--</div>-->
+                             <div class="col-lg-3">
+                                <?php echo render_input('year', "Duration", $universityDetails["year"] ?? '', 'number'); ?>
                             </div>
 
                         </div>
                         <input type="hidden" id="id" name="id" value="<?= $id ?>">
 
                         <div class="row">
-                            <!-- <div class="col-lg-3">
+                            <div class="col-lg-3">
                                 <?php
                                 echo render_input(
                                     'website_logo',
@@ -390,10 +393,8 @@ $contactInfo = !empty($feesStructure["contact_data"])
                                 <div class="website_logo_preview preview_image">
                                     <img src="<?= $universityDetails["logo"] ?? '' ?>" id="website_logo_preview">
                                 </div>
-                            </div> -->
-                            <div class="col-lg-3">
-                                <?php echo render_input('year', "Duration", $universityDetails["year"] ?? '', 'number'); ?>
                             </div>
+                           
                             <div class="col-lg-3">
                                 <?php
                                 echo render_input(
@@ -556,12 +557,12 @@ $contactInfo = !empty($feesStructure["contact_data"])
                         <div>
                             <label>Notes / Instructions</label>
                             <textarea class="ckeditor note" id="note">
-<?= $sectionDetails["note"] ?? '' ?>
+                            <?= $sectionDetails["note"] ?? '' ?>
                             </textarea>
                         </div>
 
                         <br>
-              
+      
                         <!-- Three Column Section for Other Charges, One Time Charges, Our Services -->
                         <div class="row">
                             <!-- Other Charges Section -->
@@ -986,6 +987,21 @@ $contactInfo = !empty($feesStructure["contact_data"])
                             </div>
                         </div>
 
+<div class="location-section">
+<div class="row">
+    <div class="col-md-4">
+        <label>Head Office</label>
+        <input type="text" class="form-control" value="<?= $contactInfo['headoffice'] ?? '' ?>" 
+            placeholder="Enter Head Office" id="headoffice" name="headoffice">
+    </div>
+  <div class="col-md-8">
+        <label>Office Location</label>
+        <input type="text" class="form-control" value="<?= $contactInfo['branchlocation'] ?? '' ?>" 
+            placeholder="Enter Branch locations" id="branchlocation" name="branchlocation">
+    </div>
+</div>
+
+</div>
 
                         <!-- Contact Section -->
                         <div class="contact-section">
@@ -993,8 +1009,19 @@ $contactInfo = !empty($feesStructure["contact_data"])
                             <div class="row">
                                 <div class="col-md-4">
                                     <label><i class="fa fa-phone"></i> Contact Number</label>
-                                    <input type="text" class="form-control" value="<?= $contactInfo['phone'] ?? '' ?>" readonly
-                                        placeholder="Enter contact number" id="contact_number" name="contact_number">
+                                   <input 
+    type="tel"
+    class="form-control"
+    value="<?= $contactInfo['phone'] ?? '' ?>"
+    placeholder="Enter contact number"
+    id="contact_number"
+    name="contact_number"
+    pattern="^\+91\s?[0-9]{10}$"
+  
+>
+<small id="phone_error" style="color:white; display:none;">
+Enter number like +91 9876543210
+</small>
                                 </div>
                                 <div class="col-md-4">
                                     <label><i class="fa fa-envelope"></i> Email</label>
@@ -1009,11 +1036,11 @@ $contactInfo = !empty($feesStructure["contact_data"])
                             </div>
                         </div>
                         <br>
-                        <div class=" m-4  p-4 set-checkbox">
-                            <span><input type="checkbox" value="1" name="default_country_data" id="default_country_data"> &nbsp;</span>
-                            Apply this information to all similar countries
+                        <!--<div class=" m-4  p-4 set-checkbox">-->
+                        <!--    <span><input type="checkbox" value="1" name="default_country_data" id="default_country_data"> &nbsp;</span>-->
+                        <!--    Apply this information to all similar countries-->
 
-                        </div>
+                        <!--</div>-->
                         </br>
                         <!-- Action Buttons -->
                         <div class="row mt-4">
@@ -1051,6 +1078,38 @@ $contactInfo = !empty($feesStructure["contact_data"])
 <script src="https://cdn.ckeditor.com/ckeditor5/39.0.1/classic/ckeditor.js"></script>
 
 <script>
+
+document.getElementById("contact_number").addEventListener("input", function () {
+
+    // Allow only +, digits and space
+    this.value = this.value.replace(/[^+\d\s]/g, '');
+
+    // Limit to 14 characters
+    if (this.value.length > 14) {
+        this.value = this.value.slice(0, 14);
+    }
+
+    let phone = this.value;
+    let regex = /^\+91\s?[0-9]{10}$/;
+    let error = document.getElementById("phone_error");
+
+    // Allow blank
+    if (phone.length === 0) {
+        error.style.display = "none";
+        this.style.borderColor = "";
+        return;
+    }
+
+    // Validate
+    if (phone.length === 14 && regex.test(phone)) {
+        error.style.display = "none";
+        this.style.borderColor = "green";
+    } else {
+        error.style.display = "block";
+        this.style.borderColor = "white";
+    }
+
+});
     let myEditor;
 
     ClassicEditor
@@ -1067,12 +1126,12 @@ $contactInfo = !empty($feesStructure["contact_data"])
     var id = "<?= $id ?? '' ?>";
 
     function previewData() {
-        var url = "<?= admin_url('Fees/generate'); ?>/" + id;
+        var url = "<?= admin_url('Fees/generate_partner'); ?>/" + id;
         window.open(url, "_blank");
     }
 
     function download(id) {
-        var url = "<?= admin_url('Fees/generate'); ?>/" + id + "?download=1";
+        var url = "<?= admin_url('Fees/generate_partner'); ?>/" + id + "?download=1";
 
         let newTab = window.open(url, "_blank");
 
@@ -1740,7 +1799,9 @@ $contactInfo = !empty($feesStructure["contact_data"])
             contact: {
                 phone: $('#contact_number').val(),
                 email: $('#contact_email').val(),
-                website: $('#contact_website').val()
+                website: $('#contact_website').val(),
+                headoffice: $('#headoffice').val(),
+                branchlocation: $('#branchlocation').val(),
             }
         };
 
@@ -1892,25 +1953,44 @@ $contactInfo = !empty($feesStructure["contact_data"])
     }
 
 
-    function saveFormData() {
-        appValidateForm($('#feesStructure-form'), {
-            segment_type: 'required',
-            countries: 'required',
-            universities: 'required',
-            region_type: 'required',
-            year: 'required',
-            contact_number: 'required'
-        }, saveFormDataSubmit);
-    }
+  function saveFormData() {
+
+    var rules = {
+        segment_type: 'required',
+        countries: 'required',
+        universities: 'required',
+        region_type: 'required',
+        year: 'required'
+    };
+
+
+
+    appValidateForm($('#feesStructure-form'), rules, saveFormDataSubmit);
+}
 
     function saveFormDataSubmit() {
+
+
+let contactCheck = $('#contact_number').val();
+let regex = /^\+91\s?[0-9]{10}$/;
+
+if (contactCheck === '') {
+    $('#phone_error').hide();
+}
+else if (contactCheck.length === 14 && regex.test(contactCheck)) {
+    $('#phone_error').hide();
+} 
+else {
+    $('#phone_error').show();
+    return false;
+}
 
         const dataObject = collectFormData();
         pdfData = [];
         const formData = objectToFormData(dataObject);
         console.log("final", formData);
         $.ajax({
-            url: "<?= base_url('admin/Fees/saveData') ?>",
+            url: "<?= base_url('admin/Fees/saveData_partner') ?>",
             type: "POST",
             data: formData,
             processData: false, // VERY IMPORTANT
@@ -2003,11 +2083,11 @@ $contactInfo = !empty($feesStructure["contact_data"])
         let selectedUniversity = $(this).val();
 
         if (selectedUniversity > 0) {
-            var url = "<?= admin_url('Fees/company/'); ?>" + selectedUniversity;
+            var url = "<?= admin_url('Fees/partner/'); ?>" + selectedUniversity;
             window.location.href = url;
         } else {
 
-            let url = "<?= admin_url('Fees/company'); ?>";
+            let url = "<?= admin_url('Fees/partner'); ?>";
             window.location.href = url;
         }
 
@@ -2070,13 +2150,13 @@ $contactInfo = !empty($feesStructure["contact_data"])
 
 
             window.open(
-                "<?= base_url('admin/Fees/generate/') ?>" + pdf_id + "?download=1",
+                "<?= base_url('admin/Fees/generate_partner/') ?>" + pdf_id + "?download=1",
                 "_blank"
             );
             return false;
             const csrfName = '<?= $this->security->get_csrf_token_name(); ?>';
             let csrfHash = '<?= $this->security->get_csrf_hash(); ?>';
-
+let partner = <?= !empty($partner) ? $partner : 0 ?>;
             show_loader();
 
             /* -------------------------
@@ -2084,7 +2164,7 @@ $contactInfo = !empty($feesStructure["contact_data"])
             -------------------------- */
 
             frame.onload = null; // reset previous handler
-            frame.src = "<?= admin_url('Fees/generate'); ?>/" + pdf_id;
+            frame.src = "<?= admin_url('Fees/generate_partner'); ?>/" + pdf_id;
 
             frame.onload = async function() {
 
@@ -2162,6 +2242,7 @@ $contactInfo = !empty($feesStructure["contact_data"])
                     formData.append("university_name", pdfData.university_name || "");
                     formData.append("segment_type", pdfData.segment_type || "");
                     formData.append("region_name", pdfData.region_name || "");
+                     formData.append("partner_status", partner);
 
                     /* -------------------------
                       7️⃣ UPLOAD PDF

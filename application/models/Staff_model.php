@@ -1030,4 +1030,32 @@ class Staff_model extends App_Model
 
         return $this->db->get()->result_array();
     }
+    
+    public function update_department_type($data)
+{
+    // Basic validation
+    if (empty($data['staffid']) || !is_numeric($data['staffid'])) {
+        return false;
+    }
+
+    if (empty($data['department'])) {
+        return false;
+    }
+
+    // Check if staff exists
+    $this->db->where('staffid', $data['staffid']);
+    $staff = $this->db->get(db_prefix() . 'staff')->row();
+
+    if (!$staff) {
+        return false;
+    }
+
+    // Update department
+    $this->db->where('staffid', $data['staffid']);
+    $result = $this->db->update(db_prefix() . 'staff', [
+        'department' => $data['department']
+    ]);
+
+    return true;
+}
 }

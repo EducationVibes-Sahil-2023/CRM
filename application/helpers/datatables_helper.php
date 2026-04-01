@@ -1154,7 +1154,7 @@ function data_tables_init($aColumns, $sIndexColumn, $sTable, $join = [], $where 
 }
 
 
-function data_tables_init_($aColumns, $sIndexColumn, $sTable, $join = [], $where = [], $additionalSelect = [], $sGroupBy = '', $searchAs = [], $order_by_status = 0, $search_column = [])
+function data_tables_init_($aColumns, $sIndexColumn, $sTable, $join = [], $where = [], $additionalSelect = [], $sGroupBy = '', $searchAs = [], $order_by_status = 0, $search_column = [],$group_by_aditional = "")
 {
     $CI          = &get_instance();
     $__post      = $CI->input->post();
@@ -1466,9 +1466,27 @@ function data_tables_init_($aColumns, $sIndexColumn, $sTable, $join = [], $where
     }
 
     $join = implode(' ', $join);
-    if (!empty($sOrder)) {
-        $sOrder .= ",tblleads.id";
-    }
+    // if (!empty($sOrder)) {
+    //     $sOrder .= ",tblleads.id";
+    // }
+    
+//     if(is_admin())
+// {
+//     // echo $__post['order'][$key]['column'];
+//     // die;
+//     // print_r($aColumns);
+//     // echo $aColumns[intval($__post['order'][$key]['column'])];
+//     echo $sOrder;
+//     // echo $sQuery;
+//     die;
+// }
+if (!empty($group_by_aditional)) {
+$sOrder = $group_by_aditional.' '.str_replace("ORDER BY",",",$sOrder);
+} elseif (!empty($sOrder)) {
+$sOrder = $sOrder . ',tblleads.id';
+} else {
+$sOrder = 'tblleads.id';
+}
 
 
     $sQuery = '
@@ -1488,6 +1506,7 @@ function data_tables_init_($aColumns, $sIndexColumn, $sTable, $join = [], $where
 //     // die;
 //     // print_r($aColumns);
 //     // echo $aColumns[intval($__post['order'][$key]['column'])];
+//     // echo $sOrder;
 //     echo $sQuery;
 //     die;
 // }
