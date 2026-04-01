@@ -6,6 +6,7 @@ $this->ci->load->model('gdpr_model');
 $lockAfterConvert      = get_option('lead_lock_after_convert_to_customer');
 $consentLeads          = get_option('gdpr_enable_consent_for_leads');
 $get_staff_user_id = get_staff_user_id();
+
 $has_permission_delete = has_permission('leads', '', 'delete');
 
 $custom_fields = [];
@@ -192,7 +193,15 @@ $select = array_merge($select, [
     "CONCAT(s.firstname,' ',s.lastname) as assigned_name",
     "office_start_time",
     "office_end_time",
-    "MIN(calls.call_start) phonenumber_duration",
+    // "MIN(calls.call_start) phonenumber_duration",
+    
+    "MIN(
+    CASE 
+        WHEN (calls.call_start + 19800) > UNIX_TIMESTAMP(l.dateassigned)
+        THEN calls.call_start 
+    END
+) AS phonenumber_duration",
+    
     "IFNULL(clients.userid,0) is_converted"
 
 ]);
@@ -365,12 +374,14 @@ if ($this->ci->input->post('last_update_date') || $this->ci->input->post('last_c
 // }
 
 $having ="";
-
+$having_ ="";
 if ($this->ci->input->post('show_update_counts') && $this->ci->input->post('show_update_counts') == 1) {
     $min = isset($_POST['update_count_min']) ? $_POST['update_count_min'] : 0;
     $max = isset($_POST['update_count_max']) ? $_POST['update_count_max'] : 0;
 
     $having = " HAVING update_count   BETWEEN '{$this->ci->db->escape_str($min)}' AND '{$this->ci->db->escape_str($max)}' ";
+    
+    
 }
 // Check user permissions and access scope
 if (!has_permission('leads', '', 'view')) {
@@ -381,7 +392,7 @@ $order_by ="";
 
 if(isset($_POST["order"][0]["column"]) && $_POST["order"][0]["column"] >= 0)
 {
-     if(empty($this->ci->input->post('assigned')) && is_admin())
+     if(empty($this->ci->input->post('assigned')) && (is_admin() || $get_staff_user_id == 306 || $role == 3) && empty($where))
      {
          $_POST["order"][0]["column"] = 0;
      }
@@ -438,13 +449,15 @@ if (!empty(trim($_POST["search"]["value"]))) {
     $where_condition .= " ) ";
 }
 
- if (empty($this->ci->input->post('assigned')) && is_admin()) {
+ if (empty($this->ci->input->post('assigned')) && (is_admin() || $get_staff_user_id == 306 || $role == 3)) {
+     if(empty($having)){
     $externalLimit = " LIMIT $startLength,$endLength ";
+      $startLength=0;
+     }
+    
  }
  
-  if (empty($this->ci->input->post('assigned')) && is_admin()) {
-      $startLength=0;
-  }
+
 
    $sql = "
 SELECT  $final_select_query FROM ( 
@@ -458,7 +471,7 @@ LEFT JOIN tblleads_status st ON l.status = st.id
 LEFT JOIN tblleads_type lt ON l.type = lt.id 
 LEFT JOIN tblleads_sources ls ON l.source = ls.id 
 LEFT JOIN tblreminders r ON l.id = r.rel_id AND r.rel_type = 'lead'
-WHERE l.lost = 0 AND l.junk = 0  and l.status = 33 $where_condition GROUP BY l.id $externalLimit )
+WHERE l.lost = 0 AND l.junk = 0  and l.status = 33 $where_condition GROUP BY l.id  $having_ $externalLimit )
    
    UNION ALL
    
@@ -472,12 +485,12 @@ LEFT JOIN tblleads_status st ON l.status = st.id
 LEFT JOIN tblleads_type lt ON l.type = lt.id 
 LEFT JOIN tblleads_sources ls ON l.source = ls.id
 LEFT JOIN tblreminders r ON l.id = r.rel_id AND r.rel_type = 'lead'
-WHERE l.lost = 0 AND l.junk = 0 and l.status = 33 $where_condition GROUP BY l.id  $externalLimit ) )  as Final GROUP BY Final.id  $having $order_by LIMIT $startLength,$endLength ";
+WHERE l.lost = 0 AND l.junk = 0 and l.status = 33 $where_condition GROUP BY l.id  $having_ $externalLimit ) )  as Final GROUP BY Final.id  $having $order_by LIMIT $startLength,$endLength ";
 
 // if(is_admin())
 // {
-    //  echo $sql;
-    //  die;
+//      echo $sql;
+//      die;
 // }
   
     $Result = $this->ci->db->query($sql)->result_array();
@@ -491,9 +504,16 @@ $otherLength = ($otherLength == 0)
     $otherLength = intval($otherLength);
    $sql ="";
    
-if (empty($this->ci->input->post('assigned'))  && is_admin()) {
-    $externalLimit = " LIMIT $startLength,$otherLength ";
+if (empty($this->ci->input->post('assigned'))  && (is_admin() || $get_staff_user_id == 306 || $role == 3)) {
+   
+   $startLength =  $_POST['start'];
+    if(empty($having)){
+        $externalLimit = " LIMIT $startLength,$otherLength ";
+        $startLength =0;
+    }
+   
  }
+ 
  
     $sql = "
 SELECT $final_select_query FROM ( 
@@ -507,7 +527,7 @@ LEFT JOIN tblleads_status st ON l.status = st.id
 LEFT JOIN tblleads_type lt ON l.type = lt.id 
 LEFT JOIN tblleads_sources ls ON l.source = ls.id 
 LEFT JOIN tblreminders r ON l.id = r.rel_id AND r.rel_type = 'lead'
-WHERE l.lost = 0 AND l.junk = 0 and l.status!=33 $where_condition GROUP BY l.id $externalLimit )
+WHERE l.lost = 0 AND l.junk = 0 and l.status!=33 $where_condition GROUP BY l.id $having_ $externalLimit )
    
    UNION ALL
    
@@ -521,7 +541,7 @@ LEFT JOIN tblleads_status st ON l.status = st.id
 LEFT JOIN tblleads_type lt ON l.type = lt.id 
 LEFT JOIN tblleads_sources ls ON l.source = ls.id
 LEFT JOIN tblreminders r ON l.id = r.rel_id AND r.rel_type = 'lead'
-WHERE l.lost = 0 AND l.junk = 0 and l.status!=33 $where_condition GROUP BY l.id $externalLimit ) )  as Final GROUP BY Final.id  $having $order_by LIMIT $startLength,$otherLength";
+WHERE l.lost = 0 AND l.junk = 0 and l.status!=33 $where_condition GROUP BY l.id $having_ $externalLimit ) )  as Final GROUP BY Final.id  $having $order_by LIMIT $startLength,$otherLength";
    
 
     // $Result = $this->ci->db->query($sql)->result_array();
@@ -531,8 +551,8 @@ $Result_ = $this->ci->db->query($sql)->result_array();
 
 // if(is_admin())
 // {
-    //  echo $sql;
-    //  die;
+//      echo $sql;
+//      die;
 // }
   
 

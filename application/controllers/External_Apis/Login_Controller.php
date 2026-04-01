@@ -1800,9 +1800,37 @@ public function weekend_lead_assignation()
 
 public function check_lead_auto_assignation_lead()
 {
+    
+
+
+    $currentTime = date('H:i');
+    $currentDay  = date('l'); // Sunday, Monday, etc.
+    $currentDate = date('Y-m-d');
+
+    // Define allowed time range
+    $startTime = '13:30';
+    $endTime   = '14:00';
+
+    // Define holidays (example array - you can load from DB)
+    $holidays = holiday_list();
+    // Check conditions
+    if (
+        $currentTime >= $startTime &&
+        $currentTime <= $endTime &&
+        $currentDay != 'Sunday' &&
+        !in_array($currentDate, $holidays)
+    ) {
+        $this->load->model('Leads_model');
+        $this->Leads_model->check_lead_auto_assignation_lead();
+    } else {
+        // echo "not";
+        // Optional: log or return message
+        log_message('info', 'Auto assign skipped due to time/day/holiday restriction');
+    }
+
   
-    $this->load->model('Leads_model');
-    $this->Leads_model->check_lead_auto_assignation_lead();
+    // $this->load->model('Leads_model');
+    // $this->Leads_model->check_lead_auto_assignation_lead();
 }
 
 

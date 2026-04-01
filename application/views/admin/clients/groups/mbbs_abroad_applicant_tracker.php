@@ -1594,7 +1594,20 @@ if (empty($staff_list[get_staff_user_id()]["post_sales"]) && !is_admin()) {
                                                                 <label>Visa Application Form <small class='text-danger'>*</small></label>
                                                                 <?php
                                                                 $re = !empty($file_url_application_form) ? 'false' : 'true';
-                                                                echo render_input('visa_application_form_' . $visa_id, '', '', 'file', ["data-file" => $file_url_application_form, "required" => $re]); ?>
+                                                             
+ $disabled = empty($staff_list[get_staff_user_id()]["post_sales"]) ? ['disabled' => 'disabled'] : [];
+
+echo render_input(
+    'visa_application_form_' . $visa_id,
+    '',
+    '',
+    'file',
+    array_merge(
+        ["data-file" => $file_url_application_form, "required" => $re],
+        $disabled
+    )
+);
+?>
                                                                 <?php
                                                                 if (!empty($file_url_application_form)) { ?>
                                                                     <div class="margin-top">
@@ -1611,7 +1624,10 @@ if (empty($staff_list[get_staff_user_id()]["post_sales"]) && !is_admin()) {
                                                                 <label>Visa Tracking Receipt <small class='text-danger'>*</small></label>
                                                                 <?php
                                                                 $re = !empty($file_url_tracking_receipt) ? 'false' : 'true';
-                                                                echo render_input('visa_tracking_receipt_' . $visa_id, '', '', 'file', ["data-file" => $file_url_tracking_receipt, "required" => $re]); ?>
+                                                                $disabled = empty($staff_list[get_staff_user_id()]["post_sales"]) ? ['disabled' => 'disabled'] : [];
+
+                                                                echo render_input('visa_tracking_receipt_' . $visa_id, '', '', 'file',array_merge( ["data-file" => $file_url_tracking_receipt, "required" => $re],$disabled
+    )); ?>
                                                                 <?php
                                                                 if (!empty($file_url_tracking_receipt)) { ?>
                                                                     <div class="margin-top">
