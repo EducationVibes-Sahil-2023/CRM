@@ -10,8 +10,13 @@
     $universityName = $university_data["university_name"];
     $duration = $university_data["duration"];
     $founded_year = $university_data["founded_year"];
-    $logo =  getBase64Image($university_data["logo"] ? $university_data["logo"] : 'https://educationvibes.in/assets/new_images/logo.webp');
-    $university_logo =  getBase64Image($university_data["university_logo"] ?? '');
+if (!empty($university_data["logo"])) {
+    $logo = getBase64Image($university_data["logo"]);
+} elseif (isset($partner) && $partner == 1 && empty($university_data["logo"])) {
+    $logo = '';
+} else {
+    $logo = getBase64Image('https://educationvibes.in/assets/new_images/logo.webp');
+}    $university_logo =  getBase64Image($university_data["university_logo"] ?? '');
     $university_banner = getBase64Image($university_data["banner_image"] ?? '');
     $sectionData  = !empty($section_data)
         ? json_decode($section_data, true)
@@ -375,6 +380,12 @@
              padding: 8px 20px;
 
          }
+         
+         <?php if(isset($partner) && $partner == 1){ ?>
+          .head-office {
+              width: 300px;
+          }
+         <?php } ?>
 
          .branches {
              margin-top: 10px;
@@ -752,27 +763,54 @@
 
              <?php endif; ?>
          </div>
-         <div class="row footer-section">
-             <div class="head-office">
-                 Head Office : Pune
-             </div>
-             <footer class="custom-footer">
-                 <div class="footer-left">
-                     <div class="branches">
-                         <span class="branch-title">Branches:</span>
-                         <?= $locations ?? 'Noida | Indore | Patna | Latur | Jalgaon | Nagpur |
-                        Mumbai | Hyderabad' ?>
-                     </div>
-                 </div>
+<?php if(!empty($contactInfo["headoffice"]) || !empty($contactInfo["branchlocation"]) || !empty($contactInfo["phone"]) || !empty($locations)) { ?>
 
-                 <div class="footer-right">
-                     <div class="phone-box">
-                         <img src="<?= base_url('/assets/pdf_layout/call-icon.png') ?>" style="width:32px; height:32px;">
-                         <span><?= !empty($contactInfo["phone"]) ? $contactInfo["phone"] : '+91 7217219100' ?></span>
-                     </div>
-                 </div>
-             </footer>
-         </div>
+<div class="row footer-section">
+
+    <?php if(!empty($locations)){ ?>
+    <div class="head-office">
+        Head Office : Pune
+    </div>
+    <?php } ?>
+
+    <?php if(!empty($contactInfo["headoffice"])){ ?>
+    <div class="head-office">
+        Head Office : <?=$contactInfo["headoffice"]?>
+    </div>
+    <?php } ?>
+
+    <footer class="custom-footer">
+        <div class="footer-left">
+
+            <?php if(!empty($locations) && trim($locations)!=''){ ?>
+            <div class="branches">
+                <span class="branch-title">Branches:</span>
+                <?= $locations ?>
+            </div>
+            <?php } ?>
+
+            <?php if(!empty($contactInfo["branchlocation"])){ ?>
+            <div class="branches">
+                <span class="branch-title">Branches:</span>
+                <?= $contactInfo["branchlocation"] ?>
+            </div>
+            <?php } ?>
+
+        </div>
+
+        <?php if(!empty($contactInfo["phone"])){ ?>
+        <div class="footer-right">
+            <div class="phone-box">
+                <img src="<?= base_url('/assets/pdf_layout/call-icon.png') ?>" style="width:32px;height:32px;">
+                <span><?= $contactInfo["phone"] ?? '+91 7217219100' ?></span>
+            </div>
+        </div>
+        <?php } ?>
+
+    </footer>
+</div>
+
+<?php } ?>
      </div>
 
  </body>
@@ -791,8 +829,8 @@
      async function generatePDFAndUpload() {
          const csrfName = '<?= $this->security->get_csrf_token_name(); ?>';
          let csrfHash = '<?= $this->security->get_csrf_hash(); ?>';
-
-         const {
+let partner = <?= !empty($partner) ? $partner : 0 ?>;
+const {
              jsPDF
          } = window.jspdf;
 
@@ -851,6 +889,9 @@
          formData.append("university_name", "<?= $university_data['university_name'] ?>");
          formData.append("segment_type", "<?= $university_data['segment_type'] ?>");
          formData.append("region_name", "<?= $university_data['region_name'] ?>");
+          formData.append("partner_status", partner);
+         
+         
 
          // Send to server
          try {

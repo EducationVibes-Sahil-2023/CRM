@@ -146,12 +146,7 @@ if (is_array($json_data)) {
                     return true;
                 }
                 
-                
-// $this->db->insert(
-//     db_prefix() . 'call_data',
-//     ['data' => json_encode($post_data)]
-// );
-
+ 
                 $call_data = array();
                 $required  = [];
                 $lead_type = !empty($form->lead_type) ? trim($form->lead_type) : '';
@@ -308,11 +303,26 @@ if (is_array($json_data)) {
                 
                 if($key == "834681a14c5d64a07d1fabcd11a5f9a8"){
                     
-                      $auto_assign = array_filter(explode(",", $form->auto_assign));
-                    $assign_staff_id = $this->leads_model->automatic_assign_staff('', '', '', '', $auto_assign);
+                    $auto_assign = array_filter(explode(",", $form->auto_assign));
+                    
+                   
+                    $lead_type = !empty($post_data["type"]) ? trim($post_data["type"]) : '';
+                    $state_name = !empty($post_data['state']) ? $post_data['state'] : '';
+                    $lead_type = !empty($post_data['type']) ? $post_data['type'] : '';
+                    
+                     if (!empty($form->state_wise)  && $form->state_wise == 1) {
+                    $assign_staff_id = $this->leads_model->automatic_assign_staff($state_name, $lead_type);
+                     }
+                     else
+                     {
+                         $assign_staff_id = $this->leads_model->automatic_assign_staff('', $lead_type, '', '', $auto_assign); 
+                     }
+                    
                      if (!empty($assign_staff_id[0]["staffid"])) {
                         $form->responsible = $assign_staff_id[0]["staffid"];
                     }
+                    
+                       $this->db->insert(db_prefix() . 'facebook_webhook_data', ['data' => json_encode($post_data, JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES),"form_id"=>"sulekha"]);
                 }
 
                 if (is_gdpr() && get_option('gdpr_enable_terms_and_conditions_lead_form') == 1) {
@@ -687,7 +697,8 @@ if (is_array($json_data)) {
                             $success      = true;
                             $insert_to_db = false;
 
-
+              
+                         
                             // convert to fresh lead
                             if (!empty($where)) {
                                 $this->db->where($where);
@@ -780,16 +791,21 @@ $updateStatus_dup['upcomming_count'] = ($duplicateLead->upcomming_count ?? 1) + 
                                     }
                                 }
                             }
-
-                            $updateStatus = [
-
-                                'status' => $form->lead_status,
+                            
+                            
+                                $updateStatus = [
+                                'status' => 33??$form->lead_status,
                                 // 'description' => 'Re Query',
                                 // 'assigned' => $form->responsible,
                                 'last_status_change' => date("Y-m-d"),
-                                'lastcontact' => date("Y-m-d h:i:s"),
-                                'dateassigned' => date("Y-m-d")
-                            ];
+                                // 'lastcontact' => date("Y-m-d H:i:s"),
+                                // 'dateassigned' => date("Y-m-d H:i:s"),
+                                ];
+                                                        
+
+    
+                            $statusChecker = $this->leads_model->update_lead_status(array("status"=>33,"leadid"=>$duplicateLead->id));
+ 
 
                             if (!empty($post_data["website"])) {
                                 $updateStatus['website'] = $post_data["website"];
@@ -885,8 +901,13 @@ $updateStatus_dup['upcomming_count'] = ($duplicateLead->upcomming_count ?? 1) + 
                             }
                             
                             
-                       $updateStatus['upcomming_date'] = date('Y-m-d H:i:s');
-$updateStatus['upcomming_count'] = ($duplicateLead->upcomming_count ?? 1) + 1;
+                           $statusActivity =  $this->leads_model->update_lead_status(array("status"=>33,"leadid"=>$duplicateLead->id));
+                           
+             
+                            
+                            $updateStatus['upcomming_date'] = date('Y-m-d H:i:s');
+                            $updateStatus['upcomming_count'] = ($duplicateLead->upcomming_count ?? 1) + 1;
+                            
                             $this->db->where('id', $duplicateLead->id);
                             $this->db->update(db_prefix() . 'leads', $updateStatus);
 

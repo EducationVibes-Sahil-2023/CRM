@@ -14,7 +14,7 @@ $has_permission_delete = has_permission('hostel_management', '', 'delete');
 $aColumns = [
     db_prefix() . 'hostel_infomation.name as name',
     db_prefix() . 'hostel_infomation.passport as passport',
-    // db_prefix() . 'hostel_infomation.university_name as university_name',
+    db_prefix() . 'hostel_infomation.university_name as university_name',
     'latest_quotation.room_no as room_no',
     'latest_quotation.floor_no as floor_no',
     'latest_quotation.company as company',

@@ -215,6 +215,12 @@ $route['external/update_excelData'] = 'External_Apis/Login_Controller/update_exc
 $route['external/transfer_whatsapp_notification'] = 'External_Apis/Login_Controller/transfer_whatsapp_notification';
 $route['external/tbl_call_sync'] = 'External_Apis/Login_Controller/tbl_call_sync';
 $route['external/google_qualified_leads'] = 'External_Apis/Login_Controller/google_qualified_leads';
+
+$route['external/check_lead_auto_assignation_lead'] = 'External_Apis/Login_Controller/check_lead_auto_assignation_lead';
+$route['external/weekend_lead_assignation'] = 'External_Apis/Login_Controller/weekend_lead_assignation';
+$route['external/weekend_lead_assignation_auto'] = 'External_Apis/Login_Controller/weekend_lead_assignation_auto';
+
+
 /**
  * @since  2.3.0
  * Route for clients set password URL, because it's using the same controller for staff to

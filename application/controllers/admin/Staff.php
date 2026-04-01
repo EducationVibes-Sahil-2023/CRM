@@ -18,46 +18,133 @@ class Staff extends AdminController
         $this->load->view('admin/staff/manage', $data);
     }
 
-    public function edit_phonenumber()
-    {
-        // Assuming this code is part of a method/function in your controller   
-        // Load CodeIgniter's form validation library if not already loaded
-        $this->load->library('form_validation');
-        // Set validation rules
-        $this->form_validation->set_rules('staffid', 'Staff ID', 'required|integer');
-        $this->form_validation->set_rules('phonenumber', 'Phone Number', 'integer');
+public function edit_phonenumber()
+{
+    $this->load->library('form_validation');
 
-        // Check if the submitted data passes validation
-        if ($this->form_validation->run() == FALSE) {
-            // Validation failed
-            $response = array(
-                'status' => '0',
-                'message' => validation_errors() // Return validation errors
-            );
-        } else {
-            // Validation passed, proceed with updating the database
-            $staffid = $this->input->post("staffid");
-            $phonenumber = $this->input->post("phonenumber");
+    $this->form_validation->set_rules('staffid', 'Staff ID', 'required|integer');
 
-            $this->db->where('staffid', $staffid);
-            $this->db->update(db_prefix() . 'staff', ['phonenumber' => $phonenumber]);
-            // Check if the update was successful
-            if ($this->db->affected_rows() > 0) {
-                $response = array(
-                    'status' => '1',
-                    'message' => 'Phone number updated successfully'
-                );
-            } else {
-                // $response = array(
-                //     'status' => '0',
-                //     'message' => 'Failed to update phone number. Staff ID may not exist.'
-                // );
-            }
+    if ($this->form_validation->run() == FALSE) {
+        echo json_encode([
+            'status' => '0',
+            'message' => validation_errors()
+        ]);
+        return;
+    }
+
+    $staffid = $this->input->post("staffid");
+
+    $phonenumber = trim($this->input->post("phonenumber", TRUE));
+    $alternate_number = trim($this->input->post("alternative_phonenumber", TRUE));
+
+    $updateData = [];
+
+    // Same number check
+    if (!empty($phonenumber) && !empty($alternate_number) && $phonenumber === $alternate_number) {
+        echo json_encode([
+            'status' => '0',
+            'message' => 'Phone and alternate number cannot be same'
+        ]);
+        return;
+    }
+
+// 🔹 Get current staff data
+$this->db->where('staffid', $staffid);
+$current = $this->db->get(db_prefix() . 'staff')->row();
+
+// ✅ Same staff check
+
+// If updating primary → compare with same staff alternate
+if (!empty($phonenumber) && $phonenumber == $current->alternate_number) {
+    echo json_encode([
+        'status' => '0',
+        'message' => 'Phone number cannot match alternate number (same staff)'
+    ]);
+    return;
+}
+
+// If updating alternate → compare with same staff primary
+if (!empty($alternate_number) && $alternate_number == $current->phonenumber) {
+    echo json_encode([
+        'status' => '0',
+        'message' => 'Alternate number cannot match phone number (same staff)'
+    ]);
+    return;
+}
+
+    // Duplicate check
+    if (!empty($phonenumber) || !empty($alternate_number)) {
+
+        $this->db->group_start();
+
+        if (!empty($phonenumber)) {
+            $this->db->group_start()
+                ->where('phonenumber', $phonenumber)
+                ->or_where('alternate_number', $phonenumber)
+            ->group_end();
         }
 
-        // Convert response array to JSON and return it
-        echo json_encode($response);
+        if (!empty($alternate_number)) {
+            $this->db->or_group_start()
+                ->where('phonenumber', $alternate_number)
+                ->or_where('alternate_number', $alternate_number)
+            ->group_end();
+        }
+
+        $this->db->group_end();
+        $this->db->where('staffid !=', $staffid);
+
+        $exists = $this->db->get(db_prefix() . 'staff')->row();
+
+        if ($exists) {
+            echo json_encode([
+                'status' => '0',
+                'message' => 'Phone number already exists for another staff'
+            ]);
+            return;
+        }
     }
+
+    // Prepare update
+   $updateData = [];
+
+// Use raw POST to detect presence
+$postData = $this->input->post(NULL, TRUE);
+
+// 🔹 Only update if key exists in POST
+if (array_key_exists('phonenumber', $postData)) {
+    $updateData['phonenumber'] = trim($postData['phonenumber']); // can be ''
+}
+
+if (array_key_exists('alternative_phonenumber', $postData)) {
+    $updateData['alternate_number'] = trim($postData['alternative_phonenumber']); // can be ''
+}
+
+    if (empty($updateData)) {
+        echo json_encode([
+            'status' => '0',
+            'message' => 'No data provided'
+        ]);
+        return;
+    }
+
+    $this->db->where('staffid', $staffid);
+    $update = $this->db->update(db_prefix() . 'staff', $updateData);
+
+    if ($update) {
+        echo json_encode([
+            'status' => '1',
+            'message' => $this->db->affected_rows() > 0 
+                ? 'Phone details updated successfully' 
+                : 'No changes (same values)'
+        ]);
+    } else {
+        echo json_encode([
+            'status' => '0',
+            'message' => 'Update failed'
+        ]);
+    }
+}
     /* Add new staff member or edit existing */
     public function member($id = '')
     {
@@ -112,6 +199,101 @@ class Staff extends AdminController
             //         die;
             //     }
             // }
+            
+            
+        
+            
+          $staffid = $id;
+
+// 🔹 Get full POST safely
+$postData = $this->input->post(NULL, TRUE);
+
+// 🔹 Detect fields (important)
+ $phonenumber      = array_key_exists('phonenumber', $postData) 
+                    ? trim($postData['phonenumber']) 
+                    : NULL;
+
+ $alternate_number = array_key_exists('alternate_number', $postData) 
+                    ? trim($postData['alternate_number']) 
+                    : NULL;
+
+
+// =========================================
+// 🔴 SAME STAFF CHECK
+// =========================================
+
+// Get current staff data
+$this->db->where('staffid', $staffid);
+$current = $this->db->get(db_prefix() . 'staff')->row();
+
+// ❌ If both sent and same
+if ($phonenumber !== NULL && $alternate_number !== NULL) {
+    if ($phonenumber !== '' && $alternate_number !== '' && $phonenumber == $alternate_number) {
+        set_alert('success', "Phone number and alternate number cannot be the same");
+        redirect(admin_url('staff/member/' . $id));
+        return;
+    }
+}
+
+
+
+// ❌ If updating phone → compare with existing alternate
+if ($phonenumber !== NULL && $phonenumber !== '' && $phonenumber == $current->alternate_number) {
+    set_alert('success', "Phone number cannot match alternate number");
+    redirect(admin_url('staff/member/' . $id));
+    return;
+}
+
+// ❌ If updating alternate → compare with existing phone
+if ($alternate_number !== NULL && $alternate_number !== '' && $alternate_number == $current->phonenumber) {
+    set_alert('success', "Alternate number cannot match phone number");
+    redirect(admin_url('staff/member/' . $id));
+    return;
+}
+
+
+// =========================================
+// 🔴 DUPLICATE CHECK (OTHER STAFF)
+// =========================================
+
+if (
+    ($phonenumber !== NULL && $phonenumber !== '') ||
+    ($alternate_number !== NULL && $alternate_number !== '')
+) {
+
+    $this->db->group_start();
+
+    if ($phonenumber !== NULL && $phonenumber !== '') {
+        $this->db->or_group_start()
+            ->where('phonenumber', $phonenumber)
+            ->or_where('alternate_number', $phonenumber)
+        ->group_end();
+    }
+
+    if ($alternate_number !== NULL && $alternate_number !== '') {
+        $this->db->or_group_start()
+            ->where('phonenumber', $alternate_number)
+            ->or_where('alternate_number', $alternate_number)
+        ->group_end();
+    }
+
+    $this->db->group_end();
+
+    $this->db->where('staffid !=', $staffid);
+
+    $exists = $this->db->get(db_prefix() . 'staff')->row();
+
+    if ($exists) {
+        set_alert('success', "Phone number already exists for another staff");
+        redirect(admin_url('staff/member/' . $id));
+        return;
+    }
+}
+            
+            
+            
+            
+            
             if ($id == '') {
                 if (!has_permission('staff', '', 'create')) {
                     access_denied('staff');
@@ -460,6 +642,14 @@ class Staff extends AdminController
             } //$notifications as $notification
             echo json_encode($notifications);
             die;
+        }
+    }
+    
+    public function update_department_type()
+    {
+        if ($this->input->post() && $this->input->is_ajax_request()) {
+
+            $this->staff_model->update_department_type($this->input->post());
         }
     }
 }

@@ -22,6 +22,10 @@
 							_l('staff_dt_email'),
 							_l('phone'),
 							'Alternative No.',
+							'Department',
+							'Office Region',
+							'Lead State Region',
+				// 			'State',
 							_l('role'),
 							_l('staff_dt_last_Login'),
 							_l('staff_dt_active'),
@@ -75,6 +79,7 @@
 				</div>
 				<div class="modal-body">
 					<div class="form-group">
+					    	<input type="hidden" id="alternative_phonenumber_status">
 						<input type="hidden" id="staff_id">
 						<input type="number" class="form-control" id="staff_contact">
 					</div>
@@ -103,9 +108,10 @@
 		$('#transfer_data_to').selectpicker('refresh');
 	}
 
-	function edit_staff_phone_number(id, number) {
+	function edit_staff_phone_number(id, number,alternative_phonenumber_status=0) {
 		$("#staff_contact").val(number);
 		$("#staff_id").val(id);
+		$("#alternative_phonenumber_status").val(alternative_phonenumber_status);
 		$('#edit_phonenumber').modal('show');
 	}
 
@@ -113,8 +119,17 @@
 		var formData = new FormData();
 		var phonenumber = $("#staff_contact").val();
 		var staffid = $("#staff_id").val();
+		var alternative_phonenumber_status = $("#alternative_phonenumber_status").val();
 		formData.append("staffid", staffid);
+		if(alternative_phonenumber_status==1)
+		{
+		    formData.append("alternative_phonenumber", phonenumber);
+		}
+		else{
 		formData.append("phonenumber", phonenumber);
+		}
+		
+		
 		// Assuming you are using CSRF protection, add the CSRF token to the form data
 		formData.append("<?= $this->security->get_csrf_token_name() ?>", "<?= $this->security->get_csrf_hash() ?>");
 

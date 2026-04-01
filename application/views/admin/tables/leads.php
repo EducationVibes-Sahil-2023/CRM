@@ -6,112 +6,282 @@ $this->ci->load->model('gdpr_model');
 $lockAfterConvert      = get_option('lead_lock_after_convert_to_customer');
 $consentLeads          = get_option('gdpr_enable_consent_for_leads');
 $get_staff_user_id = get_staff_user_id();
+
 $has_permission_delete = has_permission('leads', '', 'delete');
 
 $custom_fields = [];
 $customFieldValues = [];
 $is_admin = is_admin();
+$statuses              = $this->ci->leads_model->get_status();
+$statuses = array_column($statuses, null, "id");
+
+$type              = $this->ci->leads_model->get_type();
+$type = array_column($type, null, "id");
+
+
 if ($is_admin) {
     $custom_fields         = get_table_custom_fields('leads');
 }
 
-$statuses              = $this->ci->leads_model->get_status();
-$type              = $this->ci->leads_model->get_type();
-$source              = $this->ci->leads_model->get_source();
-$staff_list              = $this->ci->leads_model->get_staff_list();
 
-$statuses = array_column($statuses, null, "id");
-$type = array_column($type, null, "id");
-$source = array_column($source, null, "id");
-$staff_list = array_column($staff_list, null, "staffid");
+$holidays = "'" . implode("','", holiday_list()) . "'"; 
 
+$startLength = $_POST['start'];
+$endLength = $_POST['length'];
 
-$sTable  =  db_prefix() . "leads";
+function calculateOfficeTimeDiff(
+    $assignedDate,
+    $callDate,
+    $officeStart = '10:00:00',
+    $officeEnd = '20:00:00'
+) {
+    
+    $holidays =[];
+    if (empty($assignedDate) || empty($callDate)) {
+        return '';
+    }
+
+    $start = new DateTime($assignedDate);
+    $end   = new DateTime($callDate);
+
+    if ($end <= $start) {
+        return '';
+    }
+
+    $totalSeconds = 0;
+
+    while ($start < $end) {
+
+        $currentDate = $start->format('Y-m-d');
+        $isSunday  = ($start->format('w') == 0);
+        $isHoliday = in_array($currentDate, $holidays);
+
+        // ❌ Skip Sundays & Holidays completely
+        if ($isSunday || $isHoliday) {
+            $start->modify('+1 day')->setTime(0, 0, 0);
+            continue;
+        }
+
+        // Office hours for current day
+        list($h1, $m1, $s1) = explode(':', $officeStart);
+        list($h2, $m2, $s2) = explode(':', $officeEnd);
+
+        $dayStart = (clone $start)->setTime($h1, $m1, $s1);
+        $dayEnd   = (clone $start)->setTime($h2, $m2, $s2);
+
+        // Determine actual working window
+        $actualStart = max($start, $dayStart);
+        $actualEnd   = min($end, $dayEnd);
+
+        if ($actualEnd > $actualStart) {
+            $totalSeconds += ($actualEnd->getTimestamp() - $actualStart->getTimestamp());
+        }
+
+        // Move to next day
+        $start->modify('+1 day')->setTime(0, 0, 0);
+    }
+
+    // Format result
+    $days = floor($totalSeconds / 86400);
+    $hours = floor(($totalSeconds % 86400) / 3600);
+    $minutes = floor(($totalSeconds % 3600) / 60);
+    $seconds = $totalSeconds % 60;
+
+    return sprintf('%dD:%02d:%02d:%02d', $days, $hours, $minutes,$seconds);
+}
+ 
+
+$sTable  =  db_prefix() . "leads l";
 
 $call_table     = db_prefix() . 'calls_activity_logs';
-$sIndexColumn   = 'id';
-$up_from_date   = $this->ci->input->post('up_from_date');
-$up_to_date     = $this->ci->input->post('up_to_date');
-$where          = [];
-$join           = [];
-$filter = false;
-$sIndexColumn = 'id';
+
+$select = [];
+
+$select = [
+   "l.id as id",
+    "CASE
+    WHEN (
+        GREATEST(
+            IFNULL(DATE(l.lastupdate_date), '1970-01-01'),
+            IFNULL((
+                SELECT MAX(DATE(n.dateadded))
+                FROM tblnotes n
+                WHERE n.rel_id = l.id 
+                  AND n.rel_type = 'lead'
+            ), '1970-01-01')
+        ) >= IFNULL((
+            SELECT MAX(DATE(r.date))
+            FROM tblreminders r
+            WHERE r.rel_id = l.id 
+              AND r.rel_type = 'lead'
+        ), '1970-01-01')
+    ) THEN 3
+
+    WHEN (
+        CURDATE() <= IFNULL((
+            SELECT MAX(DATE(r.date))
+            FROM tblreminders r
+            WHERE r.rel_id = l.id 
+              AND r.rel_type = 'lead'
+        ), '1970-01-01')
+    ) THEN 2
+
+    ELSE 1
+END AS followup_status",
+    "count(DISTINCT calls.id) AS update_count",
+    "IFNULL(SUM( DISTINCT calls.duration), 0) AS call_duration",
+    "l.lastconnect_date as lastconnect_date",
+    " MIN(
+    CASE 
+        WHEN (calls.call_start + 19800) > UNIX_TIMESTAMP(l.dateassigned)
+        THEN calls.call_start
+    END
+) AS first_call_start,
+
+CASE 
+    WHEN l.dateassigned IS NULL 
+    THEN NULL
+    ELSE TIMESTAMPDIFF(
+        SECOND,
+        l.dateassigned,
+        FROM_UNIXTIME(
+            MIN(
+                CASE 
+                    WHEN (calls.call_start + 19800) > UNIX_TIMESTAMP(l.dateassigned)
+                    THEN calls.call_start
+                END
+            ) + 19800
+        )
+    )
+END AS time_diff_seconds",
+    "l.dateadded as dateadded",
+   
+];
+
+// if(is_admin())
+// {
+    $select[]= "l.lastupdate_date as lastupdate_date";
+// }
+
+$select =array_merge($select,["(SELECT GROUP_CONCAT(name SEPARATOR ',') FROM tbltaggables 
+        JOIN tbltags ON tbltaggables.tag_id = tbltags.id 
+        WHERE rel_id = l.id AND rel_type='lead' ORDER BY tag_order ASC LIMIT 1) as tags","l.name as name","l.phonenumber as phonenumber","l.status as status"]);
+
+if ($is_admin) {
+    foreach ($custom_fields as $field) {
+        $select[] = 'CONCAT("' . $field['fieldto'] . '-", l.id, "-' . $field['id'] . '") as ' . strtolower(str_replace(' ', '_', $field["name"]));
+    }
+}
+
+$select = array_merge($select, [
+    'l.type as type',
+    'l.website as website',
+    'l.reference_name as reference_name',
+    'l.source as source',
+    'l.email as email',
+    'l.assigned as assigned',
+    'l.dateassigned as dateassigned',
+    'l.city as city',
+    'l.state as state',
+    'MAX(r.dateadded) AS followup',
+    "l.upcomming_count as upcomming_count",
+    "st.name as status_name",
+    "lt.name as type_name",
+    "ls.name as source_name",
+    "st.color as color",
+    "st.bg_color as bg_color",
+    "CONCAT(s.firstname,' ',s.lastname) as assigned_name",
+    "office_start_time",
+    "office_end_time",
+    // "MIN(calls.call_start) phonenumber_duration",
+    
+    "MIN(
+    CASE 
+        WHEN (calls.call_start + 19800) > UNIX_TIMESTAMP(l.dateassigned)
+        THEN calls.call_start 
+    END
+) AS phonenumber_duration",
+    
+    "IFNULL(clients.userid,0) is_converted"
+
+]);
+
+
+
+$finalSelect = [
+   "Final.id as id",
+    "Final.followup_status as followup_status",
+    "SUM(Final.update_count) as update_count",
+    "IFNULL(SUM(Final.call_duration), 0) as call_duration",
+    "Final.lastconnect_date as lastconnect_date",
+    "MAX(Final.first_call_start) as first_call_start,
+MIN(Final.time_diff_seconds) as time_diff_seconds",
+    "Final.dateadded as dateadded",
+   
+];
+
+// if(is_admin())
+// {
+    $finalSelect[]= "MAX(Final.lastupdate_date) as lastupdate_date";
+// }
+
+$finalSelect =array_merge($finalSelect,["Final.tags as tags","Final.name as name","Final.phonenumber as phonenumber","Final.status as status"]);
+
+if ($is_admin) {
+    foreach ($custom_fields as $field) {
+        $finalSelect[] = 'CONCAT("' . $field['fieldto'] . '-", Final.id, "-' . $field['id'] . '") as ' . strtolower(str_replace(' ', '_', $field["name"]));
+    }
+}
+
+$finalSelect = array_merge($finalSelect, [
+    'Final.type as type',
+    'Final.website as website',
+    'Final.reference_name as reference_name',
+    'Final.source as source',
+    'Final.email as email',
+    'Final.assigned as assigned',
+    'Final.dateassigned as dateassigned',
+    'Final.city as city',
+    'Final.state as state',
+    'MAX(Final.followup) as followup',
+    "Final.upcomming_count as upcomming_count",
+    "Final.status_name as status_name",
+    "Final.type_name as type_name",
+    "Final.source_name as source_name",
+    "Final.color as color",
+    "Final.bg_color as bg_color",
+    "Final.assigned_name as assigned_name",
+    "Final.office_start_time as office_start_time",
+    "Final.office_end_time as office_end_time",
+    "MIN(Final.phonenumber_duration) as phonenumber_duration",
+    "Final.is_converted as is_converted"
+
+]);
+
+
+$where=[];
+
+$externalLimit= "";
+
+
 
 if (!empty($this->ci->input->post('up_to_date'))) {
     $up_to_date = $this->ci->input->post('up_to_date');
     $up_from_date   = $this->ci->input->post('up_from_date');
-    // Inputs for the query
-    // Escape input dates
+
     $up_from_date = $this->ci->db->escape_str($up_from_date); // Start date
     $up_to_date = $this->ci->db->escape_str($up_to_date);     // End date
-    $start = intval($start);                                  // Offset
-    $length = intval($length);
-    $where_c = "";
-    $join_type = "";
-    $sql_p1 = "";
-    if ($this->ci->input->post('show_update_counts') && $this->ci->input->post('show_update_counts') == 1) {
-
-        $min = isset($_POST['update_count_min']) ? $_POST['update_count_min'] : 0;
-        $max = isset($_POST['update_count_max']) ? $_POST['update_count_max'] : 0;
-        // $where_c = " AND ifnull(tblcalls_activity_logs.id,0) between {$min} AND {$max} ";
 
 
-        if ($min == 0) {
-            $join_type = "RIGHT";
-        }
-    }
-
-    if (has_permission('leads', '', 'view') && $this->ci->input->post('assigned')) {
-        $where_c  .= " AND {$sTable}.assigned IN (" . implode(',', $this->ci->db->escape_str($this->ci->input->post('assigned'))) . ")";
-    }
-
-    $where_c  .= " AND {$call_table}.staffid = {$sTable}.assigned ";
-
-
-    $join[] = "JOIN " . db_prefix() . "leads ON (
-        (
-        tblleads.phonenumber  = {$call_table}.contact
-        )
-        OR
-        (
-        tblleads.alternative_phonenumber != '' AND
-        tblleads.alternative_phonenumber = {$call_table}.contact
-        )
-        )
-        AND {$call_table}.adjusted_call_start >= '{$up_from_date} 00:00:00'
-        AND {$call_table}.adjusted_call_start <= '{$up_to_date} 23:59:59' $where_c";
-
-    $where[] = " AND {$call_table}.adjusted_call_start >= '{$up_from_date} 00:00:00'
-        AND {$call_table}.adjusted_call_start <= '{$up_to_date} 23:59:59' ";
+    $where[] = " AND calls.adjusted_call_start >= '{$up_from_date} 00:00:00'
+        AND calls.adjusted_call_start <= '{$up_to_date} 23:59:59' ";
 
 
     if (!empty($this->ci->input->post('assigned'))) {
-        $where[] = "AND " . $call_table . ".staffid IN (" . implode(',', $this->ci->db->escape_str($this->ci->input->post('assigned'))) . ")";
+        $where[] = " AND  calls.staffid IN (" . implode(',', $this->ci->db->escape_str($this->ci->input->post('assigned'))) . ") ";
     }
-} else {
+} 
 
-    $join[] = "LEFT JOIN " . $call_table . " ON (
-        (
-        tblleads.phonenumber  = {$call_table}.contact 
-        )  or (tblleads.alternative_phonenumber!='' AND tblleads.phonenumber = {$call_table}.contact)
-        )  and ({$call_table}.call_start + 19800) > UNIX_TIMESTAMP(tblleads.dateassigned) AND {$call_table}.staffid = tblleads.assigned";
-}
-
-
-if (!empty($_POST["search"]["value"])) {
-    array_push($join, 'LEFT JOIN ' . db_prefix() . 'taggables ON ' . db_prefix() . 'taggables.rel_id = ' . $sTable . '.id  AND ' . db_prefix() . 'taggables.rel_type = "lead" ');
-    array_push($join, 'LEFT JOIN ' . db_prefix() . 'tags ON ' . db_prefix() . 'taggables.tag_id = ' . db_prefix() . 'tags.id ');
-}
-
-
-
-
-
-if (!$filter || ($filter && !in_array($filter, ['lost', 'junk']))) {
-    $where[] = "AND " . $sTable . ".lost = 0 AND " . $sTable . ".junk = 0";
-}
-
-// Role-based filters for assigned leads
 $role = $this->ci->db->where('staffid', $get_staff_user_id)->get(db_prefix() . 'staff')->row()->role;
 if ($role == 3) {
     $sid = $get_staff_user_id;
@@ -120,29 +290,29 @@ if ($role == 3) {
     $this->ci->db->initialize();
     $idsarr = array_column($teamids, 'staffid');
     $sids = implode(",", $idsarr);
-    $where[] = !empty($sids) ? "AND " . $sTable . ".assigned IN ({$sid}, {$sids})" : "AND " . $sTable . ".assigned = {$sid}";
+    $where[] = !empty($sids) ? " AND l.assigned IN ({$sid}, {$sids})" : "AND l.assigned = {$sid} ";
 }
 
 // Apply filters based on input parameters
 if (has_permission('leads', '', 'view') && $this->ci->input->post('assigned')) {
-    $where[] = "AND " . $sTable . ".assigned IN (" . implode(',', $this->ci->db->escape_str($this->ci->input->post('assigned'))) . ")";
+    $where[] = " AND l.assigned IN (" . implode(',', $this->ci->db->escape_str($this->ci->input->post('assigned'))) . ") ";
 }
 
 if ($this->ci->input->post('status') && count($this->ci->input->post('status')) > 0) {
-    $where[] = "AND " . $sTable . ".status IN (" . implode(',', $this->ci->db->escape_str($this->ci->input->post('status'))) . ")";
+    $where[] = " AND l.status IN (" . implode(',', $this->ci->db->escape_str($this->ci->input->post('status'))) . ") ";
 }
 
 if ($this->ci->input->post('source')) {
-    $where[] = "AND " . $sTable . ".source IN (" . implode(',', $this->ci->db->escape_str($this->ci->input->post('source'))) . ")";
+    $where[] = " AND l.source IN (" . implode(',', $this->ci->db->escape_str($this->ci->input->post('source'))) . ") ";
 }
 
 if ($this->ci->input->post('view_form')) {
     $websites = $this->ci->input->post('view_form');
     $escaped_websites = array_map(function ($w) {
-        return "'" . $this->ci->db->escape_str(trim($w)) . "'";
+        return " '" . $this->ci->db->escape_str(trim($w)) . "' ";
     }, $websites);
 
-    $where[] = "AND " . $sTable . ".website IN (" . implode(',', $escaped_websites) . ")";
+    $where[] = " AND l.website IN (" . implode(',', $escaped_websites) . ") ";
 }
 
 if ($this->ci->input->post('reference_name')) {
@@ -151,35 +321,34 @@ if ($this->ci->input->post('reference_name')) {
         return "'" . $this->ci->db->escape_str(trim($w)) . "'";
     }, $reference_name);
 
-    $where[] = "AND " . $sTable . ".reference_name IN (" . implode(',', $escaped_reference_name) . ")";
+    $where[] = " AND l.reference_name IN (" . implode(',', $escaped_reference_name) . ") ";
 }
 
 
 
 
 if ($this->ci->input->post('lead_type')) {
-    $where[] = "AND " . $sTable . ".type IN (" . implode(',', $this->ci->db->escape_str($this->ci->input->post('lead_type'))) . ")";
+    $where[] = " AND l.type IN (" . implode(',', $this->ci->db->escape_str($this->ci->input->post('lead_type'))) . ") ";
 }
 
 if ($this->ci->input->post('assign_to_date')) {
     $assign_from_date = $this->ci->input->post('assign_from_date');
     $assign_to_date = $this->ci->input->post('assign_to_date');
-    array_push($where, ' AND DATE(dateassigned) BETWEEN "' . $this->ci->db->escape_str($assign_from_date) . '" AND "' . $this->ci->db->escape_str($assign_to_date) . '"');
+    array_push($where, ' AND DATE(l.dateassigned) BETWEEN "' . $this->ci->db->escape_str($assign_from_date) . '" AND "' . $this->ci->db->escape_str($assign_to_date) . '" ');
 }
 
 // Date filters for lead creation, assignment, follow-up, and NEET score
 if ($this->ci->input->post('to_date')) {
     $from_date = $this->ci->input->post('from_date');
     $to_date   = $this->ci->input->post('to_date');
-    $where[]   = "AND DATE(" . $sTable . ".dateadded) BETWEEN '{$this->ci->db->escape_str($from_date)}' AND '{$this->ci->db->escape_str($to_date)}'";
+    $where[]   = " AND DATE(l.dateadded) BETWEEN '{$this->ci->db->escape_str($from_date)}' AND '{$this->ci->db->escape_str($to_date)}' ";
 }
 
 
 if ($this->ci->input->post('followup_to_date')) {
     $followup_from_date = $this->ci->input->post('followup_from_date');
     $followup_to_date   = $this->ci->input->post('followup_to_date');
-    $join[] = " JOIN " . db_prefix() . "reminders ON " . db_prefix() . "reminders.rel_id = " . $sTable . ".id";
-    $where[] = "AND DATE(" . db_prefix() . "reminders.date) BETWEEN '{$this->ci->db->escape_str($followup_from_date)}' AND '{$this->ci->db->escape_str($followup_to_date)}'";
+    $where[] = " AND DATE(r.date) BETWEEN '{$this->ci->db->escape_str($followup_from_date)}' AND '{$this->ci->db->escape_str($followup_to_date)}' ";
 }
 
 if ($this->ci->input->post('last_update_date') || $this->ci->input->post('last_contact_date')) {
@@ -187,301 +356,226 @@ if ($this->ci->input->post('last_update_date') || $this->ci->input->post('last_c
     // Add condition for last_contact_date
     if (!empty($this->ci->input->post('last_contact_date'))) {
         $last_contact_date = $this->ci->db->escape_str($this->ci->input->post('last_contact_date'));
-        array_push($where, ' AND lastconnect_date <= "' . $this->ci->db->escape_str($last_contact_date) . '"');
+        array_push($where, ' AND l.lastconnect_date <= "' . $this->ci->db->escape_str($last_contact_date) . '" ');
     }
 
-    // Add condition for last_update_date
+    // Add condition for last_update_dateCOUNT(DISTINCT calls.id)
     if (!empty($this->ci->input->post('last_update_date'))) {
         $last_update_date = $this->ci->db->escape_str($this->ci->input->post('last_update_date'));
-        array_push($where, ' AND lastupdate_date <= "' . $this->ci->db->escape_str($last_update_date) . '"');
+        array_push($where, ' AND l.lastupdate_date <= "' . $this->ci->db->escape_str($last_update_date) . '" ');
     }
 }
 
+// if ($this->ci->input->post('show_update_counts') && $this->ci->input->post('show_update_counts') == 1) {
+//     $min = isset($_POST['update_count_min']) ? $_POST['update_count_min'] : 0;
+//     $max = isset($_POST['update_count_max']) ? $_POST['update_count_max'] : 0;
+
+//     $where[] = "AND count(calls.id) BETWEEN '{$this->ci->db->escape_str($min)}' AND '{$this->ci->db->escape_str($max)}'";
+// }
+
+$having ="";
+$having_ ="";
 if ($this->ci->input->post('show_update_counts') && $this->ci->input->post('show_update_counts') == 1) {
     $min = isset($_POST['update_count_min']) ? $_POST['update_count_min'] : 0;
     $max = isset($_POST['update_count_max']) ? $_POST['update_count_max'] : 0;
 
-    $where[] = "AND update_count BETWEEN '{$this->ci->db->escape_str($min)}' AND '{$this->ci->db->escape_str($max)}'";
+    $having = " HAVING update_count   BETWEEN '{$this->ci->db->escape_str($min)}' AND '{$this->ci->db->escape_str($max)}' ";
+    
+    
 }
-
 // Check user permissions and access scope
 if (!has_permission('leads', '', 'view')) {
-    $where[] = "AND (" . $sTable . ".assigned = {$get_staff_user_id} OR " . $sTable . ".is_public = 1)";
+    $where[] = " AND (l.assigned = {$get_staff_user_id} OR l.is_public = 1) ";
 }
 
-$aColumns = [
-    $sTable . '.id as id',
-    '(
-        CASE
-            WHEN (
-                GREATEST(
-                    IFNULL(DATE(' . $sTable . '.lastupdate_date), "0000-00-00"),
-                    IFNULL((
-                        SELECT MAX(DATE(dateadded))
-                        FROM ' . db_prefix() . 'notes
-                        WHERE rel_id = ' . $sTable . '.id AND rel_type = "lead"
-                    ), "0000-00-00")
-                ) >= IFNULL((
-                    SELECT MAX(DATE(date))
-                    FROM ' . db_prefix() . 'reminders
-                    WHERE rel_id = ' . $sTable . '.id AND rel_type = "lead"
-                ), "0000-00-00")
-            ) THEN 3
-            WHEN (
-                CURDATE() <= IFNULL((
-                    SELECT MAX(DATE(date))
-                    FROM ' . db_prefix() . 'reminders
-                    WHERE rel_id = ' . $sTable . '.id AND rel_type = "lead"
-                ), "0000-00-00")
-            ) THEN 2
-            ELSE 1
-        END
-    ) as followup_status'
-];
+$order_by ="";
 
-
-
-
-if (is_gdpr() && $consentLeads == '1') {
-    $aColumns[] = '1';
-}
-if ($is_admin) {
-    $aColumnsExtra = [
-        "IFNULL({$sTable}.update_count,0) as update_count",
-        "IFNULL({$sTable}.call_duration,0) as call_duration",
-        "{$sTable}.lastconnect_date as lastcontact_date",
-        "{$sTable}.dateadded as dateadded",
-        "{$sTable}.lastupdate_date as lastupdate_date",
-    ];
-} else {
-    $aColumnsExtra = [
-        "IFNULL({$sTable}.update_count,0) as update_count",
-        "IFNULL({$sTable}.call_duration,0) as call_duration",
-        "{$sTable}.lastconnect_date as lastcontact_date",
-        "{$sTable}.dateadded as dateadded",
-    ];
-}
-
-// Add conditional tags column based on search
-if (!empty($_POST["search"]["value"])) {
-    $aColumnsExtra[] = db_prefix() . 'tags.name as tags';
-} else {
-    $aColumnsExtra[] = '(SELECT GROUP_CONCAT(name SEPARATOR ",") FROM ' . db_prefix() . 'taggables 
-        JOIN ' . db_prefix() . 'tags ON ' . db_prefix() . 'taggables.tag_id = ' . db_prefix() . 'tags.id 
-        WHERE rel_id = ' . $sTable . '.id AND rel_type="lead" ORDER BY tag_order ASC LIMIT 1) as tags';
-}
-
-// Common fields for both admin and non-admin
-$aColumnsExtra[] = "{$sTable}.name as name";
-$aColumnsExtra[] = "{$sTable}.phonenumber as phonenumber";
-$aColumnsExtra[] = "{$sTable}.status as status";
-
-// Merge with existing columns
-$aColumns = array_merge($aColumns, $aColumnsExtra);
-
-if ($is_admin) {
-    foreach ($custom_fields as $field) {
-        $aColumns[] = 'CONCAT("' . $field['fieldto'] . '-", ' . $sTable . '.id, "-' . $field['id'] . '") as ' . strtolower(str_replace(' ', '_', $field["name"]));
-    }
-}
-
-$aColumns = array_merge($aColumns, [
-    $sTable . '.type as type',
-    $sTable . '.website as website',
-    $sTable . '.reference_name as reference_name',
-    $sTable . '.source as source',
-    $sTable . '.email as email',
-    $sTable . '.assigned as assigned',
-    $sTable . '.dateassigned as dateassigned',
-    $sTable . '.city as city',
-    $sTable . '.state as state',
-
-]);
-
-
-
-if ($this->ci->input->post('followup_to_date')) {
-    $aColumns[] = db_prefix() . "reminders.date as followup";
-} else {
-    $aColumns[] = '(SELECT date FROM ' . db_prefix() . 'reminders  WHERE rel_id = ' . $sTable . '.id and rel_type="lead" ORDER by id DESC LIMIT 1) as followup';
-}
-  $aColumns[] =  $sTable . '.upcomming_count as upcomming_count';
-$aColumns = hooks()->apply_filters('leads_table_sql_columns', $aColumns);
-
-$additionalColumns = [];
-$additionalColumns = hooks()->apply_filters('leads_table_additional_columns_sql', [
-    'lead_value',
-    'company',
-    'junk',
-    'lost',
-    'assigned',
-    $sTable . '.addedfrom as addedfrom',
-    '(SELECT count(leadid) FROM ' . db_prefix() . 'clients WHERE ' . db_prefix() . 'clients.leadid=' . $sTable . '.id) as is_converted',
-    'alternative_phonenumber',
-    'zip',
-    '(SELECT ' . db_prefix() . 'notes.dateadded FROM ' . db_prefix() . 'notes  WHERE rel_id = ' . $sTable . '.id and rel_type="lead" ORDER by id DESC LIMIT 1) as notesdate',
-    "{$sTable}.lastupdate_date as lastupdate_date",
-//     "IF (
-//     MIN(tblcalls_activity_logs.call_start + 19800) IS NOT NULL
-//     AND tblleads.dateassigned IS NOT NULL
-//     AND tblcalls_activity_logs.staffid = tblleads.assigned
-//     AND MIN(tblcalls_activity_logs.call_start + 19800) > UNIX_TIMESTAMP(tblleads.dateassigned),
-//     CONCAT(
-//         FLOOR(
-//             TIMESTAMPDIFF(
-//                 SECOND,
-//                 tblleads.dateassigned,
-//                 FROM_UNIXTIME(MIN(tblcalls_activity_logs.call_start + 19800))
-//             ) / 86400
-//         ), ':',
+if(isset($_POST["order"][0]["column"]) && $_POST["order"][0]["column"] >= 0)
+{
+     if(empty($this->ci->input->post('assigned')) && (is_admin() || $get_staff_user_id == 306 || $role == 3) && empty($where))
+     {
+         $_POST["order"][0]["column"] = 0;
+     }
+     else if( $_POST["order"][0]["column"] == 5)
+     {
+          $_POST["order"][0]["column"] = 0;
+     }
+   
+     
+     
+        $order_by = $select[$_POST["order"][0]["column"]];
+        $order_by = " order by ".trim(explode(' AS ', strtoupper($order_by))[1]) ." ".$_POST["order"][0]["dir"]." ";
         
-//         LPAD(
-//             FLOOR(
-//                 (TIMESTAMPDIFF(
-//                     SECOND,
-//                     tblleads.dateassigned,
-//                     FROM_UNIXTIME(MIN(tblcalls_activity_logs.call_start + 19800))
-//                 ) % 86400) / 3600
-//             ), 
-//             2, '0'
-//         ), ':',
-        
-//         LPAD(
-//             FLOOR(
-//                 (TIMESTAMPDIFF(
-//                     SECOND,
-//                     tblleads.dateassigned,
-//                     FROM_UNIXTIME(MIN(tblcalls_activity_logs.call_start + 19800))
-//                 ) % 3600) / 60
-//             ), 
-//             2, '0'
-//         ), ':',
-        
-//         LPAD(
-//             TIMESTAMPDIFF(
-//                 SECOND,
-//                 tblleads.dateassigned,
-//                 FROM_UNIXTIME(MIN(tblcalls_activity_logs.call_start + 19800))
-//             ) % 60,
-//             2, '0'
-//         ), ''
-//     ),
-
-//     ''
-// ) AS first_connect_difference"
-"CASE 
-    /* CASE 1: No call + source = 1 → return 10 seconds */
-    WHEN MIN(tblcalls_activity_logs.call_start + 19800) IS NULL
-         AND tblcalls_activity_logs.calls_source = 1
-    THEN '0 Day 00:00:10'
-
-    /* CASE 2: No call and source ≠ 1 → return empty */
-    WHEN MIN(tblcalls_activity_logs.call_start + 19800) IS NULL
-    THEN ''
-    ELSE
-        (
-            SELECT 
-                CONCAT(
-                    FLOOR(diff_sec / 86400), ' Day ',
-                    LPAD(FLOOR((diff_sec % 86400) / 3600), 2, '0'), ':',
-                    LPAD(FLOOR((diff_sec % 3600) / 60), 2, '0'), ':',
-                    LPAD(diff_sec % 60, 2, '0')
-                )
-            FROM (
-                SELECT 
-                    TIMESTAMPDIFF(
-                        SECOND,
-                        
-                        /* EFFECTIVE START */
-                        CASE 
-                            WHEN DAYNAME(tblleads.dateassigned) = 'Sunday' 
-                                THEN CONCAT(DATE_ADD(DATE(tblleads.dateassigned), INTERVAL 1 DAY), ' 10:00:00')
-                            WHEN TIME(tblleads.dateassigned) > '20:00:00'
-                                THEN CONCAT(DATE_ADD(DATE(tblleads.dateassigned), INTERVAL 1 DAY), ' 10:00:00')
-                            WHEN TIME(tblleads.dateassigned) < '10:00:00'
-                                THEN CONCAT(DATE(tblleads.dateassigned), ' 10:00:00')
-                            ELSE tblleads.dateassigned
-                        END,
-
-                        /* EFFECTIVE CALL */
-                        CASE 
-                            WHEN DAYNAME(FROM_UNIXTIME(MIN(tblcalls_activity_logs.call_start + 19800))) = 'Sunday'
-                                THEN CONCAT(DATE_ADD(DATE(FROM_UNIXTIME(MIN(tblcalls_activity_logs.call_start + 19800))), INTERVAL 1 DAY), ' 10:00:00')
-                            WHEN TIME(FROM_UNIXTIME(MIN(tblcalls_activity_logs.call_start + 19800))) < '10:00:00'
-                                THEN CONCAT(DATE(FROM_UNIXTIME(MIN(tblcalls_activity_logs.call_start + 19800))), ' 10:00:00')
-                            WHEN TIME(FROM_UNIXTIME(MIN(tblcalls_activity_logs.call_start + 19800))) > '20:00:00'
-                                THEN CONCAT(DATE_ADD(DATE(FROM_UNIXTIME(MIN(tblcalls_activity_logs.call_start + 19800))), INTERVAL 1 DAY), ' 10:00:00')
-                            ELSE FROM_UNIXTIME(MIN(tblcalls_activity_logs.call_start + 19800))
-                        END
-                    ) AS diff_sec
-            ) AS t
-        )
-END AS first_connect_difference",
-  
-]);
-
-
-
-
-
-$search_column = [];
-// Define search and group-by clauses
-if (!empty($_POST["search"]["value"])) {
-    $search_column = [$sTable . ".city", $sTable . ".phonenumber", $sTable . ".state", db_prefix() . 'tags.name', "alternative_phonenumber", $sTable . ".website", $sTable . ".name"];
-}
-
-$having_ = "";
-$having = "";
-$group_by = ' Group By ' . $sTable . '.id ' . $having . " ";
-
-
-
-// Execute final query with applied filters and joins
-
-if (is_admin()) {
-    if (!empty($_POST["order"][0]["column"]) && ($_POST["order"][0]["column"] == 5)) {
-        $_POST["order"][0]["column"] = 0;
-    }
-    
-    //  $_POST["order"][0]["column"] = 25;
-} else {
-    if (!empty($_POST["order"][0]["column"])) {
-        //   $_POST["order"][0]["column"] =0;
-    }
-}
-
-if (!empty($this->ci->input->post('up_to_date'))) {
-    $sTable = $call_table;
-}
-
-$result = data_tables_init_($aColumns, $sIndexColumn, $sTable, $join, $where, $additionalColumns, $group_by, '', '', $search_column);
-
-
-
-$output  = $result['output'];
-$rResult = $result['rResult'];
-
-// print_r($rResult);
+// echo $order_by;
 // die;
-$lead_ids_array = array_column($rResult, "id");
-// $phone_numbers = array_column($rResult, "phonenumber_");
 
-// $call_data = [];
-// if (!empty($phone_numbers)) {
-//     $phone_numbers = implode(",", $phone_numbers);
-//     $phone_numbers = explode(",", $phone_numbers);
-//     $phone_numbers = array_map(function ($value) {
-//         return preg_replace('/\s+/', '', trim($value));  // Remove all spaces
-//     }, $phone_numbers);
+}
+
+$where_condition ="";
+if(!empty($where)){
+$where_condition  = implode("  ",$where);
+}
+
+$select_query = implode(",",$select);
+
+$final_select_query = implode(",",$finalSelect);
 
 
-//     $get_call_data = get_call_information_new($phone_numbers);
-//     $call_data = array_column($get_call_data, null, 'contact');
+
+if (!empty(trim($_POST["search"]["value"]))) {
+
+    $search = trim($_POST["search"]["value"]);
+
+    // Start the search condition
+    $where_condition .= " AND ( ";
+
+    if (is_numeric($search)) {
+        // Numeric search → only phone numbers
+        $where_condition .= " l.phonenumber LIKE '{$search}%' 
+                              OR l.alternative_phonenumber LIKE '{$search}%' ";
+    } else {
+        // Text search → name, city, state, website
+        $search_escaped = addslashes($search); // prevent issues
+        $where_condition .= " l.name LIKE '{$search_escaped}%'
+        OR l.city LIKE '{$search_escaped}%'
+        OR l.state LIKE '{$search_escaped}%'
+        OR l.website LIKE '{$search_escaped}%' 
+        OR (SELECT GROUP_CONCAT(name SEPARATOR ',') FROM tbltaggables 
+        JOIN tbltags ON tbltaggables.tag_id = tbltags.id 
+        WHERE rel_id = l.id AND rel_type='lead' ORDER BY tag_order ASC LIMIT 1) LIKE '%{$search_escaped}%' ";
+                              
+    }
+
+    $where_condition .= " ) ";
+}
+
+ if (empty($this->ci->input->post('assigned')) && (is_admin() || $get_staff_user_id == 306 || $role == 3)) {
+     if(empty($having)){
+    $externalLimit = " LIMIT $startLength,$endLength ";
+      $startLength=0;
+     }
+    
+ }
+ 
+
+
+   $sql = "
+SELECT  $final_select_query FROM ( 
+   ( SELECT ".$select_query." FROM tblleads l LEFT JOIN tblcalls_activity_logs calls
+    ON l.alternative_phonenumber = calls.contact 
+    AND l.assigned = calls.staffid 
+LEFT JOIN tblstaff s ON s.staffid = l.assigned 
+LEFT JOIN tblstaff_department d ON d.id = s.department
+LEFT JOIN tblclients clients ON clients.userid = l.id 
+LEFT JOIN tblleads_status st ON l.status = st.id 
+LEFT JOIN tblleads_type lt ON l.type = lt.id 
+LEFT JOIN tblleads_sources ls ON l.source = ls.id 
+LEFT JOIN tblreminders r ON l.id = r.rel_id AND r.rel_type = 'lead'
+WHERE l.lost = 0 AND l.junk = 0  and l.status = 33 $where_condition GROUP BY l.id  $having_ $externalLimit )
+   
+   UNION ALL
+   
+   ( SELECT ".$select_query." FROM tblleads l LEFT JOIN tblcalls_activity_logs calls
+    ON l.phonenumber = calls.contact 
+    AND l.assigned = calls.staffid
+LEFT JOIN tblstaff s ON s.staffid = l.assigned 
+LEFT JOIN tblstaff_department d ON d.id = s.department
+LEFT JOIN tblclients clients ON clients.userid = l.id 
+LEFT JOIN tblleads_status st ON l.status = st.id 
+LEFT JOIN tblleads_type lt ON l.type = lt.id 
+LEFT JOIN tblleads_sources ls ON l.source = ls.id
+LEFT JOIN tblreminders r ON l.id = r.rel_id AND r.rel_type = 'lead'
+WHERE l.lost = 0 AND l.junk = 0 and l.status = 33 $where_condition GROUP BY l.id  $having_ $externalLimit ) )  as Final GROUP BY Final.id  $having $order_by LIMIT $startLength,$endLength ";
+
+// if(is_admin())
+// {
+//      echo $sql;
+//      die;
 // }
+  
+    $Result = $this->ci->db->query($sql)->result_array();
+    
+$otherLength = !empty($Result) ? count($Result) - 1 : 0;
 
+$otherLength = ($otherLength == 0) 
+    ? $endLength 
+    : ($endLength - $otherLength);
+    
+    $otherLength = intval($otherLength);
+   $sql ="";
+   
+if (empty($this->ci->input->post('assigned'))  && (is_admin() || $get_staff_user_id == 306 || $role == 3)) {
+   
+   $startLength =  $_POST['start'];
+    if(empty($having)){
+        $externalLimit = " LIMIT $startLength,$otherLength ";
+        $startLength =0;
+    }
+   
+ }
+ 
+ 
+    $sql = "
+SELECT $final_select_query FROM ( 
+   ( SELECT ".$select_query." FROM tblleads l LEFT JOIN tblcalls_activity_logs calls
+    ON l.alternative_phonenumber = calls.contact 
+    AND l.assigned = calls.staffid 
+LEFT JOIN tblstaff s ON s.staffid = l.assigned 
+LEFT JOIN tblstaff_department d ON d.id = s.department
+LEFT JOIN tblclients clients ON clients.userid = l.id 
+LEFT JOIN tblleads_status st ON l.status = st.id 
+LEFT JOIN tblleads_type lt ON l.type = lt.id 
+LEFT JOIN tblleads_sources ls ON l.source = ls.id 
+LEFT JOIN tblreminders r ON l.id = r.rel_id AND r.rel_type = 'lead'
+WHERE l.lost = 0 AND l.junk = 0 and l.status!=33 $where_condition GROUP BY l.id $having_ $externalLimit )
+   
+   UNION ALL
+   
+   ( SELECT ".$select_query." FROM tblleads l LEFT JOIN tblcalls_activity_logs calls
+    ON l.phonenumber = calls.contact 
+    AND l.assigned = calls.staffid 
+LEFT JOIN tblstaff s ON s.staffid = l.assigned 
+LEFT JOIN tblstaff_department d ON d.id = s.department
+LEFT JOIN tblclients clients ON clients.userid = l.id 
+LEFT JOIN tblleads_status st ON l.status = st.id 
+LEFT JOIN tblleads_type lt ON l.type = lt.id 
+LEFT JOIN tblleads_sources ls ON l.source = ls.id
+LEFT JOIN tblreminders r ON l.id = r.rel_id AND r.rel_type = 'lead'
+WHERE l.lost = 0 AND l.junk = 0 and l.status!=33 $where_condition GROUP BY l.id $having_ $externalLimit ) )  as Final GROUP BY Final.id  $having $order_by LIMIT $startLength,$otherLength";
+   
+
+    // $Result = $this->ci->db->query($sql)->result_array();
+
+$Result_ = $this->ci->db->query($sql)->result_array();
+
+
+// if(is_admin())
+// {
+//      echo $sql;
+//      die;
+// }
+  
+
+// if(is_admin())
+// {
+//     print_r($sql);
+//     die;
+// }
+$rResult = array_merge((array)$Result, (array)$Result_);
+;
+
+ $start_ = (intval($_POST['start']) == 0) ? 0 : intval($_POST['start']);
+ $last_ = (count($rResult) == intval($_POST['length'])) ? (1 + intval($_POST['length'])) : count($rResult);
+
+$output =[];
+$output['draw'] = $_POST['draw'] ? intval($_POST['draw']) : 0;
+$output['iTotalDisplayRecords'] = $start_ + $last_;
+$output['iTotalRecords'] = intval($_POST['start']) + $last_;
+ $output['aaData'] =[];
 
 
 if ($is_admin) {
+    $lead_ids_array = array_column($rResult, "id");
     if (!empty($lead_ids_array)) {
         $customFieldValues              = $this->ci->leads_model->get_custum_values($lead_ids_array);
 
@@ -491,39 +585,53 @@ if ($is_admin) {
 
 foreach ($rResult as $aRow) {
 
-    $dates = [];
+    // $dates = [];
 
-    if (!empty($aRow['notesdate']) && $aRow['notesdate'] !== "0000-00-00") {
-        $dates[] = date("Y-m-d", strtotime($aRow['notesdate']));
-    }
+    // if (!empty($aRow['notesdate']) && $aRow['notesdate'] !== "0000-00-00") {
+    //     $dates[] = date("Y-m-d", strtotime($aRow['notesdate']));
+    // }
 
-    if (!empty($aRow['lastupdate_date']) && $aRow['lastupdate_date'] !== "0000-00-00") {
-        $dates[] = date("Y-m-d", strtotime($aRow['lastupdate_date']));
-    }
+    // if (!empty($aRow['lastupdate_date']) && $aRow['lastupdate_date'] !== "0000-00-00") {
+    //     $dates[] = date("Y-m-d", strtotime($aRow['lastupdate_date']));
+    // }
 
-    $latest_update_date = !empty($dates) ? max($dates) : null; // Get the latest valid date
+    // $latest_update_date = !empty($dates) ? max($dates) : null; // Get the latest valid date
 
-    $aRow['status_name'] = isset($statuses[$aRow['status']]["name"]) ? $statuses[$aRow['status']]["name"] : '';
-    $aRow['color'] = isset($statuses[$aRow['status']]["color"]) ? $statuses[$aRow['status']]["color"] : '';
-    $aRow['type_name'] = isset($type[$aRow['type']]["name"]) ? $type[$aRow['type']]["name"] : '';
-    $aRow['source_name'] = isset($source[$aRow['source']]["name"]) ? $source[$aRow['source']]["name"] : '';
-    $aRow['assigned_name'] =
-        (isset($staff_list[$aRow['assigned']]["firstname"]) ? $staff_list[$aRow['assigned']]["firstname"] : '') .
-        " " .
-        (isset($staff_list[$aRow['assigned']]["lastname"]) ? $staff_list[$aRow['assigned']]["lastname"] : '');
+    // $aRow['status_name'] = isset($statuses[$aRow['status']]["name"]) ? $statuses[$aRow['status']]["name"] : '';
+    // $aRow['bg_color'] = isset($statuses[$aRow['status']]["bg_color"]) ? $statuses[$aRow['status']]["bg_color"] : '';
+    // $aRow['color'] = isset($statuses[$aRow['status']]["color"]) ? $statuses[$aRow['status']]["color"] : '';
+    // $aRow['type_name'] = isset($type[$aRow['type']]["name"]) ? $type[$aRow['type']]["name"] : '';
+    // $aRow['source_name'] = isset($source[$aRow['source']]["name"]) ? $source[$aRow['source']]["name"] : '';
+    // $aRow['assigned_name'] =
+    //     (isset($staff_list[$aRow['assigned']]["firstname"]) ? $staff_list[$aRow['assigned']]["firstname"] : '') .
+    //     " " .
+    //     (isset($staff_list[$aRow['assigned']]["lastname"]) ? $staff_list[$aRow['assigned']]["lastname"] : '');
 
     $row = [];
     $row[] = '<div class="checkbox"><input type="checkbox" value="' . $aRow['id'] . '"><label></label></div>';
 
     // echo $aRow['followup']  ;
-    $curdate = date("Y-m-d");
-    $date1 = !empty($latest_update_date) ? date("Y-m-d", strtotime($latest_update_date)) : '';
-    $date2 = !empty($aRow['followup']) ? date("Y-m-d", strtotime($aRow['followup'])) : '';
-    if ($date1 >= $date2) {
-        $col = '<span style="color:#0f970f;font-size: 16px;"><i class="fa fa-check-circle"></i></span>';
-    } else {
-        $col = ($curdate <= $date2) ? '<span style="color:#f4f407;font-size: 16px;"><i class="fa fa-check-circle"></i></span>' : '<span style="color:#fb3121;font-size: 16px;"><i class="fa fa-times-circle"></i></span>';
+    // $curdate = date("Y-m-d");
+    // $date1 = !empty($latest_update_date) ? date("Y-m-d", strtotime($latest_update_date)) : '';
+    // $date2 = !empty($aRow['followup']) ? date("Y-m-d", strtotime($aRow['followup'])) : '';
+    // if ($date1 >= $date2) {
+    //     $col = '<span style="color:#0f970f;font-size: 16px;"><i class="fa fa-check-circle"></i></span>';
+    // } else {
+    //     $col = ($curdate <= $date2) ? '<span style="color:#f4f407;font-size: 16px;"><i class="fa fa-check-circle"></i></span>' : '<span style="color:#fb3121;font-size: 16px;"><i class="fa fa-times-circle"></i></span>';
+    // }
+    // $row[]    = $col;
+    
+   
+     $col ='<span style="color:#fb3121;font-size: 16px;"><i class="fa fa-times-circle"></i></span>';
+    if($aRow['followup_status'] == 3)
+    {
+        $col ='<span style="color:#0f970f;font-size: 16px;"><i class="fa fa-check-circle"></i></span>';
     }
+    else if($aRow['followup_status'] == 2)
+    {
+        $col ='<span style="color:#f4f407;font-size: 16px;"><i class="fa fa-check-circle"></i></span>';
+    }
+    
     $row[]    = $col;
 
 
@@ -547,11 +655,50 @@ foreach ($rResult as $aRow) {
     //         $row[] = (($latest_update_date == '0000-00-00') ? '' : '<span data-toggle="tooltip" data-title="' . ($latest_update_date) . '" class="text-has-action is-date">' . $latest_update_date . '</span>');
     //     }
     // }
-    $row[] =  ($aRow['lastcontact_date'] == '0000-00-00') ? '' : $aRow['lastcontact_date'];
-    $row[] = $aRow['first_connect_difference'];
-    $row[] = date("Y-m-d", strtotime($aRow['dateadded']));
+    $row[] =  ($aRow['lastconnect_date'] == '0000-00-00') ? '' : $aRow['lastconnect_date'];
+   
     
+  $d1 = $aRow['phonenumber_duration'];
+$d2 = $aRow['alternative_duration'];
 
+// Convert empty values to null
+$d1 = !empty($d1) ? ($d1) : null;
+$d2 = !empty($d2) ? ($d2) : null;
+
+// Get minimum valid timestamp
+if ($d1 && $d2) {
+    $minDate = min($d1, $d2);
+} elseif ($d1) {
+    $minDate = $d1;
+} elseif ($d2) {
+    $minDate = $d2;
+} else {
+    $minDate = null;
+}
+
+
+// Convert back to datetime if needed
+$minDateFormatted = $minDate ? date('Y-m-d H:i:s', $minDate) : null;
+
+// Final call
+// $row[] = calculateOfficeTimeDiff(
+//     $aRow['dateassigned'],
+//     $minDateFormatted,
+//     $aRow['office_start_time'],
+//     $aRow['office_end_time']
+// );
+
+    
+ 
+ $row[] = calculateOfficeTimeDiff(
+     $aRow['dateassigned'],
+    $minDateFormatted,
+    $aRow['office_start_time'],
+     $aRow['office_end_time']
+ );
+
+//   $row[] = $aRow['first_connect_difference'];
+       $row[] = date("Y-m-d", strtotime($aRow['dateadded']));
 
     // $row[] = date("Y-m-d", strtotime($aRow['dateadded']));
     // $row[] = date("Y-m-d", strtotime($aRow['dateadded']));
@@ -574,7 +721,7 @@ foreach ($rResult as $aRow) {
     $row[] .= render_tags($aRow['tags']);
     $hrefAttr = 'href="' . admin_url('leads/index/' . $aRow['id']) . '" onclick="init_lead(' . $aRow['id'] . ');return false;"';
 
-    $nameRow = '<a ' . $hrefAttr . '>' . $aRow['name'] . '</a>';
+    $nameRow = '<a ' . $hrefAttr . '>' .mb_substr($aRow['name'], 0, 30) . '</a>';
     $nameRow .= '<div class="row-options">';
     $nameRow .= '<a ' . $hrefAttr . '>' . _l('view') . '</a>';
     $locked = false;
@@ -640,7 +787,7 @@ foreach ($rResult as $aRow) {
 
     $row[] = $outputStatus;
     foreach ($custom_fields as $key => $field) {
-        $row[] = !empty($customFieldValues[$aRow[str_replace(" ", "_", strtolower($field['name']))]]) ? $customFieldValues[$aRow[str_replace(" ", "_", strtolower($field['name']))]] : '';
+        $row[] = mb_substr(!empty($customFieldValues[$aRow[str_replace(" ", "_", strtolower($field['name']))]]) ? $customFieldValues[$aRow[str_replace(" ", "_", strtolower($field['name']))]] : '', 0, 30);
     }
 
     $outputLeadType = '<span class="inline-block lead-type-' . $aRow['type'] . ' label label-' . (empty($aRow['color']) ? 'default' : '') . '" style="color:' . $aRow['color'] . ';border:1px solid ' . $aRow['color'] . '">' . $aRow['type_name'];
@@ -714,6 +861,11 @@ foreach ($rResult as $aRow) {
     } else {
         $row['DT_RowClass'] = 'has-row-options';
     }
+  if (!empty($aRow['bg_color'])) { 
+    $row['DT_RowAttr'] = [
+        'style' => "background-color: {$aRow['bg_color']} !important;"
+    ];
+}
 
     // $row = hooks()->apply_filters('leads_table_row_data', $row, $aRow);
     $output['aaData'][] = $row;

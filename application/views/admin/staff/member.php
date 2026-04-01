@@ -1,5 +1,9 @@
 <?php defined('BASEPATH') or exit('No direct script access allowed'); ?>
 <?php init_head(); ?>
+<?php 
+$select_staff_office_region = staff_location_region();
+$select_staff_state_region = staff_state_region();
+?>
 <div id="wrapper">
    <div class="content">
       <div class="row">
@@ -181,8 +185,7 @@
                               } ?>
                            </select>
                         </div>
-
-                        <div class="form-group select-placeholder">
+    <div class="form-group select-placeholder">
                            <label for="office_location" class="control-label">Select Office Location</label>
                            <select name="office_location" data-live-search="true" id="office_location" class="form-control selectpicker" data-none-selected-text="Select Office Location">
                               <option value="">Select Office Location</option>
@@ -223,6 +226,8 @@
                               } ?>
                            </select>
                         </div>
+             
+
                         <div class="checkbox checkbox-primary">
                            <input type="checkbox" value="1" name="post_sales" id="post_sales" <?php if (isset($member->post_sales) && $member->post_sales == 1) {
                                                                                                    echo ' checked';
@@ -261,6 +266,56 @@
 
                            ?>
                         </div>
+                        
+                        <div class="form-group select-placeholder">
+    <label class="control-label">Office Region <small class="text-danger">*</small></label>
+    
+    <select name="office_location_region" 
+            class="form-control selectpicker" 
+            data-live-search="true" 
+            data-none-selected-text="Select Office Region">
+
+        <option value="">Select Office Region</option>
+
+        <?php foreach ($select_staff_office_region as $o) {
+            $selected = '';
+
+            if (isset($member) && $member->office_location_region == $o['id']) {
+                $selected = 'selected';
+            }
+        ?>
+            <option value="<?php echo $o['id']; ?>" <?php echo $selected; ?>>
+                <?php echo $o['name']; ?>
+            </option>
+        <?php } ?>
+
+    </select>
+</div>
+
+                     <div class="form-group select-placeholder">
+    <label class="control-label">Lead State Region</label>
+    
+    <select name="office_state_region" 
+            class="form-control selectpicker" 
+            data-live-search="true" 
+            data-none-selected-text="Select Office State Region" onchange="changeStateRegion(this)">
+
+        <option value="">Select Office State Region</option>
+
+        <?php foreach ($select_staff_state_region as $s) {
+            $selected = '';
+
+            if (isset($member) && $member->office_state_region == $s['id']) {
+                $selected = 'selected';
+            }
+        ?>
+            <option data-options="<?php echo $s['state']??''; ?>" value="<?php echo $s['id']; ?>" <?php echo $selected; ?>>
+                <?php echo $s['name']; ?>
+            </option>
+        <?php } ?>
+
+    </select>
+</div>
                         <div class="form-group select-placeholder assign_state_div" style="display:<?= !empty($member->department_head) ? 'none' : '' ?>">
                            <label for="assign_state" class="control-label">Select State</label>
                            <!-- <select name="assign_state[]" data-live-search="true" multiple id="assign_state" class="form-control selectpicker" data-none-selected-text="Select State">
@@ -789,6 +844,7 @@
             firstname: 'required',
             lastname: 'required',
             username: 'required',
+             office_location_region:'required',
             password: {
                required: {
                   depends: function(element) {
@@ -829,6 +885,26 @@
 
          }
       }
+      
+function changeStateRegion(obj) {
+    let dataOption = $(obj).find("option:selected").data("options");
+    let $assignState = $("#assign_state");
+
+    console.log("Data Option:", dataOption);
+
+   
+    if (!dataOption || dataOption === "") {
+        $assignState.val('');
+        $assignState.selectpicker('refresh');
+        return;
+    }
+
+    let stateIds = dataOption.toString().split(",");
+
+    $assignState.val(stateIds);
+    $assignState.selectpicker('refresh');
+} 
+     
    </script>
    </body>
 

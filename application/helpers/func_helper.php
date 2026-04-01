@@ -499,68 +499,55 @@ function sanitizeFileName($string)
     return $string;
 }
 
-function saveBase64Image($base64_string, $folder = "uploads/", $filename = null)
+function saveBase64Image($input, $folder = "uploads/", $filename = null)
 {
-
-    if (empty($base64_string)) {
+    if (empty($input)) {
         return false;
     }
 
-    // Check if it contains base64 header
-    if (preg_match('/^data:(image\/[a-zA-Z0-9\-\+\.]+);base64,/', $base64_string, $matches)) {
-
-        $mime_type = $matches[1]; // image/png, image/jpeg etc
-        $extension = explode('/', $mime_type)[1];
-
-        // Remove header
-        $base64_string = substr($base64_string, strpos($base64_string, ',') + 1);
-    } else {
-        return $base64_string; // Not valid base64 image
+    // If already a URL or file path, return it
+    if (filter_var($input, FILTER_VALIDATE_URL) || strpos($input, 'uploads/') !== false) {
+        return $input;
     }
 
-    // Check valid base64
-    return base64_encode(base64_decode($string, true)) === $string;
-
-    // Make sure folder exists
-    if (!is_dir($folder)) {
-        if (!mkdir($folder, 0755, true)) {
-            return false; // failed to create folder
-        }
+    // Check base64 format
+    if (!preg_match('/^data:image\/(\w+);base64,/', $input, $type)) {
+        return $input;
     }
 
-    // Remove "data:image/...;base64," prefix if exists
-    if (preg_match('/^data:image\/(\w+);base64,/', $base64_string, $type)) {
-        $base64_string = substr($base64_string, strpos($base64_string, ',') + 1);
-        $extension = strtolower($type[1]); // png, jpeg, jpg, gif, webp
-        if ($extension == 'jpeg') $extension = 'jpg'; // normalize
-    } else {
-        $extension = "png"; // default
+    $extension = strtolower($type[1]);
+    if ($extension == 'jpeg') {
+        $extension = 'jpg';
     }
 
-    // Remove whitespaces (important!)
+    // Remove base64 header
+    $base64_string = substr($input, strpos($input, ',') + 1);
     $base64_string = str_replace(' ', '+', $base64_string);
 
-    // Decode base64
     $image_data = base64_decode($base64_string);
-    if ($image_data === false) return false;
 
-    // Generate filename if not provided
+    if ($image_data === false) {
+        return false;
+    }
+
+    // Create folder if not exists
+    if (!is_dir($folder)) {
+        mkdir($folder, 0755, true);
+    }
+
+    // Generate filename
     if (!$filename) {
-        $filename = "image_" . time();
+        $filename = "image_" . time() . rand(100,999);
     }
 
-    // Ensure folder ends with slash
     $folder = rtrim($folder, '/') . '/';
+    $filepath = $folder . $filename . '.' . $extension;
 
-    // Full path
-    $filepath = $folder . $filename . "." . $extension;
-
-    // Save the image file
     if (file_put_contents($filepath, $image_data)) {
-        return base_url() . $filepath; // success
+        return base_url($filepath);
     }
 
-    return false; // failed
+    return false;
 }
 
 
@@ -670,3 +657,226 @@ function knowledge_base_from_path($file_path, $base_folder = "")
         ];
     }
 }
+
+
+function otpGenerate($phoneNumber, $otp)
+{
+    $CI = &get_instance();
+
+    if (!class_exists('leads_model')) {
+        $CI->load->model('leads_model');
+    }
+
+    try {
+        $whatsapp_template_id = 13;
+
+        // ✅ Fetch template
+        $whatsapp = $CI->db->query(
+            "SELECT * FROM " . db_prefix() . "whatsapptemplates WHERE status=1 AND id = ?",
+            [$whatsapp_template_id]
+        )->row();
+
+        if (!$whatsapp) {
+            throw new Exception("Template not found");
+        }
+
+        $templateName = $whatsapp->template_name;
+        $languageCode = $whatsapp->languageCode;
+
+        // ✅ Validate phone
+        $cleanNumber = preg_replace('/\D/', '', $phoneNumber);
+        if (strlen($cleanNumber) < 10) {
+            throw new Exception("Invalid phone number");
+        }
+
+        $toNumber = "91" . substr($cleanNumber, -10);
+
+        $productToken      = WHATSAAP_PRODUCT_KEY;
+        $fromNumber        = WHATSAAP_FROM_NUMBER;
+        $templateNamespace = WHATSAAP_NAMESPACE;
+
+        if (empty($productToken) || empty($fromNumber) || empty($templateNamespace)) {
+            throw new Exception("WhatsApp configuration missing");
+        }
+
+        // ✅ Parameters
+        $parameters = [[
+            "type" => "text",
+            "text" => (string)$otp
+        ]];
+
+        // ✅ Payload (same as yours)
+        $payload = [
+            "messages" => [
+                "authentication" => ["producttoken" => $productToken],
+                "msg" => [[
+                    "from" => $fromNumber,
+                    "to"   => [["number" => $toNumber]],
+                    "body" => [
+                        "type"    => "auto",
+                        "content" => $templateName
+                    ],
+                    "allowedChannels" => ["WhatsApp"],
+                    "richContent" => [
+                        "conversation" => [[
+                            "template" => [
+                                "whatsapp" => [
+                                    "namespace"    => $templateNamespace,
+                                    "element_name" => $templateName,
+                                    "language"     => [
+                                        "policy" => "deterministic",
+                                        "code"   => $languageCode
+                                    ],
+                                    "components" => [
+                                        [
+                                            "type" => "body",
+                                            "parameters" => $parameters
+                                        ],
+                                        [
+                                            "type" => "button",
+                                            "sub_type" => "url",
+                                            "index" => "0",
+                                            "parameters" => [[
+                                                "type" => "text",
+                                                "text" => (string)$otp
+                                            ]]
+                                        ]
+                                    ]
+                                ]
+                            ]
+                        ]]
+                    ]
+                ]]
+            ]
+        ];
+
+        // ✅ cURL
+        $curl = curl_init();
+        curl_setopt_array($curl, [
+            CURLOPT_URL            => 'https://gw.messaging.cm.com/v1.0/message',
+            CURLOPT_RETURNTRANSFER => true,
+            CURLOPT_TIMEOUT        => 15,
+            CURLOPT_POST           => true,
+            CURLOPT_POSTFIELDS     => json_encode($payload),
+            CURLOPT_HTTPHEADER     => ['Content-Type: application/json']
+        ]);
+
+        $response = curl_exec($curl);
+
+        // ❌ cURL error
+        if ($response === false) {
+            throw new Exception('cURL Error: ' . curl_error($curl));
+        }
+
+        $httpCode = curl_getinfo($curl, CURLINFO_HTTP_CODE);
+        curl_close($curl);
+
+        $responseArray = json_decode($response, true);
+
+        // ❌ HTTP error
+        if ($httpCode != 200) {
+            throw new Exception("HTTP Error: $httpCode - " . $response);
+        }
+
+        // ❌ API error
+        if (!$responseArray || isset($responseArray['error'])) {
+            throw new Exception("API Error: " . $response);
+        }
+
+        // ✅ Success log
+        $CI->db->insert(db_prefix() . 'whatsapp_email_logs', [
+            "type"        => "whatsapp",
+            "template_id" => $whatsapp_template_id,
+            "clientid"    => 0,
+            "datetime"    => date("Y-m-d H:i:s"),
+            "contact"     => $toNumber,
+            "response"    => json_encode($responseArray)
+        ]);
+
+        return [
+            "status" => 1,
+            "message" => "OTP sent successfully"
+        ];
+
+    } catch (Exception $e) {
+
+        // ❌ Error log (very important)
+        log_message('error', 'WhatsApp OTP Error: ' . $e->getMessage());
+
+        // Optional DB log
+        $CI->db->insert(db_prefix() . 'whatsapp_email_logs', [
+            "type"        => "whatsapp",
+            "template_id" => isset($whatsapp_template_id) ? $whatsapp_template_id : 0,
+            "clientid"    => 0,
+            "datetime"    => date("Y-m-d H:i:s"),
+            "contact"     => isset($toNumber) ? $toNumber : '',
+            "response"    => $e->getMessage()
+        ]);
+
+        return [
+            "status" => 0,
+            "message" => "Failed to send OTP. Please try again."
+            // 🔒 Do NOT expose real error in production
+        ];
+    }
+}
+
+
+function staff_location_region($id = null)
+{
+    $CI = &get_instance();
+    $CI->load->database();
+
+    if ($id !== null) {
+        $query = $CI->db->get_where('tblstaff_location_region', ['id' => $id]);
+
+        if ($query->num_rows() > 0) {
+            return $query->row_array();
+        } else {
+            return false; // No data found
+        }
+    } else {
+        $query = $CI->db->get('tblstaff_location_region');
+
+        if ($query->num_rows() > 0) {
+            return $query->result_array();
+        } else {
+            return [];
+        }
+    }
+}
+
+
+function staff_state_region($id = null)
+{
+    $CI = &get_instance();
+    $CI->load->database();
+
+    if ($id !== null) {
+        $query = $CI->db->get_where('tblstaff_state_region', ['id' => $id]);
+
+        if ($query->num_rows() > 0) {
+            return $query->row_array();
+        } else {
+            return false;
+        }
+    } else {
+        $query = $CI->db->get('tblstaff_state_region');
+
+        if ($query->num_rows() > 0) {
+            return $query->result_array();
+        } else {
+            return [];
+        }
+    }
+}
+
+
+
+function get_office_locations()
+{
+    $CI = &get_instance();
+    return $CI->s_db->query("SELECT street,city FROM office_locations")->result_array();
+}
+
+
