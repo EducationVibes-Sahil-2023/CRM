@@ -90,4 +90,25 @@ class Dashboard extends AdminController
             die();
         }
     }
+
+
+    public function table($tablePageName = "")
+    {
+
+        $data =   $this->app->get_table_data($tablePageName);
+        echo json_encode($data);
+    }
+
+    public function leads_transfers()
+    {
+        $this->load->model('Leads_model');
+        if ($this->input->is_ajax_request()) {
+            $this->table('not_reachable_transfer_leads');
+            die();
+        }
+        $data = [];
+        $data["lead_statuses"] = $this->Leads_model->get_status();
+        $data["staff"] = $this->staff_model->get();
+        $this->load->view('admin/dashboard/leads_transfers', $data);
+    }
 }
