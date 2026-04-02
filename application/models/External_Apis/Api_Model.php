@@ -135,6 +135,8 @@ class Api_Model extends CI_Model
     // ✅ Sanitize OTP
     $otp_input = trim($_POST['otp']);
      $fcm_token = trim($_POST['fcm_token'])??'';
+     
+   
 
     // ✅ Check empty OTP
     if ($otp_input === '') {
@@ -167,6 +169,15 @@ class Api_Model extends CI_Model
             "message" => "OTP expired"
         ];
     }
+    
+      if($fcm_token=="")
+     {
+      return [
+            "status" => 0,
+            "message" => "Device Tokken Missing"
+        ];
+     }
+     
 
     // ✅ Validate OTP match
     if ($user->login_otp == $otp_input) {
