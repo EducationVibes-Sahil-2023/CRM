@@ -197,6 +197,11 @@ function app_init_settings_tabs()
         'view'     => 'admin/settings/includes/leads_performance',
         'position' => 55,
     ]);
+       $CI->app_tabs->add_settings_tab('leads_distribution', [
+        'name'     => 'Leads Distribution',
+        'view'     => 'admin/settings/includes/leads_distribution',
+        'position' => 55,
+    ]);
 
     $CI->app_tabs->add_settings_tab('ma_applicant_tracker', [
         'name'     => 'Ma Applicant Tracker',

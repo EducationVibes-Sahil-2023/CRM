@@ -1,6 +1,9 @@
 <?php
 defined('BASEPATH') or exit('No direct script access allowed');
 
+// ini_set('display_errors', 1);
+// ini_set('display_startup_errors', 1);
+// error_reporting(E_ALL);
 
 $this->ci->load->model('gdpr_model');
 $lockAfterConvert      = get_option('lead_lock_after_convert_to_customer');
@@ -163,9 +166,7 @@ END AS time_diff_seconds",
     $select[]= "l.lastupdate_date as lastupdate_date";
 // }
 
-$select =array_merge($select,["(SELECT GROUP_CONCAT(name SEPARATOR ',') FROM tbltaggables 
-        JOIN tbltags ON tbltaggables.tag_id = tbltags.id 
-        WHERE rel_id = l.id AND rel_type='lead' ORDER BY tag_order ASC LIMIT 1) as tags","l.name as name","l.phonenumber as phonenumber","l.status as status"]);
+$select =array_merge($select,["l.name as name","l.phonenumber as phonenumber","l.status as status","ss.name as sub_status"]);
 
 if ($is_admin) {
     foreach ($custom_fields as $field) {
@@ -185,6 +186,9 @@ $select = array_merge($select, [
     'l.state as state',
     'MAX(r.dateadded) AS followup',
     "l.upcomming_count as upcomming_count",
+    "(SELECT GROUP_CONCAT(name SEPARATOR ',') FROM tbltaggables 
+        JOIN tbltags ON tbltaggables.tag_id = tbltags.id 
+        WHERE rel_id = l.id AND rel_type='lead' ORDER BY tag_order ASC LIMIT 1) as tags",
     "st.name as status_name",
     "lt.name as type_name",
     "ls.name as source_name",
@@ -225,7 +229,7 @@ MIN(Final.time_diff_seconds) as time_diff_seconds",
     $finalSelect[]= "MAX(Final.lastupdate_date) as lastupdate_date";
 // }
 
-$finalSelect =array_merge($finalSelect,["Final.tags as tags","Final.name as name","Final.phonenumber as phonenumber","Final.status as status"]);
+$finalSelect =array_merge($finalSelect,["Final.name as name","Final.phonenumber as phonenumber","Final.status as status","Final.sub_status as sub_status"]);
 
 if ($is_admin) {
     foreach ($custom_fields as $field) {
@@ -245,6 +249,7 @@ $finalSelect = array_merge($finalSelect, [
     'Final.state as state',
     'MAX(Final.followup) as followup',
     "Final.upcomming_count as upcomming_count",
+    "Final.tags as tags",
     "Final.status_name as status_name",
     "Final.type_name as type_name",
     "Final.source_name as source_name",
@@ -478,6 +483,7 @@ LEFT JOIN tblleads_status st ON l.status = st.id
 LEFT JOIN tblleads_type lt ON l.type = lt.id 
 LEFT JOIN tblleads_sources ls ON l.source = ls.id 
 LEFT JOIN tblreminders r ON l.id = r.rel_id AND r.rel_type = 'lead'
+LEFT JOIN tblsub_lead_status ss ON ss.id = l.sub_status
 WHERE l.lost = 0 AND l.junk = 0  and l.status = 33 $where_condition GROUP BY l.id  $having_ $externalLimit )
    
    UNION ALL
@@ -492,6 +498,7 @@ LEFT JOIN tblleads_status st ON l.status = st.id
 LEFT JOIN tblleads_type lt ON l.type = lt.id 
 LEFT JOIN tblleads_sources ls ON l.source = ls.id
 LEFT JOIN tblreminders r ON l.id = r.rel_id AND r.rel_type = 'lead'
+LEFT JOIN tblsub_lead_status ss ON ss.id = l.sub_status
 WHERE l.lost = 0 AND l.junk = 0 and l.status = 33 $where_condition GROUP BY l.id  $having_ $externalLimit ) )  as Final GROUP BY Final.id  $having $order_by LIMIT $startLength,$endLength ";
 
 // if(is_admin())
@@ -534,6 +541,7 @@ LEFT JOIN tblleads_status st ON l.status = st.id
 LEFT JOIN tblleads_type lt ON l.type = lt.id 
 LEFT JOIN tblleads_sources ls ON l.source = ls.id 
 LEFT JOIN tblreminders r ON l.id = r.rel_id AND r.rel_type = 'lead'
+LEFT JOIN tblsub_lead_status ss ON ss.id = l.sub_status
 WHERE l.lost = 0 AND l.junk = 0 and l.status!=33 $where_condition GROUP BY l.id $order_by_admin $having_ $externalLimit )
    
    UNION ALL
@@ -548,6 +556,7 @@ LEFT JOIN tblleads_status st ON l.status = st.id
 LEFT JOIN tblleads_type lt ON l.type = lt.id 
 LEFT JOIN tblleads_sources ls ON l.source = ls.id
 LEFT JOIN tblreminders r ON l.id = r.rel_id AND r.rel_type = 'lead'
+LEFT JOIN tblsub_lead_status ss ON ss.id = l.sub_status
 WHERE l.lost = 0 AND l.junk = 0 and l.status!=33 $where_condition GROUP BY l.id $order_by_admin $having_ $externalLimit ) )  as Final GROUP BY Final.id  $having $order_by LIMIT $startLength,$otherLength";
    
 
@@ -725,7 +734,7 @@ $minDateFormatted = $minDate ? date('Y-m-d H:i:s', $minDate) : null;
     }
     // }
 
-    $row[] .= render_tags($aRow['tags']);
+    // $row[] .= render_tags($aRow['tags']);
     $hrefAttr = 'href="' . admin_url('leads/index/' . $aRow['id']) . '" onclick="init_lead(' . $aRow['id'] . ');return false;"';
 
     $nameRow = '<a ' . $hrefAttr . '>' .mb_substr($aRow['name'], 0, 30) . '</a>';
@@ -793,6 +802,7 @@ $minDateFormatted = $minDate ? date('Y-m-d H:i:s', $minDate) : null;
     $outputStatus = '<span class="inline-block lead-status-' . $aRow['status'] . ' label label-' . (empty($aRow['color']) ? 'default' : '') . '" style="color:' . $aRow['color'] . ';border:1px solid ' . $aRow['color'] . '">' . $aRow['status_name'];
 
     $row[] = $outputStatus;
+    $row[] = !empty($aRow['sub_status'])?$aRow['sub_status']:'';
     foreach ($custom_fields as $key => $field) {
         $row[] = mb_substr(!empty($customFieldValues[$aRow[str_replace(" ", "_", strtolower($field['name']))]]) ? $customFieldValues[$aRow[str_replace(" ", "_", strtolower($field['name']))]] : '', 0, 30);
     }
@@ -856,6 +866,7 @@ $minDateFormatted = $minDate ? date('Y-m-d H:i:s', $minDate) : null;
     }
     
      $row[] = $aRow['upcomming_count'];
+     $row[] = render_tags($aRow['tags']);
 
     $row['DT_RowId'] = 'lead_' . $aRow['id'];
 
