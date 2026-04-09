@@ -568,7 +568,7 @@
 
          // Allow only numbers in the phone number field
          $('#phonenumber').keypress(function(event) {
-            console.log("okkkkk");
+            // console.log("okkkkk");
             if (event.which != 8 && (event.which < 48 || event.which > 57)) {
                event.preventDefault();
             }
@@ -619,7 +619,7 @@
 var lead_sub_status = <?= !empty($lead_sub_status) ? json_encode($lead_sub_status, JSON_THROW_ON_ERROR) : '[]' ?>;
 var selected_lead_sub_status = <?= !empty($lead->sub_status) ? trim($lead->sub_status) : '""' ?>;
 
-console.log('Selected sub status:', selected_lead_sub_status);
+// console.log('Selected sub status:', selected_lead_sub_status);
 
 if (typeof mapped === "undefined" || !mapped) {
     var mapped = {};
@@ -667,8 +667,12 @@ function set_sub_status() {
 
         let key = typeId + '-' + statusId;
         let list = mapped[key];
+        if(statusId == 33)
+        {
+            list = lead_sub_status;
+        }
 
-        console.log('Key:', key, 'List:', list);
+        // console.log('Key:', key, 'List:', list);
 
         // ✅ No data found
         if (!list || list.length === 0) {
@@ -708,7 +712,7 @@ function set_sub_status() {
             $subStatus.selectpicker('val', selected_lead_sub_status);
         }
 
-        console.log('Final Value:', $subStatus.val());
+        // console.log('Final Value:', $subStatus.val());
 
     } catch (error) {
         console.error("Error in set_sub_status:", error);
@@ -780,7 +784,7 @@ $(document).ready(function () {
 
    async function add_exam_block() {
       await generate_inputs_random();
-      console.log("okkkkk2");
+    //   console.log("okkkkk2");
 
       check_status = false;
       $(".exam-section input").each(function() {

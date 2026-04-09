@@ -3954,6 +3954,102 @@ die;
         // $sql = "Select s.name,st.staffid ,CONCAT(st.firstname,' ',st.lastname) staff_name,(select dateassigned from " . db_prefix() . "leads where assigned = st.staffid order by dateassigned  desc limit 1) dateassigned from " . db_prefix() . "states s join " . db_prefix() . "staff st ON (FIND_IN_SET(s.id,st.assign_state) and st.lead_type = '" . trim($lead_type) . "'  and st.active = '1') where LOWER(TRIM(s.name)) = '" . strtolower(trim($state_name)) . "' order by (select dateassigned from " . db_prefix() . "leads where assigned = st.staffid order by dateassigned desc limit 1) asc limit 1";
         return $this->db->query($sql)->result_array();
     }
+    
+    function transferLeadAssignation_distribution($lead_type,$staff_not,$locationRegion='',$leadRegion='')
+    {
+        
+       
+$sql = "SELECT 
+    st.staffid,
+    CONCAT(st.firstname, ' ', st.lastname) AS staff_name,
+    last_lead.dateassigned
+FROM " . db_prefix() . "staff st
+LEFT JOIN (
+    SELECT 
+        assigned, 
+        MAX(dateassigned) AS dateassigned
+    FROM " . db_prefix() . "leads
+    GROUP BY assigned
+) AS last_lead 
+ON st.staffid = last_lead.assigned";
+
+if (!empty($leadRegion)) {
+    $sql .= " JOIN (
+        SELECT distribution_regions, non_staff_ids, lead_type
+        FROM " . db_prefix() . "leads_distribution
+        WHERE lead_region = '" . $leadRegion . "' and lead_type = '".$lead_type."'
+    ) dis 
+    ON FIND_IN_SET(st.office_state_region, dis.distribution_regions)
+       AND (dis.non_staff_ids IS NULL OR FIND_IN_SET(st.staffid, dis.non_staff_ids) = 0)
+       AND (dis.lead_type IS NULL OR dis.lead_type = st.lead_type)";
+}
+
+$sql .= " WHERE st.active = 1 and st.admin != 1 ";
+
+if (!empty($leadRegion)) {
+}
+else
+{
+        if (!empty($lead_type)) {
+            $sql .= " and st.lead_type = '" . trim($lead_type) . "' ";
+        }
+        
+        if (!empty($leadRegion)) {
+        $sql .= " and st.office_state_region = '" . trim($leadRegion) . "' ";
+        }else if (!empty($locationRegion)) {
+        $sql .= " and st.office_location_region = '" . trim($locationRegion) . "' ";
+        }
+    
+}
+
+// Optional filters
+if (!empty($staff_not)) {
+    $sql .= " AND st.staffid !='" . $staff_not . "' ";
+}
+
+// Handle ACTIVE_STAFF_ONLY logic
+if (ACTIVE_STAFF_ONLY == 1) {
+
+    $currentTime = date('H:i');
+    $today       = date('Y-m-d');
+    $dayOfWeek   = date('w'); // 0 = Sunday
+
+    $holidays = holiday_list();
+    $isHoliday = in_array($today, $holidays);
+
+    if ($dayOfWeek == 0 || $isHoliday) {
+        $sql .= " AND DATE(st.last_login) = (
+            SELECT MAX(DATE(last_login))
+            FROM " . db_prefix() . "staff
+            WHERE DATE(last_login) < '$today'
+        ) ";
+    } else {
+        if ($currentTime >= '12:00') {
+            $sql .= " AND (DATE(st.last_login) = '$today' OR DATE(st.last_activity) = '$today') ";
+        } else {
+            $yesterday = $this->getLastWorkingDay($today, $holidays);
+            $sql .= " AND (
+                DATE(st.last_login) IN ('$today','$yesterday')
+                OR DATE(st.last_activity) IN ('$today','$yesterday')
+            ) ";
+        }
+    }
+}
+
+// Group & order
+$sql .= " GROUP BY st.staffid, last_lead.dateassigned
+          ORDER BY last_lead.dateassigned ASC ";
+
+// Limit
+if (empty($facebook_lead)) {
+    $sql .= " LIMIT 1";
+}
+        
+
+        // $sql = "Select s.name,st.staffid ,CONCAT(st.firstname,' ',st.lastname) staff_name,(select dateassigned from " . db_prefix() . "leads where assigned = st.staffid order by dateassigned  desc limit 1) dateassigned from " . db_prefix() . "states s join " . db_prefix() . "staff st ON (FIND_IN_SET(s.id,st.assign_state) and st.lead_type = '" . trim($lead_type) . "'  and st.active = '1') where LOWER(TRIM(s.name)) = '" . strtolower(trim($state_name)) . "' order by (select dateassigned from " . db_prefix() . "leads where assigned = st.staffid order by dateassigned desc limit 1) asc limit 1";
+        return $this->db->query($sql)->result_array();
+    
+    }
 function autoTransferLeads($leadData, $leadconvertStatus = 2)
 {
     
@@ -4149,12 +4245,17 @@ function autoTransferLeads($leadData, $leadconvertStatus = 2)
     
      $check_form->responsible = 1;
     //  echo "okkkk";
-  $assign_staff_id =   $this->transferLeadAssignation($leadData['type'],$leadData['assigned']??'',$leadData['office_location_region']??'',$leadData['office_state_region']??'');
+  $assign_staff_id =   $this->transferLeadAssignation_distribution($leadData['type'],$leadData['assigned']??'',$leadData['office_location_region']??'',$leadData['office_state_region']??'');
   
-  if(empty($assign_staff_id[0]["staffid"]))
+     if(empty($assign_staff_id[0]["staffid"]))
   {
-       $assign_staff_id =   $this->transferLeadAssignation($leadData['type'],$leadData['assigned']??'',$leadData['office_location_region']??'');
+      $assign_staff_id =   $this->transferLeadAssignation_distribution($leadData['type'],$leadData['assigned']??'',$leadData['office_location_region']??'');
   }
+
+//   if(empty($assign_staff_id[0]["staffid"]))
+//   {
+//       $assign_staff_id =   $this->transferLeadAssignation($leadData['type'],$leadData['assigned']??'',$leadData['office_location_region']??'');
+//   }
 //   echo $this->db->last_query();
     //  echo  "okkkkkkkkk";
     //  print_r($assign_staff_id);
@@ -4372,16 +4473,17 @@ JOIN tblleads_type t
   ON t.id = l.type 
 
 WHERE 
-  l.dateassigned >= '".START_AUTO_LEAD_TRANSFER_DATE."'
 
-  AND IFNULL(c.call_update_count, 0) < 5
-  AND l.from_form_id != 0
-  AND l.type IN (1,2)
-  AND l.status IN (20)
-  and l.mass_assigned_status!=1
-AND l.dateadded >= '".START_AUTO_LEAD_TRANSFER_DATE."'
-and st.not_transfer_lead_status !=1
+   AND l.status IN (20)
+   AND IFNULL(c.call_update_count, 0) < 5
+   AND l.from_form_id != 0
+   AND l.type IN (1,2)
+   AND l.mass_assigned_status!=1
+   AND l.dateadded >= '".START_AUTO_LEAD_TRANSFER_DATE."'
+   AND st.not_transfer_lead_status !=1
    AND date(l.dateassigned) < date(DATE_SUB(NOW(), INTERVAL $offset DAY)) ".$sqlAdditional."
+   AND l.transfer_count < 3
+
   ORDER BY l.id limit 50 "; 
 
 
@@ -4390,6 +4492,16 @@ and st.not_transfer_lead_status !=1
 // ✅ Execute query
 $query = $this->db->query($sql);
 $result = $query->result_array();
+
+
+//   
+// 
+//
+
+//   
+
+// print_r($result);
+// die;
 // echo "<pre>";
 
 //     foreach ($result as $leadData)
