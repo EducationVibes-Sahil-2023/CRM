@@ -713,10 +713,7 @@ $reference_name = $this->db
                                  'name' => _l('Updated'),
                                  'th_attrs' => array('class' => 'toggleable', 'id' => 'th-last-contact')
                               ),
-                              array(
-                                 'name' => _l('tags'),
-                                 'th_attrs' => array('class' => 'toggleable', 'id' => 'th-tags')
-                              ),
+                              
                               array(
                                  'name' => _l('leads_dt_name'),
                                  'th_attrs' => array('class' => 'toggleable', 'id' => 'th-name')
@@ -737,6 +734,12 @@ $reference_name = $this->db
                               'name' => _l('leads_dt_status'),
                               'th_attrs' => array('class' => 'toggleable', 'id' => 'th-status')
                            );
+                           
+                             $_table_data[] = array(
+                              'name' => _l('Sub Status'),
+                              'th_attrs' => array('class' => 'toggleable', 'id' => 'th-status')
+                           );
+
 
                            $custom_fields = get_custom_fields('leads', array('show_on_table' => 1));
 
@@ -815,6 +818,11 @@ $reference_name = $this->db
                             $_table_data[] = array(
                                  'name' => _l('Lead Value'),
                                  'th_attrs' => array('class' => 'date-created toggleable', 'id' => 'th-counts')
+                              );
+                              
+                              $_table_data[] = array(
+                                 'name' => _l('tags'),
+                                 'th_attrs' => array('class' => 'toggleable', 'id' => 'th-tags')
                               );
 
                            foreach ($_table_data as $_t) {
@@ -926,7 +934,7 @@ $reference_name = $this->db
             ?>
          </div>
       </li>
-      <?php if(is_admin()){ ?>
+     
       <li>
          <div class="leads-filter-column">
             <?php
@@ -954,7 +962,7 @@ $reference_name = $this->db
             ?>
          </div>
       </li>
-      <?php } ?>
+     
       <li>
          <div class="leads-filter-column">
             <div id="leads-filter-source">
@@ -1169,7 +1177,7 @@ let callChartInstance = null;
 
 var lead_sub_status = <?= !empty($lead_sub_status) ? json_encode($lead_sub_status) : '[]' ?>;
 
-function set_sub_status()
+function set_sub_status_leads()
 {
     // console.log("=== set_sub_status() called ===");
     
@@ -1279,14 +1287,14 @@ $(document).ready(function () {
         // console.error("❌ No data found in lead_sub_status!");
     }
     
-    set_sub_status();
+    set_sub_status_leads();
 });
 
 // ✅ Event binding (removed duplicate)
 $(document).on("change", "#filter-right-side select#lead_type, #filter-right-side select#view_status", function () {
     // console.log("\n🔄 Filter changed event triggered");
     // console.log("Changed element:", this.id);
-    set_sub_status();
+    set_sub_status_leads();
 });
 
 function formatTime(seconds) {

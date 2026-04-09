@@ -289,4 +289,93 @@ class Settings extends AdminController
             'success' => delete_option($name),
         ]);
     }
+    
+public function distribution()
+{
+
+// ini_set('display_errors', 1);
+// ini_set('display_startup_errors', 1);
+// error_reporting(E_ALL);
+
+    $data = json_decode($_POST['data'],true);
+
+    // ✅ Validate request is an array
+    // if (!is_array($data) || empty($data)) {
+    //     return response()->json([
+    //         'status' => false,
+    //         'message' => 'No data provided or invalid format.'
+    //     ], 422);
+    // }
+
+    $insertData = [];
+    $combinations = [];
+if(!empty($data)){
+    foreach ($data as $index => $row) {
+
+        $leadType = $row['lead_type'] ?? null;
+        $region   = $row['region'] ?? null;
+        $subRegions = $row['sub_regions'] ?? null;
+        $staff    = $row['staff'] ?? null;
+
+        // ✅ Required fields validation
+        if (!$leadType || !$region || !$subRegions ) {
+            echo json_encode([
+                'status' => false,
+                'message' => "Missing fields in row " . ($index + 1)
+            ], 422);
+        }
+
+        // ✅ Convert subRegions string to array if sent as "1,2,3"
+        // if (is_string($subRegions)) {
+        //     $subRegions = array_filter(array_map('trim', explode(',', $subRegions)));
+        // }
+
+        // if (empty($subRegions)) {
+        //     return response()->json([
+        //         'status' => false,
+        //         'message' => "No sub-regions provided in row " . ($index + 1)
+        //     ], 422);
+        // }
+
+        // ✅ Check uniqueness in request (lead_type + region)
+        $key = $leadType . '|' . $region;
+        if (in_array($key, $combinations)) {
+            return response()->json([
+                'status' => false,
+                'message' => "Duplicate Lead Type + Region in request at row " . ($index + 1)
+            ], 422);
+        }
+        $combinations[] = $key;
+
+     
+            $insertData[] = [
+                'lead_type' => $leadType,
+                'lead_region' => $region,
+                'distribution_regions' => $subRegions,
+                'non_staff_ids' => !empty($staff)?implode(",",$staff):'',
+                'created_by' => get_staff_user_id(),
+                'created_at' => date('Y-m-d H:i:s'),
+                'updated_at' =>date('Y-m-d H:i:s')
+            ];
+        
+    }
+    
+}
+
+$table = db_prefix() . 'leads_distribution';
+
+// ✅ Delete all existing rows
+$this->db->truncate($table);  // safer than delete without where
+// ✅ Insert batch if data exists
+if (!empty($insertData)) {
+    $this->db->insert_batch($table, $insertData);
+
+}
+
+    echo json_encode([
+        'status' => true,
+        'message' => 'Distribution saved successfully',
+        'inserted_count' => count($insertData)
+    ],true);
+}
 }
