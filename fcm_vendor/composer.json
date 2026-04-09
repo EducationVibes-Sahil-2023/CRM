@@ -1,0 +1,17 @@
+{
+    "name": "sahil/fcm_vendor",
+    "autoload": {
+        "psr-4": {
+            "Sahil\\FcmVendor\\": "src/"
+        }
+    },
+    "authors": [
+        {
+            "name": "EducationVibes-Sahil-2023",
+            "email": "sahil.chaudhary@educationvibes.in"
+        }
+    ],
+    "require": {
+        "kreait/firebase-php": "^5.26"
+    }
+}
