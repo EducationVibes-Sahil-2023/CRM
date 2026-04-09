@@ -306,6 +306,9 @@ if ($this->ci->input->post('source')) {
     $where[] = " AND l.source IN (" . implode(',', $this->ci->db->escape_str($this->ci->input->post('source'))) . ") ";
 }
 
+if ($this->ci->input->post('sub_status')) {
+    $where[] = " AND l.sub_status IN (" . implode(',', $this->ci->db->escape_str($this->ci->input->post('sub_status'))) . ") ";
+}
 if ($this->ci->input->post('view_form')) {
     $websites = $this->ci->input->post('view_form');
     $escaped_websites = array_map(function ($w) {
@@ -389,6 +392,7 @@ if (!has_permission('leads', '', 'view')) {
 }
 
 $order_by ="";
+$order_by_admin ="";
 
 if(isset($_POST["order"][0]["column"]) && $_POST["order"][0]["column"] >= 0)
 {
@@ -403,8 +407,11 @@ if(isset($_POST["order"][0]["column"]) && $_POST["order"][0]["column"] >= 0)
    
      
      
-        $order_by = $select[$_POST["order"][0]["column"]];
-        $order_by = " order by ".trim(explode(' AS ', strtoupper($order_by))[1]) ." ".$_POST["order"][0]["dir"]." ";
+        $order_by_ = $select[$_POST["order"][0]["column"]];
+        $order_by = " order by ".trim(explode(' AS ', strtoupper($order_by_))[1]) ." ".$_POST["order"][0]["dir"]." ";
+        if(is_admin() || $role == 3){
+        $order_by_admin = " order by ".trim(explode(' AS ', strtoupper($order_by_))[1]) ." ".$_POST["order"][0]["dir"]." ";
+        }
         
 // echo $order_by;
 // die;
@@ -527,7 +534,7 @@ LEFT JOIN tblleads_status st ON l.status = st.id
 LEFT JOIN tblleads_type lt ON l.type = lt.id 
 LEFT JOIN tblleads_sources ls ON l.source = ls.id 
 LEFT JOIN tblreminders r ON l.id = r.rel_id AND r.rel_type = 'lead'
-WHERE l.lost = 0 AND l.junk = 0 and l.status!=33 $where_condition GROUP BY l.id $having_ $externalLimit )
+WHERE l.lost = 0 AND l.junk = 0 and l.status!=33 $where_condition GROUP BY l.id $order_by_admin $having_ $externalLimit )
    
    UNION ALL
    
@@ -541,7 +548,7 @@ LEFT JOIN tblleads_status st ON l.status = st.id
 LEFT JOIN tblleads_type lt ON l.type = lt.id 
 LEFT JOIN tblleads_sources ls ON l.source = ls.id
 LEFT JOIN tblreminders r ON l.id = r.rel_id AND r.rel_type = 'lead'
-WHERE l.lost = 0 AND l.junk = 0 and l.status!=33 $where_condition GROUP BY l.id $having_ $externalLimit ) )  as Final GROUP BY Final.id  $having $order_by LIMIT $startLength,$otherLength";
+WHERE l.lost = 0 AND l.junk = 0 and l.status!=33 $where_condition GROUP BY l.id $order_by_admin $having_ $externalLimit ) )  as Final GROUP BY Final.id  $having $order_by LIMIT $startLength,$otherLength";
    
 
     // $Result = $this->ci->db->query($sql)->result_array();

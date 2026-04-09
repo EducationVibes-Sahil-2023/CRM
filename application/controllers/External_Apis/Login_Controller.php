@@ -1784,7 +1784,7 @@ public function google_qualified_leads()
 
 public function check_lead_auto_transfer_lead()
 {
-    return true;
+    // return true;
     $this->load->model('Leads_model');
     $this->Leads_model->check_lead_auto_transfer_lead();
     

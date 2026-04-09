@@ -207,9 +207,17 @@ $search_column = [];
 if (!empty($_POST["search"]["value"])) {
     $search_column = [db_prefix() . 'leads.name', db_prefix() . 'leads.phonenumber', db_prefix() . 'cities_.name'];
 }
-
+if (!empty($this->ci->input->post('excelStatus')) && $this->ci->input->post('excelStatus') == 1)
+{
+    $_POST["order"][0]["column"] = 0;
+    $_POST["order"][0]["dir"] = "desc";
+}
 $result = data_tables_init($aColumns, $sIndexColumn, $sTable, $join, $where, [], '', '', '', $search_column);
-
+if (!empty($this->ci->input->post('excelStatus')) && $this->ci->input->post('excelStatus') == 1)
+{
+    echo json_encode($result['rResult'], true);
+    die;
+}
 $output  = $result['output'];
 $rResult = $result['rResult'];
 foreach ($rResult as $aRow) {

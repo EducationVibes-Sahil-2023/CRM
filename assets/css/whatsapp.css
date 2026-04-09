@@ -326,8 +326,8 @@ main.a1-column {
 }
 
 ::-webkit-scrollbar {
-    width: 6px;
-    height: 6px;
+    width: 0px;
+    height: 0px;
 }
 
 ::-webkit-scrollbar-thumb {

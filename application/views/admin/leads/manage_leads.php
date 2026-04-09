@@ -14,6 +14,9 @@ $reference_name = $this->db
 
 ?>
 
+
+
+
 <link href="<?= base_url("assets/css/uislider.css") ?>" rel="stylesheet">
 <script src="<?= base_url("assets/js/uislider.js") ?>"></script>
 
@@ -163,6 +166,13 @@ $reference_name = $this->db
       background: white;
       width: -webkit-fill-available;
    }
+   #callChart
+   {
+       box-shadow: 1px 1px 7px lightgrey;
+    padding: 10px;
+    margin-top: 25px;
+    min-height: 450px !important;
+   }
 </style>
 <div id="wrapper">
    <div class="content">
@@ -249,15 +259,20 @@ $reference_name = $this->db
                         <div class="col-md-12">
                            <h4 class="no-margin"><?php echo _l('leads_summary'); ?></h4>
                         </div>
-                        <div class="row">
+                        <div class="">
 
-                           <div class="text-center  col-md-6">
+                           <div class="text-center col-md-6">
                               <h3><span id="updationCounter"><?php echo $updateCount; ?></span></h3><br>
                               <span id="updationCounterText">Update Count</span>
                            </div>
-                           <div class="text-center  col-md-6">
+                         
+                           <div class="text-center col-md-6">
                               <h3><span id="updationCounter_time"><?php echo $call_count; ?></span></h3><br>
                               <span id="updationCounterText_time">Updates Calls Duration</span>
+                           </div>
+                           
+                             <div class="col-md-8">
+                           <canvas id="callChart"></canvas>
                            </div>
                         </div>
                      </div>
@@ -858,6 +873,32 @@ $reference_name = $this->db
             </div>
          </li>
       <?php } ?>
+         <li class="">
+         <div class="leads-filter-column">
+            <div id="leads-filter-type">
+               <?php
+               echo render_select(
+                  'lead_type[]',
+                  $type,
+                  array('id', 'name'),
+                  '',
+                  '',
+                  array(
+                     'data-width' => '100%',
+                     'data-none-selected-text' => _l('lead_import_type'),
+                     'multiple' => true,
+                     'data-actions-box' => true
+                  ),
+                  array(),
+                  'no-mbot',
+                  '',
+                  false,
+                  "lead_type"
+               );
+               ?>
+            </div>
+         </div>
+      </li>
       <li>
          <div class="leads-filter-column">
             <?php
@@ -885,6 +926,35 @@ $reference_name = $this->db
             ?>
          </div>
       </li>
+      <?php if(is_admin()){ ?>
+      <li>
+         <div class="leads-filter-column">
+            <?php
+            $selected = array();
+            echo '<div id="leads-filter-status">';
+            echo render_select(
+               'view_sub_status[]',
+               [],
+               [],
+               '',
+               '',
+               array(
+                  'data-width' => '100%',
+                  'data-none-selected-text' => _l('Sub Status'),
+                  'multiple' => true,
+                  'data-actions-box' => true
+               ),
+               array(),
+               'no-mbot',
+               '',
+               false,
+               'view_sub_status'
+            );
+            echo '</div>';
+            ?>
+         </div>
+      </li>
+      <?php } ?>
       <li>
          <div class="leads-filter-column">
             <div id="leads-filter-source">
@@ -911,32 +981,7 @@ $reference_name = $this->db
             </div>
          </div>
       </li>
-      <li class="">
-         <div class="leads-filter-column">
-            <div id="leads-filter-type">
-               <?php
-               echo render_select(
-                  'lead_type[]',
-                  $type,
-                  array('id', 'name'),
-                  '',
-                  '',
-                  array(
-                     'data-width' => '100%',
-                     'data-none-selected-text' => _l('lead_import_type'),
-                     'multiple' => true,
-                     'data-actions-box' => true
-                  ),
-                  array(),
-                  'no-mbot',
-                  '',
-                  false,
-                  "lead_type"
-               );
-               ?>
-            </div>
-         </div>
-      </li>
+   
       <li class="">
          <div class="leads-filter-column">
             <div id="leads-filter-type">
@@ -1116,7 +1161,263 @@ $reference_name = $this->db
 <?php include_once(APPPATH . 'views/admin/leads/status.php'); ?>
 <?php init_tail(); ?>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/bootstrap-daterangepicker/3.1/daterangepicker.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/chartjs-plugin-datalabels@2"></script>
+<script>
 
+let callChartInstance = null;
+
+var lead_sub_status = <?= !empty($lead_sub_status) ? json_encode($lead_sub_status) : '[]' ?>;
+
+function set_sub_status()
+{
+    // console.log("=== set_sub_status() called ===");
+    
+    // ✅ Debug: Check if data exists
+    if (!lead_sub_status || lead_sub_status.length === 0) {
+        // console.warn("⚠️ lead_sub_status is empty or undefined");
+        // console.log("lead_sub_status value:", lead_sub_status);
+    } else {
+        // console.log("✅ Data loaded:", lead_sub_status.length, "records");
+        // console.log("Sample data:", lead_sub_status[0]);
+    }
+    
+    // ✅ Get multiple values (always array)
+    let typeIds = $("#filter-right-side select#lead_type").val() || [];
+    let statusIds = $("#filter-right-side select#view_status").val() || [];
+    
+    // console.log("Selected Lead Types:", typeIds);
+    // console.log("Selected Statuses:", statusIds);
+    
+    // ✅ Normalize (avoid number/string mismatch)
+    typeIds = typeIds.map(String);
+    statusIds = statusIds.map(String);
+    
+    let $subStatus = $("#filter-right-side select#view_sub_status");
+    $subStatus.empty();
+    
+    let list = [];
+    
+    // ✅ CASE 1: Nothing selected → show ALL
+    if (typeIds.length === 0 && statusIds.length === 0) {
+        // console.log("📋 Case 1: Showing ALL sub statuses");
+        list = lead_sub_status;
+    }
+    
+    // ✅ CASE 2: Only lead_type selected
+    else if (typeIds.length > 0 && statusIds.length === 0) {
+        // console.log("📋 Case 2: Filtering by lead_type only:", typeIds);
+        list = lead_sub_status.filter(item => 
+            typeIds.includes(String(item.lead_type))
+        );
+    }
+    
+    // ✅ CASE 3: Only status selected
+    else if (typeIds.length === 0 && statusIds.length > 0) {
+        // console.log("📋 Case 3: Filtering by status only:", statusIds);
+        list = lead_sub_status.filter(item => 
+            statusIds.includes(String(item.status_id))
+        );
+    }
+    
+    // ✅ CASE 4: Both selected
+    else {
+        // console.log("📋 Case 4: Filtering by BOTH lead_type AND status");
+        // console.log("  Lead Types:", typeIds);
+        // console.log("  Statuses:", statusIds);
+        list = lead_sub_status.filter(item => 
+            typeIds.includes(String(item.lead_type)) &&
+            statusIds.includes(String(item.status_id))
+        );
+    }
+    
+    // console.log("📊 Filtered results count:", list.length);
+    
+    // ❌ No data
+    if (!list || list.length === 0) {
+        // console.warn("⚠️ No sub status found matching criteria");
+        $subStatus.append(`<option value="">No Sub Status Found</option>`);
+        $subStatus.selectpicker('refresh');
+        return;
+    }
+    
+    // ✅ Unique by sub_status_id
+    let unique = [...new Map(
+        list.map(item => [item.sub_status_id, item])
+    ).values()];
+    
+    // console.log("📊 Unique records after deduplication:", unique.length);
+    
+    // ✅ Default option
+    // $subStatus.append(`<option value="">Select Sub Status</option>`);
+    
+    // ✅ Populate dropdown
+    unique.forEach(item => {
+        // console.log(`  Adding option: ID=${item.sub_status_id}, Name=${item.name}`);
+        $subStatus.append(
+            `<option value="${item.sub_status_id}">${item.name}</option>`
+        );
+    });
+    
+    // console.log("✅ Sub status dropdown populated successfully");
+    
+    // ✅ Refresh selectpicker UI
+    $subStatus.selectpicker('refresh');
+    // console.log("✅ Selectpicker refreshed");
+    // console.log("=== set_sub_status() completed ===\n");
+}
+
+// ✅ Initial load with debug
+$(document).ready(function () {
+    // console.log("🚀 Document ready - Initializing...");
+    // console.log("lead_sub_status type:", typeof lead_sub_status);
+    // console.log("lead_sub_status is array:", Array.isArray(lead_sub_status));
+    
+    if (lead_sub_status && lead_sub_status.length > 0) {
+        // console.log("✅ Data loaded successfully. Count:", lead_sub_status.length);
+    } else {
+        // console.error("❌ No data found in lead_sub_status!");
+    }
+    
+    set_sub_status();
+});
+
+// ✅ Event binding (removed duplicate)
+$(document).on("change", "#filter-right-side select#lead_type, #filter-right-side select#view_status", function () {
+    // console.log("\n🔄 Filter changed event triggered");
+    // console.log("Changed element:", this.id);
+    set_sub_status();
+});
+
+function formatTime(seconds) {
+    seconds = Number(seconds);
+    const h = Math.floor(seconds / 3600);
+    const m = Math.floor((seconds % 3600) / 60);
+    const s = seconds % 60;
+
+    return [
+        h.toString().padStart(2, '0'),
+        m.toString().padStart(2, '0'),
+        s.toString().padStart(2, '0')
+    ].join(':');
+}
+
+function formatHour(hour) {
+    hour = Number(hour);
+    const ampm = hour >= 12 ? 'PM' : 'AM';
+    const h = hour % 12 || 12;
+    return h + ' ' + ampm;
+}
+
+function setCallGraph(rawData) {
+
+    // ✅ Convert + Filter (safe)
+    rawData = rawData
+        .map(d => ({
+            hour: Number(d.hour),
+            unique_calls: Number(d.unique_calls),
+            total_call_duration: Number(d.total_call_duration)
+        }))
+        .filter(d => d.hour >= 9 && d.hour <= 21)
+        .sort((a, b) => a.hour - b.hour);
+
+    // Prepare data
+    const labels = rawData.map(d => formatHour(d.hour));
+    const calls = rawData.map(d => d.unique_calls);
+    const duration = rawData.map(d => d.total_call_duration);
+
+    // ✅ TOTALS
+    const totalCalls = calls.reduce((a, b) => a + b, 0);
+    const totalDuration = duration.reduce((a, b) => a + b, 0);
+
+    // 👉 Update UI
+    // if (document.getElementById('updationCounter')) {
+    //     document.getElementById('updationCounter').innerText = totalCalls;
+    // }
+
+    // if (document.getElementById('updationCounter_time')) {
+    //     document.getElementById('updationCounter_time').innerText = formatTime(totalDuration);
+    // }
+
+    const ctx = document.getElementById('callChart').getContext('2d');
+
+    if (callChartInstance) {
+        callChartInstance.destroy();
+    }
+
+    callChartInstance = new Chart(ctx, {
+        data: {
+            labels: labels,
+            datasets: [
+                {
+                    type: 'bar',
+                    label: totalCalls + ' Total Calls', // ✅ fixed
+                    data: calls,
+                    datalabels: {
+                        anchor: 'end',
+                        align: 'top',
+                        formatter: v => v
+                    }
+                },
+                {
+                    type: 'line',
+                    label: formatTime(totalDuration) + ' Total Duration', // ✅ fixed
+                    data: duration,
+                    yAxisID: 'y1',
+                    datalabels: {
+                        anchor: 'end',
+                        align: 'top',
+                        formatter: v => formatTime(v)
+                    }
+                }
+            ]
+        },
+        options: {
+            responsive: true,
+            plugins: {
+                legend: {
+                    position: 'top'
+                },
+                title: {
+                    display: true,
+                    text: 'Call Analytics (9 AM - 9 PM)',
+                    font: {
+                        size: 16,
+                        weight: 'bold'
+                    }
+                },
+                datalabels: {
+                    color: '#000',
+                    font: {
+                        weight: 'bold'
+                    }
+                }
+            },
+            scales: {
+                y: {
+                    beginAtZero: true,
+                    title: {
+                        display: true,
+                        text: 'Calls'
+                    }
+                },
+                y1: {
+                    beginAtZero: true,
+                    position: 'right',
+                    title: {
+                        display: true,
+                        text: 'Duration (HH:MM:SS)'
+                    },
+                    grid: {
+                        drawOnChartArea: false
+                    }
+                }
+            }
+        },
+        plugins: [ChartDataLabels]
+    });
+}
+</script>
 <script>
    var max_count = parseInt("<?= !empty($updateCount_max) ? $updateCount_max : 0 ?>");
 
@@ -1353,6 +1654,9 @@ $reference_name = $this->db
          var last_update_date = document.getElementById("last_update_date").value;
          var time_condition = document.getElementById("time_condition").value;
          var time = document.getElementById("time_minutes").value;
+         var reference_name = document.getElementById("reference_name") 
+    ? document.getElementById("reference_name").value 
+    : '';
          
          console.log("update count");
          if (to_date != '') {
@@ -1500,6 +1804,8 @@ $reference_name = $this->db
       var element_lead_type = document.getElementById("lead_type");
       var element_form_name = document.getElementById("view_form");
       var element_reference_name = document.getElementById("reference_name");
+      var element_sub_status= document.getElementById("view_sub_status");
+      
 
       var view_assigned_options = "";
       var view_source_options = "";
@@ -1507,6 +1813,7 @@ $reference_name = $this->db
       var view_lead_type_options = "";
       var view_view_form_options = "";
       var view_reference_name_options = "";
+      var view_sub_status_options = "";
       if (typeof(element_view_source) != 'undefined' && element_view_source != null) {
          view_source_options = document.getElementById('view_source').selectedOptions;
          view_source_options = Array.from(view_source_options).map(({
@@ -1545,6 +1852,13 @@ $reference_name = $this->db
             value
          }) => value);
       }
+      
+      if (typeof(element_sub_status) != 'undefined' && element_sub_status != null) {
+         view_sub_status_options = document.getElementById('view_sub_status').selectedOptions;
+         view_sub_status_options = Array.from(view_sub_status_options).map(({
+            value
+         }) => value);
+      }
 
       if ($("#leadSum").html() != '' && status == 1) {
          hide_loader();
@@ -1575,6 +1889,11 @@ $reference_name = $this->db
       
       var time_condition = document.getElementById("time_condition").value;
       var time_minutes = document.getElementById("time_minutes").value;
+     var reference_name = document.getElementById("reference_name")
+    ? document.getElementById("reference_name").value 
+    : '';
+    
+    
 
       if ($("#show_update_counts").is(":checked")) {
          update_count_min = document.getElementById("update_count_min").value;
@@ -1612,7 +1931,9 @@ $reference_name = $this->db
             show_lead_status: status,
             view_form: view_view_form_options,
             time_condition: time_condition,
-            time_minutes: time_minutes
+            time_minutes: time_minutes,
+            reference_name:reference_name,
+            sub_status:view_sub_status_options
          },
          dataType: "JSON",
          cache: false,
@@ -1626,6 +1947,7 @@ $reference_name = $this->db
             if ($("#updationCounter").html() == '' && data.update_count != undefined) {
                $("#updationCounter").html(data.update_count);
                $("#updationCounter_time").html(data.call_count);
+              setCallGraph(data.graphData);
             }
             if (data.max_count != undefined && parseInt(data.max_count) > 0) {
                recreate_range_slider(data.max_count);
