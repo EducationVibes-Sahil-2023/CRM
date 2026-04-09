@@ -155,11 +155,14 @@ if(is_admin())
 
             // Manual validation (check existing active ticket)
             if ($auto == 0) {
+                
+                if(!is_admin()){
                 $check = $this->check_ticket_data($client_exam_data["client_ids"], $client_exam_data);
 
 
                 if (!$check["status"]) {
                     return $check;
+                }
                 }
                 
 

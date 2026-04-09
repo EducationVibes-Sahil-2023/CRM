@@ -25,8 +25,16 @@ function app_init_admin_sidebar_menu_items()
                 $CI->app_menu->add_sidebar_children_item('dashboards', [
                         'slug'     => 'Dashboard/leads_transfers',
                         'icon'     => 'fa fa-user-times',
-                        'name'     => "Leads transfer",
+                        'name'     => "Leads Transfer",
                         'href'     => admin_url('Dashboard/leads_transfers'),
+                        'position' => 1,
+                ]);
+                
+                $CI->app_menu->add_sidebar_children_item('dashboards', [
+                        'slug'     => 'Dashboard/leads_assignation',
+                        'icon'     => 'fa fa-user-times',
+                        'name'     => "Leads Assignation",
+                        'href'     => admin_url('Dashboard/leads_assignation'),
                         'position' => 1,
                 ]);
         }
@@ -73,15 +81,15 @@ function app_init_admin_sidebar_menu_items()
                 ]);
         }
 
-        if (has_permission('auto_transfer', '', 'view') && is_admin()) {
-                $CI->app_menu->add_sidebar_menu_item('auto_transfer', [
-                        'slug'     => 'Leads/auto_transfer',
-                        'icon'     => 'fa fa-user-times',
-                        'name'     => "Lead Transfer",
-                        'href'     => admin_url('leads/auto_transfer'),
-                        'position' => 1,
-                ]);
-        }
+        // if (has_permission('auto_transfer', '', 'view') && is_admin()) {
+        //         $CI->app_menu->add_sidebar_menu_item('auto_transfer', [
+        //                 'slug'     => 'Leads/auto_transfer',
+        //                 'icon'     => 'fa fa-user-times',
+        //                 'name'     => "Lead Transfer",
+        //                 'href'     => admin_url('leads/auto_transfer'),
+        //                 'position' => 1,
+        //         ]);
+        // }
 
 
         if (

@@ -7859,6 +7859,12 @@ function calculate_call_duration_new($params = false, $max_status = 0)
         $check_today = false;
         $sql .= " AND l.assigned IN (" . implode(",", $params['assigned']) . ") ";
     }
+    
+       if (!empty($params['sub_status'])) {
+        $check_today = false;
+        $sql .= " AND l.sub_status IN (" . implode(",", $params['sub_status']) . ") ";
+    }
+
 
     if (!empty($params['last_update_date'])) {
         $check_today = false;
@@ -7914,15 +7920,22 @@ function calculate_call_duration_new($params = false, $max_status = 0)
     }
 
 
-    if (!empty($params['reference_name'])) {
-        $reference_name = $params['reference_name'];
-        $escaped_reference_name = array_map(function ($w) {
-            return "'" . trim($w) . "'";
-        }, $reference_name);
+     if (!empty($params['reference_name'])) {
+ $check_today = false;
+    $reference_name = $params['reference_name'];
 
-        $sql .= " AND  l.reference_name IN (" . implode(',', $escaped_reference_name) . ")";
+    // Convert to array if it's a string
+    if (!is_array($reference_name)) {
+        $reference_name = explode(',', $reference_name);
     }
 
+    // Trim + escape values
+    $escaped_reference_name = array_map(function ($w) use ($CI) {
+        return "'" . $CI->db->escape_str(trim($w)) . "'";
+    }, $reference_name);
+
+    $conditions[] = "l.reference_name IN (" . implode(',', $escaped_reference_name) . ")";
+}
     if (!empty($params['lead_type'])) {
         $check_today = false;
         $sql .= ' AND l.type IN (' . implode(",", $CI->db->escape_str($params['lead_type'])) . ')';
@@ -8033,6 +8046,12 @@ function calculate_call_duration_new($params = false, $max_status = 0)
 
 
     // $sql = "SELECT IFNULL(SUM(call_duration), 0) AS total_sum FROM (" . $sql . ") AS subquery";
+    
+    // if(is_admin())
+    // {
+    // echo $sql;
+    // die;
+    // }
 
     $duration = $CI->db->query($sql)->result_array();
 
@@ -8041,6 +8060,201 @@ function calculate_call_duration_new($params = false, $max_status = 0)
 
     return !empty($duration) ? $duration : [];
 }
+
+function graphDataCalls($params)
+{
+    $CI = &get_instance();
+$showStatus = false;
+    $where = [];
+
+    // ✅ Assigned filter
+    if (!empty($params['assigned'])) {
+        $assigned = implode(",", array_map('intval', $params['assigned']));
+        $where[] = "l.assigned IN ($assigned)";
+    }
+
+    // ✅ Call Date filter
+    if (!empty($params['up_from_date']) && !empty($params['up_to_date'])) {
+        $from = $CI->db->escape_str($params['up_from_date']);
+        $to   = $CI->db->escape_str($params['up_to_date']);
+$showStatus = true;
+// Calculate difference
+
+$fromDate = new DateTime($from);
+$toDate   = new DateTime($to);
+$diff = $fromDate->diff($toDate)->days;
+
+// Check if more than 31 days
+if ($diff > 31) {
+    $showStatus = false;
+}
+        $where[] = "DATE(FROM_UNIXTIME(calls.call_start + 19800)) 
+                    BETWEEN '$from' AND '$to'";
+    } elseif (!empty($params['last_update_date'])) {
+        $date = $CI->db->escape_str($params['last_update_date']);
+        $where[] = "DATE(FROM_UNIXTIME(calls.call_start + 19800)) <= '$date'";
+    } else {
+        $today = date('Y-m-d');
+        $where[] = " adjusted_call_start = '$today' ";
+        $showStatus = true;
+    }
+
+    // ✅ Lead Created Date
+    if (!empty($params['to_date'])) {
+        $from_date = $CI->db->escape_str($params['from_date']);
+        $to_date   = $CI->db->escape_str($params['to_date']);
+        
+        $showStatus= true;
+        $fromDate = new DateTime($from_date);
+$toDate   = new DateTime($to_date);
+$diff = $fromDate->diff($toDate)->days;
+
+// Check if more than 31 days
+if ($diff > 31) {
+    $showStatus = false;
+}
+
+        $where[] = "DATE(l.dateadded) BETWEEN '$from_date' AND '$to_date'";
+    }
+
+    // ✅ Assign Date
+    if (!empty($params['assign_to_date'])) {
+        $from = $CI->db->escape_str($params['assign_from_date']);
+        $to   = $CI->db->escape_str($params['assign_to_date']);
+
+
+  $showStatus= true;
+        $fromDate = new DateTime($from);
+$toDate   = new DateTime($to);
+$diff = $fromDate->diff($toDate)->days;
+
+// Check if more than 31 days
+if ($diff > 31) {
+    $showStatus = false;
+}
+        $where[] = "DATE(l.dateassigned) BETWEEN '$from' AND '$to'";
+    }
+
+    // ✅ Follow-up Date (requires JOIN)
+    $joinReminder = "";
+    if (!empty($params['followup_to_date'])) {
+        $from = $CI->db->escape_str($params['followup_from_date']);
+        $to   = $CI->db->escape_str($params['followup_to_date']);
+
+        $joinReminder = "LEFT JOIN tblreminders r ON r.rel_id = l.id";
+
+        $where[] = "DATE(r.date) BETWEEN '$from' AND '$to'";
+        
+          $showStatus= true;
+        $fromDate = new DateTime($from);
+$toDate   = new DateTime($to);
+$diff = $fromDate->diff($toDate)->days;
+
+// Check if more than 31 days
+if ($diff > 31) {
+    $showStatus = false;
+}
+
+    }
+
+    // ✅ Other filters
+    if (!empty($params['status'])) {
+        $status = implode(",", array_map('intval', $params['status']));
+        $where[] = "l.status IN ($status)";
+    }
+
+    if (!empty($params['source'])) {
+        $source = implode(",", array_map('intval', $params['source']));
+        $where[] = "l.source IN ($source)";
+    }
+
+    if (!empty($params['lead_type'])) {
+        $type = implode(",", array_map('intval', $params['lead_type']));
+        $where[] = "l.type IN ($type)";
+    }
+    
+       if (!empty($params['sub_status'])) {
+        $type = implode(",", array_map('intval', $params['sub_status']));
+        $where[] = "l.sub_status IN ($type)";
+    }
+
+if(!is_admin()){
+    $role = $CI->db->where('staffid', get_staff_user_id())->get(db_prefix() . 'staff')->row()->role;
+    $tids = '';
+    if ($role == 3) {
+        $sid = get_staff_user_id();
+        $teamids = $CI->db->query('CALL GetReportingPersons(?)', array($sid))->result_array();
+        $CI->db->close();
+        $CI->db->initialize();
+        $idsarr = array_column($teamids, 'staffid');
+        $sids = implode(",", $idsarr);
+        $where[]  = !empty($sids) ? " assigned IN ($sid, $sids)" : " assigned IN ($sid)";
+    }
+    else{
+        $where[]  = " assigned = ".get_staff_user_id() ;
+    }
+}
+    
+
+
+    $whereSql = !empty($where) ? "WHERE " . implode(" AND ", $where) : "";
+
+    // ✅ Base SELECT
+    $baseSelect = "
+        SELECT 
+            HOUR(FROM_UNIXTIME(calls.call_start + 19800)) AS hour,
+            SUM(IF(call_status IN ('answered','status_unknown'), IFNULL(duration,0), 0)) AS total_call_duration,
+            COUNT(DISTINCT calls.contact) AS unique_calls
+    ";
+
+    // ✅ Query 1 (Primary number)
+    $q1 = "
+        $baseSelect
+        FROM tblleads l
+        $joinReminder
+        INNER JOIN tblcalls_activity_logs calls 
+            ON calls.contact = REPLACE(TRIM(REPLACE(l.phonenumber, '+91', '')), ' ', '')
+            AND l.assigned = calls.staffid
+        $whereSql
+        GROUP BY hour
+    ";
+
+    // ✅ Query 2 (Alternative number)
+    $q2 = "
+        $baseSelect
+        FROM tblleads l
+        $joinReminder
+        INNER JOIN tblcalls_activity_logs calls 
+            ON calls.contact = REPLACE(TRIM(REPLACE(l.alternative_phonenumber, '+91', '')), ' ', '')
+            AND l.assigned = calls.staffid
+        $whereSql
+        GROUP BY hour
+    ";
+
+    // ✅ FINAL UNION
+    $sql = "
+        SELECT 
+            hour,
+            SUM(total_call_duration) AS total_call_duration,
+            SUM(unique_calls) AS unique_calls
+        FROM (
+            $q1
+            UNION ALL
+            $q2
+        ) AS combined
+        GROUP BY hour
+         HAVING hour BETWEEN 9 AND 21
+        ORDER BY hour ASC
+    ";
+
+    if($showStatus == false)
+    {
+        return [];
+    }else{
+    return $CI->db->query($sql)->result_array();
+    }
+}
+
 function get_leads_summary_filter_new($params)
 {
     $CI = &get_instance();
@@ -8318,6 +8532,10 @@ function get_leads_summary_filter_neww($params)
     if (!empty($params['lead_type'])) {
         $conditions[] = 'type IN (' . implode(',', $CI->db->escape_str($params['lead_type'])) . ')';
     }
+    
+     if (!empty($params['sub_status'])) {
+        $conditions[] = 'sub_status IN (' . implode(',', $CI->db->escape_str($params['sub_status'])) . ')';
+    }
     if (!empty($params['from_date']) && !empty($params['to_date'])) {
         $conditions[] = 'DATE(' . $tblleads . '.dateadded) BETWEEN "' . $CI->db->escape_str($params['from_date']) . '" AND "' . $CI->db->escape_str($params['to_date']) . '"';
     }
@@ -8339,6 +8557,15 @@ function get_leads_summary_filter_neww($params)
     if (!empty($params['last_update_date'])) {
         $conditions[] = 'DATE(' . $tblleads . '.lastupdate_date) <= "' . $CI->db->escape_str($params['last_update_date']) . '"';
     }
+    // if (!empty($params['reference_name'])) {
+    //     $reference_name = $params['reference_name'];
+    //     $escaped_reference_name = array_map(function ($w) {
+    //         return "'" . trim($w) . "'";
+    //     }, $reference_name);
+
+    //     // $conditions[] = " " . $tblleads . ".reference_name IN (" . implode(',', $escaped_reference_name) . ")";
+    // }
+    
     
     $having_query ="";
 
@@ -8399,14 +8626,22 @@ function get_leads_summary_filter_neww($params)
         $conditions[] = " " . $tblleads . ".website IN (" . implode(',', $escaped_websites) . ")";
     }
 
-    if (!empty($params['reference_name'])) {
-        $reference_name = $params['reference_name'];
-        $escaped_reference_name = array_map(function ($w) {
-            return "'" . trim($w) . "'";
-        }, $reference_name);
+     if (!empty($params['reference_name'])) {
 
-        $conditions[] = " " . $tblleads . ".reference_name IN (" . implode(',', $escaped_reference_name) . ")";
+    $reference_name = $params['reference_name'];
+
+    // Convert to array if it's a string
+    if (!is_array($reference_name)) {
+        $reference_name = explode(',', $reference_name);
     }
+
+    // Trim + escape values
+    $escaped_reference_name = array_map(function ($w) use ($CI) {
+        return "'" . $CI->db->escape_str(trim($w)) . "'";
+    }, $reference_name);
+
+    $conditions[] = $tblleads . ".reference_name IN (" . implode(',', $escaped_reference_name) . ")";
+}
     
     //     if(is_admin())
     // {
@@ -10104,4 +10339,763 @@ function googleFeedback_Api($lead, $feedback_name)
     $CI->db->insert(db_prefix() . 'leads_google_performnce_logs', $data);
 }
 
+// function getleadsCounts_by_staff($data)
+// {
+//     $CI = &get_instance();
 
+// $leadStatus = $data['status']??'';
+// $leadAssigned = $data['assigned']??'';
+
+// $where = " where 1= 1 ";
+// $whereStatus = " where 1= 1 ";
+
+// if (!empty($leadStatus) && is_array($leadStatus)) {
+//     $statusList = implode(',', array_map('intval', $leadStatus));
+//     $whereStatus .= " AND l.status IN ($statusList)";
+// }
+
+// if (!empty($leadAssigned) && is_array($leadAssigned)) {
+//     $assignedList = implode(',', array_map('intval', $leadAssigned));
+//     $where .= " AND st.staffid IN ($assignedList) ";
+// }
+
+
+// $sql ="WITH lead_base AS (
+//     SELECT 
+//         l.id,
+//         l.assigned,
+//         l.source,
+//         l.status,
+//         COALESCE(NULLIF(l.website,''), 'No Form') AS website
+//     FROM tblleads l
+//     $whereStatus
+// ),
+
+// source_counts AS (
+//     SELECT 
+//         assigned,
+//         source,
+//         COUNT(*) AS lead_count
+//     FROM lead_base
+//     GROUP BY assigned, source
+// ),
+
+// status_counts AS (
+//     SELECT 
+//         assigned,
+//         source,
+//         status,
+//         COUNT(*) AS lead_count
+//     FROM lead_base
+//     GROUP BY assigned, source, status
+// ),
+
+// form_counts AS (
+//     SELECT 
+//         assigned,
+//         website,
+//         COUNT(*) AS lead_count
+//     FROM lead_base
+//     WHERE source = 35
+//     GROUP BY assigned, website
+// ),
+
+// status_summary AS (
+//     SELECT 
+//         assigned,
+//         status,
+//         COUNT(*) AS lead_count
+//     FROM lead_base
+//     GROUP BY assigned, status
+// )
+
+// SELECT 
+//     loc.id AS region_id,
+//     loc.name AS region_name,
+
+//     JSON_ARRAYAGG(
+//         JSON_OBJECT(
+//             'staff_id', st.staffid,
+//             'staff_name', CONCAT(st.firstname, ' ', st.lastname),
+
+//             'lead_count', COALESCE(sl.lead_count, 0),
+
+//             'sources', (
+//                 SELECT JSON_ARRAYAGG(
+//                     JSON_OBJECT(
+//                         'source_id', sc.source,
+//                         'source_name', s.name,
+//                         'lead_count', sc.lead_count,
+
+//                         'status', (
+//                             SELECT JSON_ARRAYAGG(
+//                                 JSON_OBJECT(
+//                                     'status_id', stc.status,
+//                                     'status_name', sta.name,
+//                                     'count', stc.lead_count
+//                                 )
+//                             )
+//                             FROM status_counts stc
+//                             JOIN tblleads_status sta ON sta.id = stc.status
+//                             WHERE stc.assigned = st.staffid
+//                               AND stc.source = sc.source
+//                         ),
+
+//                         'forms', CASE 
+//                             WHEN sc.source = 35 THEN (
+//                                 SELECT JSON_ARRAYAGG(
+//                                     JSON_OBJECT(
+//                                         'form_name', fc.website,
+//                                         'count', fc.lead_count
+//                                     )
+//                                 )
+//                                 FROM form_counts fc
+//                                 WHERE fc.assigned = st.staffid
+//                             )
+//                             ELSE JSON_ARRAY()
+//                         END
+//                     )
+//                 )
+//                 FROM source_counts sc
+//                 JOIN tblleads_sources s ON s.id = sc.source
+//                 WHERE sc.assigned = st.staffid
+//             ),
+
+//             'status_summary', (
+//                 SELECT JSON_ARRAYAGG(
+//                     JSON_OBJECT(
+//                         'status_id', ss.status,
+//                         'status_name', sta.name,
+//                         'count', ss.lead_count
+//                     )
+//                 )
+//                 FROM status_summary ss
+//                 JOIN tblleads_status sta ON sta.id = ss.status
+//                 WHERE ss.assigned = st.staffid
+                
+//             )
+
+//         )
+//     ) AS staff_data
+
+// FROM tblstaff_location_region loc
+
+// LEFT JOIN tblstaff st 
+//     ON st.office_location_region = loc.id
+
+// LEFT JOIN (
+//     SELECT assigned, COUNT(*) AS lead_count
+//     FROM lead_base
+//     GROUP BY assigned
+// ) sl ON sl.assigned = st.staffid
+//  $where
+// GROUP BY loc.id
+// ORDER BY loc.name ";
+
+//     $query = $CI->db->query($sql);
+
+//     return $query->result_array(); // ✅ IMPORTANT
+// }
+
+
+function getleadsCounts_by_staff($data)
+{
+    $CI = &get_instance();
+    
+    
+     $get_staff_user_id = get_staff_user_id();
+    $idsarr =[];
+   if (!empty($_POST['view_assigned'])) {
+}else
+{
+      $role = $CI->db->where('staffid', $get_staff_user_id)->get(db_prefix() . 'staff')->row()->role;
+    
+     $sid = $get_staff_user_id;
+        if ($role == 3) {
+        $teamids = $CI->db->query('CALL GetReportingPersons(?)', array($get_staff_user_id))->result_array();
+        $CI->db->close();
+        $CI->db->initialize();
+        $idsarr = array_column($teamids, 'staffid');
+        }
+}
+
+
+    $leadStatus   = $data['status'] ?? [];
+    $leadAssigned = $data['assigned'] ?? [];
+    $leadSource   = $data['source'] ?? [];
+    $created_date   = $data['created_date'] ?? '';
+    $assigned_date   = $data['assigned_date'] ?? '';
+    $campaign = $data['campaign'] ?? '';
+    $adsset = $data['adsset'] ?? '';
+    $ads = $data['ads'] ?? '';
+    $form = $data['form'] ?? '';
+    $department = $data['department'] ?? [];
+    // $created_date   = $data['created_date'] ?? '';
+    // $created_date   = $data['created_date'] ?? '';
+
+    // ✅ SINGLE FILTER (ONLY HERE)
+    $whereLead = " WHERE 1=1 ";
+    $whereAssigned = " WHERE 1=1 ";
+
+    if (!empty($leadStatus) && is_array($leadStatus)) {
+        $statusList = implode(',', array_map('intval', $leadStatus));
+        $whereLead .= " AND l.status IN ($statusList)";
+    }
+
+if (!empty($leadAssigned) && is_array($leadAssigned)) {
+
+    $assignedList = implode(',', array_map('intval', $leadAssigned));
+
+    $whereLead     .= " AND l.assigned IN ($assignedList)";
+    $whereAssigned .= " AND st.staffid IN ($assignedList)";
+
+} else {
+    
+    if(!is_admin()){
+
+    if (!empty($idsarr)) {
+
+        $ids = array_unique(array_merge($idsarr, [$get_staff_user_id]));
+        $assignedList = implode(',', array_map('intval', $ids));
+
+        $whereLead     .= " AND l.assigned IN ($assignedList)";
+        $whereAssigned .= " AND st.staffid IN ($assignedList)";
+
+    } else {
+
+        $sid = (int)$get_staff_user_id;
+
+        $whereLead     .= " AND l.assigned = $sid";
+        $whereAssigned .= " AND st.staffid = $sid";
+    }
+    }
+    
+            if (!empty($department)) {
+        $departmentList = implode(',', array_map('intval', $department));
+         $whereAssigned .= " AND st.department IN ($departmentList)";
+      
+    }
+    
+}
+
+    if (!empty($leadSource) && is_array($leadSource)) {
+        $sourceList = implode(',', array_map('intval', $leadSource));
+        $whereLead .= " AND l.source IN ($sourceList)";
+        $whereSources .= " AND sc.source IN ($sourceList)";
+    }
+    
+    if (!empty($form) && is_array($form)) {
+    // Escape and quote each string value
+    $formList = implode(',', array_map(function($f) use ($CI) {
+        return "'" . $CI->db->escape_str($f) . "'";
+    }, $form));
+    
+    $whereLead .= " AND l.website IN ($formList)";
+}
+
+
+  if (!empty($campaign) && is_array($campaign)) {
+    // Escape and quote each string value
+    $campaignList = implode(',', array_map(function($f) use ($CI) {
+        return "'" . $CI->db->escape_str($f) . "'";
+    }, $campaign));
+    
+    $whereLead .= " AND l.utm_campaign_name IN ($campaignList)";
+}
+
+
+  if (!empty($adsset) && is_array($adsset)) {
+    // Escape and quote each string value
+    $adssetList = implode(',', array_map(function($f) use ($CI) {
+        return "'" . $CI->db->escape_str($f) . "'";
+    }, $adsset));
+    
+    $whereLead .= " AND l.utm_ads_set_name IN ($adssetList)";
+}
+
+
+  if (!empty($ads) && is_array($ads)) {
+    // Escape and quote each string value
+    $adsList = implode(',', array_map(function($f) use ($CI) {
+        return "'" . $CI->db->escape_str($f) . "'";
+    }, $ads));
+    
+    $whereLead .= " AND l.utm_ads_name IN ($adsList)";
+}
+    
+  if (!empty($created_date)) {
+
+    // ✅ split date range
+    $dates = explode(' to ', $created_date);
+
+    if (count($dates) == 2) {
+
+        $start = trim($dates[0]);
+        $end   = trim($dates[1]);
+
+        $whereLead .= " AND DATE(l.dateadded) BETWEEN '$start' AND '$end'";
+    }
+}
+
+  if (!empty($assigned_date)) {
+
+    // ✅ split date range
+    $dates = explode(' to ', $assigned_date);
+
+    if (count($dates) == 2) {
+
+        $start = trim($dates[0]);
+        $end   = trim($dates[1]);
+
+        $whereLead .= " AND DATE(l.dateassigned) BETWEEN '$start' AND '$end'";
+    }
+}
+
+  $sql = "
+WITH lead_base AS (
+    SELECT 
+        l.id,
+        l.assigned,
+        l.source,
+        l.status,
+        COALESCE(NULLIF(l.website, ''), '') AS website,
+        l.state,
+        l.utm_campaign_name,
+        l.utm_ads_set_name,
+        l.utm_ads_name
+    FROM tblleads l  
+    $whereLead and from_form_id > 0
+),
+
+source_counts AS (
+    SELECT assigned, source, COUNT(*) AS lead_count
+    FROM lead_base
+    GROUP BY assigned, source
+),
+
+status_counts AS (
+    SELECT assigned, source, status, COUNT(*) AS lead_count
+    FROM lead_base
+    GROUP BY assigned, source, status
+),
+
+form_counts AS (
+    SELECT assigned, website, COUNT(*) AS lead_count
+    FROM lead_base
+    WHERE source = 35 AND website != ''
+    GROUP BY assigned, website
+),
+
+google_counts AS (
+    SELECT 
+        assigned, 
+        utm_campaign_name,
+        utm_ads_set_name,
+        utm_ads_name,
+        COUNT(*) AS lead_count
+    FROM lead_base
+    WHERE source = 39 AND utm_campaign_name != ''
+    GROUP BY assigned, utm_campaign_name, utm_ads_set_name, utm_ads_name
+),
+
+status_summary AS (
+    SELECT assigned, status, COUNT(*) AS lead_count
+    FROM lead_base
+    GROUP BY assigned, status
+)
+
+SELECT 
+    loc.id AS region_id,
+    loc.name AS region_name,
+
+    JSON_ARRAYAGG(
+        JSON_OBJECT(
+            'staff_id', st.staffid,
+            'staff_name', CONCAT(st.firstname, ' ', st.lastname),
+            'lead_count', COALESCE(sl.lead_count, 0),
+            'office_region_id',st.office_location_region,
+            'sources', (
+                SELECT JSON_ARRAYAGG(
+                    JSON_OBJECT(
+                        'source_id', sc.source,
+                        'source_name', s.name,
+                        'lead_count', sc.lead_count,
+
+                        'status', (
+                            SELECT JSON_ARRAYAGG(
+                                JSON_OBJECT(
+                                    'status_id', stc.status,
+                                    'status_name', sta.name,
+                                    'count', stc.lead_count
+                                )
+                            )
+                            FROM status_counts stc
+                            JOIN tblleads_status sta ON sta.id = stc.status
+                            WHERE stc.assigned = st.staffid
+                              AND stc.source = sc.source $whereSources
+                        ),
+
+                        'forms', CASE 
+                            WHEN sc.source = 35 THEN (
+                                SELECT JSON_ARRAYAGG(
+                                    JSON_OBJECT(
+                                        'form_name', fc.website,
+                                        'count', fc.lead_count
+                                    )
+                                )
+                                FROM form_counts fc
+                                WHERE fc.assigned = st.staffid
+                            )
+                            ELSE JSON_ARRAY()
+                        END,
+'google', CASE
+    WHEN sc.source = 39 THEN (
+        SELECT JSON_ARRAYAGG(
+            JSON_OBJECT(
+                'utm_campaign_name', gc.utm_campaign_name,
+                'utm_ads_set_name', gc.utm_ads_set_name,
+                'utm_ads_name', gc.utm_ads_name,
+                'count', gc.lead_count
+            )
+        )
+        FROM google_counts gc
+        WHERE gc.assigned = st.staffid
+    )
+    ELSE JSON_ARRAY()
+END
+                    )
+                )
+                FROM source_counts sc
+                JOIN tblleads_sources s ON s.id = sc.source
+                WHERE sc.assigned = st.staffid and s.paid_sources=1 $whereSources
+            ),
+
+            'status_summary', (
+                SELECT JSON_ARRAYAGG(
+                    JSON_OBJECT(
+                        'status_id', ss.status,
+                        'status_name', sta.name,
+                        'count', ss.lead_count
+                    )
+                )
+                FROM status_summary ss
+                JOIN tblleads_status sta ON sta.id = ss.status
+                WHERE ss.assigned = st.staffid
+            )
+        )
+    ) AS staff_data
+
+FROM tblstaff_location_region loc
+LEFT JOIN tblstaff st ON st.office_location_region = loc.id
+LEFT JOIN (
+    SELECT assigned, COUNT(*) AS lead_count
+    FROM lead_base
+    GROUP BY assigned
+) sl ON sl.assigned = st.staffid
+$whereAssigned
+GROUP BY loc.id
+ORDER BY loc.name
+";
+
+    $query = $CI->db->query($sql);
+
+    return $query->result_array();
+}
+
+function getleadsCounts_by_source($data)
+{
+    
+
+    $CI = &get_instance();
+
+    $get_staff_user_id = get_staff_user_id();
+    $idsarr = [];
+
+    // 🔹 Get team members if role = 3
+    if (empty($_POST['view_assigned'])) {
+        $role = $CI->db->where('staffid', $get_staff_user_id)
+            ->get(db_prefix() . 'staff')
+            ->row()
+            ->role;
+
+        if ($role == 3) {
+            $teamids = $CI->db->query('CALL GetReportingPersons(?)', [$get_staff_user_id])->result_array();
+            $CI->db->close();
+            $CI->db->initialize();
+            $idsarr = array_column($teamids, 'staffid');
+        }
+    }
+
+    // 🔹 Inputs
+    $leadStatus   = $data['status'] ?? [];
+    $leadAssigned = $data['assigned'] ?? [];
+    $leadSource   = $data['source'] ?? [];
+    $created_date = $data['created_date'] ?? '';
+    $assigned_date = $data['assigned_date'] ?? '';
+    $campaign = $data['campaign'] ?? [];
+    $adsset = $data['adsset'] ?? [];
+    $ads = $data['ads'] ?? [];
+    $form = $data['form'] ?? [];
+    $department = $data['department'] ?? [];
+
+    // 🔹 WHERE
+    $whereLead = " WHERE 1=1 ";
+
+    // ✅ Status
+    if (!empty($leadStatus)) {
+        $statusList = implode(',', array_map('intval', $leadStatus));
+        $whereLead .= " AND l.status IN ($statusList)";
+    }
+
+    // ✅ Assigned
+    if (!empty($leadAssigned)) {
+
+        $assignedList = implode(',', array_map('intval', $leadAssigned));
+        $whereLead .= " AND l.assigned IN ($assignedList)";
+
+    } else {
+
+if(!is_admin()){
+        if (!empty($idsarr)) {
+            $ids = array_unique(array_merge($idsarr, [$get_staff_user_id]));
+            $assignedList = implode(',', array_map('intval', $ids));
+            $whereLead .= " AND l.assigned IN ($assignedList)";
+        } else {
+            $sid = (int)$get_staff_user_id;
+            $whereLead .= " AND l.assigned = $sid";
+        }
+        
+
+        
+  
+}
+
+        if (!empty($department)) {
+        $departmentList = implode(',', array_map('intval', $department));
+         $whereLead .= " AND sst.department IN ($departmentList)";
+      
+    }
+    
+    }
+
+    // ✅ Source
+    if (!empty($leadSource)) {
+        $sourceList = implode(',', array_map('intval', $leadSource));
+        $whereLead .= " AND l.source IN ($sourceList)";
+    }
+
+    // ✅ Form (remove blank automatically)
+    if (!empty($form)) {
+        $formList = implode(',', array_map(function ($f) use ($CI) {
+            return "'" . $CI->db->escape_str(trim($f)) . "'";
+        }, array_filter($form)));
+        if (!empty($formList)) {
+            $whereLead .= " AND l.website IN ($formList)";
+        }
+    }
+
+    // ✅ Campaign
+    if (!empty($campaign)) {
+        $campaignList = implode(',', array_map(function ($f) use ($CI) {
+            return "'" . $CI->db->escape_str($f) . "'";
+        }, $campaign));
+        $whereLead .= " AND l.utm_campaign_name IN ($campaignList)";
+    }
+
+    // ✅ Ads Set
+    if (!empty($adsset)) {
+        $adssetList = implode(',', array_map(function ($f) use ($CI) {
+            return "'" . $CI->db->escape_str($f) . "'";
+        }, $adsset));
+        $whereLead .= " AND l.utm_ads_set_name IN ($adssetList)";
+    }
+
+    // ✅ Ads
+    if (!empty($ads)) {
+        $adsList = implode(',', array_map(function ($f) use ($CI) {
+            return "'" . $CI->db->escape_str($f) . "'";
+        }, $ads));
+        $whereLead .= " AND l.utm_ads_name IN ($adsList)";
+    }
+
+    // ✅ Created Date
+    if (!empty($created_date)) {
+        $dates = explode(' to ', $created_date);
+        if (count($dates) == 2) {
+            $whereLead .= " AND DATE(l.dateadded) BETWEEN '{$dates[0]}' AND '{$dates[1]}'";
+        }
+    }
+
+    // ✅ Assigned Date
+    if (!empty($assigned_date)) {
+        $dates = explode(' to ', $assigned_date);
+        if (count($dates) == 2) {
+            $whereLead .= " AND DATE(l.dateassigned) BETWEEN '{$dates[0]}' AND '{$dates[1]}'";
+        }
+    }
+
+    // 🔹 FINAL QUERY
+    $sql = "
+WITH lead_base AS (
+    SELECT 
+        l.id,
+        l.assigned,
+        l.source,
+        l.status,
+        l.state,
+        COALESCE(NULLIF(l.website,''), '') AS website,
+        l.utm_campaign_name,
+        l.utm_ads_set_name,
+        l.utm_ads_name,
+        sst.department -- include department
+    FROM tblleads l
+    JOIN tblleads_sources ss 
+        ON ss.id = l.source AND ss.paid_sources = 1
+    JOIN tblstaff sst 
+        ON sst.staffid = l.assigned
+   
+    $whereLead
+    AND from_form_id > 0
+),
+
+staff_counts AS (
+    SELECT assigned, source, COUNT(*) AS lead_count
+    FROM lead_base
+    GROUP BY assigned, source
+),
+
+status_counts AS (
+    SELECT assigned, source, status, COUNT(*) AS lead_count
+    FROM lead_base
+    GROUP BY assigned, source, status
+),
+
+form_counts AS (
+    SELECT website, COUNT(*) AS lead_count
+    FROM lead_base
+    WHERE source = 35 AND website != ''
+    GROUP BY website
+),
+
+form_staff_counts AS (
+    SELECT assigned, website, COUNT(*) AS lead_count
+    FROM lead_base
+    
+    WHERE source = 35 AND website != ''
+    GROUP BY assigned, website
+),
+
+google_region_staff AS (
+    SELECT 
+        lb.assigned,
+        COALESCE(sst.id, 0) AS region_id,
+        COALESCE(sst.name, 'Unknown Region') AS region_name,
+        COUNT(*) AS lead_count
+    FROM lead_base lb
+    JOIN tblleads_sources so 
+        ON so.id = lb.source AND so.google_type = 1
+    LEFT JOIN tblstates st 
+        ON st.name = lb.state
+    LEFT JOIN tblstaff_state_region sst 
+        ON FIND_IN_SET(st.id, sst.state)
+    GROUP BY lb.source, COALESCE(sst.id, 0), lb.assigned
+)
+
+SELECT 
+    s.id AS source_id,
+    s.name AS source_name,
+
+    CASE 
+
+        -- FB FORMS
+        WHEN s.id = 35 THEN COALESCE((
+            SELECT JSON_ARRAYAGG(
+                JSON_OBJECT(
+                    'form_name', fc.website,
+                    'staff', (
+                        SELECT JSON_ARRAYAGG(
+                            JSON_OBJECT(
+                                'staff_id', st.staffid,
+                                'staff_name', CONCAT(st.firstname, ' ', st.lastname),
+                                'count', fsc.lead_count,
+                                'office_region_id', st.office_location_region,
+                                'department', st.department
+                            )
+                        )
+                        FROM form_staff_counts fsc
+                        JOIN tblstaff st ON st.staffid = fsc.assigned
+                        WHERE fsc.website = fc.website
+                    )
+                )
+            )
+            FROM form_counts fc
+        ), JSON_ARRAY())
+
+        -- GOOGLE → REGION → STAFF
+        WHEN s.google_type = 1 THEN COALESCE((
+            SELECT JSON_ARRAYAGG(
+                JSON_OBJECT(
+                    'region_id', gr.region_id,
+                    'region_name', gr.region_name,
+                    'staff', (
+                        SELECT JSON_ARRAYAGG(
+                            JSON_OBJECT(
+                                'staff_id', st.staffid,
+                                'staff_name', CONCAT(st.firstname, ' ', st.lastname),
+                                'count', gr2.lead_count,
+                                'office_region_id', st.office_location_region,
+                                'department', st.department
+                            )
+                        )
+                        FROM google_region_staff gr2
+                        JOIN tblstaff st ON st.staffid = gr2.assigned
+                        WHERE gr2.region_id = gr.region_id
+                    )
+                )
+            )
+            FROM (
+                SELECT DISTINCT region_id, region_name 
+                FROM google_region_staff
+            ) gr
+        ), JSON_ARRAY())
+
+        -- OTHER SOURCES
+        ELSE COALESCE((
+            SELECT JSON_ARRAYAGG(
+                JSON_OBJECT(
+                    'staff_id', st.staffid,
+                    'staff_name', CONCAT(st.firstname, ' ', st.lastname),
+                    'lead_count', COALESCE(sc.lead_count, 0),
+                    'office_region_id', st.office_location_region,
+                    'department', st.department,
+                    'status_summary', COALESCE((
+                        SELECT JSON_ARRAYAGG(
+                            JSON_OBJECT(
+                                'status_id', ls.id,
+                                'status_name', ls.name,
+                                'count', sc2.lead_count
+                            )
+                        )
+                        FROM status_counts sc2
+                        JOIN tblleads_status ls ON ls.id = sc2.status
+                        WHERE sc2.assigned = st.staffid 
+                          AND sc2.source = s.id
+                    ), JSON_ARRAY())
+                )
+            )
+            FROM staff_counts sc
+            JOIN tblstaff st ON st.staffid = sc.assigned
+            WHERE sc.source = s.id
+        ), JSON_ARRAY())
+
+    END AS data
+
+FROM tblleads_sources s
+WHERE s.paid_sources = 1
+ORDER BY s.id
+    ";
+// Join tblfacebook_name  fbname on (fbname.name = lead_base.website and fbname.status=1)
+   
+
+    return $CI->db->query($sql)->result_array();
+}

@@ -6,12 +6,14 @@ $sIndexColumn = 'id';
 $this->ci->load->model('leads_model');
 $statuses = array_column($this->ci->leads_model->get_status(), null, 'id');
 $staff = array_column($this->ci->leads_model->get_staff_list(), null, 'staffid');
-
+$lead_source = array_column(get_source(), null, 'id');
+$get_staff_user_id = get_staff_user_id();
 // ❗ NO "AS" here
 $aColumns = [
     "{$sTable}.id as id",
     "{$sTable}.name as name",
     "{$sTable}.phonenumber as phonenumber",
+    'l.source as source',
     "{$sTable}.update_count as update_count",
     "{$sTable}.old_status as old_status",
     "{$sTable}.new_status as new_status",
@@ -27,8 +29,8 @@ $where = [];
 $additionalColumns = [];
 
 // $join[] = "LEFT JOIN " . db_prefix() . "leads_status os ON os.id = {$sTable}.old_status";
-// $join[] = "LEFT JOIN " . db_prefix() . "leads_status ns ON ns.id = {$sTable}.new_status";
-// $join[] = "LEFT JOIN " . db_prefix() . "staff so ON so.staffid = {$sTable}.old_assignation";
+$join[] = "LEFT JOIN " . db_prefix() . "leads l ON l.id = {$sTable}.leadid";
+$join[] = "LEFT JOIN " . db_prefix() . "staff so ON so.staffid = {$sTable}.old_assignation";
 // $join[] = "LEFT JOIN " . db_prefix() . "staff sn ON sn.staffid = {$sTable}.new_assignation";
 
 if (!empty($_POST['transfer_date'])) {
@@ -48,12 +50,44 @@ if (!empty($_POST['status'])) {
 if (!empty($_POST['assigned'])) {
     $assignedIds = implode(',', array_map('intval', $_POST['assigned']));
     $where[] = " AND ({$sTable}.old_assignation IN ({$assignedIds})) ";
+}else
+{
+    
+      if(!empty($_POST['department']))
+        {
+        $departments = implode(',', array_map('intval', $_POST['department']));
+    $where[] = " AND (so.department IN ({$departments})) ";
+        }
+        
+        
+    $role = $this->ci->db->where('staffid', $get_staff_user_id)->get(db_prefix() . 'staff')->row()->role;
+    $sid = $get_staff_user_id;
+if ($role == 3) {
+    
+    $teamids = $this->ci->db->query('CALL GetReportingPersons(?)', array($sid))->result_array();
+    $this->ci->db->close();
+    $this->ci->db->initialize();
+    $idsarr = array_column($teamids, 'staffid');
+    $sids = implode(",", $idsarr);
+    
 }
+if(!is_admin()){
+$where[] = !empty($sids) ? " AND {$sTable}.old_assignation IN ({$sid}, {$sids})" : "AND {$sTable}.old_assignation = {$sid} ";
+}
+}
+
 
 if (!empty($_POST['update_count'])) {
     $updateCounts = implode(',', array_map('intval', $_POST['update_count']));
     $where[] = " AND ({$sTable}.update_count IN ({$updateCounts})) ";
 }
+
+if (!empty($_POST['sources'])) {
+    $sourceses = implode(',', array_map('intval', $_POST['sources']));
+    $where[] = " AND (l.source IN ({$sourceses})) ";
+}
+
+
 
 
 
@@ -77,6 +111,7 @@ foreach ($rResult as $aRow) {
     $row[] = $aRow['id'];
     $row[] = $aRow['name'];
     $row[] = $aRow['phonenumber'];
+     $row[] =!empty($lead_source[$aRow['source']]) ? $lead_source[$aRow['source']]['name'] : '';
     $row[] = $aRow['update_count'];
     $row[] = !empty($statuses[$aRow['old_status']]) ? $statuses[$aRow['old_status']]['name'] : '';
     $row[] = !empty($statuses[$aRow['new_status']]) ? $statuses[$aRow['new_status']]['name'] : '';
@@ -84,7 +119,7 @@ foreach ($rResult as $aRow) {
     $row[] = !empty($staff[$aRow['new_assignation']]) ? $staff[$aRow['new_assignation']]['staff_name'] : '';
     $row[] = _dt($aRow['old_assignation_date']);
     $row[] = _dt($aRow['new_assignation_date']);
-    $row[] = _dt($aRow['created_at']);
+    // $row[] = _dt($aRow['created_at']);
 
     $output['aaData'][] = $row;
 }

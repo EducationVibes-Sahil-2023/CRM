@@ -8,6 +8,7 @@ class Dashboard extends AdminController
     {
         parent::__construct();
         $this->load->model('dashboard_model');
+         $this->load->model('leads_model');
     }
 
     /* This is admin dashboard view */
@@ -101,14 +102,72 @@ class Dashboard extends AdminController
 
     public function leads_transfers()
     {
-        $this->load->model('Leads_model');
+    
         if ($this->input->is_ajax_request()) {
+            
+   
+            if(!empty($_POST['summary']) && $_POST['summary'] == 1)
+            {
+              $data =  $this->leads_model->leads_transfers_summary($_POST); 
+              echo json_encode(array("status"=>1,"data"=>$data));
+               die;
+            }
+            else if(!empty($_REQUEST['tbl']) && $_REQUEST['tbl'] == "self_table")
+            {
+                
+               $this->table('lead_transfer_dashboard');
+               
+            die();
+            }else  if(!empty($_POST['summary_self']) && $_POST['summary_self'] == 1)
+            {
+                 $data =  $this->leads_model->leads_transfers_summary_self($_POST); 
+              echo json_encode(array("status"=>1,"data"=>$data));
+               die;
+            }
+            else{
             $this->table('not_reachable_transfer_leads');
             die();
+            }
         }
         $data = [];
-        $data["lead_statuses"] = $this->Leads_model->get_status();
+        $data["lead_statuses"] = $this->leads_model->get_status();
+         $data["lead_sources"] = $this->leads_model->get_source('','');
         $data["staff"] = $this->staff_model->get();
+          $data["departments"] = $this->staff_model->staff_department();
         $this->load->view('admin/dashboard/leads_transfers', $data);
     }
+    
+    public function leads_assignation()
+    {
+    
+        if ($this->input->is_ajax_request()) {
+            if(!empty($_POST['source_status']))
+            {
+              $data = getleadsCounts_by_source($_POST);
+           echo json_encode(array("success"=>true,"data"=>$data),true);
+              die();  
+            }
+           $data = getleadsCounts_by_staff($_POST);
+           echo json_encode(array("success"=>true,"data"=>$data),true);
+            die();
+        }
+
+        $data = [];
+        
+        $data["lead_statuses"] = $this->leads_model->get_status();
+         $data["departments"] = $this->staff_model->staff_department();
+      
+        $data["staff"] = $this->staff_model->get();
+         $data['lead_sources']  = $this->leads_model->get_source('','',["l.paid_sources"=>1]);
+
+          $data['performance_related_dropdown']  = $this->leads_model->performance_related_dropdown();
+        if (!empty($data['performance_related_dropdown'])) {
+            $data['performance_related_dropdown'] = array_column($data['performance_related_dropdown'], null, "source");
+        }
+        $this->load->view('admin/dashboard/leads_assignation', $data);
+        
+    }
+    
+    
+    
 }

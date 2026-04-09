@@ -2755,7 +2755,7 @@ WHERE ho.status = 1";
     }
 
 
-    if (!empty($_GET["group_by"])) {
+    if (!empty($_GET["group_by"]) && is_string($_GET["group_by"])) {
         $sql .= " " . $_GET["group_by"] . " ";
     } else {
         $sql .= " GROUP BY ho.id ";

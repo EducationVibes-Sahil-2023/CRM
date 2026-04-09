@@ -151,6 +151,9 @@ $category[] = array("id" => "2", "name" => "Upcoming");
 
                                     <div class="col-md-12 text-center leads-filter-column margin-top">
                                         <div class="form-group pull-right">
+                                            <?php if(is_admin()){ ?>
+                                            <button id="exportBtn" class="btn btn-success"><i class="fa fa-download"></i> Export to Excel</button>
+                                            <?php } ?>
                                             <button type="button" class="btn btn-primary" onclick="filter_data();" id="apply_filter">Apply Filter</button>
                                             <button class="btn btn-primary" onclick="window. location. reload();">Reset</button>
                                         </div>
@@ -181,7 +184,11 @@ $category[] = array("id" => "2", "name" => "Upcoming");
 </div>
 <?php init_tail(); ?>
 
+
 <script>
+
+ 
+ 
     var r = {
         status: "[name='status[]']",
         location: "[name='location[]']",
@@ -195,6 +202,7 @@ $category[] = array("id" => "2", "name" => "Upcoming");
         assigned: "[name='assigned[]']",
         category: "[name='category']",
         last_update_date: "[name='last_update_date']",
+       
 
     };
 
@@ -209,6 +217,190 @@ $category[] = array("id" => "2", "name" => "Upcoming");
         refresh_visitor_table();
         set_search_cities();
     })
+
+
+document.getElementById("exportBtn").addEventListener("click", async () => {
+    show_loader();
+    try {
+        const postData = collectFormData();
+        const data = await fetchLeads(postData);
+
+        if (!data || data.length === 0) {
+            alert("No data found");
+            hide_loader();
+            return;
+        }
+
+        exportToCSV(data);
+
+    } catch (err) {
+         hide_loader();
+        console.error("Export failed:", err);
+        alert("Export failed");
+    }
+});
+
+ <?php $staff_map = array_column($staff, 'full_name', 'staffid'); ?>
+ 
+ const staffMap = <?php echo json_encode($staff_map); ?>;
+ 
+ <?php $lead_map = array_column($lead_type, 'name', 'id'); ?>
+ 
+ const leadMap = <?php echo json_encode($lead_map); ?>;
+
+
+
+
+// ✅ Collect form data
+function collectFormData() {
+    const getMultiValues = sel =>
+        Array.from(document.querySelectorAll(sel + ":checked, " + sel + " option:checked"))
+            .map(el => el.value);
+
+    const getValue = sel => document.querySelector(sel)?.value || "";
+
+    return {
+        status: getMultiValues("[name='status[]']"),
+        location: getMultiValues("[name='location[]']"),
+        type: getMultiValues("[name='type[]']"),
+        attendee: getMultiValues("[name='attendee[]']"),
+        lead_type: getMultiValues("[name='lead_type[]']"),
+        source_type: getMultiValues("[name='source_type[]']"),
+        lead_status: getMultiValues("[name='view_status[]']"),
+        assigned: getMultiValues("[name='assigned[]']"),
+        excelStatus: 1,
+        from_date: getValue("[name='from_date']"),
+        to_date: getValue("[name='to_date']"),
+        category: getValue("[name='category']"),
+        last_update_date: getValue("[name='last_update_date']"),
+        csrf_token_name: csrfData.hash,
+      
+    };
+}
+
+
+// ✅ API call
+async function fetchLeads(postData) {
+    const formData = new FormData();
+
+    for (const key in postData) {
+        const val = postData[key];
+        if (Array.isArray(val)) {
+            val.forEach(v => formData.append(key + "[]", v));
+        } else {
+            formData.append(key, val);
+        }
+    }
+
+    const res = await fetch(admin_url + "leads/table_lead_visitor", {
+        method: "POST",
+        body: formData
+    });
+
+    if (!res.ok) throw new Error("Server error");
+
+    return res.json();
+}
+
+
+// ✅ FAST Export
+function exportToCSV(data) {
+
+    const headers = [
+        "Status","Date Of Visit","Student Name","Contact no.","Update Count",
+        "Duration","Place of Visit","Visit Type","Attendee","Assignee",
+        "Lead type","Lead Status","Lead Source","Fb Form Name",
+        "Created Date","Updated Date","Connected Date"
+    ];
+
+    const keys = [
+        "status","date_of_visit","student_name","phonenumber","update_count",
+        "call_duration","location","visitor_type","assigned","created_by",
+        "lead_type","status_name","source_name","website",
+        "created_at","updated_at","lastcontact_date"
+    ];
+
+    // 🚀 Pre-define format rules (NO repeated ifs)
+    const formatters = {
+        assigned: v => staffMap[v] || "",
+        created_by: v => staffMap[v] || "",
+        lead_type: v => leadMap[v] || v,
+        call_duration: v => v ? secondsToHMS(v) : "",
+        date_of_visit: formatDate,
+        created_at: formatDate,
+        updated_at: formatDate,
+        lastcontact_date: formatDate
+    };
+
+    const stripHTML = v => v?.toString().replace(/<[^>]*>?/gm, "") || "";
+
+    let csv = headers.join(",") + "\n";
+
+    for (let i = 0; i < data.length; i++) {
+        const item = data[i];
+
+        const row = new Array(keys.length);
+
+        for (let j = 0; j < keys.length; j++) {
+            const key = keys[j];
+
+            let value = item[key];
+
+            // 🚀 Apply formatter if exists
+            if (formatters[key]) {
+                value = formatters[key](value);
+            }
+
+            value = stripHTML(value);
+
+            row[j] = `"${value}"`;
+        }
+
+        csv += row.join(",") + "\n";
+    }
+
+    downloadCSV(csv);
+    hide_loader();
+}
+
+
+// ✅ Download
+function downloadCSV(content) {
+    const blob = new Blob([content], { type: "text/csv;charset=utf-8;" });
+    const url = URL.createObjectURL(blob);
+
+    const a = document.createElement("a");
+    a.href = url;
+    a.download = "visitor_logs.csv";
+    a.click();
+hide_loader();
+    URL.revokeObjectURL(url);
+}
+
+
+// ✅ Date format (FAST)
+function formatDate(d) {
+    if (!d) return "";
+    const date = new Date(d);
+    if (isNaN(date)) return d;
+
+    return date.toLocaleDateString("en-GB", {
+        day: "numeric",
+        month: "long",
+        year: "numeric"
+    });
+}
+
+
+// ✅ Duration
+function secondsToHMS(s) {
+    s = +s || 0;
+    const h = (s / 3600) | 0;
+    const m = ((s % 3600) / 60) | 0;
+    const sec = (s % 60) | 0;
+
+    return `${h.toString().padStart(2,"0")}:${m.toString().padStart(2,"0")}:${sec.toString().padStart(2,"0")}`;
+}
 
     function filter_data() {
 
@@ -269,43 +461,43 @@ $category[] = array("id" => "2", "name" => "Upcoming");
     function set_search_cities() {
 
         // Bind event to search input ONLY inside #visitor_location selectpicker
-        $('#location').parent().find('.bs-searchbox input').on('input', function() {
-            let searchQuery = $(this).val();
+        // $('#location').parent().find('.bs-searchbox input').on('input', function() {
+        //     let searchQuery = $(this).val();
 
-            if (searchQuery.length > 2) { // Start AJAX after 3+ characters
-                let formData = new FormData(); // Correct FormData initialization
+        //     if (searchQuery.length > 2) { // Start AJAX after 3+ characters
+        //         let formData = new FormData(); // Correct FormData initialization
 
-                formData.append("csrf_token_name", csrfData.hash);
-                formData.append("value", searchQuery); // Corrected `.val()` issue
+        //         formData.append("csrf_token_name", csrfData.hash);
+        //         formData.append("value", searchQuery); // Corrected `.val()` issue
 
-                $.ajax({
-                    url: "<?php echo base_url('admin/leads/search_cities'); ?>", // Replace with actual API URL
-                    method: "POST", // FormData requires POST (not GET)
-                    data: formData,
-                    processData: false, // Prevent jQuery from transforming FormData
-                    contentType: false, // Ensure correct Content-Type is set for FormData
-                    dataType: "JSON",
-                    success: function(response) { // 'data' is already parsed as JSON
+        //         $.ajax({
+        //             url: "<?php echo base_url('admin/leads/search_cities'); ?>", // Replace with actual API URL
+        //             method: "POST", // FormData requires POST (not GET)
+        //             data: formData,
+        //             processData: false, // Prevent jQuery from transforming FormData
+        //             contentType: false, // Ensure correct Content-Type is set for FormData
+        //             dataType: "JSON",
+        //             success: function(response) { // 'data' is already parsed as JSON
 
-                        $('#location').empty(); // Clear old options
-                        let data = response.data;
-                        if (data.length > 0) {
-                            $.each(data, function(index, item) {
-                                $('#location').append(`<option value="${item.id}">${item.name}</option>`);
-                            });
-                        } else {
-                            $('#location').append('<option disabled>No results found</option>'); // Handle no results case
-                        }
+        //                 $('#location').empty(); // Clear old options
+        //                 let data = response.data;
+        //                 if (data.length > 0) {
+        //                     $.each(data, function(index, item) {
+        //                         $('#location').append(`<option value="${item.id}">${item.name}</option>`);
+        //                     });
+        //                 } else {
+        //                     $('#location').append('<option disabled>No results found</option>'); // Handle no results case
+        //                 }
 
-                        $('#location').selectpicker('refresh'); // Refresh selectpicker
-                    },
-                    error: function(xhr, status, error) {
-                        console.error("AJAX Error: ", error);
-                    }
-                });
+        //                 $('#location').selectpicker('refresh'); // Refresh selectpicker
+        //             },
+        //             error: function(xhr, status, error) {
+        //                 console.error("AJAX Error: ", error);
+        //             }
+        //         });
 
-            }
-        });
+        //     }
+        // });
 
     }
 

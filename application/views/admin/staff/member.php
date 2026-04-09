@@ -268,7 +268,7 @@ $select_staff_state_region = staff_state_region();
                         </div>
                         
                         <div class="form-group select-placeholder">
-    <label class="control-label">Office Region <small class="text-danger">*</small></label>
+    <label class="control-label">Office Region</label>
     
     <select name="office_location_region" 
             class="form-control selectpicker" 
@@ -844,7 +844,7 @@ $select_staff_state_region = staff_state_region();
             firstname: 'required',
             lastname: 'required',
             username: 'required',
-             office_location_region:'required',
+            //  office_location_region:'required',
             password: {
                required: {
                   depends: function(element) {

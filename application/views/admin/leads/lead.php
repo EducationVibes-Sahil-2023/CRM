@@ -20,7 +20,7 @@ $streets = json_encode(array_column($officeAddress, 'street'))??[];
    ul#suggestion-list {
       display: block;
       border: 1px solid rgb(204, 204, 204);
-      padding: 5px 10px;
+      padding: 5px 10px;A
       position: absolute;
       background: white;
       top: 72px;
@@ -36,6 +36,7 @@ $streets = json_encode(array_column($officeAddress, 'street'))??[];
    ul#suggestion-list li:hover {
       background: lightgray;
    }
+
 </style>
 <div class="modal-header">
    <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>

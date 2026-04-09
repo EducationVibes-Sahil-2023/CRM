@@ -64,7 +64,7 @@ public function test()
 
         $data['staff'] = $this->staff_model->get('', ['active' => 1]);
 
-
+$data['lead_sub_status'] = $this->leads_model->lead_sub_status();
         // $data['team'] = $this->staff_model->get_team('', ['active' => 1]);
 
 
@@ -289,7 +289,9 @@ public function test()
         // 'max_count' => '', // Max count is not being set, you can adjust if needed
         // 'call_count' => !empty($totalDuration)?convertToHMS($totalDuration):0
         // ]);
-
+//     error_reporting(E_ALL);
+// ini_set('display_errors', 1);
+// ini_set('display_startup_errors', 1);
 
         if (!empty($_POST["show_lead_status"]) && $_POST["show_lead_status"] == 1) {
             $statusHtml = '<div>';
@@ -336,10 +338,14 @@ public function test()
             $totalDuration = array_reduce($call_duration, function ($carry, $item) {
                 return $carry + $item['total_call_duration'];
             }, 0);
+            
+            $callGraphData =[];
+            $callGraphData = graphDataCalls($_POST);
 
             echo json_encode([
                 'update_count' => !empty($call_duration) ? count($call_duration) : 0,
-                'call_count' => !empty($totalDuration) ? convertToHMS($totalDuration) : 0
+                'call_count' => !empty($totalDuration) ? convertToHMS($totalDuration) : 0,
+                'graphData' =>$callGraphData
             ]);
         } else {
             return true;
@@ -646,6 +652,7 @@ public function test()
         // $data['location'] = $this->staff_model->cities();
         $data['visitor_type'] = $this->staff_model->visitor_type();
         $data['visitor_status'] = $this->staff_model->visitor_status();
+        $data['lead_sub_status'] = $this->leads_model->lead_sub_status();
 
         if (is_numeric($id)) {
 
@@ -802,6 +809,7 @@ public function test()
                         "updated_by" => get_staff_user_id(),
                         "updated_at" => date('Y-m-d H:i:s'),
                         "status" => 1,
+                        "self_created"=>1,
                         "approved_by" => get_staff_user_id(),
                         "approved_date" => date('Y-m-d H:i:s'),
                     ]);
@@ -3955,7 +3963,9 @@ if ($reference_name !== '') {
     public function lead_visitor_request()
     {
         $data['title']    = "Lead Visitor Request";
-        $data['location'] = $this->staff_model->cities("");
+        // $data['location'] = $this->staff_model->cities("");
+        $data['location'] = $this->db->query("SELECT DISTINCT c.name,c.id FROM `tblvisitor_request` lo join tblcities_ c on lo.location = c.id")->result_array();
+        
         $data['visitor_type'] = $this->staff_model->visitor_type();
         $data['visitor_status'] = $this->staff_model->visitor_status();
         $data['type']  = $this->leads_model->get_type();
