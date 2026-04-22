@@ -294,11 +294,18 @@ $data['lead_sub_status'] = $this->leads_model->lead_sub_status();
 // ini_set('display_startup_errors', 1);
 
         if (!empty($_POST["show_lead_status"]) && $_POST["show_lead_status"] == 1) {
-            $statusHtml = '<div>';
-            $summary = get_leads_summary_filter_neww($_POST);
-            $marketing_data = [];
+            $statusHtml = '<div> <br><br><hr><div><div class="col-md-12 col-xs-12 "><h3 class="bold"><span style="color:#d81b60">Lead Status</span></h3></div>';
+            
+            $sub_statusHtml = '<div><br><br><hr><div><div class="col-md-12 col-xs-12 "><h3 class="bold"><span style="color:#d81b60">Lead Sub Status</span></h3></div>';
+        
+
+
+                $summary = get_leads_summary_filter_neww_test($_POST);
+                
+                
+              $marketing_data = [];
             $total_leads = 0;
-            foreach ($summary as $status) {
+            foreach ($summary['statuses'] as $status) {
 
                 if (!empty($status["conversion_type_name"]) && !empty($_POST["show_marketing_status"]) && $_POST["show_marketing_status"] == 1) {
                     $marketing_data[$status["conversion_type"]]["name"] = $status["conversion_type_name"];
@@ -314,7 +321,44 @@ $data['lead_sub_status'] = $this->leads_model->lead_sub_status();
                 <span style='color: {$status['color']}'>{$status['name']}</span></div></div>";
             }
             $statusHtml .= "</div>";
+            
+             $sub_total_leads = 0;
+        
+            foreach ($summary['sub_statuses'] as $status) {
+                $percent = isset($status['percent']) ? '<span data-toggle="tooltip" data-title="' . $status['total'] . '">' . $status['percent'] . '%</span>' : $status['total'];
+                $sub_statusHtml .= "<div class='col-md-2 col-xs-6 '>
+                <div class='border-card'>
+                <h3 class='bold'>{$percent}</h3>
+                <span style='color: {$status['color']}'>{$status['name']}</span></div></div>";
+            }
+            $sub_statusHtml .= "</div>";
+            
+            
+            $statusHtml .= $sub_statusHtml;
+//             }
+//             else{
+//             $summary = get_leads_summary_filter_neww($_POST);
+            
 
+//             $marketing_data = [];
+//             $total_leads = 0;
+//             foreach ($summary as $status) {
+
+//                 if (!empty($status["conversion_type_name"]) && !empty($_POST["show_marketing_status"]) && $_POST["show_marketing_status"] == 1) {
+//                     $marketing_data[$status["conversion_type"]]["name"] = $status["conversion_type_name"];
+//                     $marketing_data[$status["conversion_type"]]["total"] += $status["total"];
+//                     $marketing_data[$status["conversion_type"]]["color"] = $status["color"];
+//                     $total_leads += $status["total"];
+//                 }
+
+//                 $percent = isset($status['percent']) ? '<span data-toggle="tooltip" data-title="' . $status['total'] . '">' . $status['percent'] . '%</span>' : $status['total'];
+//                 $statusHtml .= "<div class='col-md-2 col-xs-6 '>
+//                 <div class='border-card'>
+//                 <h3 class='bold'>{$percent}</h3>
+//                 <span style='color: {$status['color']}'>{$status['name']}</span></div></div>";
+//             }
+//             $statusHtml .= "</div>";
+// }
             if (!empty($_POST["show_marketing_status"]) && $_POST["show_marketing_status"] == 1) {
                 $marketing_data[$status["conversion_type"]]["name"] = "total";
                 $marketing_data[$status["conversion_type"]]["total"] = $total_leads;
@@ -334,18 +378,39 @@ $data['lead_sub_status'] = $this->leads_model->lead_sub_status();
         } else if (!empty($_POST["show_lead_status"]) && $_POST["show_lead_status"] == 2) {
             $call_duration = 0;
             $totalDuration = 0;
+            $totalCalls = 0;
+            $answeredCall=0;
             $call_duration = calculate_call_duration_new($_POST);
+            
+            // if(is_admin())
+            // {
+            //     echo $this->db->last_query();
+            //     die;
+            // }
+           
             $totalDuration = array_reduce($call_duration, function ($carry, $item) {
                 return $carry + $item['total_call_duration'];
             }, 0);
+            
+             $totalCalls = array_reduce($call_duration, function ($carry, $item) {
+                return $carry + $item['total_calls'];
+            }, 0);
+            
+              $answeredCall = array_reduce($call_duration, function ($carry, $item) {
+                return $carry + $item['answered_count'];
+            }, 0);
+            
             
             $callGraphData =[];
             $callGraphData = graphDataCalls($_POST);
 
             echo json_encode([
+                'answeredCall'=>$answeredCall,
+                'totalCalls'=>$totalCalls,
                 'update_count' => !empty($call_duration) ? count($call_duration) : 0,
                 'call_count' => !empty($totalDuration) ? convertToHMS($totalDuration) : 0,
-                'graphData' =>$callGraphData
+                'graphData' =>$callGraphData??[],
+                'totalDuration'=> !empty($totalDuration) ? $totalDuration : 0,
             ]);
         } else {
             return true;
@@ -583,6 +648,10 @@ $data['lead_sub_status'] = $this->leads_model->lead_sub_status();
                 $proposalWarning = false;
 
                 $message         = '';
+                
+                if(empty($_POST['sub_status'])){
+                $_POST['sub_status'] = 0;
+                }
 
                 $success         = $this->leads_model->update($this->input->post(), $id);
 
@@ -636,6 +705,12 @@ $data['lead_sub_status'] = $this->leads_model->lead_sub_status();
     private function _get_lead_data($id = '', $visitorStatus = 0)
 
     {
+        
+        
+            if (!is_staff_member() || ($id != '' && !$this->leads_model->staff_can_access_lead($id) && !$this->leads_model->get_lead_visitor_request_exist($id))) {
+
+                ajax_access_denied();
+            }
 
         $reminder_data       = '';
 
@@ -4255,4 +4330,38 @@ if ($reference_name !== '') {
             'status' => $statusHtml,
         ]);
     }
+    
+public function todayCalls()
+{
+     // Enable error reporting (only for development)
+    // error_reporting(E_ALL);
+    // ini_set('display_errors', 1);
+    $this->load->driver('cache', ['adapter' => 'file']);
+
+    $cache_key = 'today_calls_data_'.get_staff_user_id();
+
+    // Try to get from cache
+    // if (!$data = $this->cache->get($cache_key)) {
+
+        try {
+            $data = get_todayCalls();
+
+            // Save cache for 120 seconds (2 min)
+            $this->cache->save($cache_key, $data, 120);
+
+        } catch (Exception $e) {
+            echo json_encode([
+                'status' => false,
+                'error' => $e->getMessage()
+            ]);
+            return;
+        }
+    // }
+
+    // Return response
+    echo json_encode([
+        'status' => true,
+        'data' => $data
+    ]);
+}
 }

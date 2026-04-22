@@ -864,9 +864,13 @@ public function update_excelData()
 // ini_set('display_startup_errors', 1);
 // error_reporting(E_ALL);
 
-  $this->load->library('app_object_cache');
+//   $this->load->library('app_object_cache');
+    // $this->load->library('mails/Lead_assigned');
+    //   $this->load->library('mails/App_mail_template');
 
-
+ $this->load->library('merge_fields/App_merge_fields');
+    $this->load->library('app_object_cache');
+    $this->load->library('mails/App_mail_template');
     
       $this->load->model('Leads_model','leads_model');
     $key =  $_REQUEST["key"];
@@ -1150,7 +1154,7 @@ public function update_excelData()
                                 'status' => $form->lead_status,
                                 'last_status_change' => date("Y-m-d"),
                                 'lastcontact' => date("Y-m-d h:i:s"),
-                                'dateassigned' => date("Y-m-d")
+                                'dateassigned' => date("Y-m-d h:i:s"),
                             ];
 
                             if (!empty($post_data["website"])) {
@@ -1441,10 +1445,9 @@ public function update_excelData()
                         }
 
                         handle_custom_fields_post($lead_id, $custom_fields_build);
-//  $this->load->library('mails/Lead_assigned');
-//       $this->load->library('mails/App_mail_template');
+
    
-                        // $this->leads_model->lead_assigned_member_notification($lead_id, $form->responsible, true);
+                        $this->leads_model->lead_assigned_member_notification($lead_id, $form->responsible, true);
 
                         handle_lead_attachments($lead_id, 'file-input', $form->name);
                         if (!empty($post_data['tags'])) {
@@ -1676,13 +1679,34 @@ public function tbl_call_sync()
         $response = $this->Api_Model->update_call_data_bulk_temp_new(
             $form_data_array_temp
         );
+        
+        if ($response['status']) {
+        return $this->output
+        ->set_status_header(200)
+        ->set_content_type('application/json')
+        ->set_output(json_encode($response));
+        } else {
+        return $this->output
+        ->set_status_header(400)
+        ->set_content_type('application/json')
+        ->set_output(json_encode($response));
+        }
 
     } else {
 
-        $response = [
-            "status" => 0,
-            "message" => "No valid call data found"
-        ];
+        // $response = [
+        //     "status" => 0,
+        //     "message" => "No valid call data found"
+        // ];
+        
+         return $this->output
+            ->set_status_header(404)
+            ->set_content_type('application/json')
+            ->set_output(json_encode([
+                'status'  => false,
+                'message' => 'No valid call data found',
+                'error'   => $e->getMessage()
+            ]));
     }
 
 } else {
@@ -1711,6 +1735,7 @@ public function tbl_call_sync()
 
         // Success response
         return $this->output
+         ->set_status_header(400)
             ->set_content_type('application/json')
             ->set_output(json_encode([
                 'status'  => true,
@@ -1841,6 +1866,80 @@ public function weekend_lead_assignation_auto()
     die;
      $this->load->model('Leads_model');
     $this->Leads_model->weekend_lead_assignation_auto();
+}
+
+public function update_fcm_token()
+{
+    try {
+        // Get input safely
+        $fcmToken = $this->input->post('fcm_token', true); // XSS filtered
+        $staffId  = $this->staffId;
+
+        // ✅ Validation
+        if (empty($staffId)) {
+            return $this->output
+                ->set_status_header(401)
+                ->set_content_type('application/json')
+                ->set_output(json_encode([
+                    'status'  => false,
+                    'message' => 'Unauthorized: Staff ID missing'
+                ]));
+        }
+
+        if (empty($fcmToken)) {
+            return $this->output
+                ->set_status_header(400)
+                ->set_content_type('application/json')
+                ->set_output(json_encode([
+                    'status'  => false,
+                    'message' => 'FCM token is required'
+                ]));
+        }
+
+        // Optional: basic length check (FCM tokens are usually long)
+        if (strlen($fcmToken) < 20) {
+            return $this->output
+                ->set_status_header(400)
+                ->set_content_type('application/json')
+                ->set_output(json_encode([
+                    'status'  => false,
+                    'message' => 'Invalid FCM token'
+                ]));
+        }
+
+        // ✅ Update DB
+        $this->db->where('staff_id', $staffId);
+        $updated = $this->db->update('tblstaff', [
+            "fcm_token" => $fcmToken
+        ]);
+
+        if ($updated) {
+            return $this->output
+                ->set_status_header(200)
+                ->set_content_type('application/json')
+                ->set_output(json_encode([
+                    'status'  => true,
+                    'message' => 'FCM token updated successfully'
+                ]));
+        } else {
+            return $this->output
+                ->set_status_header(500)
+                ->set_content_type('application/json')
+                ->set_output(json_encode([
+                    'status'  => false,
+                    'message' => 'Failed to update FCM token'
+                ]));
+        }
+
+    } catch (Exception $e) {
+        return $this->output
+            ->set_status_header(500)
+            ->set_content_type('application/json')
+            ->set_output(json_encode([
+                'status'  => false,
+                'message' => $e->getMessage()
+            ]));
+    }
 }
 
 

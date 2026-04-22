@@ -168,6 +168,102 @@ class Dashboard extends AdminController
         
     }
     
+    public function call_tracker()
+    {
+        $data =[];
+        $data['type']  = $this->leads_model->get_type();
+         $data['sources']  = $this->leads_model->get_source();
+         $data['statuses'] = $this->leads_model->get_status();
+         $data['office_location']  = $this->staff_model->office_location();
+         $data['staff_department']  = $this->staff_model->staff_department();
+          $data['staff']  =$this->staff_model->get('', ['active' => 1]);
+         $this->load->view('admin/dashboard/call_tracker', $data);
+    }
     
+    public function get_daily_calls_tracker()
+    {
+    $this->load->driver('cache', array('adapter' => 'file'));
+    
+    // ✅ get date from POST (from your date picker)
+    $from = $this->input->post('from');
+    $to   = $this->input->post('to');
+    
+    // fallback to today
+    if (!$from || !$to) {
+    $from = date('Y-m-d');
+    $to   = date('Y-m-d');
+    }
+    
+    // ✅ unique cache key based on filter
+    $cacheKey = "daily_calls_{$from}_{$to}";
+    
+    // ✅ check cache FIRST
+    $data = $this->cache->get($cacheKey);
+    
+    // if ($data === FALSE) {
+    
+    // ❌ cache miss → fetch from DB
+    $data = $this->dashboard_model->dailyCallsTracker();
+    
+    // ✅ save cache (10 min)
+    $this->cache->save($cacheKey, $data, 600);
+    
+    // }
+    
+    // ✅ return JSON properly
+    echo json_encode($data);
+    }
+    
+    public function get_daily_calls_Datatable()
+    {
+        
+        // return true;
+        $data = $this->dashboard_model->dailyCallsTracker_Datatable();
+        
+        echo json_encode( $data ,true);
+    }
+    
+       public function follow_up_tracker()
+    {
+        $data =[];
+        $data['type']  = $this->leads_model->get_type();
+         $data['sources']  = $this->leads_model->get_source();
+         $data['statuses'] = $this->leads_model->get_status();
+         $data['office_location']  = $this->staff_model->office_location();
+         $data['staff_department']  = $this->staff_model->staff_department();
+          $data['staff']  =$this->staff_model->get('', ['active' => 1]);
+         $this->load->view('admin/dashboard/follow_up_tracker', $data);
+    }
+    
+  public function getFollowupDashboard()
+{
+//     ini_set('display_errors', 1);
+// ini_set('display_startup_errors', 1);
+// error_reporting(E_ALL);
+    $param = [
+        'follow_up_date'   => date('Y-m-d'),
+        'missed_from_date' => $this->input->post('from'),
+        'missed_to_date'   => $this->input->post('to'),
+        'status'           => $this->input->post('view_status'),
+        'assigned'         => $this->input->post('staff'),
+        'source'           => $this->input->post('view_source'),
+        'lead_type'        => $this->input->post('lead_type'),
+        'department'       => $this->input->post('staff_department'),
+        'location'         => $this->input->post('office_location'),
+    ];
+
+    $result = $this->dashboard_model->getFollowupDashboard($_POST);
+    echo json_encode($result);
+}
+
+
+public function getFollow_up_datatable()
+{
+     $data = $this->dashboard_model->getFollow_up_datatable();
+        
+        echo json_encode( $data ,true);
+}
+
+
     
 }

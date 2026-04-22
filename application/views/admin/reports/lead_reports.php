@@ -303,6 +303,14 @@ $status_list_ = array_column($status_list, null, "id");
     .marketing-type {
         width: 16% !important;
     }
+    
+    .border-card {
+    /* border: 1px solid black; */
+    padding: 5px 10px;
+    box-shadow: 0px 0px 5px lightgrey;
+    margin-bottom: 10px;
+    border-radius: 8px;
+}
 </style>
 
 <div id="wrapper">

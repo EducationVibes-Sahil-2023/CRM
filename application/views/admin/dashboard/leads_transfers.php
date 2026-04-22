@@ -147,6 +147,13 @@
     width: 300px;
     border-radius: 12px;
     padding: 0 0.5rem;
+        box-shadow: 2px 3px 10px lightgrey;
+    padding: 15px !important;
+    }
+    
+    .source-card
+    {
+      right: 50rem;  
     }
 
     .ranking-card h5 {
@@ -405,7 +412,16 @@
                                 <div class="ranking-card">
                                 <h5><i class="fa fa-ranking-star"></i> Counselor Ranking</h5>
                                 <div id="counselorRankingList"></div>
+                                  
+                                
                             </div>
+                                   <div class="ranking-card source-card">
+                                <h5><i class="fa fa-ranking-star"></i> sources Ranking</h5>
+                                 <div id="topSourcesList"></div>
+                                  
+                                
+                            </div>
+                           
                             </div>
                             
                         </div>
@@ -500,6 +516,8 @@
                         <div class="chart-ranking-wrapper">
                             <div class="chart-container"><canvas id="counselorChart_self"></canvas>
                             <div class="ranking-card"><h5><i class="fa fa-ranking-star"></i> Counselor Ranking</h5><div id="counselorRankingList_self"></div></div>
+                            <div class="ranking-card source-card"><h5><i class="fa fa-ranking-star"></i> Counselor Ranking</h5><div id="topSourcesList_self"></div></div>
+                       
                             </div>
                             
                         </div>
@@ -613,7 +631,185 @@ function refreshLeadTransferTable() {
     updateMainStatsAndChart();
 }
 
+// function updateMainStatsAndChart() {
+
+//     let postData = {
+//         'department[]': $("[name='department[]']").val() || [],
+//         'view_status[]': $('[name="view_status[]"]').val() || [],
+//         'view_sources[]': $('[name="view_sources[]"]').val() || [],
+//         'view_assigned[]': $('[name="view_assigned[]"]').val() || [],
+//         'view_update_count[]': $('[name="view_update_count[]"]').val() || [],
+//         'date_range': $('#date_range').val() || '',
+//         'csrf_token_name': csrfData.hash,
+//         'summary': 1,
+//         'leadType': currentMainType === 'transfer' ? 'Lead Transfer' : 'Lead Assignation'
+//     };
+
+//     $.ajax({
+//         url: admin_url + 'dashboard/leads_transfers',
+//         type: 'POST',
+//         data: postData,
+//         traditional: true,
+
+//         success: function(response) {
+
+//             let parsed = JSON.parse(response);
+//             let data = Array.isArray(parsed.data) ? parsed.data : [];
+
+//             let total = 0;
+//             let sorted = [...data];
+
+//             sorted.forEach(item => {
+//                 total += Number(item?.counts) || 0;
+//             });
+
+//             // ✅ Stats
+//             $('#totalTransfers').text(total);
+//             $('#activeCounselors').text(sorted.length);
+
+//             if (sorted.length) {
+//                 $('#topCounselorName').text(sorted[0]?.staff_name || '—');
+//                 $('#topCounselorLeadsCount').text((sorted[0]?.counts || 0) + ' leads');
+//             } else {
+//                 $('#topCounselorName').text('—');
+//                 $('#topCounselorLeadsCount').text('0 leads');
+//             }
+
+//             // ✅ Labels + Values
+//             let labels = sorted.map(s =>
+//                 s?.staff_name?.length > 20
+//                     ? s.staff_name.substring(0, 18) + '..'
+//                     : (s?.staff_name || 'Unknown')
+//             );
+
+//             let values = sorted.map(s => Number(s?.counts) || 0);
+
+//             // ✅ Top 5 Ranking
+//             let top5 = sorted.slice(0, 5);
+//             let rankingHtml = '';
+
+//             top5.forEach((item, idx) => {
+//                 let medal =
+//                     idx === 0 ? '🥇' :
+//                     idx === 1 ? '🥈' :
+//                     idx === 2 ? '🥉' :
+//                     '#' + (idx + 1);
+
+//                 let percent = top5[0]?.counts > 0
+//                     ? (item.counts / top5[0].counts * 100)
+//                     : 0;
+
+//                 rankingHtml += `
+//                     <div class="ranking-item">
+//                         <div class="rank-info">
+//                             <span>${medal} ${item?.staff_name || 'Unknown'}</span>
+//                             <span>${item?.counts || 0} leads</span>
+//                         </div>
+//                         <div class="rank-bar">
+//                             <div class="bar-fill" style="width:${percent}%;"></div>
+//                         </div>
+//                     </div>
+//                 `;
+//             });
+
+//             $('#counselorRankingList').html(
+//                 rankingHtml || '<div class="empty-state">No data available</div>'
+//             );
+
+//             // 🔥 Destroy old chart
+//             if (mainChart) mainChart.destroy();
+
+//             let canvas = document.getElementById('counselorChart');
+//             if (!canvas) return;
+
+//             let ctx = canvas.getContext('2d');
+
+//             // ✅ Create Chart
+//             mainChart = new Chart(ctx, {
+//                 type: 'bar',
+
+//                 data: {
+//                     labels: labels,
+//                     datasets: [{
+//                         label: 'Leads',
+//                         data: values,
+//                         backgroundColor: 'rgba(59, 130, 246, 0.85)',
+//                         borderRadius: 8,
+
+//                         // ✅ better spacing
+//                         barPercentage: 0.6,
+//                         categoryPercentage: 0.7
+//                     }]
+//                 },
+
+//                 options: {
+//                     responsive: true,
+//                     maintainAspectRatio: true,
+
+//                     plugins: {
+//                         legend: { display: false },
+
+//                         tooltip: {
+//                             callbacks: {
+//                                 label: ctx => `${ctx.raw} leads`
+//                             }
+//                         },
+
+//                         datalabels: {
+//                             anchor: 'end',
+//                             align: 'top',
+//                             offset: 4,
+//                             color: '#000',
+//                             font: {
+//                                 weight: 'bold',
+//                                 size: 11
+//                             },
+//                             formatter: v => v
+//                         }
+//                     },
+
+//                     scales: {
+
+//                         // ✅ REMOVE X GRID LINES
+//                         x: {
+//                             grid: {
+//                                 display: false
+//                             },
+//                             ticks: {
+//                                 font: { size: 11 }
+//                             }
+//                         },
+
+//                         // ✅ ADD TOP SPACE + CLEAN GRID
+//                         y: {
+//                             beginAtZero: true,
+
+//                             grace: '20%', // 🔥 key spacing fix
+
+//                             grid: {
+//                                 color: 'rgba(128,128,128,0.1)'
+//                             },
+
+//                             title: {
+//                                 display: true,
+//                                 text: 'Number of Transfers'
+//                             }
+//                         }
+//                     }
+//                 },
+
+//                 plugins: [ChartDataLabels]
+//             });
+//         },
+
+//         error: function(xhr) {
+//             console.error(xhr);
+//         }
+//     });
+// }
+
 function updateMainStatsAndChart() {
+
     let postData = {
         'department[]': $("[name='department[]']").val() || [],
         'view_status[]': $('[name="view_status[]"]').val() || [],
@@ -625,42 +821,199 @@ function updateMainStatsAndChart() {
         'summary': 1,
         'leadType': currentMainType === 'transfer' ? 'Lead Transfer' : 'Lead Assignation'
     };
+
+    // 🔄 Loading UI
+    $('#counselorRankingList').html('<div class="loading">Loading...</div>');
+    $('#topSourcesList').html('<div class="loading">Loading...</div>');
+    $('#topLeadsList').html('<div class="loading">Loading...</div>');
+
     $.ajax({
-        url: admin_url + 'dashboard/leads_transfers', type: 'POST', data: postData, traditional: true,
-        success: function(response) {
-            let data = JSON.parse(response).data;
-            let total = 0, sorted = [];
-            for (let i = 0; i < data.length; i++) {
-                sorted.push(data[i]);
-                total += parseInt(data[i].counts);
+        url: admin_url + 'dashboard/leads_transfers',
+        type: 'POST',
+        data: postData,
+        traditional: true,
+
+        success: function (response) {
+
+            let parsed;
+
+            try {
+                parsed = typeof response === 'object' ? response : JSON.parse(response);
+            } catch (e) {
+                console.error('JSON parse error:', e);
+                return showErrorState();
             }
+
+            let apiData = parsed?.data || {};
+
+            let data = Array.isArray(apiData.leads_summary) ? apiData.leads_summary : [];
+            let topSources = Array.isArray(apiData.top_sources) ? apiData.top_sources : [];
+            let topLeads = Array.isArray(apiData.top_leads) ? apiData.top_leads : [];
+
+            // =========================
+            // ✅ STATS
+            // =========================
+            let total = data.reduce((sum, item) => sum + (Number(item?.counts) || 0), 0);
+
             $('#totalTransfers').text(total);
             $('#activeCounselors').text(data.length);
-            if (sorted.length) {
-                $('#topCounselorName').text(sorted[0].staff_name);
-                $('#topCounselorLeadsCount').text(sorted[0].counts + ' leads');
-            } else { $('#topCounselorName').text('—'); $('#topCounselorLeadsCount').text('0 leads'); }
-            
-            let labels = sorted.map(s => s.staff_name.length > 20 ? s.staff_name.substring(0, 18) + '..' : s.staff_name);
-            let values = sorted.map(s => s.counts);
-            let top5 = sorted.slice(0, 5);
-            let rankingHtml = '';
-            top5.forEach((item, idx) => {
-                let medal = idx === 0 ? '🥇' : idx === 1 ? '🥈' : idx === 2 ? '🥉' : '#' + (idx + 1);
-                let percent = top5[0].counts > 0 ? (item.counts / top5[0].counts * 100) : 0;
-                rankingHtml += `<div class="ranking-item"><div class="rank-info"><span>${medal} ${item.staff_name}</span><span>${item.counts} leads</span></div><div class="rank-bar"><div class="bar-fill" style="width:${percent}%;"></div></div></div>`;
-            });
-            $('#counselorRankingList').html(rankingHtml || '<div class="empty-state">No data available</div>');
-            
-            if (mainChart) mainChart.destroy();
-            let ctx = document.getElementById('counselorChart').getContext('2d');
+
+            $('#topCounselorName').text(data[0]?.staff_name || '—');
+            $('#topCounselorLeadsCount').text((data[0]?.counts || 0) + ' leads');
+
+            // =========================
+            // 🥇 STAFF RANKING
+            // =========================
+            let top5 = data.slice(0, 5);
+
+            let rankingHtml = top5.map((item, idx) => {
+
+                let medal = ['🥇','🥈','🥉'][idx] || `#${idx + 1}`;
+                let percent = top5[0]?.counts ? (item.counts / top5[0].counts * 100) : 0;
+
+                return `
+                <div class="ranking-item">
+                    <div class="rank-info">
+                        <span>${medal} ${item?.staff_name || 'Unknown'}</span>
+                        <span>${item?.counts || 0} leads</span>
+                    </div>
+                    <div class="rank-bar">
+                        <div class="bar-fill" style="width:${percent}%;"></div>
+                    </div>
+                </div>`;
+            }).join('');
+
+            $('#counselorRankingList').html(
+                rankingHtml || '<div class="empty-state">No data</div>'
+            );
+
+            // =========================
+            // 📊 TOP SOURCES
+            // =========================
+            let sourceHtml = topSources.map((s, idx) => {
+
+                let medal = ['🥇','🥈','🥉'][idx] || `#${idx + 1}`;
+                let percent = topSources[0]?.total ? (s.total / topSources[0].total * 100) : 0;
+
+                return `
+                <div class="ranking-item">
+                    <div class="rank-info">
+                        <span>${medal} ${s.source_name || 'Unknown'}</span>
+                        <span>${s.total || 0}</span>
+                    </div>
+                    <div class="rank-bar">
+                        <div class="bar-fill" style="width:${percent}%;"></div>
+                    </div>
+                </div>`;
+            }).join('');
+
+            $('#topSourcesList').html(
+                sourceHtml || '<div class="empty-state">No sources</div>'
+            );
+
+            // =========================
+            // 📊 TOP LEADS
+            // =========================
+            let leadsHtml = topLeads.map((s, idx) => {
+
+                let medal = ['🥇','🥈','🥉'][idx] || `#${idx + 1}`;
+                let percent = topLeads[0]?.total ? (s.total / topLeads[0].total * 100) : 0;
+
+                return `
+                <div class="ranking-item">
+                    <div class="rank-info">
+                        <span>${medal} ${s.status_name || 'Unknown'}</span>
+                        <span>${s.total || 0}</span>
+                    </div>
+                    <div class="rank-bar">
+                        <div class="bar-fill" style="width:${percent}%;"></div>
+                    </div>
+                </div>`;
+            }).join('');
+
+            $('#topLeadsList').html(
+                leadsHtml || '<div class="empty-state">No leads</div>'
+            );
+
+            // =========================
+            // 📊 MAIN CHART (WITH COUNT ON TOP)
+            // =========================
+            if (window.mainChart) mainChart.destroy();
+
+            let ctx = document.getElementById('counselorChart')?.getContext('2d');
+            if (!ctx) return;
+
             mainChart = new Chart(ctx, {
-                type: 'bar', data: { labels: labels, datasets: [{ label: 'Leads', data: values, backgroundColor: 'rgba(59, 130, 246, 0.85)', borderRadius: 8, barPercentage: 0.65 }] },
-                options: { responsive: true, maintainAspectRatio: true, plugins: { legend: { display: false }, tooltip: { callbacks: { label: ctx => ctx.raw + ' leads' } }, datalabels: { anchor: 'end', align: 'top', offset: 4, color: '#000', font: { weight: 'bold', size: 11 }, formatter: v => v } }, scales: { y: { beginAtZero: true, title: { display: true, text: 'Number of Transfers' } }, x: { ticks: { font: { size: 11 } } } } },
+                type: 'bar',
+                data: {
+                    labels: data.map(s => s.staff_name),
+                    datasets: [{
+                        data: data.map(s => Number(s.counts)),
+                        backgroundColor: 'rgba(59,130,246,0.85)',
+                        borderRadius: 8,
+                        barPercentage: 0.6,
+                        categoryPercentage: 0.7
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: true,
+
+                    plugins: {
+                        legend: { display: false },
+
+                        tooltip: {
+                            callbacks: {
+                                label: ctx => `${ctx.raw} leads`
+                            }
+                        },
+
+                        // 🔥 SHOW VALUE ON TOP
+                        datalabels: {
+                            anchor: 'end',
+                            align: 'top',
+                            offset: 4,
+                            color: '#000',
+                            font: {
+                                weight: 'bold',
+                                size: 12
+                            },
+                            formatter: value => value
+                        }
+                    },
+
+                    scales: {
+                        x: {
+                            grid: { display: false }
+                        },
+                        y: {
+                            beginAtZero: true,
+                            grace: '25%',   // 🔥 space above bars
+                            grid: {
+                                color: 'rgba(128,128,128,0.1)'
+                            }
+                        }
+                    }
+                },
+
                 plugins: [ChartDataLabels]
             });
-        }, error: function(xhr) { console.error(xhr); }
+        },
+
+        error: function (xhr) {
+            console.error(xhr);
+            showErrorState();
+        }
     });
+
+    // =========================
+    // ❌ ERROR UI
+    // =========================
+    function showErrorState() {
+        $('#counselorRankingList').html('<div class="error-state">Error</div>');
+        $('#topSourcesList').html('<div class="error-state">Error</div>');
+        $('#topLeadsList').html('<div class="error-state">Error</div>');
+    }
 }
 
 // ======================== SELF TAB ========================
@@ -679,7 +1032,186 @@ function refreshSelfTransferTable() {
     updateSelfStatsAndChart();
 }
 
+// function updateSelfStatsAndChart() {
+
+//     let postData = {
+//         'department_self[]': $("[name='department_self[]']").val() || [],
+//         'view_status_self[]': $('[name="view_status_self[]"]').val() || [],
+//         'view_sources_self[]': $('[name="view_sources_self[]"]').val() || [],
+//         'view_assigned_self[]': $('[name="view_assigned_self[]"]').val() || [],
+//         'view_update_count_self[]': $('[name="view_update_count_self[]"]').val() || [],
+//         'date_range_self': $('#date_range_self').val() || '',
+//         'csrf_token_name': csrfData.hash,
+//         'summary_self': 1,
+//         'leadType': currentSelfType === 'transfer' ? 'Lead Transfer' : 'Lead Assignation'
+//     };
+
+//     $.ajax({
+//         url: admin_url + 'dashboard/leads_transfers',
+//         type: 'POST',
+//         data: postData,
+//         traditional: true,
+
+//         success: function(response) {
+
+//             let parsed = JSON.parse(response);
+//             let data = Array.isArray(parsed.data) ? parsed.data : [];
+
+//             let total = 0;
+//             let sorted = [...data];
+
+//             sorted.forEach(item => {
+//                 total += Number(item?.counts) || 0;
+//             });
+
+//             // ✅ Stats
+//             $('#totalTransfers_self').text(total);
+//             $('#activeCounselors_self').text(sorted.length);
+
+//             if (sorted.length) {
+//                 $('#topCounselorName_self').text(sorted[0]?.staff_name || '—');
+//                 $('#topCounselorLeadsCount_self').text((sorted[0]?.counts || 0) + ' leads');
+//             } else {
+//                 $('#topCounselorName_self').text('—');
+//                 $('#topCounselorLeadsCount_self').text('0 leads');
+//             }
+
+//             // ✅ Labels + Values
+//             let labels = sorted.map(s =>
+//                 s?.staff_name?.length > 20
+//                     ? s.staff_name.substring(0, 18) + '..'
+//                     : (s?.staff_name || 'Unknown')
+//             );
+
+//             let values = sorted.map(s => Number(s?.counts) || 0);
+
+//             // ✅ Top 5 Ranking
+//             let top5 = sorted.slice(0, 5);
+//             let rankingHtml = '';
+
+//             top5.forEach((item, idx) => {
+//                 let medal =
+//                     idx === 0 ? '🥇' :
+//                     idx === 1 ? '🥈' :
+//                     idx === 2 ? '🥉' :
+//                     '#' + (idx + 1);
+
+//                 let percent = top5[0]?.counts > 0
+//                     ? (item.counts / top5[0].counts * 100)
+//                     : 0;
+
+//                 rankingHtml += `
+//                     <div class="ranking-item">
+//                         <div class="rank-info">
+//                             <span>${medal} ${item?.staff_name || 'Unknown'}</span>
+//                             <span>${item?.counts || 0} leads</span>
+//                         </div>
+//                         <div class="rank-bar">
+//                             <div class="bar-fill" style="width:${percent}%;"></div>
+//                         </div>
+//                     </div>
+//                 `;
+//             });
+
+//             $('#counselorRankingList_self').html(
+//                 rankingHtml || '<div class="empty-state">No data available</div>'
+//             );
+
+//             // 🔥 Destroy old chart
+//             if (selfChart) selfChart.destroy();
+
+//             let ctx = document.getElementById('counselorChart_self');
+//             if (!ctx) return;
+
+//             ctx = ctx.getContext('2d');
+
+//             // ✅ Create Chart
+//             selfChart = new Chart(ctx, {
+//                 type: 'bar',
+
+//                 data: {
+//                     labels: labels,
+//                     datasets: [{
+//                         label: 'Leads',
+//                         data: values,
+//                         backgroundColor: 'rgba(59, 130, 246, 0.85)',
+//                         borderRadius: 8,
+
+//                         // ✅ spacing improvements
+//                         barPercentage: 0.6,
+//                         categoryPercentage: 0.7
+//                     }]
+//                 },
+
+//                 options: {
+//                     responsive: true,
+//                     maintainAspectRatio: true,
+
+//                     plugins: {
+//                         legend: {
+//                             display: false
+//                         },
+
+//                         tooltip: {
+//                             callbacks: {
+//                                 label: ctx => `${ctx.raw} leads`
+//                             }
+//                         },
+
+//                         datalabels: {
+//                             anchor: 'end',
+//                             align: 'top',
+//                             offset: 4,
+//                             color: '#000',
+//                             font: {
+//                                 weight: 'bold',
+//                                 size: 11
+//                             },
+//                             formatter: v => v
+//                         }
+//                     },
+
+//                     scales: {
+
+//                         // ✅ REMOVE X GRID
+//                         x: {
+//                             grid: {
+//                                 display: false
+//                             },
+//                             ticks: {
+//                                 font: { size: 11 }
+//                             }
+//                         },
+
+//                         // ✅ ADD TOP SPACE
+//                         y: {
+//                             beginAtZero: true,
+//                             grace: '20%',   // 🔥 key fix
+
+//                             grid: {
+//                                 color: 'rgba(128,128,128,0.1)'
+//                             },
+
+//                             title: {
+//                                 display: true,
+//                                 text: 'Number of Transfers'
+//                             }
+//                         }
+//                     }
+//                 },
+
+//                 plugins: [ChartDataLabels]
+//             });
+//         },
+
+//         error: function(xhr) {
+//             console.error(xhr);
+//         }
+//     });
+// }
+
 function updateSelfStatsAndChart() {
+
     let postData = {
         'department_self[]': $("[name='department_self[]']").val() || [],
         'view_status_self[]': $('[name="view_status_self[]"]').val() || [],
@@ -691,37 +1223,215 @@ function updateSelfStatsAndChart() {
         'summary_self': 1,
         'leadType': currentSelfType === 'transfer' ? 'Lead Transfer' : 'Lead Assignation'
     };
+
+    // 🔄 Loading UI
+    $('#counselorRankingList_self').html('<div class="loading">Loading...</div>');
+    $('#topSourcesList_self').html('<div class="loading">Loading...</div>');
+
     $.ajax({
-        url: admin_url + 'dashboard/leads_transfers', type: 'POST', data: postData, traditional: true,
+        url: admin_url + 'dashboard/leads_transfers',
+        type: 'POST',
+        data: postData,
+        traditional: true,
+
         success: function(response) {
-            let data = JSON.parse(response).data;
-            let total = 0, sorted = [];
-            for (let i = 0; i < data.length; i++) { sorted.push(data[i]); total += parseInt(data[i].counts); }
+
+            let parsed;
+
+            // ✅ SAFE PARSE
+            try {
+                parsed = typeof response === 'object' ? response : JSON.parse(response);
+            } catch (e) {
+                console.error('JSON parse error:', e);
+                return showError();
+            }
+
+            let apiData = parsed?.data || {};
+
+            let data = Array.isArray(apiData.leads_summary) ? apiData.leads_summary : [];
+            let topStaff = Array.isArray(apiData.top_lead) ? apiData.top_lead : [];
+            let topSources = Array.isArray(apiData.top_sources) ? apiData.top_sources : [];
+
+            // =========================
+            // ✅ STATS
+            // =========================
+            let total = data.reduce((sum, item) => sum + (Number(item?.counts) || 0), 0);
+
             $('#totalTransfers_self').text(total);
             $('#activeCounselors_self').text(data.length);
-            if (sorted.length) { $('#topCounselorName_self').text(sorted[0].staff_name); $('#topCounselorLeadsCount_self').text(sorted[0].counts + ' leads'); }
-            else { $('#topCounselorName_self').text('—'); $('#topCounselorLeadsCount_self').text('0 leads'); }
-            
-            let labels = sorted.map(s => s.staff_name.length > 20 ? s.staff_name.substring(0, 18) + '..' : s.staff_name);
-            let values = sorted.map(s => s.counts);
-            let top5 = sorted.slice(0, 5);
-            let rankingHtml = '';
-            top5.forEach((item, idx) => {
-                let medal = idx === 0 ? '🥇' : idx === 1 ? '🥈' : idx === 2 ? '🥉' : '#' + (idx + 1);
-                let percent = top5[0].counts > 0 ? (item.counts / top5[0].counts * 100) : 0;
-                rankingHtml += `<div class="ranking-item"><div class="rank-info"><span>${medal} ${item.staff_name}</span><span>${item.counts} leads</span></div><div class="rank-bar"><div class="bar-fill" style="width:${percent}%;"></div></div></div>`;
-            });
-            $('#counselorRankingList_self').html(rankingHtml || '<div class="empty-state">No data available</div>');
-            
+
+            if (data.length) {
+                $('#topCounselorName_self').text(data[0]?.staff_name || '—');
+                $('#topCounselorLeadsCount_self').text((data[0]?.counts || 0) + ' leads');
+            } else {
+                $('#topCounselorName_self').text('—');
+                $('#topCounselorLeadsCount_self').text('0 leads');
+            }
+
+            // =========================
+            // 🥇 TOP STAFF
+            // =========================
+            let top5 = topStaff.length ? topStaff : data.slice(0, 5);
+
+            let rankingHtml = top5.map((item, idx) => {
+
+                let medal =
+                    idx === 0 ? '🥇' :
+                    idx === 1 ? '🥈' :
+                    idx === 2 ? '🥉' :
+                    '#' + (idx + 1);
+
+                let percent = (top5[0]?.counts || 0) > 0
+                    ? (item.counts / top5[0].counts * 100)
+                    : 0;
+
+                return `
+                    <div class="ranking-item">
+                        <div class="rank-info">
+                            <span>${medal} ${item?.staff_name || 'Unknown'}</span>
+                            <span>${item?.counts || 0} leads</span>
+                        </div>
+                        <div class="rank-bar">
+                            <div class="bar-fill" style="width:${percent}%;"></div>
+                        </div>
+                    </div>
+                `;
+            }).join('');
+
+            $('#counselorRankingList_self').html(
+                rankingHtml || '<div class="empty-state">No data available</div>'
+            );
+
+            // =========================
+            // 📊 TOP SOURCES
+            // =========================
+            let sourceHtml = topSources.map((s, idx) => {
+
+                let medal =
+                    idx === 0 ? '🥇' :
+                    idx === 1 ? '🥈' :
+                    idx === 2 ? '🥉' :
+                    '#' + (idx + 1);
+
+                let percent = (topSources[0]?.total || 0) > 0
+                    ? (s.total / topSources[0].total * 100)
+                    : 0;
+
+                return `
+                    <div class="ranking-item">
+                        <div class="rank-info">
+                            <span>${medal} ${s.source_name || 'Unknown'}</span>
+                            <span>${s.total || 0}</span>
+                        </div>
+                        <div class="rank-bar">
+                            <div class="bar-fill" style="width:${percent}%;"></div>
+                        </div>
+                    </div>
+                `;
+            }).join('');
+
+            $('#topSourcesList_self').html(
+                sourceHtml || '<div class="empty-state">No sources</div>'
+            );
+
+            // =========================
+            // 📊 CHART WITH LABELS
+            // =========================
             if (selfChart) selfChart.destroy();
-            let ctx = document.getElementById('counselorChart_self').getContext('2d');
+
+            let canvas = document.getElementById('counselorChart_self');
+            if (!canvas) return;
+
+            let ctx = canvas.getContext('2d');
+
+            let labels = data.map(s =>
+                s?.staff_name?.length > 20
+                    ? s.staff_name.substring(0, 18) + '..'
+                    : (s?.staff_name || 'Unknown')
+            );
+
+            let values = data.map(s => Number(s?.counts) || 0);
+
             selfChart = new Chart(ctx, {
-                type: 'bar', data: { labels: labels, datasets: [{ label: 'Leads', data: values, backgroundColor: 'rgba(59, 130, 246, 0.85)', borderRadius: 8, barPercentage: 0.65 }] },
-                options: { responsive: true, maintainAspectRatio: true, plugins: { legend: { display: false }, tooltip: { callbacks: { label: ctx => ctx.raw + ' leads' } }, datalabels: { anchor: 'end', align: 'top', offset: 4, color: '#000', font: { weight: 'bold', size: 11 }, formatter: v => v } }, scales: { y: { beginAtZero: true, title: { display: true, text: 'Number of Transfers' } }, x: { ticks: { font: { size: 11 } } } } },
+                type: 'bar',
+                data: {
+                    labels: labels,
+                    datasets: [{
+                        data: values,
+                        backgroundColor: 'rgba(59, 130, 246, 0.85)',
+                        borderRadius: 8,
+                        barPercentage: 0.6,
+                        categoryPercentage: 0.7
+                    }]
+                },
+
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: true,
+
+                    plugins: {
+                        legend: { display: false },
+
+                        tooltip: {
+                            callbacks: {
+                                label: ctx => `${ctx.raw} leads`
+                            }
+                        },
+
+                        // 🔥 SHOW COUNT ON TOP
+                        datalabels: {
+                            anchor: 'end',
+                            align: 'top',
+                            offset: 4,
+                            color: '#000',
+                            font: {
+                                weight: 'bold',
+                                size: 12
+                            },
+                            formatter: function(value) {
+                                return value;
+                            }
+                        }
+                    },
+
+                    scales: {
+                        x: {
+                            grid: { display: false }
+                        },
+                        y: {
+                            beginAtZero: true,
+                            grace: '25%', // space for labels
+                            grid: {
+                                color: 'rgba(128,128,128,0.1)'
+                            }
+                        }
+                    }
+                },
+
                 plugins: [ChartDataLabels]
             });
-        }, error: function(xhr) { console.error(xhr); }
+        },
+
+        error: function(xhr) {
+            console.error('API error:', xhr);
+            showError();
+        }
     });
+
+    // =========================
+    // ❌ ERROR UI
+    // =========================
+    function showError() {
+        $('#counselorRankingList_self').html('<div class="error-state">Failed to load data</div>');
+        $('#topSourcesList_self').html('<div class="error-state">Failed to load</div>');
+
+        $('#totalTransfers_self').text('0');
+        $('#activeCounselors_self').text('0');
+        $('#topCounselorName_self').text('—');
+        $('#topCounselorLeadsCount_self').text('0 leads');
+
+        if (selfChart) selfChart.destroy();
+    }
 }
 
 // ======================== FILTER & TAB HANDLERS ========================
@@ -789,7 +1499,9 @@ $(document).ready(function() {
         if (leadsTableSelf) leadsTableSelf.ajax.reload();
     });
     
-    refreshLeadTransferTable();
-    refreshSelfTransferTable();
+  refreshLeadTransferTable();
+    // refreshSelfTransferTable();
 });
+
+
 </script>

@@ -173,6 +173,99 @@ $reference_name = $this->db
     margin-top: 25px;
     min-height: 450px !important;
    }
+   
+   
+   
+     /* ── KPI CARDS ── */
+  .kpi {
+    background: var(--surface);
+    border: 0.5px solid var(--border);
+    border-radius: var(--radius);
+    padding: 16px 18px;
+    position: relative;
+    overflow: hidden;
+  }
+  
+  
+  
+  #myDashboard {
+  --bg: #f4f6fb;
+  --surface: #ffffff;
+  --surface2: #f0f3f9;
+  --border: rgba(0,0,0,0.08);
+  --text: #1a1d23;
+  --text2: #5a6275;
+  --text3: #9aa0b0;
+  --radius: 12px;
+  --radius-sm: 8px;
+  --blue: #378ADD;
+  --blue-lt: #B5D4F4;
+  --blue-dk: #0C447C;
+  --teal: #1D9E75;
+  --teal-lt: #E1F5EE;
+  --amber: #BA7517;
+  --amber-lt: #FAEEDA;
+  --coral: #D85A30;
+  --coral-lt: #FAECE7;
+  --purple: #7F77DD;
+  --purple-lt: #EEEDFE;
+  --green: #639922;
+  --green-lt: #EAF3DE;
+  --gray: #888780;
+  --gray-lt: #F1EFE8;
+}
+
+#myDashboard{
+  .kpi::before {
+    content: '';
+    position: absolute;
+    top: 0; left: 0;
+    width: 3px; height: 100%;
+    border-radius: 12px 0 0 12px;
+  }
+  
+  
+  
+  .kpi.k1::before { background: var(--blue); }
+  .kpi.k2::before { background: var(--teal); }
+  .kpi.k3::before { background: var(--amber); }
+  .kpi.k4::before { background: var(--purple); }
+  .kpi-lbl {  width:100%; font-size: 13px; color: var(--text3); font-weight: 500; margin-bottom: 5px; text-transform: uppercase; letter-spacing: .4px; }
+  .kpi-val { font-size: 1.4rem; font-weight: 700; color: var(--text); line-height: 1.1; }
+  .kpi-row { display: flex; align-items: center; justify-content: space-between; margin-top: 6px; }
+  .kpi-sub { font-size: 11px; color: var(--text3); }
+  .badge { font-size: 11px; padding: 5px 5px; border-radius: 4px; font-weight: 600; display: inline-flex; align-items: center; gap: 3px; }
+  .up { background: var(--green-lt); color: #27500A; }
+  .dn { background: var(--coral-lt); color: #791F1F; }
+  .neu { background: var(--gray-lt); color: #444441; }
+
+  }
+    #myDashboard > div
+  {
+      width: 20% !important; 
+      margin: 10px;
+  }
+  
+  
+  .myDashboard {
+  
+    .card {
+    background: var(--surface);
+    border: 0.5px solid var(--border);
+    border-radius: var(--radius);
+    padding: 16px;
+  }
+  .card-title {
+      text-align: center;
+    font-size: 11px;
+    font-weight: 600;
+    color: var(--text3);
+    text-transform: uppercase;
+    letter-spacing: .5px;
+    margin-bottom: 14px;
+  }
+  
+  }
 </style>
 <div id="wrapper">
    <div class="content">
@@ -189,6 +282,11 @@ $reference_name = $this->db
                            <?php echo _l('import_leads'); ?>
                         </a>
                      <?php } ?>
+                     
+                     
+                     
+                  
+                     
                      <div class="row">
                         <div class="col-md-4">
                            <a href="#" class="btn btn-default btn-with-tooltip" data-toggle="tooltip" data-title="<?php echo _l('leads_summary'); ?>" data-placement="bottom" onclick="slideToggle('.leads-overview');  summary(1); return false;"><i class="fa fa-bar-chart"></i></a>
@@ -208,6 +306,39 @@ $reference_name = $this->db
 
                         </div>
 
+<div class="row col-md-12 card text-center" style="margin:20px 0;">
+    
+    <div class="col-md-3">
+        <div class="card shadow-sm p-3">
+            <h6 style="color:#888;">Total Calls</h6>
+            <h6 id="no_of_calls" style="font-weight:bold;">0</h6>
+        </div>
+    </div>
+
+    <div class="col-md-3">
+        <div class="card shadow-sm p-3">
+            <h6 style="color:#888;">Total Duration</h6>
+            <h6 id="no_of_duration" style="font-weight:bold;">00:00:00</h6>
+        </div>
+    </div>
+
+    <div class="col-md-3">
+        <div class="card shadow-sm p-3">
+            <h6 style="color:#888;">Last Call Sync</h6>
+            <h6 id="last_call_sync" style="font-weight:bold;">--</h6>
+        </div>
+    </div>
+
+    <div class="col-md-3">
+        <h6 style="color:#888;"></h6><br>
+        <button class="btn btn-primary btn-lg" onclick="refreshData()"><i class="fa fa-refresh"></i>
+        </button>
+    </div>
+
+</div>
+                          <div class="clearfix"></div>
+                  
+                     
                         <div class="col-md-4 col-xs-12 pull-right leads-search">
                            <?php if ($this->session->userdata('leads_kanban_view') == 'true' && 1 == 0) { ?>
                               <!-- <div data-toggle="tooltip" data-placement="bottom" data-title="<?php echo _l('search_by_tags'); ?>">
@@ -226,6 +357,8 @@ $reference_name = $this->db
                               </ul> 
                            </div> -->
                         </div>
+                        
+                      
                      </div>
                      <div class="clearfix"></div>
                      <div class="row hide leads-overview">
@@ -260,20 +393,79 @@ $reference_name = $this->db
                            <h4 class="no-margin"><?php echo _l('leads_summary'); ?></h4>
                         </div>
                         <div class="">
+                            
+                                          
+                                 <div class="col-md-12 d-flex dashboard-ui" id="myDashboard">
+          <div class="kpi k1">
+      <div class="kpi-lbl">Total calls</div>
+      <div class="kpi-val total-calls">0</div>
+      <div class="kpi-row yesterday-grow hide">
+        <span class="kpi-sub y-total-calls-c"></span>
+        <span class="badge up total-calls-c-grow"></span>
+      </div>
+    </div>
+    <div class="kpi k1">
+      <div class="kpi-lbl">Total Unique calls</div>
+      <div class="kpi-val total-unique-calls">0</div>
+      <div class="kpi-row yesterday-grow hide">
+        <span class="kpi-sub y-total-calls"></span>
+        <span class="badge up total-calls-grow"></span>
+      </div>
+    </div>
+    <div class="kpi k2">
+      <div class="kpi-lbl">Avg call duration</div>
+      <div class="kpi-val total-calls-avg">0m</div>
+      <div class="kpi-row yesterday-grow hide">
+        <span class="kpi-sub y-total-calls-avg"></span>
+        <span class="badge dn total-calls-avg-grow"></span>
+      </div>
+    </div>
+    <div class="kpi k3">
+      <div class="kpi-lbl">Connect rate</div>
+      <div class="kpi-val total-calls-connect">0%</div>
+      <div class="kpi-row yesterday-grow hide">
+        <span class="kpi-sub y-total-calls-connect"></span>
+        <span class="badge up total-calls-connect-grow"></span>
+      </div>
+    </div>
+    <div class="kpi k4">
+      <div class="kpi-lbl">Total talk time</div>
+      <div class="kpi-val total-calls-duration">0m</div>
+      <div class="kpi-row yesterday-grow hide">
+        <span class="kpi-sub y-total-calls-duration"></span>
+        <span class="badge up total-calls-duration-grow"></span>
+      </div>
+    </div>
+  </div>
+                          
 
-                           <div class="text-center col-md-6">
+                           <div class="text-center col-md-6 hide ">
                               <h3><span id="updationCounter"><?php echo $updateCount; ?></span></h3><br>
                               <span id="updationCounterText">Update Count</span>
                            </div>
                          
-                           <div class="text-center col-md-6">
+                           <div class="text-center col-md-6  hide">
                               <h3><span id="updationCounter_time"><?php echo $call_count; ?></span></h3><br>
                               <span id="updationCounterText_time">Updates Calls Duration</span>
                            </div>
                            
-                             <div class="col-md-8">
-                           <canvas id="callChart"></canvas>
-                           </div>
+                           <!--  <div class="col-md-8">-->
+                           <!--<canvas id="callChart"></canvas>-->
+                           <!--</div>-->
+                           
+                           
+                                        <div class="row myDashboard">
+                                        <div class="card graph-data col-md-6">
+                                        <div class="card-title">Hourly call distribution — office hours (9 am – 9 pm)</div>
+                                        <div class="ch-wrap" style="height:350px"><canvas id="hourlyChart"></canvas></div>
+                                        </div>
+                                        <div class="card graph-data col-md-6">
+                                        <div class="card-title">Call duration by lead status (minutes)</div>
+                                        <div class="legend" id="statusLegend"></div>
+                                        <div class="ch-wrap" style="height:350px"><canvas id="statusChart"></canvas></div>
+                                        </div>
+                                        </div>
+                          
                         </div>
                      </div>
 
@@ -683,16 +875,26 @@ $reference_name = $this->db
                                  'th_attrs' => array('class' => 'toggleable', 'id' => 'th-number')
                               )
                            );
+                           $_table_data[]=array(
+                                 'name' => _l('Count'),
+                                 'th_attrs' => array('class' => 'toggleable', 'id' => 'th-number')
+                              );
+                              
+                              if(is_admin())
+                              {
+                                    $_table_data[]=array(
+                                 'name' => _l('Total Count'),
+                                 'th_attrs' => array('class' => 'toggleable', 'id' => 'th-number')
+                              );
+
+                              }
 
                            /// change follow date
 
 
                            // Common columns for both roles
                            $_table_data = array_merge($_table_data, array(
-                              array(
-                                 'name' => _l('Count'),
-                                 'th_attrs' => array('class' => 'toggleable', 'id' => 'th-number')
-                              ),
+                              
                               array(
                                  'name' => _l('Durations'),
                                  'th_attrs' => array('class' => 'toggleable', 'id' => 'th-number')
@@ -1058,11 +1260,7 @@ $reference_name = $this->db
             <i class="fa fa-chevron-down"></i>
          </div>
       </li>
-      <?php if (is_admin()) {
-      ?>
-      <?php
-      }
-      ?>
+
       <li class="">
          <div id="follow_date_right" data-from="followup_from_date" data-to="followup_to_date" class="date-filter form-control">
             <i class="fa fa-calendar"></i>
@@ -1173,7 +1371,25 @@ $reference_name = $this->db
 <script src="https://cdn.jsdelivr.net/npm/chartjs-plugin-datalabels@2"></script>
 <script>
 
+
+const BLUE='#378ADD', BLUE_LT='#B5D4F4';
+const TEAL='#1D9E75', TEAL_LT='#E1F5EE';
+const AMBER='#BA7517', AMBER_LT='#FAEEDA';
+const CORAL='#D85A30', CORAL_LT='#FAECE7';
+const PURPLE='#7F77DD', PURPLE_LT='#EEEDFE';
+const GREEN='#639922', GREEN_LT='#EAF3DE';
+const GRAY='#888780', GRAY_LT='#F1EFE8';
+
+const avatarColors=[
+  ['#E6F1FB','#0C447C'],['#E1F5EE','#085041'],['#EEEDFE','#3C3489'],
+  ['#FAEEDA','#633806'],['#FAECE7','#712B13'],['#EAF3DE','#27500A'],
+  ['#FBEAF0','#72243E'],['#F1EFE8','#444441'],['#FCEBEB','#791F1F'],['#E6F1FB','#185FA5']
+];
+
+
 let callChartInstance = null;
+
+var charts={};
 
 var lead_sub_status = <?= !empty($lead_sub_status) ? json_encode($lead_sub_status) : '[]' ?>;
 
@@ -1955,8 +2171,37 @@ function setCallGraph(rawData) {
             if ($("#updationCounter").html() == '' && data.update_count != undefined) {
                $("#updationCounter").html(data.update_count);
                $("#updationCounter_time").html(data.call_count);
-              setCallGraph(data.graphData);
+            //   setCallGraph(data.graphData);
+              renderHourlyChart('hourlyChart',data.graphData.hourly);
+              renderStatusChart("statusChart", data.graphData.status);
+              
+              
+               let totalCalls = data.totalCalls || 0;
+let answeredCalls = data.answeredCall || 0;
+let totalDuration = data.totalDuration || 0;
+
+// Average call duration (in seconds)
+let avgSeconds = 0;
+if (answeredCalls > 0) {
+  avgSeconds = Math.floor(totalDuration / answeredCalls);
+}
+
+// Connect percentage
+let connectPercent = 0;
+if (totalCalls > 0) {
+  connectPercent = (answeredCalls / totalCalls) * 100;
+}
+
+// Update UI
+$(".total-calls").text(totalCalls);
+$(".total-unique-calls").text(data.update_count || 0);
+$(".total-calls-avg").text(formatTime(avgSeconds));
+$(".total-calls-connect").text(answeredCalls + " (" + connectPercent.toFixed(2) + "%)");
+$(".total-calls-duration").text(data.call_count || 0);
+
             }
+
+                 
             if (data.max_count != undefined && parseInt(data.max_count) > 0) {
                recreate_range_slider(data.max_count);
             }
@@ -1976,6 +2221,23 @@ function setCallGraph(rawData) {
    });
    // });
 
+function formatTime(seconds, showSeconds = false) {
+
+    seconds = Math.floor(Math.max(0, seconds || 0));
+
+    const h = Math.floor(seconds / 3600);
+    const m = Math.floor((seconds % 3600) / 60);
+    const s = seconds % 60;
+
+    // If hours = 0 → hide hours
+    const hourPart = h > 0 ? `${h} h ` : '';
+
+    if (showSeconds) {
+        return `${hourPart}${String(m).padStart(2, '0')} m ${String(s).padStart(2, '0')} s`;
+    }
+
+    return `${hourPart}${String(m).padStart(2, '0')}m`;
+}
    function show_lead_request() {
 
       slideToggle('.lead-transfer-table');
@@ -2276,6 +2538,468 @@ function setCallGraph(rawData) {
    }
 
    document.body.classList.add("hide-sidefilter");
+   
+   function renderHourlyChart(canvasId, apiData) {
+
+    // 🔥 Destroy old chart
+    if (charts[canvasId]) {
+        charts[canvasId].destroy();
+    }
+
+    // ✅ Safe data
+    const safeData = Array.isArray(apiData) ? apiData : [];
+
+    const labels = [];
+    const durationData = [];
+    const leadsData = [];
+
+    safeData.forEach(item => {
+        let hour = Number(item?.hour);
+
+        let label = hour < 12
+            ? `${hour || 12}am`
+            : `${(hour - 12) || 12}pm`;
+
+        labels.push(label);
+
+        durationData.push(Number(item?.total_call_duration) || 0);
+        leadsData.push(Number(item?.unique_calls) || 0);
+    });
+
+    const totalLeads = leadsData.reduce((a, b) => a + b, 0);
+    const totalDuration = durationData.reduce((a, b) => a + b, 0);
+
+    const maxVal = Math.max(...durationData, 0);
+
+    const top3 = [...safeData]
+        .sort((a, b) => (b.total_call_duration || 0) - (a.total_call_duration || 0))
+        .slice(0, 3);
+
+    const ctx = document.getElementById(canvasId);
+    if (!ctx) return;
+
+    charts[canvasId] = new Chart(ctx, {
+        type: 'bar',
+
+        data: {
+            labels,
+            datasets: [{
+                data: durationData,
+
+                backgroundColor: durationData.map(v =>
+                    v === maxVal ? BLUE : BLUE_LT
+                ),
+
+                borderRadius: 6,
+                borderSkipped: false,
+
+                // ✅ Better spacing
+                barThickness: 25,
+                categoryPercentage: 0.7,
+                barPercentage: 0.8
+            }]
+        },
+
+        options: {
+            responsive: true,
+            maintainAspectRatio: false,
+
+            // ✅ Space for right box + breathing room
+            layout: {
+                padding: {
+                    right: 0,
+                    top: 10,
+                    bottom: 10
+                }
+            },
+
+            plugins: {
+                legend: {
+                    display: true,
+                    labels: {
+                        generateLabels: () => ([
+                            {
+                                text: `👥 Total Leads: ${totalLeads}`,
+                                fillStyle: BLUE
+                            },
+                            {
+                                text: `⏱ Total Time: ${formatTime(totalDuration)}`,
+                                fillStyle: "#FF9800"
+                            }
+                        ])
+                    }
+                },
+
+                datalabels: typeof ChartDataLabels !== 'undefined' ? {
+                    labels: {
+
+                        // ⏱ Duration label (top)
+                        duration: {
+                            anchor: 'end',
+                            align: 'top',
+                            offset: 6,
+                            color: '#111',
+                            font: { size: 11, weight: 'bold' },
+                            formatter: value => formatTime(value)
+                        },
+
+                        // 👥 Leads label (center)
+                        leads: {
+                            anchor: 'center',
+                            align: 'center',
+                            color: '#111',
+                            font: { size: 12, weight: 'bold' },
+                            formatter: (value, ctx) => leadsData[ctx.dataIndex]
+                        }
+                    }
+                } : {},
+
+                tooltip: {
+                    callbacks: {
+                        label: c => {
+                            const i = c.dataIndex;
+                            return `${leadsData[i]} leads | ${formatTime(c.raw)}`;
+                        }
+                    }
+                }
+            },
+
+            scales: {
+                x: {
+                    grid: { display: false },
+                    ticks: { font: { size: 11 } }
+                },
+
+                y: {
+                    beginAtZero: true,
+
+                    // ✅ Key spacing fix
+                    grace: '20%',
+
+                    grid: { color: 'rgba(128,128,128,0.1)' },
+
+                    ticks: {
+                        callback: value => formatTime(value)
+                    }
+                }
+            }
+        },
+
+        plugins: typeof ChartDataLabels !== 'undefined'
+            ? [ChartDataLabels]
+            : []
+    });
+
+    // 📦 Parent container
+    const container = ctx.parentNode;
+    container.style.position = "relative";
+
+    // 🔥 Remove old Top-3 box (IMPORTANT)
+    const oldBox = container.querySelector('.top-hours-box');
+    if (oldBox) oldBox.remove();
+
+    // 🥇 TOP 3 HOURS BOX
+    const topHtml = `
+        <div class="top-hours-box hide" style="
+            position:absolute;
+            right:10px;
+            top:10px;
+            background:#fff;
+            padding:12px;
+            border-radius:10px;
+            box-shadow:0 4px 16px rgba(0,0,0,0.08);
+            font-size:12px;
+            min-width:180px;
+        ">
+            <b>Top 3 Hours</b>
+            <hr style="margin:6px 0;">
+
+            ${top3.map(item => {
+                let hour = Number(item?.hour);
+
+                let label = hour < 12
+                    ? `${hour || 12}am`
+                    : `${(hour - 12) || 12}pm`;
+
+                return `
+                    <div style="margin-bottom:8px;">
+                        <b>${label}</b><br>
+                        👥 ${item?.unique_calls || 0} leads<br>
+                        ⏱ ${formatTime(item?.total_call_duration || 0)}
+                    </div>
+                `;
+            }).join('')}
+        </div>
+    `;
+
+    container.insertAdjacentHTML("beforeend", topHtml);
+
+    return charts[canvasId];
+}
+
+function renderStatusChart(canvasId, apiData) {
+
+    // 🔥 Destroy old chart
+    if (charts[canvasId]) {
+        charts[canvasId].destroy();
+    }
+
+    // ✅ Safe data
+    const safeData = Array.isArray(apiData) ? apiData : [];
+
+    const labels = [];
+    const timeData = [];
+    const leadsData = [];
+    const colors = [];
+
+    safeData.forEach(item => {
+        labels.push(item?.status_name || 'Unknown');
+
+        timeData.push(Number(item?.total_call_duration) || 0);
+        leadsData.push(Number(item?.lead_count) || 0);
+
+        colors.push(item?.status_color || "#999999");
+    });
+
+    const totalLeads = leadsData.reduce((a, b) => a + b, 0);
+    const totalDuration = timeData.reduce((a, b) => a + b, 0);
+
+    const maxTime = Math.max(...timeData, 0);
+
+    // 🥇 TOP 3 BY LEADS
+    const top3 = [...safeData]
+        .sort((a, b) => (b.lead_count || 0) - (a.lead_count || 0))
+        .slice(0, 3);
+
+    const ctx = document.getElementById(canvasId);
+    if (!ctx) return;
+
+    charts[canvasId] = new Chart(ctx, {
+        type: 'bar',
+
+        data: {
+            labels,
+            datasets: [{
+                data: timeData,
+
+                // 🎨 API colors with opacity
+                backgroundColor: colors.map(c => c + "CC"),
+
+                borderRadius: 6,
+                borderSkipped: false,
+
+                // ✅ Better spacing
+                barThickness: 25,
+                categoryPercentage: 0.7,
+                barPercentage: 0.8
+            }]
+        },
+
+        options: {
+            responsive: true,
+            maintainAspectRatio: false,
+
+            // ✅ Space for right box
+            layout: {
+                padding: {
+                    right: 0,
+                    top: 10,
+                    bottom: 10
+                }
+            },
+
+            plugins: {
+
+                legend: {
+                    display: true,
+                    labels: {
+                        generateLabels: () => ([
+                            {
+                                text: `👥 Total Leads: ${totalLeads}`,
+                                fillStyle: "#333"
+                            },
+                            {
+                                text: `⏱ Total Time: ${formatTime(totalDuration)}`,
+                                fillStyle: "#FF9800"
+                            }
+                        ])
+                    }
+                },
+
+                datalabels: typeof ChartDataLabels !== 'undefined' ? {
+                    labels: {
+
+                        // ⏱ Duration (top)
+                        duration: {
+                            anchor: 'end',
+                            align: 'top',
+                            offset: 6,
+                            color: '#111',
+                            font: { size: 11, weight: 'bold' },
+                            formatter: value => formatTime(value)
+                        },
+
+                        // 👥 Leads (center)
+                        leads: {
+                            anchor: 'center',
+                            align: 'center',
+                            color: '#111',
+                            font: { size: 12, weight: 'bold' },
+                            formatter: (value, ctx) => leadsData[ctx.dataIndex]
+                        }
+                    }
+                } : {},
+
+                tooltip: {
+                    callbacks: {
+                        label: c => {
+                            const i = c.dataIndex;
+                            return `${leadsData[i]} leads | ${formatTime(c.raw)}`;
+                        }
+                    }
+                }
+            },
+
+            scales: {
+                x: {
+                    grid: { display: false },
+                    ticks: { font: { size: 11 } }
+                },
+
+                y: {
+                    beginAtZero: true,
+
+                    // ✅ spacing fix
+                    grace: '20%',
+
+                    grid: { color: 'rgba(128,128,128,0.1)' },
+
+                    ticks: {
+                        callback: value => formatTime(value)
+                    }
+                }
+            }
+        },
+
+        plugins: typeof ChartDataLabels !== 'undefined'
+            ? [ChartDataLabels]
+            : []
+    });
+
+    // 📦 Container
+    const container = ctx.parentNode;
+    container.style.position = "relative";
+
+    // 🔥 Remove old Top-3 box (IMPORTANT)
+    const oldBox = container.querySelector('.top-status-box');
+    if (oldBox) oldBox.remove();
+
+    // 🥇 TOP 3 BOX
+    const topHtml = `
+        <div class="top-status-box hide" style="
+            position:absolute;
+            right:10px;
+            top:10px;
+            background:#fff;
+            padding:12px;
+            border-radius:10px;
+            box-shadow:0 4px 16px rgba(0,0,0,0.08);
+            font-size:12px;
+            min-width:190px;
+        ">
+            <b>Top 3 Status</b>
+            <hr style="margin:6px 0;">
+
+            ${top3.map(item => `
+                <div style="margin-bottom:8px;">
+                    <span style="color:${item?.color || '#999'};font-weight:bold;">●</span>
+                    <b>${item?.status_name || 'Unknown'}</b><br>
+                    👥 ${item?.total_leads || 0} leads<br>
+                    ⏱ ${formatTime(item?.total_call_duration || 0)}
+                </div>
+            `).join('')}
+        </div>
+    `;
+
+    container.insertAdjacentHTML("beforeend", topHtml);
+
+    return charts[canvasId];
+    
+    
+    
+}
+
+function refreshData() {
+
+    let csrfName = csrfData.token_name;
+    let csrfHash = csrfData.hash;
+
+    let postData = {};
+    postData[csrfName] = csrfHash;
+
+    $.ajax({
+        url: admin_url + "leads/todayCalls",
+        type: "POST",
+        data: postData,
+        dataType: "json",
+
+        beforeSend: function () {
+            $("#no_of_calls").text("...");
+            $("#no_of_duration").text("...");
+            $("#last_call_sync").text("Loading...");
+        },
+
+        success: function (res) {
+            if (res.status) {
+                console.log(res);
+
+                $("#no_of_calls").text(res.data.total_calls ||'0');
+                $("#no_of_duration").text(res.data.duration_hms || '00:00:00');
+         $("#last_call_sync").text(
+    res.data.last_call_time 
+        ? formatDateTime(res.data.last_call_time) 
+        : 'Not Sync'
+);
+
+             
+
+            } else {
+                console.error(res.error);
+            }
+        },
+
+        error: function (err) {
+            console.error("AJAX Error:", err);
+        }
+    });
+}
+
+function formatDateTime(dateString) {
+    let date = new Date(dateString);
+
+    let options = {
+        day: '2-digit',
+        month: 'short',
+        year: 'numeric',
+        hour: '2-digit',
+        minute: '2-digit',
+        second: '2-digit',
+        hour12: true
+    };
+
+    return date.toLocaleString('en-IN', options);
+}
+
+$(document).ready(function () {
+    // Run immediately on page load
+    refreshData();
+
+    // Run every 5 minutes
+    setInterval(function () {
+        refreshData();
+    }, 300000); // 5 min = 300000 ms
+});
+
 </script>
 
 </body>

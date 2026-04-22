@@ -3491,7 +3491,7 @@ public function holiday_list()
     $this->load->library('app_object_cache');
     $this->load->library('mails/App_mail_template');
   
-    phpinfo();
+    // phpinfo();
     $this->load->library('Fcm_lib'); // file: application/libraries/Fcm.php
     //  $this->load->library('mails/Lead_assigned');
         // $this->load->helper('google');
@@ -3537,6 +3537,8 @@ public function holiday_list()
             l.type,
                l.state,
                l.city,
+               st.office_location_region,
+               st.office_state_region,
             s.name as status_name,
             src.name as source_name,
             t.name as type_name,
@@ -3580,7 +3582,7 @@ public function holiday_list()
         $this->db->join('tblleads_type t', 't.id = l.type');
 
         $this->db->where('l.update_count', 0);
-        // $this->db->where('l.call_duration', 0);
+        $this->db->where('l.call_duration', 0);
 
         // $this->db->where('(l.lastupdate_date = "0000-00-00" OR l.lastupdate_date >= l.dateassigned)', NULL, FALSE);
         // $this->db->where('c.call_start IS NULL', NULL, FALSE);
@@ -3588,11 +3590,12 @@ public function holiday_list()
         $this->db->where("TIMESTAMPDIFF(MINUTE, l.dateassigned, '$now') >= 90", NULL, FALSE);
 
         $this->db->where('l.status', 2);
-        $this->db->where('l.auto_transfer_status!=', 2);
+        // $this->db->where('l.auto_transfer_status!=', 2);
          $this->db->where('l.from_form_id!=', 0);
           $this->db->where('l.mass_assigned_status', 0);
            $this->db->where('l.assigned', 170);
-          
+           $this->db->where('l.id', 431037);
+      
       
 
         // $this->db->where_in('l.id', [447809 ,447874]);
@@ -3604,11 +3607,7 @@ public function holiday_list()
         $query = $this->db->get();
         $result = $query->result_array();
         // echo $this->db->last_query();
-echo "<pre>";
-print_r(count($result));
-print_r($result);
 
-die;
         $filtered = [];
         $bulkNotifications = [];
         $leader_bulkNotifications=[];
@@ -3623,121 +3622,137 @@ die;
 
             $res['diff_minutes'] = $seconds;
 
-          if ($seconds >= 7200 && $res['auto_transfer_status']== 2 && 1==2) {
+          if ($seconds >= 7200 && $res['auto_transfer_status']== 2) {
 
         $transferData = [];
         $staffId = 1; // default staff
 
-        if (!empty($res['from_form_id'])) {
+        // if (!empty($res['from_form_id'])) {
 
-            $form = $this->get_form([
-                'id' => $res['from_form_id']
-            ]);
+        //     $form = $this->get_form([
+        //         'id' => $res['from_form_id']
+        //     ]);
 
-            if (!empty($form) && !empty($form->assigned)) {
-                $staffId = $form->assigned;
-            }
+        //     if (!empty($form) && !empty($form->assigned)) {
+        //         $staffId = $form->assigned;
+        //     }
             
-            if (!empty($form->facebook_status) && $form->facebook_status == 1) {
+        //     // if (!empty($form->facebook_status) && $form->facebook_status == 1) {
                 
-                 $state_name = !empty($res['state']) ? $res['state'] : '';
-                    $lead_type = !empty($res['type']) ? $res['type'] : '';
+        //     //      $state_name = !empty($res['state']) ? $res['state'] : '';
+        //     //         $lead_type = !empty($res['type']) ? $res['type'] : '';
                     
                     
-                    if (!empty($lead_type)) {
-                        $facebook_lead_name = !empty($res['website']) ? $res['website'] : '';
-                        $assign_staff_id = $this->automatic_assign_staff('', $lead_type, '', $facebook_lead_name,'','',$res['assigned']);
-                        $status_fb_lead_assign = false;
-                        if (!empty($assign_staff_id)) {
-                            foreach ($assign_staff_id as $fl) {
-                                if (!empty($fl["facebook_lead_name"])) {
-                                    $fb_form_name = explode(",", $fl["facebook_lead_name"]);
-                                    if (!empty($fb_form_name)) {
-                                        foreach ($fb_form_name as $fb_name) {
-                                            if (!empty($fb_name) && $status_fb_lead_assign == false) {
-                                                if (strpos(strtolower(trim($facebook_lead_name)), strtolower(trim($fb_name))) !== false) {
-                                                    $staffId = $fl["staffid"];
-                                                    $status_fb_lead_assign = true;
-                                                }
-                                            }
-                                            if ($status_fb_lead_assign == true) {
-                                                break;
-                                            }
-                                        }
-                                    }
-                                }
-                            }
-                        }
-                        if ($status_fb_lead_assign == false) {
-                            if (!empty($lead_type)) {
-                                $assign_staff_id = $this->automatic_assign_staff('', $lead_type, 1,'','','',$res['assigned']);
-                                if (!empty($assign_staff_id[0]["staffid"])) {
-                                    $staffId = $assign_staff_id[0]["staffid"];
-                                }
-                            }
-                        }
-                    }
+        //     //         if (!empty($lead_type)) {
+        //     //             $facebook_lead_name = !empty($res['website']) ? $res['website'] : '';
+        //     //             $assign_staff_id = $this->automatic_assign_staff('', $lead_type, '', $facebook_lead_name,'','',$res['assigned']);
+        //     //             $status_fb_lead_assign = false;
+        //     //             if (!empty($assign_staff_id)) {
+        //     //                 foreach ($assign_staff_id as $fl) {
+        //     //                     if (!empty($fl["facebook_lead_name"])) {
+        //     //                         $fb_form_name = explode(",", $fl["facebook_lead_name"]);
+        //     //                         if (!empty($fb_form_name)) {
+        //     //                             foreach ($fb_form_name as $fb_name) {
+        //     //                                 if (!empty($fb_name) && $status_fb_lead_assign == false) {
+        //     //                                     if (strpos(strtolower(trim($facebook_lead_name)), strtolower(trim($fb_name))) !== false) {
+        //     //                                         $staffId = $fl["staffid"];
+        //     //                                         $status_fb_lead_assign = true;
+        //     //                                     }
+        //     //                                 }
+        //     //                                 if ($status_fb_lead_assign == true) {
+        //     //                                     break;
+        //     //                                 }
+        //     //                             }
+        //     //                         }
+        //     //                     }
+        //     //                 }
+        //     //             }
+        //     //             if ($status_fb_lead_assign == false) {
+        //     //                 if (!empty($lead_type)) {
+        //     //                     $assign_staff_id = $this->automatic_assign_staff('', $lead_type, 1,'','','',$res['assigned']);
+        //     //                     if (!empty($assign_staff_id[0]["staffid"])) {
+        //     //                         $staffId = $assign_staff_id[0]["staffid"];
+        //     //                     }
+        //     //                 }
+        //     //             }
+        //     //         }
                 
-            }
+        //     // }
             
-              if (!empty($form->auto_assign)) {
-                    $auto_assign = array_filter(explode(",", $form->auto_assign));
-                    $assign_staff_id = $this->automatic_assign_staff('', '', '', '', $auto_assign,'',$res['assigned']);
-                    if (!empty($assign_staff_id[0]["staffid"])) {
-                        $staffId = $assign_staff_id[0]["staffid"];
-                    }
-                }
+        //     //   if (!empty($form->auto_assign)) {
+        //     //         $auto_assign = array_filter(explode(",", $form->auto_assign));
+        //     //         $assign_staff_id = $this->automatic_assign_staff('', '', '', '', $auto_assign,'',$res['assigned']);
+        //     //         if (!empty($assign_staff_id[0]["staffid"])) {
+        //     //             $staffId = $assign_staff_id[0]["staffid"];
+        //     //         }
+        //     //     }
                 
                 
-                   if (!empty($form->state_wise)  && $form->state_wise == 1) {
-                    $staffId = 1;
+        //     //       if (!empty($form->state_wise)  && $form->state_wise == 1) {
+        //     //         $staffId = 1;
 
-                    if (!empty($form->allow_state_location) && $form->allow_state_location == 1) {
-                        $state_name = !empty($res['state']) ? trim($res['state']) : '';
-                        $city_name = !empty($res['city']) ? trim($res['city']) : '';
-                    } else {
-                        $ip = $_SERVER['REMOTE_ADDR'];
-                        $ipdetails = json_decode(file_get_contents("http://ipinfo.io/{$ip}/json"));
-                        $state_name = !empty($ipdetails->region) ? trim($ipdetails->region) : '';
-                        $city_name = !empty($ipdetails->city) ? trim($ipdetails->city) : '';
-                    }
-                    $lead_type = !empty($res["type"]) ? trim($res["type"]) : '';
-                    if (empty($lead_type)) {
-                        $lead_type = !empty($form->lead_type) ? trim($form->lead_type) : '';
-                    }
-                    $status_assign = false;
+        //     //         if (!empty($form->allow_state_location) && $form->allow_state_location == 1) {
+        //     //             $state_name = !empty($res['state']) ? trim($res['state']) : '';
+        //     //             $city_name = !empty($res['city']) ? trim($res['city']) : '';
+        //     //         } else {
+        //     //             $ip = $_SERVER['REMOTE_ADDR'];
+        //     //             $ipdetails = json_decode(file_get_contents("http://ipinfo.io/{$ip}/json"));
+        //     //             $state_name = !empty($ipdetails->region) ? trim($ipdetails->region) : '';
+        //     //             $city_name = !empty($ipdetails->city) ? trim($ipdetails->city) : '';
+        //     //         }
+        //     //         $lead_type = !empty($res["type"]) ? trim($res["type"]) : '';
+        //     //         if (empty($lead_type)) {
+        //     //             $lead_type = !empty($form->lead_type) ? trim($form->lead_type) : '';
+        //     //         }
+        //     //         $status_assign = false;
 
-                    if (!empty($city_name) && $status_assign == false) {
-                        $assign_staff_id = $this->leads_model->automatic_assign_staff_city($city_name, $lead_type, '', '', '', $google_source,$res['assigned']);
-                        if (!empty($assign_staff_id[0]["staffid"])) {
-                            $form->responsible = $assign_staff_id[0]["staffid"];
-                            $status_assign = true;
-                        }
-                    }
+        //     //         if (!empty($city_name) && $status_assign == false) {
+        //     //             $assign_staff_id = $this->leads_model->automatic_assign_staff_city($city_name, $lead_type, '', '', '', $google_source,$res['assigned']);
+        //     //             if (!empty($assign_staff_id[0]["staffid"])) {
+        //     //                 $form->responsible = $assign_staff_id[0]["staffid"];
+        //     //                 $status_assign = true;
+        //     //             }
+        //     //         }
 
-                    if (!empty($state_name)  && $status_assign == false) {
-                        $assign_staff_id = $this->leads_model->automatic_assign_staff($state_name, $lead_type, '', '', '', $google_source,$res['assigned']);
-                        if (!empty($assign_staff_id[0]["staffid"])) {
-                            $form->responsible = $assign_staff_id[0]["staffid"];
-                            $status_assign = true;
-                        }
-                    } else if (!empty($lead_type)  && $status_assign == false) {
-                        $assign_staff_id = $this->leads_model->automatic_assign_staff('', $lead_type, 1,'','','',$res['assigned']);
-                        if (!empty($assign_staff_id[0]["staffid"])) {
-                            $staffId = $assign_staff_id[0]["staffid"];
-                        }
-                    }
-                }
+        //     //         if (!empty($state_name)  && $status_assign == false) {
+        //     //             $assign_staff_id = $this->leads_model->automatic_assign_staff($state_name, $lead_type, '', '', '', $google_source,$res['assigned']);
+        //     //             if (!empty($assign_staff_id[0]["staffid"])) {
+        //     //                 $form->responsible = $assign_staff_id[0]["staffid"];
+        //     //                 $status_assign = true;
+        //     //             }
+        //     //         } else if (!empty($lead_type)  && $status_assign == false) {
+        //     //             $assign_staff_id = $this->leads_model->automatic_assign_staff('', $lead_type, 1,'','','',$res['assigned']);
+        //     //             if (!empty($assign_staff_id[0]["staffid"])) {
+        //     //                 $staffId = $assign_staff_id[0]["staffid"];
+        //     //             }
+        //     //         }
+        //     //     }
             
 
-        } else {
+        // } else {
 
-            $assign_staff_id = $this->automatic_assign_staff('', $res['type'],'','','','',$res['assigned']);
+        //     $assign_staff_id = $this->automatic_assign_staff('', $res['type'],'','','','',$res['assigned']);
 
-            if (is_array($assign_staff_id) && !empty($assign_staff_id[0]['staffid'])) {
-                $staffId = $assign_staff_id[0]['staffid'];
-            }
+        //     if (is_array($assign_staff_id) && !empty($assign_staff_id[0]['staffid'])) {
+        //         $staffId = $assign_staff_id[0]['staffid'];
+        //     }
+        // }
+        
+        
+  
+        $assign_staff_id = $this->transferLeadAssignation_distribution($res['type']??'',$res['assigned']??'',$res['office_location_region']??'',$res['office_state_region']??'');
+        
+        if(empty($assign_staff_id[0]["staffid"]))
+        {
+        $assign_staff_id =   $this->transferLeadAssignation_distribution($res['type'],$res['assigned']??'',$res['office_location_region']??'');
         }
+        
+        if(!empty($assign_staff_id[0]["staffid"]))
+        {
+        $staffId = $assign_staff_id[0]["staffid"];
+        }
+        
+   
 
         $transferData = [
             'assigned' => $staffId,
@@ -3766,89 +3781,76 @@ die;
 
     continue;
 }
-            else if ($seconds >= 6300 && 1==2) {
+            else if ($seconds >= 6300 ) {
 
                 $res['warning'] = 2;
 
                 if ($res['auto_transfer_status'] != 2) {
 
                     $res['channel_type'] = 11;
-                    $bulkNotifications[]=$res['fcm_token'];
+                        $bulkNotifications[] = [
+                'token' => $res['fcm_token'],
+                'notification' => array("body"=>"{$res['name']} ({$res['phonenumber']}) from {$res['source_name']} has not been contacted for 01 Hour 45 minutes. Please call within the next 15 minutes to avoid reassignment.","title"=>"⚠️ Lead Not Contacted",
+                "data"=>array("type"=>"CALL","url" => "tel:{$res['phonenumber']}")
+                )
+                ];
                     $filtered[] = $res;
                     
 
                     $res['staff_contact'] = $res['team_leader_contact'];
                     $res['channel_type'] = 10;
                     $filtered[] = $res;
-                    $leader_bulkNotifications[]=$res['fcm_token'];
+                    
+                    
+                    // $leader_bulkNotifications[]=$res['fcm_token'];
+                    
+                    //leader_fcm_token update
+                         $bulkNotifications[] = [
+                'token' => $res['fcm_token'],
+                'notification' => [
+    "title" => "⚠️ Lead Not Contacted",
+    "body"  => "Dear {$res['team_leader']}, the lead {$res['assigned_name']} - {$res['name']} ({$res['phonenumber']}) from {$res['source_name']} has not been contacted for 1 hour 45 minutes. Please review and take the necessary action."
+    // "data" => ["type" => "CALL", "url" => "tel:{$res['phonenumber']}"]
+]
+                ];
                 }
 
-            } elseif ($seconds >= 5400 || 1==1 ) {
+            } elseif ($seconds >= 5400   ) {
 
                 $res['warning'] = 1;
                 // $res['channel_type'] = 9;
                 
 
                 if ($res['auto_transfer_status'] != 1) {
-                    $filtered[] = $res;
-                   $bulkNotifications[] = [
-    'token' => $res['fcm_token'],
-    'notification' => array("body"=>"{$res['name']} ({$res['phonenumber']}) from {$res['source_name']} has not been contacted for 90 minutes. Please call within the next 30 minutes to avoid reassignment.","title"=>"⚠️ Lead Not Contacted")
-];
-
- $bulkNotifications[] = [
-    'token' => $res['fcm_token'],
-    'notification' => array("body"=>"{$res['name']} ({$res['phonenumber']}) from {$res['source_name']} has not been contacted for 90 minutes. Please call within the next 30 minutes to avoid reassignment.","title"=>"⚠️ Lead Not Contacted")
-];
-
- $bulkNotifications[] = [
-    'token' => $res['fcm_token'],
-    'notification' => array("body"=>"{$res['name']} ({$res['phonenumber']}) from {$res['source_name']} has not been contacted for 90 minutes. Please call within the next 30 minutes to avoid reassignment.","title"=>"⚠️ Lead Not Contacted")
-];
-
- $bulkNotifications[] = [
-    'token' => $res['fcm_token'],
-    'notification' => array("body"=>"{$res['name']} ({$res['phonenumber']}) from {$res['source_name']} has not been contacted for 90 minutes. Please call within the next 30 minutes to avoid reassignment.","title"=>"⚠️ Lead Not Contacted")
-];
-
- $bulkNotifications[] = [
-    'token' => $res['fcm_token'],
-    'notification' => array("body"=>"{$res['name']} ({$res['phonenumber']}) from {$res['source_name']} has not been contacted for 90 minutes. Please call within the next 30 minutes to avoid reassignment.","title"=>"⚠️ Lead Not Contacted")
-];
-
- $bulkNotifications[] = [
-    'token' => $res['fcm_token'],
-    'notification' => array("body"=>"{$res['name']} ({$res['phonenumber']}) from {$res['source_name']} has not been contacted for 90 minutes. Please call within the next 30 minutes to avoid reassignment.","title"=>"⚠️ Lead Not Contacted")
-];
+                $filtered[] = $res;
+                $bulkNotifications[] = [
+                'token' => $res['fcm_token'],
+                'notification' => array("body"=>"{$res['name']} ({$res['phonenumber']}) from {$res['source_name']} has not been contacted for 1 Hour 30 minutes. Please call within the next 30 minutes to avoid reassignment.","title"=>"⚠️ Lead Not Contacted",
+                "data"=>array("type"=>"CALL","url" => "tel:{$res['phonenumber']}")
+                )
+                ];
+                
                 }
             }
         }
        
-       
-       echo "<pre>";
-// print_r(count($result));
-print_r($bulkNotifications);
+       if(!empty($bulkNotifications)){
+      $this->fcm_lib->sendBulk_message($bulkNotifications);
+       }
 
-$this->fcm->sendBulk_message($bulkNotifications);
 
-die;
 
-        $bulkNotifications = array_unique(array_filter($bulkNotifications));
-        $leader_bulkNotifications = array_unique(array_filter($leader_bulkNotifications));
-
-       echo "<pre>";
-       print_r($bulkNotifications);
-       die;
-
+       if(!empty($filtered)){
         $this->auto_transfer_lead_fcm_notification($filtered);
+       }
 
         return $this->output
             ->set_content_type('application/json')
             ->set_output(json_encode([
                 "status" => true,
-                "total_records" => count($result),
-                "filtered_records" => count($filtered),
-                "data" => $filtered
+                // "total_records" => count($result),
+                // "filtered_records" => count($filtered),
+                // "data" => $filtered
             ]));
 
     } catch (Exception $e) {
@@ -4343,11 +4345,12 @@ function autoTransferLeads($leadData, $leadconvertStatus = 2)
 public function check_lead_auto_assignation_lead()
 {
 
+
      $this->load->library('merge_fields/App_merge_fields');
     $this->load->library('app_object_cache');
     $this->load->library('mails/App_mail_template');
     
- 
+ $date = date('Y-m-d');
 
 
 $holidays = holiday_list();
@@ -4473,7 +4476,7 @@ JOIN tblleads_type t
   ON t.id = l.type 
 
 WHERE 
-
+1=1
    AND l.status IN (20)
    AND IFNULL(c.call_update_count, 0) < 5
    AND l.from_form_id != 0
@@ -4485,7 +4488,6 @@ WHERE
    AND l.transfer_count < 3
 
   ORDER BY l.id limit 50 "; 
-
 
 
 
@@ -4752,7 +4754,7 @@ public function auto_transfer_lead_fcm_notification($filtered)
     foreach ($filtered as $key => $data)
     {
         // Insert data
-        $insert_Data[$key]["leadid"]  = $data["leadid"];
+        $insert_Data[$key]["leadid"]  = $data["id"];
         $insert_Data[$key]["name"]  = $data["name"];
         $insert_Data[$key]["status"]       = 1;
         $insert_Data[$key]["phonenumber"]     = $data["phonenumber"];
@@ -4775,7 +4777,7 @@ public function auto_transfer_lead_fcm_notification($filtered)
         $insert_Data[$key]["data"]         = json_encode($data, true);
 
         // Update data
-        $leadId_Data[$key]["id"] = $data["leadid"];
+        $leadId_Data[$key]["id"] = $data["id"];
         $leadId_Data[$key]["auto_transfer_status"] = $data["warning"];
     }
 
@@ -4786,6 +4788,7 @@ public function auto_transfer_lead_fcm_notification($filtered)
 
     // Batch update
     if (!empty($leadId_Data)) {
+   
         $this->db->update_batch(db_prefix().'leads', $leadId_Data, 'id');
     }
 }
@@ -4905,90 +4908,90 @@ function google_qualified_leads($type, $start = 0)
 }
 
 
-function leads_transfers_summary($data)
-{
+// function leads_transfers_summary($data)
+// {
  
- $get_staff_user_id = get_staff_user_id();
-    $idsarr =[];
-   if (!empty($_POST['view_assigned'])) {
-}else
-{
+//  $get_staff_user_id = get_staff_user_id();
+//     $idsarr =[];
+//   if (!empty($_POST['view_assigned'])) {
+// }else
+// {
     
     
    
         
-     $role = $this->db->where('staffid', $get_staff_user_id)->get(db_prefix() . 'staff')->row()->role;
-     $sid = $get_staff_user_id;
-if ($role == 3) {
-$teamids = $this->db->query('CALL GetReportingPersons(?)', array($get_staff_user_id))->result_array();
+//      $role = $this->db->where('staffid', $get_staff_user_id)->get(db_prefix() . 'staff')->row()->role;
+//      $sid = $get_staff_user_id;
+// if ($role == 3) {
+// $teamids = $this->db->query('CALL GetReportingPersons(?)', array($get_staff_user_id))->result_array();
 
-$this->db->close();
-$this->db->initialize();
+// $this->db->close();
+// $this->db->initialize();
 
-$idsarr = array_column($teamids, 'staffid');
+// $idsarr = array_column($teamids, 'staffid');
 
 
       
 
-}
-}
+// }
+// }
 
 
 
-  // Build query
-  if($_POST['leadType'] == "Lead Assignation")
-{
-     $this->db->select("CONCAT(s.firstname, ' ', s.lastname) AS staff_name, COUNT(l.id) AS counts");
-        $this->db->from('tblleads_transfer_logs l');
-        $this->db->join('tblstaff s', 's.staffid = l.new_assignation', 'inner');
-         $this->db->join('tblleads lead', 'lead.id = l.leadid', 'inner');
-}
-else{
-        $this->db->select("CONCAT(s.firstname, ' ', s.lastname) AS staff_name, COUNT(l.id) AS counts");
+//   // Build query
+//   if($_POST['leadType'] == "Lead Assignation")
+// {
+//      $this->db->select("CONCAT(s.firstname, ' ', s.lastname) AS staff_name, COUNT(l.id) AS counts");
+//         $this->db->from('tblleads_transfer_logs l');
+//         $this->db->join('tblstaff s', 's.staffid = l.new_assignation', 'inner');
+//          $this->db->join('tblleads lead', 'lead.id = l.leadid', 'inner');
+// }
+// else{
+//         $this->db->select("CONCAT(s.firstname, ' ', s.lastname) AS staff_name, COUNT(l.id) AS counts");
 
-        $this->db->from('tblleads_transfer_logs l');
-        $this->db->join('tblstaff s', 's.staffid = l.old_assignation', 'inner');
-         $this->db->join('tblleads lead', 'lead.id = l.leadid', 'inner');
+//         $this->db->from('tblleads_transfer_logs l');
+//         $this->db->join('tblstaff s', 's.staffid = l.old_assignation', 'inner');
+//          $this->db->join('tblleads lead', 'lead.id = l.leadid', 'inner');
         
-}
+// }
         
-        if(!empty($_POST['view_status']))
-        {
-        $this->db->where_in('l.old_status', $_POST['view_status']);
-        }
-           if(!empty($_POST['view_sources']))
-        {
-        $this->db->where_in('lead.source', $_POST['view_sources']);
-        }
+//         if(!empty($_POST['view_status']))
+//         {
+//         $this->db->where_in('l.old_status', $_POST['view_status']);
+//         }
+//           if(!empty($_POST['view_sources']))
+//         {
+//         $this->db->where_in('lead.source', $_POST['view_sources']);
+//         }
         
       
         
-        if(!empty($_POST['view_update_count']))
-        {
-        $this->db->where_in('l.update_count', $_POST['view_update_count']);
-        }
+//         if(!empty($_POST['view_update_count']))
+//         {
+//         $this->db->where_in('l.update_count', $_POST['view_update_count']);
+//         }
         
         
        
         
        
         
-       if (!empty($this->input->post('date_range'))) {
-    // Get date range from POST
-    $dateRange = $this->input->post('date_range'); // e.g. "2026-04-01 to 2026-04-02"
+//       if (!empty($this->input->post('date_range'))) {
+//     // Get date range from POST
+//     $dateRange = $this->input->post('date_range'); // e.g. "2026-04-01 to 2026-04-02"
     
-    // Split by 'to'
-    $dates = explode(' to ', $dateRange);
+//     // Split by 'to'
+//     $dates = explode(' to ', $dateRange);
 
-    if (count($dates) === 2) {
-        $startDate = trim($dates[0]);
-        $endDate = trim($dates[1]);
+//     if (count($dates) === 2) {
+//         $startDate = trim($dates[0]);
+//         $endDate = trim($dates[1]);
 
-        // Apply CI3 where condition
-        $this->db->where('DATE(l.created_at) >=', $startDate);
-        $this->db->where('DATE(l.created_at) <=', $endDate);
-    }
-}
+//         // Apply CI3 where condition
+//         $this->db->where('DATE(l.created_at) >=', $startDate);
+//         $this->db->where('DATE(l.created_at) <=', $endDate);
+//     }
+// }
      
      
          
@@ -4996,138 +4999,410 @@ else{
 
         
                
-if (!empty($_POST['view_assigned'])) {
-    $this->db->where_in('l.old_assignation', $_POST['view_assigned']);
-}else
-{
+// if (!empty($_POST['view_assigned'])) {
+//     $this->db->where_in('l.old_assignation', $_POST['view_assigned']);
+// }else
+// {
  
 
- if(is_admin())
- {
+//  if(is_admin())
+//  {
      
- }
- else{
+//  }
+//  else{
 
- !empty($idsarr) ? $this->db->where_in('l.old_assignation', array_merge($idsarr, [$get_staff_user_id])): $this->db->where('l.old_assignation', $get_staff_user_id);
-}
+//  !empty($idsarr) ? $this->db->where_in('l.old_assignation', array_merge($idsarr, [$get_staff_user_id])): $this->db->where('l.old_assignation', $get_staff_user_id);
+// }
 
 
-  if(!empty($_POST['department']))
-        {
-        $this->db->where_in('s.department', $_POST['department']);
-        }
+//   if(!empty($_POST['department']))
+//         {
+//         $this->db->where_in('s.department', $_POST['department']);
+//         }
         
-} 
+// } 
 
 
-if($_POST['leadType'] == "Lead Assignation")
-{
-    $this->db->group_by('l.new_assignation');
-        $this->db->order_by('counts', 'DESC');
-}
-else
-{
-    $this->db->group_by('l.old_assignation');
-        $this->db->order_by('counts', 'DESC');
-}
+// if($_POST['leadType'] == "Lead Assignation")
+// {
+//     $this->db->group_by('l.new_assignation');
+//         $this->db->order_by('counts', 'DESC');
+// }
+// else
+// {
+//     $this->db->group_by('l.old_assignation');
+//         $this->db->order_by('counts', 'DESC');
+// }
 
         
         
 
-        $query = $this->db->get();
+//         $query = $this->db->get();
     
   
-       return  $data['leads_summary'] = $query->result_array();
+//       return  $data['leads_summary'] = $query->result_array();
 
 
     
-}
+// }
 
+function leads_transfers_summary($data)
+{
+    $get_staff_user_id = get_staff_user_id();
+    $idsarr = [];
+
+    // =========================
+    // 👤 ROLE FILTER
+    // =========================
+    if (empty($_POST['view_assigned'])) {
+
+        $role = $this->db->where('staffid', $get_staff_user_id)
+                         ->get(db_prefix() . 'staff')
+                         ->row()->role;
+
+        if ($role == 3) {
+            $teamids = $this->db->query('CALL GetReportingPersons(?)', [$get_staff_user_id])->result_array();
+
+            $this->db->close();
+            $this->db->initialize();
+
+            $idsarr = array_column($teamids, 'staffid');
+        }
+    }
+
+    // =========================
+    // 🔁 COMMON FILTER FUNCTION
+    // =========================
+    $applyFilters = function($db) use ($idsarr, $get_staff_user_id) {
+
+        if (!empty($_POST['view_status'])) {
+            $db->where_in('l.old_status', $_POST['view_status']);
+        }
+
+        if (!empty($_POST['view_sources'])) {
+            $db->where_in('lead.source', $_POST['view_sources']);
+        }
+
+        if (!empty($_POST['view_update_count'])) {
+            $db->where_in('l.update_count', $_POST['view_update_count']);
+        }
+
+        if (!empty($_POST['date_range'])) {
+            $dates = explode(' to ', $_POST['date_range']);
+            if (count($dates) === 2) {
+                $db->where('DATE(l.created_at) >=', trim($dates[0]));
+                $db->where('DATE(l.created_at) <=', trim($dates[1]));
+            }
+        }
+
+        if (!empty($_POST['view_assigned'])) {
+            $db->where_in('l.old_assignation', $_POST['view_assigned']);
+        } else {
+            if (!is_admin()) {
+                if (!empty($idsarr)) {
+                    $db->where_in('l.old_assignation', array_merge($idsarr, [$get_staff_user_id]));
+                } else {
+                    $db->where('l.old_assignation', $get_staff_user_id);
+                }
+            }
+        }
+
+        // ✅ Department filter (safe now because join exists)
+        if (!empty($_POST['department'])) {
+            $db->where_in('s.department', $_POST['department']);
+        }
+    };
+    
+ 
+
+    // =========================
+    // 📊 STAFF SUMMARY
+    // =========================
+    if ($_POST['leadType'] == "Lead Assignation") {
+
+        $this->db->select("CONCAT(s.firstname,' ',s.lastname) AS staff_name, COUNT(l.id) AS counts");
+        $this->db->from('tblleads_transfer_logs l');
+        $this->db->join('tblstaff s', 's.staffid = l.new_assignation', 'left');
+
+    } else {
+
+        $this->db->select("CONCAT(s.firstname,' ',s.lastname) AS staff_name, COUNT(l.id) AS counts");
+        $this->db->from('tblleads_transfer_logs l');
+        $this->db->join('tblstaff s', 's.staffid = l.old_assignation', 'left');
+    }
+
+    $this->db->join('tblleads lead', 'lead.id = l.leadid');
+
+    $applyFilters($this->db);
+
+    if ($_POST['leadType'] == "Lead Assignation") {
+        $this->db->group_by('l.new_assignation');
+    } else {
+        $this->db->group_by('l.old_assignation');
+    }
+
+    $this->db->order_by('counts', 'DESC');
+
+    $staffSummary = $this->db->get()->result_array();
+
+    // =========================
+    // 🥇 TOP LEADS
+    // =========================
+    $topLeads = array_slice($staffSummary, 0, 5);
+
+    // =========================
+    // 📊 TOP SOURCES
+    // =========================
+    $this->db->select("so.name AS source_name, COUNT(l.id) as total");
+    $this->db->from('tblleads_transfer_logs l');
+    $this->db->join('tblleads lead', 'lead.id = l.leadid');
+    $this->db->join('tblleads_sources so', 'so.id = lead.source', 'left');
+
+    // ✅ IMPORTANT: join staff here also (FIX)
+    if ($_POST['leadType'] == "Lead Assignation") {
+        $this->db->join('tblstaff s', 's.staffid = l.new_assignation', 'left');
+    } else {
+        $this->db->join('tblstaff s', 's.staffid = l.old_assignation', 'left');
+    }
+
+    $applyFilters($this->db);
+
+    $this->db->group_by('lead.source');
+    $this->db->order_by('total', 'DESC');
+    $this->db->limit(5);
+
+    $topSources = $this->db->get()->result_array();
+
+    // =========================
+    // ✅ FINAL RESPONSE
+    // =========================
+    return [
+        'leads_summary' => $staffSummary,
+        'top_lead'      => $topLeads,
+        'top_sources'   => $topSources
+    ];
+}
 
 function leads_transfers_summary_self($data)
 {
+    $get_staff_user_id = get_staff_user_id();
+    $idsarr = [];
+
+    // =========================
+    // 👤 ROLE FILTER
+    // =========================
+    if (empty($_POST['view_assigned_self'])) {
+
+        $role = $this->db->where('staffid', $get_staff_user_id)
+                         ->get(db_prefix() . 'staff')
+                         ->row()->role;
+
+        if ($role == 3) {
+            $teamids = $this->db->query('CALL GetReportingPersons(?)', [$get_staff_user_id])->result_array();
+
+            $this->db->close();
+            $this->db->initialize();
+
+            $idsarr = array_column($teamids, 'staffid');
+        }
+    }
+
+    // =========================
+    // 🔁 COMMON FILTER FUNCTION
+    // =========================
+    $applyFilters = function($db) use ($idsarr, $get_staff_user_id) {
+
+        if (!empty($_POST['view_status_self'])) {
+            $db->where_in('lead.status', $_POST['view_status_self']);
+        }
+
+        if (!empty($_POST['view_sources_self'])) {
+            $db->where_in('lead.source', $_POST['view_sources_self']);
+        }
+
+        if (!empty($_POST['view_update_count_self'])) {
+            $db->where_in('l.update_count', $_POST['view_update_count_self']);
+        }
+
+        // 📅 DATE RANGE
+        if (!empty($_POST['date_range_self'])) {
+            $dates = explode(' to ', $_POST['date_range_self']);
+            if (count($dates) === 2) {
+                $db->where('DATE(l.created_at) >=', trim($dates[0]));
+                $db->where('DATE(l.created_at) <=', trim($dates[1]));
+            }
+        }
+
+        // 👤 ASSIGNED FILTER
+        if (!empty($_POST['view_assigned_self'])) {
+            $db->where_in('l.created_by', $_POST['view_assigned_self']);
+        } else {
+            if (!is_admin()) {
+                !empty($idsarr)
+                    ? $db->where_in('l.created_by', array_merge($idsarr, [$get_staff_user_id]))
+                    : $db->where('l.created_by', $get_staff_user_id);
+            }
+        }
+
+        // 🏢 DEPARTMENT
+        if (!empty($_POST['department_self'])) {
+            $db->where_in('s.department', $_POST['department_self']);
+        }
+        
+           $db->where('l.created_by!=', IVR_AUTO_ASIGNATION);
+    };
+
+    // =========================
+    // 📊 STAFF SUMMARY
+    // =========================
+    if ($_POST['leadType'] == "Lead Assignation") {
+        $this->db->select("CONCAT(s.firstname,' ',s.lastname) AS staff_name, COUNT(l.id) AS counts");
+        $this->db->from('tbllead_transfer_request l');
+        $this->db->join('tblstaff s', 's.staffid = l.assign');
+    } else {
+        $this->db->select("CONCAT(s.firstname,' ',s.lastname) AS staff_name, COUNT(l.id) AS counts");
+        $this->db->from('tbllead_transfer_request l');
+        $this->db->join('tblstaff s', 's.staffid = l.created_by');
+    }
+
+    $this->db->join('tblleads lead', 'lead.id = l.leadid');
+
+    $applyFilters($this->db);
+
+    if ($_POST['leadType'] == "Lead Assignation") {
+        $this->db->group_by('l.assign');
+    } else {
+        $this->db->group_by('l.created_by');
+    }
+
+    $this->db->order_by('counts', 'DESC');
+
+
+    $staffSummary = $this->db->get()->result_array();
+    
+   
+
+    // =========================
+    // 🥇 TOP 5 STAFF
+    // =========================
+    $topLeads = !empty($staffSummary) ? array_slice($staffSummary, 0, 5) : [];
+
+    // =========================
+    // 📊 TOP SOURCES
+    // =========================
+    $this->db->select("so.name AS source_name, COUNT(l.id) as total");
+    $this->db->from('tbllead_transfer_request l');
+    $this->db->join('tblleads lead', 'lead.id = l.leadid');
+    $this->db->join('tblleads_sources so', 'so.id = lead.source', 'left');
+     $this->db->join('tblstaff s', 's.staffid = l.created_by');
+
+    // ⚠️ IMPORTANT: SAME FILTERS AGAIN
+    $applyFilters($this->db);
+
+    $this->db->group_by('lead.source');
+    $this->db->order_by('total', 'DESC');
+    $this->db->limit(5);
+
+    $topSources = $this->db->get()->result_array();
+
+    // =========================
+    // ✅ FINAL RESPONSE
+    // =========================
+    return [
+        'leads_summary' => $staffSummary,
+        'top_lead'      => $topLeads,
+        'top_sources'   => $topSources
+    ];
+}
+
+// function leads_transfers_summary_self($data)
+// {
  
- $get_staff_user_id = get_staff_user_id();
-    $idsarr =[];
-   if (!empty($_POST['view_assigned'])) {
-}else
-{
+// //   ini_set('display_errors', 1);
+// // ini_set('display_startup_errors', 1);
+// // error_reporting(E_ALL);
+ 
+//  $get_staff_user_id = get_staff_user_id();
+//     $idsarr =[];
+//   if (!empty($_POST['view_assigned'])) {
+// }else
+// {
     
     
    
         
-     $role = $this->db->where('staffid', $get_staff_user_id)->get(db_prefix() . 'staff')->row()->role;
-     $sid = $get_staff_user_id;
-if ($role == 3) {
-$teamids = $this->db->query('CALL GetReportingPersons(?)', array($get_staff_user_id))->result_array();
+//      $role = $this->db->where('staffid', $get_staff_user_id)->get(db_prefix() . 'staff')->row()->role;
+//      $sid = $get_staff_user_id;
+// if ($role == 3) {
+// $teamids = $this->db->query('CALL GetReportingPersons(?)', array($get_staff_user_id))->result_array();
 
-$this->db->close();
-$this->db->initialize();
+// $this->db->close();
+// $this->db->initialize();
 
-$idsarr = array_column($teamids, 'staffid');
+// $idsarr = array_column($teamids, 'staffid');
 
 
       
 
-}
-}
+// }
+// }
 
 
 
-  // Build query
-  if($_POST['leadType'] == "Lead Assignation")
-{
-     $this->db->select("CONCAT(s.firstname, ' ', s.lastname) AS staff_name, COUNT(l.id) AS counts");
-        $this->db->from('tbllead_transfer_request l');
-        $this->db->join('tblstaff s', 's.staffid = l.assign', 'inner');
-         $this->db->join('tblleads lead', 'lead.id = l.leadid', 'inner');
-}
-else{
-        $this->db->select("CONCAT(s.firstname, ' ', s.lastname) AS staff_name, COUNT(l.id) AS counts");
+//   // Build query
+//   if($_POST['leadType'] == "Lead Assignation")
+// {
+//      $this->db->select("CONCAT(s.firstname, ' ', s.lastname) AS staff_name, COUNT(l.id) AS counts");
+//         $this->db->from('tbllead_transfer_request l');
+//         $this->db->join('tblstaff s', 's.staffid = l.assign', 'inner');
+//          $this->db->join('tblleads lead', 'lead.id = l.leadid', 'inner');
+// }
+// else{
+//         $this->db->select("CONCAT(s.firstname, ' ', s.lastname) AS staff_name, COUNT(l.id) AS counts");
 
-        $this->db->from('tbllead_transfer_request l');
-        $this->db->join('tblstaff s', 's.staffid = l.created_by', 'inner');
-         $this->db->join('tblleads lead', 'lead.id = l.leadid', 'inner');
+//         $this->db->from('tbllead_transfer_request l');
+//         $this->db->join('tblstaff s', 's.staffid = l.created_by', 'inner');
+//          $this->db->join('tblleads lead', 'lead.id = l.leadid', 'inner');
         
-}
+// }
         
-        if(!empty($_POST['view_status_self']))
-        {
-        $this->db->where_in('lead.status', $_POST['view_status_self']);
-        }
+//         if(!empty($_POST['view_status_self']))
+//         {
+//         $this->db->where_in('lead.status', $_POST['view_status_self']);
+//         }
         
       
-          if(!empty($_POST['view_sources_self']))
-        {
-        $this->db->where_in('lead.source', $_POST['view_sources_self']);
-        }
+//           if(!empty($_POST['view_sources_self']))
+//         {
+//         $this->db->where_in('lead.source', $_POST['view_sources_self']);
+//         }
         
-        if(!empty($_POST['view_update_count']))
-        {
-        $this->db->where_in('l.update_count', $_POST['view_update_count']);
-        }
+//         if(!empty($_POST['view_update_count']))
+//         {
+//         $this->db->where_in('l.update_count', $_POST['view_update_count']);
+//         }
         
         
-        $this->db->where('DATE(l.created_at) >=', "2026-04-06");
+//         $this->db->where('DATE(l.created_at) >=', "2026-04-06");
         
        
         
-       if (!empty($this->input->post('date_range_self'))) {
-    // Get date range from POST
-    $dateRange = $this->input->post('date_range_self'); // e.g. "2026-04-01 to 2026-04-02"
+//       if (!empty($this->input->post('date_range_self'))) {
+//     // Get date range from POST
+//     $dateRange = $this->input->post('date_range_self'); // e.g. "2026-04-01 to 2026-04-02"
     
-    // Split by 'to'
-    $dates = explode(' to ', $dateRange);
+//     // Split by 'to'
+//     $dates = explode(' to ', $dateRange);
 
-    if (count($dates) === 2) {
-        $startDate = trim($dates[0]);
-        $endDate = trim($dates[1]);
+//     if (count($dates) === 2) {
+//         $startDate = trim($dates[0]);
+//         $endDate = trim($dates[1]);
 
-        // Apply CI3 where condition
-        $this->db->where('DATE(l.created_at) >=', $startDate);
-        $this->db->where('DATE(l.created_at) <=', $endDate);
-    }
-}
+//         // Apply CI3 where condition
+//         $this->db->where('DATE(l.created_at) >=', $startDate);
+//         $this->db->where('DATE(l.created_at) <=', $endDate);
+//     }
+// }
      
      
          
@@ -5135,52 +5410,51 @@ else{
 
         
                
-if (!empty($_POST['view_assigned_self'])) {
-    $this->db->where_in('l.created_by', $_POST['view_assigned_self']);
-}else
-{
+// if (!empty($_POST['view_assigned_self'])) {
+//     $this->db->where_in('l.created_by', $_POST['view_assigned_self']);
+// }else
+// {
  
 
- if(is_admin())
- {
+//  if(is_admin())
+//  {
      
- }
- else{
+//  }
+//  else{
 
- !empty($idsarr) ? $this->db->where_in('l.created_at', array_merge($idsarr, [$get_staff_user_id])): $this->db->where('l.created_at', $get_staff_user_id);
-}
+//  !empty($idsarr) ? $this->db->where_in('l.created_by', array_merge($idsarr, [$get_staff_user_id])): $this->db->where('l.created_by', $get_staff_user_id);
+// }
 
 
-  if(!empty($_POST['department_self']))
-        {
-        $this->db->where_in('s.department', $_POST['department_self']);
-        }
+//   if(!empty($_POST['department_self']))
+//         {
+//         $this->db->where_in('s.department', $_POST['department_self']);
+//         }
         
-} 
+// } 
 
 
-if($_POST['leadType'] == "Lead Assignation")
-{
-    $this->db->group_by('l.assign');
-        $this->db->order_by('counts', 'DESC');
-}
-else
-{
-    $this->db->group_by('l.created_by');
-        $this->db->order_by('counts', 'DESC');
-}
+// if($_POST['leadType'] == "Lead Assignation")
+// {
+//     $this->db->group_by('l.assign');
+//         $this->db->order_by('counts', 'DESC');
+// }
+// else
+// {
+//     $this->db->group_by('l.created_by');
+//         $this->db->order_by('counts', 'DESC');
+// }
 
         
-        
+       
 
-        $query = $this->db->get();
-     
+//         $query = $this->db->get();
     
-       return  $data['leads_summary'] = $query->result_array();
+//       return  $data['leads_summary'] = $query->result_array();
 
 
     
-}
+// }
 
 function lead_sub_status()
 {

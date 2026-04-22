@@ -10906,6 +10906,7 @@ WHERE s.client_id = " . (int)$client_id . "
             $acadmic_year       = $this->input->post("acadmic_year") ?? '';
             $study_year         = $this->input->post("study_year") ?? '';
             $currency_exchange  = $this->input->post("currency_exchange") ?? '';
+            $remark  = $this->input->post("remark") ?? '';
             $ex_currency  = $this->input->post("ex_currency") ?? '';
             $location_id  = $this->input->post("location_id") ?? '';
             $tt_copy  = $this->input->post("tt_copy") ?? 0;
@@ -10928,6 +10929,7 @@ WHERE s.client_id = " . (int)$client_id . "
             if (empty($payment_id) && !has_permission('payment_quotation', '', 'create')) {
                 throw new Exception("Access denied: Quotation Payment Create");
             }
+
 
             $seenEntries = [];
             $insertRows  = [];
@@ -10954,7 +10956,7 @@ WHERE s.client_id = " . (int)$client_id . "
                 //     "location_id" => $location_id ?? 0
 
                 // ];
-
+ 
                 $row = [
                     "client_id"        => $client_id,
                     "university_name"  => $university_name,
@@ -10979,7 +10981,8 @@ WHERE s.client_id = " . (int)$client_id . "
                     "tt_copy"          => isset($tt_copy) ? $tt_copy : 0,
                     "currency_disabled" => isset($currency_disabled) ? $currency_disabled : 0,
                     "quotation_id"     => isset($quotation_id) ? $quotation_id : 0,
-                    "location_id"      => isset($location_id) ? $location_id : 0
+                    "location_id"      => isset($location_id) ? $location_id : 0,
+                    "remark" =>$remark
                 ];
 
 
@@ -11314,6 +11317,10 @@ WHERE s.client_id = " . (int)$client_id . "
 
     public function payment_information()
     {
+//         ini_set('display_errors', 1);
+// ini_set('display_startup_errors', 1);
+// error_reporting(E_ALL);
+
         try {
             // Load model
             $this->load->model('Payments_model');

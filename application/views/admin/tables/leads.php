@@ -21,6 +21,7 @@ $statuses = array_column($statuses, null, "id");
 $type              = $this->ci->leads_model->get_type();
 $type = array_column($type, null, "id");
 
+$role = $this->ci->db->where('staffid', $get_staff_user_id)->get(db_prefix() . 'staff')->row()->role;
 
 if ($is_admin) {
     $custom_fields         = get_table_custom_fields('leads');
@@ -131,7 +132,14 @@ $select = [
 
     ELSE 1
 END AS followup_status",
-    "count(DISTINCT calls.id) AS update_count",
+    "count(DISTINCT calls.id) AS update_count"];
+    
+    if(is_admin())
+    {
+        $select =array_merge($select,["l.update_count AS total_count"]);
+    }
+   
+ $select =array_merge($select,[ 
     "IFNULL(SUM( DISTINCT calls.duration), 0) AS call_duration",
     "l.lastconnect_date as lastconnect_date",
     " MIN(
@@ -157,9 +165,8 @@ CASE
         )
     )
 END AS time_diff_seconds",
-    "l.dateadded as dateadded",
-   
-];
+    "l.dateadded as dateadded"
+]);
 
 // if(is_admin())
 // {
@@ -174,17 +181,39 @@ if ($is_admin) {
     }
 }
 
+  $select[]= "l.type as type";
+  
+   if(is_admin())
+{
+    $select[]= "l.website as website";
+   
+}
+
+     if(is_admin()  || $role==3)
+{
+     $select[]= "l.reference_name as reference_name";
+}
+  
+  
+  
+  $select[]= "l.source as source";
+  
+     if(is_admin()  || $role==3)
+{
+    $select[]= "l.email as email";
+     $select[]= "l.assigned as assigned";
+}
+  
+    $select[]= "l.dateassigned as dateassigned";
+    $select[]= "l.city as city";
+     $select[]= "l.state as state";
+     
+          if(is_admin()  || $role==3)
+{
+    $select[]= "MAX(r.date) AS followup";
+}
+    
 $select = array_merge($select, [
-    'l.type as type',
-    'l.website as website',
-    'l.reference_name as reference_name',
-    'l.source as source',
-    'l.email as email',
-    'l.assigned as assigned',
-    'l.dateassigned as dateassigned',
-    'l.city as city',
-    'l.state as state',
-    'MAX(r.dateadded) AS followup',
     "l.upcomming_count as upcomming_count",
     "(SELECT GROUP_CONCAT(name SEPARATOR ',') FROM tbltaggables 
         JOIN tbltags ON tbltaggables.tag_id = tbltags.id 
@@ -215,14 +244,16 @@ $select = array_merge($select, [
 $finalSelect = [
    "Final.id as id",
     "Final.followup_status as followup_status",
-    "SUM(Final.update_count) as update_count",
-    "IFNULL(SUM(Final.call_duration), 0) as call_duration",
+    "SUM(Final.update_count) as update_count"];
+    if(is_admin()){
+ $finalSelect[] ="Final.total_count";
+ }  
+$finalSelect=array_merge($finalSelect,["IFNULL(SUM(Final.call_duration), 0) as call_duration",
     "Final.lastconnect_date as lastconnect_date",
     "MAX(Final.first_call_start) as first_call_start,
 MIN(Final.time_diff_seconds) as time_diff_seconds",
-    "Final.dateadded as dateadded",
-   
-];
+    "Final.dateadded as dateadded"
+]);
 
 // if(is_admin())
 // {
@@ -237,17 +268,38 @@ if ($is_admin) {
     }
 }
 
+
+  $finalSelect[]= "Final.type as type";
+  
+   if(is_admin())
+{
+    $finalSelect[]= "Final.website as website";
+   
+}
+   if(is_admin() || $role==3)
+{
+     $finalSelect[]= "Final.reference_name as reference_name";
+}
+  
+  $finalSelect[]= "Final.source as source";
+  
+     if(is_admin() || $role==3)
+{
+    $finalSelect[]= "Final.email as email";
+     $finalSelect[]= "Final.assigned as assigned";
+}
+  
+    $finalSelect[]= "Final.dateassigned as dateassigned";
+    $finalSelect[]= "Final.city as city";
+     $finalSelect[]= "Final.state as state";
+     
+          if(is_admin()  || $role==3)
+{
+    $finalSelect[]= "MAX(Final.followup) AS followup";
+}
+  
+  
 $finalSelect = array_merge($finalSelect, [
-    'Final.type as type',
-    'Final.website as website',
-    'Final.reference_name as reference_name',
-    'Final.source as source',
-    'Final.email as email',
-    'Final.assigned as assigned',
-    'Final.dateassigned as dateassigned',
-    'Final.city as city',
-    'Final.state as state',
-    'MAX(Final.followup) as followup',
     "Final.upcomming_count as upcomming_count",
     "Final.tags as tags",
     "Final.status_name as status_name",
@@ -287,7 +339,6 @@ if (!empty($this->ci->input->post('up_to_date'))) {
     }
 } 
 
-$role = $this->ci->db->where('staffid', $get_staff_user_id)->get(db_prefix() . 'staff')->row()->role;
 if ($role == 3) {
     $sid = $get_staff_user_id;
     $teamids = $this->ci->db->query('CALL GetReportingPersons(?)', array($sid))->result_array();
@@ -405,15 +456,28 @@ if(isset($_POST["order"][0]["column"]) && $_POST["order"][0]["column"] >= 0)
      {
          $_POST["order"][0]["column"] = 0;
      }
-     else if( $_POST["order"][0]["column"] == 5)
+     
+     if(is_admin())
+     {
+          if( $_POST["order"][0]["column"] == 6)
      {
           $_POST["order"][0]["column"] = 0;
+     }
+     }
+     else
+     {
+          if( $_POST["order"][0]["column"] == 5)
+     {
+          $_POST["order"][0]["column"] = 0;
+     }
      }
    
      
      
         $order_by_ = $select[$_POST["order"][0]["column"]];
         $order_by = " order by ".trim(explode(' AS ', strtoupper($order_by_))[1]) ." ".$_POST["order"][0]["dir"]." ";
+        
+      
         if(is_admin() || $role == 3){
         $order_by_admin = " order by ".trim(explode(' AS ', strtoupper($order_by_))[1]) ." ".$_POST["order"][0]["dir"]." ";
         }
@@ -655,6 +719,11 @@ foreach ($rResult as $aRow) {
 
 
     $row[]    = $updatecount;
+    
+    if(is_admin()){
+     $totalCount = !empty($aRow['total_count']) ? $aRow['total_count'] : 0;
+    $row[]    = $totalCount;
+    }
     $call_duration = 0;
     $last_call_update = "";
     $row[] = !empty($aRow['call_duration'])

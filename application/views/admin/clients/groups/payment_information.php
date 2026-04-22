@@ -1,6 +1,9 @@
 <?php defined('BASEPATH') or exit('No direct script access allowed'); ?>
 
 <?php
+// ini_set('display_errors', 1);
+// ini_set('display_startup_errors', 1);
+// error_reporting(E_ALL);
 $ci = &get_instance();
 
 $get_clients_fees = get_clients_fees_details(2, $client_id);
@@ -23,33 +26,72 @@ $refund_amount = [];
 //     }
 // }
 
-if (!empty($applicantpaymentdata)) {
+if (!empty($applicantpaymentdata) && is_array($applicantpaymentdata)) {
+
     foreach ($applicantpaymentdata as $applicantPayment) {
-        $FeesInformation_array = json_decode($applicantPayment['fess_infomation'],true);
-  
+
+        // ✅ Validate JSON field exists
+        if (empty($applicantPayment['fess_infomation'])) {
+            continue;
+        }
+
+        // ✅ Decode safely
+        $FeesInformation_array = json_decode($applicantPayment['fess_infomation'], true);
+
+        if (empty($FeesInformation_array) || !is_array($FeesInformation_array)) {
+            continue;
+        }
+
         foreach ($FeesInformation_array as $applicantPayment_) {
-         
-            if($applicantPayment["payment_type"] == RETURN_FEES_ID)
-            {
-                if($applicantPayment_["fee_id"] ==1){
-        $refund_amount[$applicantPayment_["fee_id"]][3] += $applicantPayment_['fee_inr_value'] ?? 0;
-            }else
-            {
-                $refund_amount[$applicantPayment_["fee_id"]][$applicantPayment_["fee_currency"]] += $applicantPayment_['fee_amount'] ?? 0; 
+
+            // ✅ Validate required keys
+            if (
+                !isset($applicantPayment_['fee_id']) ||
+                !isset($applicantPayment_['fee_currency'])
+            ) {
+                continue;
             }
+
+            $fee_id = $applicantPayment_['fee_id'];
+            $currency = $applicantPayment_['fee_currency'];
+
+            $fee_amount = isset($applicantPayment_['fee_amount'])
+                ? (float)$applicantPayment_['fee_amount']
+                : 0;
+
+            $fee_inr_value = isset($applicantPayment_['fee_inr_value'])
+                ? (float)$applicantPayment_['fee_inr_value']
+                : 0;
+
+            // ✅ Initialize arrays
+            if (!isset($refund_amount[$fee_id])) {
+                $refund_amount[$fee_id] = [];
             }
-            else{
-            if($applicantPayment_["fee_id"] ==1){
-        $deduction_amount[$applicantPayment_["fee_id"]][3] += $applicantPayment_['fee_inr_value'] ?? 0;
-            }else
-            {
-                $deduction_amount[$applicantPayment_["fee_id"]][$applicantPayment_["fee_currency"]] += $applicantPayment_['fee_amount'] ?? 0; 
+
+            if (!isset($deduction_amount[$fee_id])) {
+                $deduction_amount[$fee_id] = [];
             }
+
+            // ✅ CHECK PAYMENT TYPE
+            if (isset($applicantPayment["payment_type"]) && $applicantPayment["payment_type"] == RETURN_FEES_ID) {
+
+                if ($fee_id == 1) {
+                    $refund_amount[$fee_id][3] = ($refund_amount[$fee_id][3] ?? 0) + $fee_inr_value;
+                } else {
+                    $refund_amount[$fee_id][$currency] = ($refund_amount[$fee_id][$currency] ?? 0) + $fee_amount;
+                }
+
+            } else {
+
+                if ($fee_id == 1) {
+                    $deduction_amount[$fee_id][3] = ($deduction_amount[$fee_id][3] ?? 0) + $fee_inr_value;
+                } else {
+                    $deduction_amount[$fee_id][$currency] = ($deduction_amount[$fee_id][$currency] ?? 0) + $fee_amount;
+                }
+
             }
         }
     }
-    
-
 }
 ?>
 
@@ -110,20 +152,51 @@ else
             $totalAmountRaw = $FessAmounts[$feeId]['total_amount'] ?? $currency_lookup[$default_currency]['symbol'] . "0";
             $totalAmount = (int) $FessAmounts[$feeId]['amount'] ?? 0;
        
-if(strtolower($client_information->primary_country) == "georgia")
-{
-            if($feeId == 3)
-            {
+// if(strtolower($client_information->primary_country) == "georgia")
+// {
+//             if($feeId == 3)
+//             {
                 
-                $feeName .=" + Medical";
-                if($FessAmounts[7]["currency_id"] == $FessAmounts[$feeId]["currency_id"] )
-                {
-                    $totalAmountRaw = $currency_lookup[$FessAmounts[$feeId]["currency_id"]]['symbol']."".($FessAmounts[7]['amount'] + $FessAmounts[$feeId]['amount']);
+//                 $feeName .=" + Medical";
+//                 if($FessAmounts[7]["currency_id"] == $FessAmounts[$feeId]["currency_id"] )
+//                 {
+//                     $totalAmountRaw = $currency_lookup[$FessAmounts[$feeId]["currency_id"]]['symbol']."".($FessAmounts[7]['amount'] + $FessAmounts[$feeId]['amount']);
                     
-                    $totalAmount = ($FessAmounts[7]['amount'] + $FessAmounts[$feeId]['amount']);
+//                     $totalAmount = ($FessAmounts[7]['amount'] + $FessAmounts[$feeId]['amount']);
                     
-                }
-            }
+//                 }
+//             }
+// }
+
+if (
+    isset($client_information->primary_country) &&
+    strtolower($client_information->primary_country) === "georgia" &&
+    isset($feeId) && $feeId == 3 &&
+    isset($FessAmounts[7], $FessAmounts[$feeId]) &&
+    is_array($FessAmounts[7]) &&
+    is_array($FessAmounts[$feeId])
+) {
+
+    $feeName .= " + Medical";
+
+    $currencyIdMain = $FessAmounts[$feeId]['currency_id'] ?? null;
+    $currencyIdMedical = $FessAmounts[7]['currency_id'] ?? null;
+
+    $amountMain = isset($FessAmounts[$feeId]['amount']) ? (float)$FessAmounts[$feeId]['amount'] : 0;
+    $amountMedical = isset($FessAmounts[7]['amount']) ? (float)$FessAmounts[7]['amount'] : 0;
+
+    // ✅ Check currency match + lookup exists
+    if (
+        $currencyIdMain !== null &&
+        $currencyIdMain === $currencyIdMedical &&
+        isset($currency_lookup[$currencyIdMain]['symbol'])
+    ) {
+        $totalAmount = $amountMain + $amountMedical;
+
+        $symbol = $currency_lookup[$currencyIdMain]['symbol'];
+
+        $totalAmountRaw = $symbol . $totalAmount;
+    }
 }
             // Initialize original amount
             $orignal_amount[$feeId][$currencyId] = $totalAmount;

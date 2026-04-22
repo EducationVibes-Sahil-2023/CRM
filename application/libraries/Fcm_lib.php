@@ -104,21 +104,39 @@ class Fcm_lib {
     //     }
     // }
     
-        public function sendBulk_message($bulkMessage = [], $data = [], $sound = "default")
+ public function sendBulk_message($bulkMessage = [])
 {
-    if (empty($deviceTokens)) return [];
-
     $responses = [];
 
     // ✅ Clean tokens (remove empty + duplicates)
-    $bulkMessage = array_unique(array_filter($bulkMessage));
+    // $bulkMessage = array_unique(array_filter($bulkMessage));
 
     foreach ($bulkMessage as $bulk) {
+        $token = $bulk['token'] ?? '';
+        $title = $bulk['notification']['title'] ?? '';
+        $body  = $bulk['notification']['body'] ?? '';
+        $data =[];
+        if(!empty($bulk['notification']['data'])){
+        $data  = !empty($bulk['notification']['data']) ? $bulk['notification']['data'] : [];
+        }
+        $sound = $bulk['notification']['sound'] ?? 'default';
 
-$token = $bulk['token'];
-$title = $bulk['token'];
-$body = $bulk['token'];
-        $responses[] = $this->send($token, $title, $body, $data, $sound);
+        try {
+            $response = $this->send($token, $title, $body, $data, $sound);
+          
+            $responses[] = [
+                'token' => $token,
+                'status' => 'success',
+                'response' => $response
+            ];
+        } catch (\Exception $e) {
+            // Log the error or store it in responses
+            $responses[] = [
+                'token' => $token,
+                'status' => 'failed',
+                'error' => $e->getMessage()
+            ];
+        }
     }
 
     return $responses;
@@ -155,36 +173,69 @@ $body = $bulk['token'];
                 $data[$key] = (string) $value;
             }
         }
+if(!empty($data)){
+      $payload = [
+    "message" => [
+        "token" => $deviceToken,
 
-        $payload = [
-            "message" => [
-                "token" => $deviceToken,
+        "notification" => [
+            "title" => $title,
+            "body"  => $body
+        ],
 
-                "notification" => [
-                    "title" => $title,
-                    "body"  => $body
-                ],
-
-                // ✅ Android config
-                "android" => [
-                    "priority" => "high",
-                    "notification" => [
-                        "sound" => $sound // 🔥 dynamic sound
-                    ]
-                ],
-
-                // ✅ iOS config
-                "apns" => [
-                    "payload" => [
-                        "aps" => [
-                            "sound" => $sound
-                        ]
-                    ]
-                ],
-
-                "data" => $data
+        // ✅ Android config
+        "android" => [
+            "priority" => "high",
+            "notification" => [
+                "sound" => $sound ?? 'default' // 🔥 dynamic sound with fallback
             ]
-        ];
+        ],
+
+        // ✅ iOS config
+        "apns" => [
+            "payload" => [
+                "aps" => [
+                    "sound" => $sound ?? 'default'
+                ]
+            ]
+        ],
+
+        // ✅ Data payload (handle null safely)
+        "data" => is_array($data) ? $data : []
+    ]
+];
+}
+else
+{
+         $payload = [
+    "message" => [
+        "token" => $deviceToken,
+
+        "notification" => [
+            "title" => $title,
+            "body"  => $body
+        ],
+
+        // ✅ Android config
+        "android" => [
+            "priority" => "high",
+            "notification" => [
+                "sound" => $sound ?? 'default' // 🔥 dynamic sound with fallback
+            ]
+        ],
+
+        // ✅ iOS config
+        "apns" => [
+            "payload" => [
+                "aps" => [
+                    "sound" => $sound ?? 'default'
+                ]
+            ]
+        ],
+
+    ]
+];
+}
 
         $headers = [
             "Authorization: Bearer " . $accessToken,

@@ -91,7 +91,7 @@
                     </td>
                     <td></td>
                     <td style="text-align:right;">
-                        <img style="height:120px;" src="<?= base_url() ?>uploads/pdf_include/eduvibe_logo.png">
+                        <img style="height:120px;" src="<?= base_url() ?>uploads/pdf_include/eduvibe_logo_new.png">
                     </td>
                 </tr>
                 <tr>

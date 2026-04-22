@@ -7,6 +7,7 @@ $lead_data = array_column(get_type(), null, 'id');
 $lead_source = array_column(get_source(), null, 'id');
 $lead_status = array_column(get_status(), null, 'id');
 $staff_data = array_column(get_all_staff(), null, 'staffid');
+$get_staff_user_id = get_staff_user_id();
 
 $aColumns = [
 

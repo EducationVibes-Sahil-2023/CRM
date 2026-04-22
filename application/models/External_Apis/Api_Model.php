@@ -231,6 +231,12 @@ class Api_Model extends CI_Model
                 );
                 $jwt_token =  $this->generate_token($data);
                 $response["jwt_token"] = !empty($jwt_token) ? $jwt_token : '';
+                
+              
+                    $response["last_sync_time"] = get_lastCall_sync($user->staffid)??'';
+                    
+                    // if()
+                
 
                 if (!empty($user->staffid)) {
                     $follow_up_contact = $this->follow_up_contact($user->staffid);
@@ -246,6 +252,7 @@ class Api_Model extends CI_Model
                     "token" => $access_token,
                     "status" => 1,
                     "login_datetime" => date('Y-m-d H:i:s')
+                    
                 );
                 $this->update_data(db_prefix() . 'login_analytics', ["status" => 0, "expire_status" => 0], array("staffid" => $user->staffid));
 

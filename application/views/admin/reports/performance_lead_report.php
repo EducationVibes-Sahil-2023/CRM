@@ -62,6 +62,14 @@ $selected_performance_column = array_slice(array_column($tbllead_performance_col
         width: auto !important;
         min-width: 30px !important;
     }
+    
+     .border-card {
+    /* border: 1px solid black; */
+    padding: 5px 10px;
+    box-shadow: 0px 0px 5px lightgrey;
+    margin-bottom: 10px;
+    border-radius: 8px;
+}
 </style>
 
 

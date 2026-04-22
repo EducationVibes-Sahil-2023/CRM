@@ -7584,9 +7584,21 @@ function calculate_call_duration($params = false, $max_status = 0)
         ' ',
         '') = calls.contact AND l.assigned = calls.staffid ";
 
-    if (!empty($params['assigned'])) {
+     if (!empty($params['assigned'])) {
         $check_today = false;
         $sql .= " AND l.assigned IN (" . implode(",", $params['assigned']) . ") ";
+    }
+    else
+    {
+          $check_today = false;
+      
+        if ( $role == 3) {
+            $sql .= ' AND l.assigned in (' . get_staff_user_id() . ',' . $sids . ')';
+        } else {
+            if(!is_admin()){
+            $sql .= ' AND l.assigned in (' . get_staff_user_id(). ')';
+            }
+        }
     }
 
     if (!empty($params['last_update_date'])) {
@@ -7753,6 +7765,13 @@ function calculate_call_duration_new($params = false, $max_status = 0)
         $CI->load->model('leads_model');
     }
 
+
+  $dataParam = $params;
+  
+  unset($dataParam['show_lead_status']);
+$filtered = array_filter($dataParam);
+    
+
     $has_permission_view   = has_permission('leads', '', 'view');
     $sql                   = '';
     $whereNoViewPermission = '(l.addedfrom = ' . get_staff_user_id() . ' OR l.assigned=' . get_staff_user_id() . ' OR l.is_public = 1)';
@@ -7776,8 +7795,20 @@ function calculate_call_duration_new($params = false, $max_status = 0)
     }
 
     $check_today = true;
-    $sql .= "SELECT   SUM(IF(call_status IN ('answered', 'status_unknown'), IFNULL(duration, 0), 0)) AS total_call_duration,adjusted_call_start,
-    COUNT(DISTINCT CONCAT(calls.contact, '-', adjusted_call_start)) AS update_count FROM " . db_prefix() . "leads l ";
+    
+    // if(is_admin()){
+    //     $sql .= "SELECT calls.id call_id,call_status,duration,adjusted_call_start,l.id lead_id FROM " . db_prefix() . "leads l ";
+    // }
+    // else{
+ 
+    //      $sql .= "SELECT  COUNT(CASE WHEN calls.call_status = 'answered' THEN 1 END) AS answered_count,count(calls.id) total_calls,SUM(IF(call_status IN ('answered', 'status_unknown'), IFNULL(duration, 0), 0)) AS total_call_duration,adjusted_call_start,
+    // COUNT(DISTINCT l.id) AS update_count FROM " . db_prefix() . "leads l ";
+    // }
+    
+    
+    $sql .= "SELECT calls.id call_id,call_status,duration,adjusted_call_start,l.id lead_id,calls.staffid FROM " . db_prefix() . "leads l ";
+     
+
 
  if (
     isset($params['time_condition'], $params['time_minutes']) &&
@@ -7798,50 +7829,6 @@ function calculate_call_duration_new($params = false, $max_status = 0)
     $sql .= ' JOIN ' . db_prefix() . 'staff_department 
               ON ' . db_prefix() . 'staff_department.id = ' . db_prefix() . 'staff.department ';
 
-    $sql .= " AND (
-        TIMESTAMPDIFF(
-            SECOND,
-
-            CASE 
-                WHEN DAYNAME(l.dateassigned) = 'Sunday'
-                THEN CONCAT(
-                    DATE_ADD(DATE(l.dateassigned), INTERVAL 1 DAY),
-                    ' ',
-                    COALESCE(" . db_prefix() . "staff_department.office_start_time,'10:00:00')
-                )
-
-                WHEN TIME(l.dateassigned) >
-                    COALESCE(" . db_prefix() . "staff_department.office_end_time,'20:00:00')
-
-                THEN CONCAT(
-                    DATE_ADD(DATE(l.dateassigned), INTERVAL 1 DAY),
-                    ' ',
-                    COALESCE(" . db_prefix() . "staff_department.office_start_time,'10:00:00')
-                )
-
-                WHEN TIME(l.dateassigned) <
-                    COALESCE(" . db_prefix() . "staff_department.office_start_time,'10:00:00')
-
-                THEN CONCAT(
-                    DATE(l.dateassigned),
-                    ' ',
-                    COALESCE(" . db_prefix() . "staff_department.office_start_time,'10:00:00')
-                )
-
-                ELSE l.dateassigned
-            END,
-
-            FROM_UNIXTIME(
-                (
-                    SELECT MIN(call_start + 19800)
-                    FROM " . db_prefix() . "calls_activity_logs c
-                    WHERE c.contact = l.phonenumber
-                    AND (c.call_start + 19800) > UNIX_TIMESTAMP(l.dateassigned)
-                    AND c.staffid = l.assigned
-                )
-            )
-        ) / 60
-    ) {$condition} {$minutes} ";
 }
 
 
@@ -7858,6 +7845,18 @@ function calculate_call_duration_new($params = false, $max_status = 0)
     if (!empty($params['assigned'])) {
         $check_today = false;
         $sql .= " AND l.assigned IN (" . implode(",", $params['assigned']) . ") ";
+    }
+    else
+    {
+          $check_today = false;
+      
+        if ( $role == 3) {
+            $sql .= ' AND l.assigned in (' . get_staff_user_id() . ',' . $sids . ')';
+        } else {
+            if(!is_admin()){
+            $sql .= ' AND l.assigned in (' . get_staff_user_id(). ')';
+            }
+        }
     }
     
        if (!empty($params['sub_status'])) {
@@ -7886,7 +7885,7 @@ function calculate_call_duration_new($params = false, $max_status = 0)
             . $CI->db->escape_str($up_from_date) . "' AND '" . $CI->db->escape_str($up_to_date) . "'";
     }
 
-    if ($check_today === true && empty($params['up_to_date']) && empty($params['last_update_date']) && empty($params['to_date']) && empty($params['last_contact_date']) &&  empty($params['followup_to_date']) && empty($params['assign_to_date'])) {
+    if (empty($filtered) && empty($params['up_to_date']) && empty($params['last_update_date']) && empty($params['to_date']) && empty($params['last_contact_date']) &&  empty($params['followup_to_date']) && empty($params['assign_to_date'])) {
         $current_date = date('Y-m-d');
         $sql .= " AND DATE(adjusted_call_start) BETWEEN '"
             . $CI->db->escape_str($current_date) . "' AND '" . $CI->db->escape_str($current_date) . "'";
@@ -7988,70 +7987,36 @@ function calculate_call_duration_new($params = false, $max_status = 0)
         $grup_by .= ',' . db_prefix() . 'customfieldsvalues.relid';
     }
     if (!empty($params['assigned'])) {
-        $grup_by .= ',calls.staffid';
+        $grup_by .= ',staffid';
     }
 
     $sql_add = "";
 
     $having = "";
     if (!empty($params['last_contact_date']) ||  (isset($params['update_count_max']) && $params['update_count_max'] != '') || !empty($params['last_update_date'])) {
-        // $having .= ' HAVING ';
-
-        // if (!empty($params['last_contact_date'])) {
-        //     $last_contact_date = $params["last_contact_date"];
-        //     if (isset($params['update_count_max']) && $params['update_count_max'] != "") {
-        //         $having .= "(lastcontact <= '" . $last_contact_date . "')";
-        //     } else {
-        //         $having .= "(lastcontact <= '" . $last_contact_date . "' OR lastcontact IS NULL)";
-        //     }
-
-        //     if (isset($params['update_count_max']) && $params['update_count_max'] != "") {
-        //         $having .= ' AND ';
-        //     }
-        // } 
-        // else if (!empty($params['last_update_date'])) {
-        //     $last_contact_date = $params["last_update_date"];
-        //     if (isset($params['update_count_max']) && $params['update_count_max'] != "") {
-        //         $having .= "(adjusted_call_start <= '" . $last_contact_date . "')";
-        //     } else {
-        //         $having .= "(adjusted_call_start <= '" . $last_contact_date . "' OR adjusted_call_start IS NULL)";
-        //     }
-
-        //     if (isset($params['update_count_max']) && $params['update_count_max'] != "") {
-        //         $having .= ' AND ';
-        //     }
-        // }
-
 
         if (isset($params['update_count_max']) && $params['update_count_max'] != "") {
             $min = $params['update_count_min'];
             $max = $params['update_count_max'];
-            $having .= ' HAVING COUNT(calls.id) BETWEEN "' . $CI->db->escape_str($min) . '" AND "' . $CI->db->escape_str($max) . '"';
+            $having .= ' HAVING COUNT(call_id) BETWEEN "' . $CI->db->escape_str($min) . '" AND "' . $CI->db->escape_str($max) . '"';
         }
     }
 
 
-    $sql .= " GROUP BY calls.contact" . $grup_by . " " . $having . $sql_add;
-//     if(is_admin())
-// {
-//     echo $sql; die;
-// }
-
-    // . ") AS subquery";
+    // $sql .= " GROUP BY l.id " . $grup_by . " " . $having . $sql_add;
 
     $alt =  str_replace("l.phonenumber", "l.alternative_phonenumber", $sql);
     $sql .= " UNION ALL ";
 
     $sql = $sql . " " . $alt;
-
-
-    // $sql = "SELECT IFNULL(SUM(call_duration), 0) AS total_sum FROM (" . $sql . ") AS subquery";
     
-    // if(is_admin())
-    // {
-    // echo $sql;
-    // die;
-    // }
+   
+        
+       $sql=   "SELECT  COUNT(CASE WHEN call_status = 'answered' THEN 1 END) AS answered_count,count(call_id) total_calls,SUM(IF(call_status IN ('answered', 'status_unknown'), IFNULL(duration, 0), 0)) AS total_call_duration,adjusted_call_start,
+    COUNT(DISTINCT lead_id) AS update_count,staffid from ( ". $sql." ) t  GROUP BY lead_id " . $grup_by . " " . $having . $sql_add;
+     
+    
+
 
     $duration = $CI->db->query($sql)->result_array();
 
@@ -8064,8 +8029,15 @@ function calculate_call_duration_new($params = false, $max_status = 0)
 function graphDataCalls($params)
 {
     $CI = &get_instance();
-$showStatus = false;
+    $showStatus = false;
     $where = [];
+
+$dataParam = $params;
+  unset($dataParam['show_lead_status']);
+$filtered = array_filter($dataParam);
+
+
+
 
     // ✅ Assigned filter
     if (!empty($params['assigned'])) {
@@ -8077,43 +8049,33 @@ $showStatus = false;
     if (!empty($params['up_from_date']) && !empty($params['up_to_date'])) {
         $from = $CI->db->escape_str($params['up_from_date']);
         $to   = $CI->db->escape_str($params['up_to_date']);
-$showStatus = true;
-// Calculate difference
-
-$fromDate = new DateTime($from);
-$toDate   = new DateTime($to);
-$diff = $fromDate->diff($toDate)->days;
-
-// Check if more than 31 days
-if ($diff > 31) {
-    $showStatus = false;
-}
-        $where[] = "DATE(FROM_UNIXTIME(calls.call_start + 19800)) 
-                    BETWEEN '$from' AND '$to'";
+        $showStatus = true;
+        $fromDate = new DateTime($from);
+        $toDate   = new DateTime($to);
+        $diff = $fromDate->diff($toDate)->days;
+        if ($diff > 31) $showStatus = false;
+        $where[] = "DATE(FROM_UNIXTIME(calls.call_start + 19800)) BETWEEN '$from' AND '$to'";
     } elseif (!empty($params['last_update_date'])) {
         $date = $CI->db->escape_str($params['last_update_date']);
         $where[] = "DATE(FROM_UNIXTIME(calls.call_start + 19800)) <= '$date'";
     } else {
+        if(empty($filtered)){
         $today = date('Y-m-d');
         $where[] = " adjusted_call_start = '$today' ";
         $showStatus = true;
+        }
+                $showStatus = true;
     }
 
     // ✅ Lead Created Date
     if (!empty($params['to_date'])) {
         $from_date = $CI->db->escape_str($params['from_date']);
         $to_date   = $CI->db->escape_str($params['to_date']);
-        
-        $showStatus= true;
+        $showStatus = true;
         $fromDate = new DateTime($from_date);
-$toDate   = new DateTime($to_date);
-$diff = $fromDate->diff($toDate)->days;
-
-// Check if more than 31 days
-if ($diff > 31) {
-    $showStatus = false;
-}
-
+        $toDate   = new DateTime($to_date);
+        $diff = $fromDate->diff($toDate)->days;
+        if ($diff > 31) $showStatus = false;
         $where[] = "DATE(l.dateadded) BETWEEN '$from_date' AND '$to_date'";
     }
 
@@ -8121,17 +8083,11 @@ if ($diff > 31) {
     if (!empty($params['assign_to_date'])) {
         $from = $CI->db->escape_str($params['assign_from_date']);
         $to   = $CI->db->escape_str($params['assign_to_date']);
-
-
-  $showStatus= true;
+        $showStatus = true;
         $fromDate = new DateTime($from);
-$toDate   = new DateTime($to);
-$diff = $fromDate->diff($toDate)->days;
-
-// Check if more than 31 days
-if ($diff > 31) {
-    $showStatus = false;
-}
+        $toDate   = new DateTime($to);
+        $diff = $fromDate->diff($toDate)->days;
+        if ($diff > 31) $showStatus = false;
         $where[] = "DATE(l.dateassigned) BETWEEN '$from' AND '$to'";
     }
 
@@ -8140,21 +8096,13 @@ if ($diff > 31) {
     if (!empty($params['followup_to_date'])) {
         $from = $CI->db->escape_str($params['followup_from_date']);
         $to   = $CI->db->escape_str($params['followup_to_date']);
-
         $joinReminder = "LEFT JOIN tblreminders r ON r.rel_id = l.id";
-
         $where[] = "DATE(r.date) BETWEEN '$from' AND '$to'";
-        
-          $showStatus= true;
+        $showStatus = true;
         $fromDate = new DateTime($from);
-$toDate   = new DateTime($to);
-$diff = $fromDate->diff($toDate)->days;
-
-// Check if more than 31 days
-if ($diff > 31) {
-    $showStatus = false;
-}
-
+        $toDate   = new DateTime($to);
+        $diff = $fromDate->diff($toDate)->days;
+        if ($diff > 31) $showStatus = false;
     }
 
     // ✅ Other filters
@@ -8162,97 +8110,158 @@ if ($diff > 31) {
         $status = implode(",", array_map('intval', $params['status']));
         $where[] = "l.status IN ($status)";
     }
-
     if (!empty($params['source'])) {
         $source = implode(",", array_map('intval', $params['source']));
         $where[] = "l.source IN ($source)";
     }
-
     if (!empty($params['lead_type'])) {
         $type = implode(",", array_map('intval', $params['lead_type']));
         $where[] = "l.type IN ($type)";
     }
-    
-       if (!empty($params['sub_status'])) {
+    if (!empty($params['sub_status'])) {
         $type = implode(",", array_map('intval', $params['sub_status']));
         $where[] = "l.sub_status IN ($type)";
     }
 
-if(!is_admin()){
-    $role = $CI->db->where('staffid', get_staff_user_id())->get(db_prefix() . 'staff')->row()->role;
-    $tids = '';
-    if ($role == 3) {
-        $sid = get_staff_user_id();
-        $teamids = $CI->db->query('CALL GetReportingPersons(?)', array($sid))->result_array();
-        $CI->db->close();
-        $CI->db->initialize();
-        $idsarr = array_column($teamids, 'staffid');
-        $sids = implode(",", $idsarr);
-        $where[]  = !empty($sids) ? " assigned IN ($sid, $sids)" : " assigned IN ($sid)";
+    if (!is_admin()) {
+        $role = $CI->db->where('staffid', get_staff_user_id())->get(db_prefix() . 'staff')->row()->role;
+        if ($role == 3) {
+            $sid = get_staff_user_id();
+            $teamids = $CI->db->query('CALL GetReportingPersons(?)', array($sid))->result_array();
+            $CI->db->close();
+            $CI->db->initialize();
+            $idsarr = array_column($teamids, 'staffid');
+            $sids = implode(",", $idsarr);
+            $where[] = !empty($sids) ? " assigned IN ($sid, $sids)" : " assigned IN ($sid)";
+        } else {
+            $where[] = " assigned = " . get_staff_user_id();
+        }
     }
-    else{
-        $where[]  = " assigned = ".get_staff_user_id() ;
-    }
-}
-    
-
 
     $whereSql = !empty($where) ? "WHERE " . implode(" AND ", $where) : "";
 
-    // ✅ Base SELECT
-    $baseSelect = "
+    // ========= HOURLY DATA =========
+   $hourlySql = "
+SELECT 
+    hour,
+    SUM(total_duration) AS total_call_duration,
+    COUNT( lead_id) AS unique_calls
+FROM (
+    
+    SELECT 
+        HOUR(FROM_UNIXTIME(call_start + 19800)) AS hour,
+        lead_id,
+        duration AS total_duration
+        
+    FROM (
+        
+        -- Primary phone
         SELECT 
-            HOUR(FROM_UNIXTIME(calls.call_start + 19800)) AS hour,
-            SUM(IF(call_status IN ('answered','status_unknown'), IFNULL(duration,0), 0)) AS total_call_duration,
-            COUNT(DISTINCT calls.contact) AS unique_calls
-    ";
-
-    // ✅ Query 1 (Primary number)
-    $q1 = "
-        $baseSelect
+            calls.call_start,
+            l.id AS lead_id,
+            IF(calls.call_status IN ('answered','status_unknown'), IFNULL(calls.duration,0), 0) AS duration
         FROM tblleads l
         $joinReminder
         INNER JOIN tblcalls_activity_logs calls 
-            ON calls.contact = REPLACE(TRIM(REPLACE(l.phonenumber, '+91', '')), ' ', '')
+            ON calls.contact = l.phonenumber
             AND l.assigned = calls.staffid
         $whereSql
-        GROUP BY hour
-    ";
 
-    // ✅ Query 2 (Alternative number)
-    $q2 = "
-        $baseSelect
+        UNION
+
+        -- Alternative phone
+        SELECT 
+            calls.call_start,
+            l.id AS lead_id,
+            IF(calls.call_status IN ('answered','status_unknown'), IFNULL(calls.duration,0), 0) AS duration
         FROM tblleads l
         $joinReminder
         INNER JOIN tblcalls_activity_logs calls 
-            ON calls.contact = REPLACE(TRIM(REPLACE(l.alternative_phonenumber, '+91', '')), ' ', '')
+            ON calls.contact = l.alternative_phonenumber
             AND l.assigned = calls.staffid
         $whereSql
-        GROUP BY hour
-    ";
 
-    // ✅ FINAL UNION
-    $sql = "
+    ) AS merged
+
+    GROUP BY call_start,lead_id,hour
+
+) AS final
+
+WHERE hour BETWEEN 9 AND 21
+GROUP BY hour
+ORDER BY hour ASC
+";
+    // if(is_admin())
+    // {
+    //     echo $hourlySql;
+    //     die;
+    // }
+    
+    
+$statusSql = "
+SELECT 
+    s.id AS status_id,
+    s.name AS status_name,
+    s.color AS status_color,
+    COUNT(DISTINCT lead_id) AS lead_count,
+    SUM(total_duration) AS total_call_duration
+FROM (
+    
+    SELECT 
+        status_id,
+        lead_id,
+        MAX(duration) AS total_duration
+    FROM (
+        
+        -- Primary phone
         SELECT 
-            hour,
-            SUM(total_call_duration) AS total_call_duration,
-            SUM(unique_calls) AS unique_calls
-        FROM (
-            $q1
-            UNION ALL
-            $q2
-        ) AS combined
-        GROUP BY hour
-         HAVING hour BETWEEN 9 AND 21
-        ORDER BY hour ASC
-    ";
+            l.status AS status_id,
+            l.id AS lead_id,
+            IF(calls.call_status IN ('answered','status_unknown'), IFNULL(calls.duration,0), 0) AS duration
+        FROM tblleads l
+        $joinReminder
+        INNER JOIN tblcalls_activity_logs calls 
+            ON calls.contact = l.phonenumber
+            AND l.assigned = calls.staffid
+        $whereSql
 
-    if($showStatus == false)
-    {
-        return [];
-    }else{
-    return $CI->db->query($sql)->result_array();
+        UNION
+
+        -- Alternative phone
+        SELECT 
+            l.status AS status_id,
+            l.id AS lead_id,
+            IF(calls.call_status IN ('answered','status_unknown'), IFNULL(calls.duration,0), 0) AS duration
+        FROM tblleads l
+        $joinReminder
+        INNER JOIN tblcalls_activity_logs calls 
+            ON calls.contact = l.alternative_phonenumber
+            AND l.assigned = calls.staffid
+        $whereSql
+
+    ) AS merged
+
+    GROUP BY status_id, lead_id
+
+) AS combined
+
+LEFT JOIN tblleads_status s ON s.id = combined.status_id
+
+GROUP BY s.id, s.name
+ORDER BY s.id ASC
+";
+
+    if ($showStatus == false) {
+        return [
+            'hourly' => [],
+            'status' => [],
+        ];
     }
+
+    return [
+        'hourly' => $CI->db->query($hourlySql)->result_array(),
+        'status' => $CI->db->query($statusSql)->result_array(),
+    ];
 }
 
 function get_leads_summary_filter_new($params)
@@ -8460,9 +8469,11 @@ function get_leads_summary_filter_neww($params)
     // $sql = 'SELECT IFNULL(' . db_prefix() . 'leads_status.id, "unknown") AS status_id, COUNT(DISTINCT ' . $tblleads . '.id) AS total ';
     // if(is_admin())
     // {
-          $sql = 'SELECT  tblleads.id,
+          $sql = 'SELECT  
+        
+        tblleads.id,
         tblleads.status,
-        COUNT(tblcalls_activity_logs.id) AS call_count ';
+        IFNULL(COUNT(tblcalls_activity_logs.id), 0) AS call_count ';
     // }
     $sql .= 'FROM ' . $tblleads . ' ';
     $sql .= 'LEFT JOIN ' . db_prefix() . 'leads_status ON ' . $tblleads . '.status = ' . db_prefix() . 'leads_status.id ';
@@ -8571,7 +8582,7 @@ function get_leads_summary_filter_neww($params)
 
 // if(is_admin()){
      if (isset($params['update_count_min']) && $params['update_count_min'] != '') {
-   $having_query = ' having call_count BETWEEN "' . $CI->db->escape_str($params['update_count_min']) . '" AND "' . $CI->db->escape_str($params['update_count_max']) . '" ';
+   $having_query = ' having IFNULL(COUNT(tblcalls_activity_logs.id), 0)  BETWEEN "' . $CI->db->escape_str($params['update_count_min']) . '" AND "' . $CI->db->escape_str($params['update_count_max']) . '" ';
      }
 // }
 // else{
@@ -8830,6 +8841,232 @@ GROUP BY lead_data.status
     $statuses[] = ["name" => "Total Leads", "color" => "#28B8DA", "isdefault" => 0, "total" => $totalLeads];
 
     return $statuses;
+}
+
+function get_leads_summary_filter_neww_test($params)
+{
+    $params['update_count_min'] = (isset($params['update_count_min']) && is_numeric($params['update_count_min']) && $params['update_count_min'] !== 'NaN')
+        ? $params['update_count_min'] : '';
+    $params['update_count_max'] = (isset($params['update_count_max']) && is_numeric($params['update_count_max']) && $params['update_count_max'] !== 'NaN')
+        ? $params['update_count_max'] : '';
+
+    $CI = &get_instance();
+    if (!class_exists('leads_model')) {
+        $CI->load->model('leads_model');
+    }
+
+    $statuses     = $CI->leads_model->get_status();
+    $sub_statuses = $CI->db->query('SELECT id, name FROM tblsub_lead_status')->result_array();
+
+    $tblleads              = db_prefix() . 'leads';
+    $has_permission_view   = has_permission('leads', '', 'view');
+    $whereNoViewPermission = '(' . $tblleads . '.addedfrom = ' . get_staff_user_id() . ' OR ' . $tblleads . '.assigned=' . get_staff_user_id() . ' OR ' . $tblleads . '.is_public = 1)';
+
+    $role = $CI->db->where('staffid', get_staff_user_id())->get(db_prefix() . 'staff')->row()->role;
+    $tids = '';
+    if ($role == 3) {
+        $sid = get_staff_user_id();
+        $teamids = $CI->db->query('CALL GetReportingPersons(?)', array($sid))->result_array();
+        $CI->db->close();
+        $CI->db->initialize();
+        $idsarr = array_column($teamids, 'staffid');
+        $sids = implode(",", $idsarr);
+        $tids = !empty($sids) ? " AND assigned IN ($sid, $sids)" : " AND assigned IN ($sid)";
+    }
+
+    // Base inner query: returns id, status, sub_status, call_count per lead
+    $sql  = 'SELECT  
+        ' . $tblleads . '.id,
+        ' . $tblleads . '.status,
+        ' . $tblleads . '.sub_status,
+        IFNULL(COUNT(' . db_prefix() . 'calls_activity_logs.id), 0) AS call_count ';
+    $sql .= 'FROM ' . $tblleads . ' ';
+    $sql .= 'LEFT JOIN ' . db_prefix() . 'leads_status ON ' . $tblleads . '.status = ' . db_prefix() . 'leads_status.id ';
+
+    if (!empty($params['up_to_date']) || (isset($params['update_count_min']) && $params['update_count_min'] != '')) {
+        $sql .= ' JOIN ' . db_prefix() . 'calls_activity_logs ON  ' . db_prefix() . 'calls_activity_logs.contact = ' . $tblleads . '.phonenumber AND ' . db_prefix() . 'calls_activity_logs.staffid = ' . $tblleads . '.assigned ';
+    } else {
+        $sql .= 'LEFT JOIN ' . db_prefix() . 'calls_activity_logs ON  ' . db_prefix() . 'calls_activity_logs.contact = ' . $tblleads . '.phonenumber AND ' . db_prefix() . 'calls_activity_logs.staffid = ' . $tblleads . '.assigned ';
+    }
+
+    if (!empty($params['course']) || !empty($params['degree']) || !empty($params['neet_score']) || !empty($params['google_source'])) {
+        $sql .= 'JOIN ' . db_prefix() . 'customfieldsvalues ON ' . $tblleads . '.id = ' . db_prefix() . 'customfieldsvalues.relid ';
+    }
+    if (!empty($params['followup_to_date'])) {
+        $sql .= 'JOIN ' . db_prefix() . 'reminders ON ' . db_prefix() . 'reminders.rel_id = ' . $tblleads . '.id ';
+    }
+    if (!empty($params['location']) || !empty($params['department'])) {
+        $sql .= 'JOIN ' . db_prefix() . 'staff ON ' . db_prefix() . 'staff.staffid = ' . $tblleads . '.assigned ';
+    } else if ((isset($params['time_condition']) && $params['time_condition'] != '') && (isset($params['time_minutes']) && $params['time_minutes'] >= 0)) {
+        $sql .= 'JOIN ' . db_prefix() . 'staff ON ' . db_prefix() . 'staff.staffid = ' . $tblleads . '.assigned ';
+    }
+    if ((isset($params['time_condition']) && $params['time_condition'] != '') && (isset($params['time_minutes']) && $params['time_minutes'] >= 0)) {
+        $sql .= ' JOIN  ' . db_prefix() . 'staff_department on ' . db_prefix() . 'staff_department.id = ' . db_prefix() . 'staff.department ';
+    }
+
+    // WHERE
+    $conditions = ['junk = 0', 'lost = 0'];
+    if (!$has_permission_view)               $conditions[] = $whereNoViewPermission;
+    if (!empty($params['status']))           $conditions[] = db_prefix() . 'leads_status.id IN (' . implode(',', $params['status']) . ')';
+    if (!empty($params['assigned']))         $conditions[] = 'assigned IN (' . implode(',', $params['assigned']) . ')';
+    elseif ($role == 3)                      $conditions[] = substr($tids, 4);
+    if (!empty($params['source']))           $conditions[] = 'source IN (' . implode(',', $CI->db->escape_str($params['source'])) . ')';
+
+    if (!empty($params['neet_score'])) {
+        $neet_range = explode('-', $params['neet_score']);
+        $conditions[] = db_prefix() . 'customfieldsvalues.fieldid = 8 AND ' . db_prefix() . 'customfieldsvalues.value BETWEEN ' .
+            $CI->db->escape_str(trim($neet_range[0])) . ' AND ' . $CI->db->escape_str(trim($neet_range[1])) . ' AND ' .
+            db_prefix() . 'customfieldsvalues.value != ""';
+    }
+    if (!empty($params['lead_type']))        $conditions[] = 'type IN (' . implode(',', $CI->db->escape_str($params['lead_type'])) . ')';
+    if (!empty($params['sub_status']))       $conditions[] = 'sub_status IN (' . implode(',', $CI->db->escape_str($params['sub_status'])) . ')';
+    if (!empty($params['from_date']) && !empty($params['to_date'])) $conditions[] = 'DATE(' . $tblleads . '.dateadded) BETWEEN "' . $CI->db->escape_str($params['from_date']) . '" AND "' . $CI->db->escape_str($params['to_date']) . '"';
+    if (!empty($params['followup_to_date'])) $conditions[] = 'DATE(' . db_prefix() . 'reminders.date) BETWEEN "' . $CI->db->escape_str($params['followup_from_date']) . '" AND "' . $CI->db->escape_str($params['followup_to_date']) . '"';
+    if (!empty($params['assign_from_date'])) $conditions[] = 'DATE(' . $tblleads . '.dateassigned) BETWEEN "' . $CI->db->escape_str($params['assign_from_date']) . '" AND "' . $CI->db->escape_str($params['assign_to_date']) . '"';
+    if (!empty($params['last_contact_date']))$conditions[] = 'DATE(' . $tblleads . '.lastconnect_date) <= "' . $CI->db->escape_str($params['last_contact_date']) . '"';
+    if (!empty($params['last_update_date'])) $conditions[] = 'DATE(' . $tblleads . '.lastupdate_date) <= "' . $CI->db->escape_str($params['last_update_date']) . '"';
+
+    $having_query = "";
+    if (isset($params['update_count_min']) && $params['update_count_min'] != '') {
+        $having_query = ' HAVING IFNULL(COUNT(' . db_prefix() . 'calls_activity_logs.id), 0)  BETWEEN "' . $CI->db->escape_str($params['update_count_min']) . '" AND "' . $CI->db->escape_str($params['update_count_max']) . '" ';
+    }
+
+    if (!empty($params["utm_status"]) && $params["utm_status"] == 1) $conditions[] = ' ' . $tblleads . '.utm_campaign_name != " " ';
+    if (!empty($params['utm_campaign_name']))$conditions[] = " " . $tblleads . ".utm_campaign_name IN ('" . implode("','", $CI->db->escape_str($params['utm_campaign_name'])) . "')";
+    if (!empty($params['utm_ads_set_name'])) $conditions[] = " " . $tblleads . ".utm_ads_set_name IN ('" . implode("','", $CI->db->escape_str($params['utm_ads_set_name'])) . "')";
+    if (!empty($params['utm_ads_name']))     $conditions[] = " " . $tblleads . ".utm_ads_name IN ('" . implode("','", $CI->db->escape_str($params['utm_ads_name'])) . "')";
+    if (!empty($params['utm_term']))         $conditions[] = " " . $tblleads . ".utm_term IN ('" . implode("','", $CI->db->escape_str($params['utm_term'])) . "')";
+    if (!empty($params['utm_form_name']))    $conditions[] = " " . $tblleads . ".utm_form_name IN ('" . implode("','", $CI->db->escape_str($params['utm_form_name'])) . "')";
+    if (!empty($params['department']))       $conditions[] = " " . db_prefix() . "staff.department IN ('" . implode("','", $CI->db->escape_str($params['department'])) . "')";
+    if (!empty($params['location']))         $conditions[] = " " . db_prefix() . "staff.office_location IN ('" . implode("','", $CI->db->escape_str($params['location'])) . "')";
+
+    if (!empty($params['view_form'])) {
+        $websites = $params['view_form'];
+        $escaped_websites = array_map(function ($w) { return "'" . trim($w) . "'"; }, $websites);
+        $conditions[] = " " . $tblleads . ".website IN (" . implode(',', $escaped_websites) . ")";
+    }
+    if (!empty($params['reference_name'])) {
+        $reference_name = $params['reference_name'];
+        if (!is_array($reference_name)) $reference_name = explode(',', $reference_name);
+        $escaped_reference_name = array_map(function ($w) use ($CI) {
+            return "'" . $CI->db->escape_str(trim($w)) . "'";
+        }, $reference_name);
+        $conditions[] = $tblleads . ".reference_name IN (" . implode(',', $escaped_reference_name) . ")";
+    }
+
+    if (!empty($params['up_to_date'])) {
+        $up_from_date = $CI->db->escape_str($params['up_from_date']);
+        $up_to_date   = $CI->db->escape_str($params['up_to_date']);
+        $conditions[] = " " . db_prefix() . "calls_activity_logs.adjusted_call_start BETWEEN '{$up_from_date}' AND '{$up_to_date}' ";
+    }
+
+    if ((isset($params['time_condition']) && $params['time_condition'] != '') && (isset($params['time_minutes']) && $params['time_minutes'] >= 0)) {
+        $condition = in_array($params['time_condition'], ['>', '<', '=', '>=', '<=']) ? $params['time_condition'] : '>';
+        $minutes   = (int)$params['time_minutes'];
+        $conditions[] = " (
+        TIMESTAMPDIFF(SECOND,
+        CASE 
+        WHEN DAYNAME(" . db_prefix() . "leads.dateassigned) = 'Sunday'
+        THEN CONCAT(DATE_ADD(DATE(" . db_prefix() . "leads.dateassigned), INTERVAL 1 DAY),' ',COALESCE(" . db_prefix() . "staff_department.office_start_time,'10:00:00'))
+        WHEN TIME(" . db_prefix() . "leads.dateassigned) > COALESCE(" . db_prefix() . "staff_department.office_end_time,'20:00:00')
+        THEN CONCAT(DATE_ADD(DATE(" . db_prefix() . "leads.dateassigned), INTERVAL 1 DAY),' ',COALESCE(" . db_prefix() . "staff_department.office_start_time,'10:00:00'))
+        WHEN TIME(" . db_prefix() . "leads.dateassigned) < COALESCE(" . db_prefix() . "staff_department.office_start_time,'10:00:00')
+        THEN CONCAT(DATE(" . db_prefix() . "leads.dateassigned),' ',COALESCE(" . db_prefix() . "staff_department.office_start_time,'10:00:00'))
+        ELSE " . db_prefix() . "leads.dateassigned
+        END,
+        FROM_UNIXTIME((SELECT MIN(call_start + 19800) FROM " . db_prefix() . "calls_activity_logs c
+        WHERE c.contact = " . db_prefix() . "leads.phonenumber
+        AND (c.call_start + 19800) > UNIX_TIMESTAMP(" . db_prefix() . "leads.dateassigned)
+        AND c.staffid = " . db_prefix() . "leads.assigned))
+        )/60
+        ) {$condition} {$minutes}";
+    }
+
+    if (!empty($conditions)) {
+        $sql .= 'WHERE ' . implode(' AND ', $conditions) . ' ';
+    }
+
+    $sql .= 'GROUP BY ' . $tblleads . '.id ' . $having_query . ' ';
+
+    // UNION phone + alternative_phonenumber
+    $unionSql = " ( " . $sql . " ) UNION ALL ( " . str_replace('phonenumber', 'alternative_phonenumber', $sql) . " ) ";
+
+    // Dedupe by lead id in outer query (one row per lead)
+    $finalSql = "
+        SELECT 
+            combined.id,
+            combined.status,
+            combined.sub_status
+        FROM (
+            $unionSql
+        ) AS combined
+        GROUP BY combined.id
+    ";
+$rows = $CI->db->query($finalSql)->result();
+
+
+// Build lookup map from tblsub_lead_status (by id AND by name — safety net)
+$subById   = [];
+$subByName = [];
+foreach ($sub_statuses as $ss) {
+    $subById[(string)$ss['id']]             = $ss;
+    $subByName[strtolower(trim($ss['name']))] = $ss;
+}
+
+$statusTotals    = [];
+$subStatusTotals = [];
+
+foreach ($rows as $r) {
+    // ---- Status ----
+    $statusKey = (!empty($r->status) && $r->status != 0) ? (string)$r->status : 'unknown';
+    $statusTotals[$statusKey] = ($statusTotals[$statusKey] ?? 0) + 1;
+
+    // ---- Sub-status ----
+    $rawSub = trim((string)$r->sub_status);
+
+    if ($rawSub === '' || $rawSub === '0') {
+        $subKey = 'unknown';
+    } elseif (isset($subById[$rawSub])) {
+        // Matched by id
+        $subKey = (string)$subById[$rawSub]['id'];
+    } elseif (isset($subByName[strtolower($rawSub)])) {
+        // Matched by name (fallback if sub_status column stores name)
+        $subKey = (string)$subByName[strtolower($rawSub)]['id'];
+    } else {
+        $subKey = 'unknown';
+    }
+
+    $subStatusTotals[$subKey] = ($subStatusTotals[$subKey] ?? 0) + 1;
+}
+
+// ----- DEBUG (remove after verifying) -----
+// echo "<pre>Raw rows:\n"; print_r($rows);
+// echo "\nsub_statuses table:\n"; print_r($sub_statuses);
+// echo "\nsubStatusTotals:\n"; print_r($subStatusTotals);
+// die;
+
+// Build status output
+$statuses[] = ["id" => "unknown", "name" => "Unknown Status"];
+$totalLeads = 0;
+foreach ($statuses as $key => $status) {
+    $statuses[$key]['total'] = $statusTotals[(string)$status["id"]] ?? 0;
+    $totalLeads += $statuses[$key]['total'];
+}
+$statuses[] = ["name" => "Total Leads", "color" => "#28B8DA", "isdefault" => 0, "total" => $totalLeads];
+
+// Build sub-status output
+$sub_statuses[] = ["id" => "unknown", "name" => "Unknown Sub Status"];
+$totalSubLeads  = 0;
+foreach ($sub_statuses as $k => $ss) {
+    $sub_statuses[$k]['total'] = $subStatusTotals[(string)$ss['id']] ?? 0;
+    $totalSubLeads += $sub_statuses[$k]['total'];
+}
+$sub_statuses[] = ["name" => "Total Leads", "color" => "#28B8DA", "isdefault" => 0, "total" => $totalSubLeads];
+
+return [
+    'statuses'     => $statuses,
+    'sub_statuses' => $sub_statuses,
+];
 }
 
 function get_university_list($lead_type)
@@ -11098,4 +11335,58 @@ ORDER BY s.id
    
 
     return $CI->db->query($sql)->result_array();
+}
+
+function get_lastCall_sync($staffId)
+{
+    $CI = &get_instance();
+
+if(empty($staffId))
+{
+     return null; // or return '0000-00-00'
+}
+    $sql = "
+       SELECT 
+   call_start AS call_datetime
+FROM tblcalls_activity_logs
+WHERE staffid = ?
+ORDER BY call_start DESC
+LIMIT 1;
+    ";
+
+    $query = $CI->db->query($sql, [$staffId]);
+
+    // ✅ check query success
+    if (!$query) {
+        return null; // or return '0000-00-00'
+    }
+
+    $row = $query->row();
+
+    // ✅ handle no data
+    if (!$row) {
+        return null; // no calls found
+    }
+
+    return $row->call_datetime;
+}
+
+function get_todayCalls()
+{
+
+        
+     $CI = &get_instance();
+     $current_date = date('Y-m-d');
+    $sql ="SELECT 
+    COUNT(id) AS total_calls,
+    SUM(duration) AS total_seconds,
+    SEC_TO_TIME(SUM(duration)) AS duration_hms,
+    FROM_UNIXTIME(MAX(call_start) + 19800) AS last_call_time
+FROM tblcalls_activity_logs 
+WHERE staffid = '".get_staff_user_id()."' 
+  AND adjusted_call_start = '${current_date}'";
+
+  
+  return $CI->db->query($sql)->row();
+  
 }
