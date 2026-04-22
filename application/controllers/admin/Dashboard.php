@@ -182,7 +182,7 @@ class Dashboard extends AdminController
     
     public function get_daily_calls_tracker()
     {
-    $this->load->driver('cache', array('adapter' => 'file'));
+    // $this->load->driver('cache', array('adapter' => 'file'));
     
     // ✅ get date from POST (from your date picker)
     $from = $this->input->post('from');
@@ -195,10 +195,10 @@ class Dashboard extends AdminController
     }
     
     // ✅ unique cache key based on filter
-    $cacheKey = "daily_calls_{$from}_{$to}";
+    // $cacheKey = "daily_calls_{$from}_{$to}";
     
     // ✅ check cache FIRST
-    $data = $this->cache->get($cacheKey);
+    // $data = $this->cache->get($cacheKey);
     
     // if ($data === FALSE) {
     
@@ -206,7 +206,7 @@ class Dashboard extends AdminController
     $data = $this->dashboard_model->dailyCallsTracker();
     
     // ✅ save cache (10 min)
-    $this->cache->save($cacheKey, $data, 600);
+    // $this->cache->save($cacheKey, $data, 600);
     
     // }
     

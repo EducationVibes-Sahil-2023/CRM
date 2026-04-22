@@ -4336,9 +4336,9 @@ public function todayCalls()
      // Enable error reporting (only for development)
     // error_reporting(E_ALL);
     // ini_set('display_errors', 1);
-    $this->load->driver('cache', ['adapter' => 'file']);
+    // $this->load->driver('cache', ['adapter' => 'file']);
 
-    $cache_key = 'today_calls_data_'.get_staff_user_id();
+    // $cache_key = 'today_calls_data_'.get_staff_user_id();
 
     // Try to get from cache
     // if (!$data = $this->cache->get($cache_key)) {
@@ -4347,7 +4347,7 @@ public function todayCalls()
             $data = get_todayCalls();
 
             // Save cache for 120 seconds (2 min)
-            $this->cache->save($cache_key, $data, 120);
+            // $this->cache->save($cache_key, $data, 120);
 
         } catch (Exception $e) {
             echo json_encode([
