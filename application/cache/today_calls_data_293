@@ -1,1 +1,1 @@
-a:3:{s:4:"time";i:1776854923;s:3:"ttl";i:120;s:4:"data";O:8:"stdClass":4:{s:11:"total_calls";s:1:"2";s:13:"total_seconds";s:3:"102";s:12:"duration_hms";s:8:"00:01:42";s:14:"last_call_time";s:26:"2026-04-22 15:00:00.000000";}}
+a:3:{s:4:"time";i:1776855223;s:3:"ttl";i:120;s:4:"data";O:8:"stdClass":4:{s:11:"total_calls";s:1:"2";s:13:"total_seconds";s:3:"102";s:12:"duration_hms";s:8:"00:01:42";s:14:"last_call_time";s:26:"2026-04-22 15:00:00.000000";}}
