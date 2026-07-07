@@ -15,13 +15,16 @@ $aColumns = [
     "{$sTable}.phonenumber as phonenumber",
     'l.source as source',
     "{$sTable}.update_count as update_count",
+    "l.sub_status as sub_status",
     "{$sTable}.old_status as old_status",
     "{$sTable}.new_status as new_status",
+    "l.status as current_status",
     "{$sTable}.old_assignation as old_assignation",
     "{$sTable}.new_assignation as new_assignation",
     "{$sTable}.old_assignation_date as old_assignation_date",
     "{$sTable}.new_assignation_date as new_assignation_date",
     "{$sTable}.created_at as created_at",
+    "ss.name as sub_status_name"
 ];
 
 $join = [];
@@ -31,7 +34,7 @@ $additionalColumns = [];
 // $join[] = "LEFT JOIN " . db_prefix() . "leads_status os ON os.id = {$sTable}.old_status";
 $join[] = "LEFT JOIN " . db_prefix() . "leads l ON l.id = {$sTable}.leadid";
 $join[] = "LEFT JOIN " . db_prefix() . "staff so ON so.staffid = {$sTable}.old_assignation";
-// $join[] = "LEFT JOIN " . db_prefix() . "staff sn ON sn.staffid = {$sTable}.new_assignation";
+$join[] = "LEFT JOIN " . db_prefix() . "sub_lead_status ss ON ss.id = l.sub_status";
 
 if (!empty($_POST['transfer_date'])) {
     $dateRange = explode(' to ', $_POST['transfer_date']);
@@ -88,6 +91,12 @@ if (!empty($_POST['sources'])) {
 }
 
 
+if (!empty($_POST['c_status'])) {
+    $c_status = implode(',', array_map('intval', $_POST['c_status']));
+    $where[] = " AND (l.status IN ({$c_status})) ";
+}
+
+
 
 
 
@@ -113,8 +122,10 @@ foreach ($rResult as $aRow) {
     $row[] = $aRow['phonenumber'];
      $row[] =!empty($lead_source[$aRow['source']]) ? $lead_source[$aRow['source']]['name'] : '';
     $row[] = $aRow['update_count'];
+    $row[] = $aRow['sub_status_name'];
     $row[] = !empty($statuses[$aRow['old_status']]) ? $statuses[$aRow['old_status']]['name'] : '';
     $row[] = !empty($statuses[$aRow['new_status']]) ? $statuses[$aRow['new_status']]['name'] : '';
+    $row[] = !empty($statuses[$aRow['current_status']]) ? $statuses[$aRow['current_status']]['name'] : '';
     $row[] = !empty($staff[$aRow['old_assignation']]) ? $staff[$aRow['old_assignation']]['staff_name'] : '';
     $row[] = !empty($staff[$aRow['new_assignation']]) ? $staff[$aRow['new_assignation']]['staff_name'] : '';
     $row[] = _dt($aRow['old_assignation_date']);

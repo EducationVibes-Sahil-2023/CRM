@@ -232,6 +232,15 @@ $route['authentication/set_password/(:num)/(:num)/(:any)'] = 'admin/authenticati
 // For backward compatilibilty
 $route['survey/(:num)/(:any)'] = 'surveys/participate/index/$1/$2';
 
+$route['cron/whatsaapAttachments_cron'] = 'External_Apis/Login_Controller/whatsaapAttachments_cron';
+$route['cron/ai_update_status'] = 'External_Apis/Login_Controller/ai_update_status';
+$route['cron/not_reachable_notification'] = 'External_Apis/Login_Controller/not_reachable_notification';
+$route['cron/fresh_notification'] = 'External_Apis/Login_Controller/fresh_notification';
+$route['cron/update_reminder_data'] = 'External_Apis/Login_Controller/update_reminder_data';
+$route['cron/visitor_seminar_whatsapp_notification'] = 'External_Apis/Login_Controller/visitor_seminar_whatsapp_notification';
+$route['cron/whatsapp_message_send_visitor_logs'] = 'External_Apis/Login_Controller/whatsapp_message_send_visitor_logs';
+
+
 if (file_exists(APPPATH . 'config/my_routes.php')) {
     include_once(APPPATH . 'config/my_routes.php');
 }

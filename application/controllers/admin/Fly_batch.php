@@ -112,7 +112,8 @@ class Fly_batch extends AdminController
             $manually = $this->input->post("manually", true);
             $old_batch_id = $this->input->post("old_batch_id", true);
             $ticket_status = $this->input->post("ticket_status", true);
-
+            $airline = $this->input->post("airline", true);
+            
             // check_invitation_letter($client_list);
             // check_neet_Aff($client_list);
             // check_name_Aff($client_list);
@@ -130,6 +131,7 @@ class Fly_batch extends AdminController
                     "fly_date"           => $fly_date,
                     "departure_location" => $departure_location,
                     "ticket_status" => $ticket_status??1,
+                    "airline"=>$airline
                     
                 ];
              
@@ -151,10 +153,15 @@ class Fly_batch extends AdminController
                     ];
 
                     // Upload file and assign it to the ticket data
-                    $file_name = upload_applicant_documents($client_id, $upload_data);
+                    $file_name = upload_applicant_documents($postData_Ticket['client_ids'][0], $upload_data);
 
                     if (!empty($file_name["file_path"])) {
                         $postData_Ticket["ticket_file"] = base_url() . $file_name["file_path"];
+                        
+             
+                          $dataStaffGet = $this->clients_model->get($postData_Ticket['client_ids'][0]);
+                          clientsWhatsappAttachments($postData_Ticket['client_ids'][0], $dataStaffGet->addedfrom,"Flight Ticket",$file_name["file_path"],$departure_location??'Fly Ticket',16);
+                       
                     }
                 }
 
@@ -297,6 +304,7 @@ class Fly_batch extends AdminController
                 "payment_mode"     => $payment_mode,
                 "fly_date"         => $fly_date,
                 "departure_location" => $departure_location,
+                 "airline"=>$airline
             ];
 
 

@@ -1664,4 +1664,9 @@ class Cron_model extends App_Model
 
         return $body;
     }
+    
+    public function not_reachable_cron()
+    {
+        
+    }
 }

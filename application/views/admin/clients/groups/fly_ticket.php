@@ -1,5 +1,5 @@
 <?php defined('BASEPATH') or exit('No direct script access allowed');
-
+$airline   = getDataInformation('airline', ['id', 'name'], ['status' => 1]);
 $batchData = $this->db
     ->select('old_batch_id,tb.name')
     ->from(db_prefix() . 'ticket_data t')
@@ -21,7 +21,7 @@ $batchData = $this->db
     }
     
     .table-responsive {
-    overflow-x: unset !important;
+    /*overflow-x: unset !important;*/
 }
 </style>
 
@@ -123,6 +123,9 @@ $table_data = array(
                      <div class="form-group col-md-4">
                         <?= render_input('ticket_file', 'Ticket', '', 'file'); ?>
                     </div>
+                    <div class="form-group col-md-4">
+                        <?= render_select('airline', $airline, ['id', 'name'], 'Airline', []); ?>
+                    </div>
                 </form>
             </div>
 
@@ -182,6 +185,9 @@ $table_data = array(
                 $("#vendor_name").val(decodedData.vendor_id).trigger("change");
                 $("#departure_location").val(decodedData.departure_location_id).trigger("change");
                  $("#old_batch_id").val(decodedData.old_batch_id).trigger("change");
+                  $("#airline").val(decodedData.airline).trigger("change");
+                 
+                 
             console.log(decodedData);    
 if (decodedData.ticket_batch_id > 0) {
     // Disable all input and select fields inside #ticketModal, except file inputs

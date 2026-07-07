@@ -312,14 +312,16 @@ class Staff_model extends App_Model
         }
 
         $this->db->select($select_str);
-        $this->db->where($where);
+   
+        
+       
 
         if ($all == 1) {
             $this->db->order_by('firstname', 'desc');
             return $this->db->get(db_prefix() . 'staff')->result_array();
             die;
         }
-        if (is_numeric($id)) {
+        if (!empty($id) && is_numeric($id)) {
             $this->db->where('staffid', $id);
             $staff = $this->db->get(db_prefix() . 'staff')->row();
 
@@ -347,6 +349,7 @@ class Staff_model extends App_Model
             // array_push($query, $selfDet[0]);
             // return $query;
         }
+        $this->db->where($where);
         $this->db->order_by('firstname', 'desc');
 
         return $this->db->get(db_prefix() . 'staff')->result_array();

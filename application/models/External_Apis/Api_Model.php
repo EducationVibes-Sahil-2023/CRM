@@ -135,6 +135,7 @@ class Api_Model extends CI_Model
     // ✅ Sanitize OTP
     $otp_input = trim($_POST['otp']);
      $fcm_token = trim($_POST['fcm_token'])??'';
+     $app_version = trim($_POST['app_version'])??'';
      
    
 
@@ -187,7 +188,8 @@ class Api_Model extends CI_Model
             db_prefix() . 'staff',
             [
                 "fcm_token"=>$fcm_token,
-                "login_otp" => ""
+                "login_otp" => "",
+                "app_version"=>$app_version??""
             ],array("staffid" => $user->staffid)
         );
 
@@ -232,8 +234,9 @@ class Api_Model extends CI_Model
                 $jwt_token =  $this->generate_token($data);
                 $response["jwt_token"] = !empty($jwt_token) ? $jwt_token : '';
                 
+                $response["last_sync_time"] = ($user->staffid == 363) ? "2026-06-18 11:00:00" : (get_lastCall_sync($user->staffid) ?? '');
               
-                    $response["last_sync_time"] = get_lastCall_sync($user->staffid)??'';
+                    // $response["last_sync_time"] = if($user->staffid == 363){"2026-06-18 11:00:00"}else{get_lastCall_sync($user->staffid)??'';}
                     
                     // if()
                 
@@ -301,72 +304,140 @@ class Api_Model extends CI_Model
         return $response;
     }
 
-    public function insert_data_batch($table, $data)
-    {
-        $response = [];
-        $chunk_size = 500;  // Break data into smaller chunks (e.g., 1000 rows at a time)
+    // public function insert_data_batch($table, $data)
+    // {
+    //     $response = [];
+    //     $chunk_size = 500;  // Break data into smaller chunks (e.g., 1000 rows at a time)
 
-        try {
-            // Disable foreign key checks (if needed) for faster insertion
-            $this->db->query('SET foreign_key_checks = 0;');
+    //     try {
+    //         // Disable foreign key checks (if needed) for faster insertion
+    //         $this->db->query('SET foreign_key_checks = 0;');
 
-            // Start transaction
-            $this->db->trans_start();
+    //         // Start transaction
+    //         $this->db->trans_start();
 
-            // Loop through data in chunks
-            foreach (array_chunk($data, $chunk_size) as $chunk) {
-                $fields = implode(',', array_keys($chunk[0]));  // Get the column names from the first record
-                $values = array_map(function ($item) {
-                    return '(' . implode(',', array_map(function ($value) {
-                        return $this->db->escape($value);  // Use escape method for security
-                    }, $item)) . ')';
-                }, $chunk);
+    //         // Loop through data in chunks
+    //         foreach (array_chunk($data, $chunk_size) as $chunk) {
+    //             $fields = implode(',', array_keys($chunk[0]));  // Get the column names from the first record
+    //             $values = array_map(function ($item) {
+    //                 return '(' . implode(',', array_map(function ($value) {
+    //                     return $this->db->escape($value);  // Use escape method for security
+    //                 }, $item)) . ')';
+    //             }, $chunk);
 
-                // Join all values to make the bulk insert query
-                $sql = 'INSERT IGNORE INTO ' . $table . ' (' . $fields . ') VALUES ' . implode(',', $values);
+    //             // Join all values to make the bulk insert query
+    //             $sql = 'INSERT IGNORE INTO ' . $table . ' (' . $fields . ') VALUES ' . implode(',', $values);
 
-                // Execute the query in bulk
-                $this->db->query($sql);
-            }
+    //             // Execute the query in bulk
+    //             $this->db->query($sql);
+    //         }
 
-            // Complete the transaction
-            $this->db->trans_complete();
+    //         // Complete the transaction
+    //         $this->db->trans_complete();
 
-            // Re-enable foreign key checks
-            $this->db->query('SET foreign_key_checks = 1;');
+    //         // Re-enable foreign key checks
+    //         $this->db->query('SET foreign_key_checks = 1;');
 
-            // Check if the transaction was successful
-            if ($this->db->trans_status() === FALSE) {
-                log_message('error', 'Data insert failed during transaction.');
-                $response = [
-                    "status" => 0,
-                    "message" => "Failed to insert data"
-                ];
-            } else {
-                // Handle the response based on affected rows
-                if ($this->db->affected_rows() > 0) {
-                    $response = [
-                        "status" => 1,
-                        "message" => "Data inserted successfully."
-                    ];
-                } else {
-                    $response = [
-                        "status" => 0,
-                        "message" => "No rows inserted (possibly duplicates)."
-                    ];
-                }
-            }
-        } catch (Exception $e) {
-            // Catch any exceptions and return an error message
-            $response = [
-                "status" => 0,
-                "message" => $e->getMessage()
-            ];
-        }
+    //         // Check if the transaction was successful
+    //         if ($this->db->trans_status() === FALSE) {
+    //             log_message('error', 'Data insert failed during transaction.');
+    //             $response = [
+    //                 "status" => 0,
+    //                 "message" => "Failed to insert data"
+    //             ];
+    //         } else {
+    //             // Handle the response based on affected rows
+    //             if ($this->db->affected_rows() > 0) {
+    //                 $response = [
+    //                     "status" => 1,
+    //                     "message" => "Data inserted successfully."
+    //                 ];
+    //             } else {
+    //                 $response = [
+    //                     "status" => 0,
+    //                     "message" => "No rows inserted (possibly duplicates)."
+    //                 ];
+    //             }
+    //         }
+    //     } catch (Exception $e) {
+    //         // Catch any exceptions and return an error message
+    //         $response = [
+    //             "status" => 0,
+    //             "message" => $e->getMessage()
+    //         ];
+    //     }
 
-        return $response;
+    //     return $response;
+    // }
+
+
+public function insert_data_batch($table, $data)
+{
+    if (empty($data)) {
+        return [
+            "status" => 0,
+            "message" => "No data provided"
+        ];
     }
 
+    $chunk_size = 50;
+
+    try {
+
+        foreach (array_chunk($data, $chunk_size) as $chunk) {
+
+            $this->db->trans_begin();
+
+            $fields = array_keys($chunk[0]);
+            $field_list = '`' . implode('`,`', $fields) . '`';
+
+            $values_sql = [];
+
+            foreach ($chunk as $row) {
+
+                $escaped = [];
+
+                foreach ($fields as $field) {
+                    $escaped[] = isset($row[$field])
+                        ? $this->db->escape($row[$field])
+                        : "NULL";
+                }
+
+                $values_sql[] = '(' . implode(',', $escaped) . ')';
+            }
+
+            $sql = "INSERT INTO {$table} ({$field_list}) VALUES "
+                 . implode(',', $values_sql);
+
+            $this->db->query($sql);
+
+            if ($this->db->trans_status() === FALSE) {
+                $this->db->trans_rollback();
+
+                return [
+                    "status" => 0,
+                    "message" => "Chunk insert failed"
+                ];
+            }
+
+            $this->db->trans_commit();
+        }
+
+        return [
+            "status" => 1,
+            "message" => "Batch insert completed"
+        ];
+
+    } catch (Exception $e) {
+
+        $this->db->trans_rollback();
+
+        return [
+            "status" => 0,
+            "message" => $e->getMessage()
+        ];
+    }
+}
 
     public function update_data($table, $data, $where)
     {
@@ -510,7 +581,7 @@ class Api_Model extends CI_Model
                 );
             } else {
                 $response = array(
-                    "status" => 1,
+                    "status" => 0,
                     "message" => "Call data update successfully.",
                 );
             }

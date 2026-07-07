@@ -299,6 +299,15 @@ class Misc_model extends App_Model
         $insert_id = $this->db->insert_id();
 
         if ($insert_id) {
+            
+            if($rel_type == 'lead')
+            {
+                if(is_admin()){
+                
+                $this->updateLeadLastUpdateDate($rel_id);
+                
+                }
+            }
             hooks()->do_action('note_created', $insert_id, $data);
 
             return $insert_id;
@@ -306,6 +315,43 @@ class Misc_model extends App_Model
 
         return false;
     }
+    
+    public function updateLeadLastUpdateDate($leadId)
+{
+    if (empty($leadId)) {
+        return false;
+    }
+
+    $dateadded = date('Y-m-d H:i:s');
+
+    // Get existing lastupdate_date
+    $lead = $this->db
+        ->select('lastupdate_date')
+        ->where('id', $leadId)
+        ->get(db_prefix() . 'leads')
+        ->row();
+
+    $existingDate = !empty($lead->lastupdate_date)
+        ? strtotime($lead->lastupdate_date)
+        : 0;
+
+    $newDate = strtotime($dateadded);
+
+    // Update only if new date is greater
+    if ($newDate > $existingDate) {
+
+        $this->db->where('id', $leadId);
+
+        return $this->db->update(
+            db_prefix() . 'leads',
+            [
+                'lastupdate_date' => $dateadded
+            ]
+        );
+    }
+
+    return false;
+}
 
     public function edit_note($data, $id)
     {
@@ -732,8 +778,8 @@ class Misc_model extends App_Model
 
 
         // Payments search
-        $has_permission_view_payments     = has_permission('payments', '', 'view');
-        $has_permission_view_invoices_own = has_permission('invoices', '', 'view_own');
+        // $has_permission_view_payments     = has_permission('payments', '', 'view');
+        // $has_permission_view_invoices_own = has_permission('invoices', '', 'view_own');
 
         // if (has_permission('payments', '', 'view') || $has_permission_view_invoices_own || get_option('allow_staff_view_invoices_assigned') == '1') {
         //     if (is_numeric($q)) {
@@ -772,19 +818,19 @@ class Misc_model extends App_Model
         // }
 
         // Custom fields only admins
-        if ($is_admin) {
-            $this->db->select()->from(db_prefix() . 'customfieldsvalues')->like('value', $q)->limit($limit);
-            $result[] = [
-                'result'         => $this->db->get()->result_array(),
-                'type'           => 'custom_fields',
-                'search_heading' => _l('custom_fields'),
-            ];
-        }
+        // if ($is_admin) {
+        //     $this->db->select()->from(db_prefix() . 'customfieldsvalues')->like('value', $q)->limit($limit);
+        //     $result[] = [
+        //         'result'         => $this->db->get()->result_array(),
+        //         'type'           => 'custom_fields',
+        //         'search_heading' => _l('custom_fields'),
+        //     ];
+        // }
 
         // Invoice Items Search
-        $has_permission_view_invoices       = has_permission('invoices', '', 'view');
-        $has_permission_view_invoices_own   = has_permission('invoices', '', 'view_own');
-        $allow_staff_view_invoices_assigned = get_option('allow_staff_view_invoices_assigned');
+        // $has_permission_view_invoices       = has_permission('invoices', '', 'view');
+        // $has_permission_view_invoices_own   = has_permission('invoices', '', 'view_own');
+        // $allow_staff_view_invoices_assigned = get_option('allow_staff_view_invoices_assigned');
 
         // if ($has_permission_view_invoices || $has_permission_view_invoices_own || $allow_staff_view_invoices_assigned == '1') {
         //     $noPermissionQuery = get_invoices_where_sql_for_staff(get_staff_user_id());
@@ -805,9 +851,9 @@ class Misc_model extends App_Model
         // }
 
         // Estimate Items Search
-        $has_permission_view_estimates       = has_permission('estimates', '', 'view');
-        $has_permission_view_estimates_own   = has_permission('estimates', '', 'view_own');
-        $allow_staff_view_estimates_assigned = get_option('allow_staff_view_estimates_assigned');
+        // $has_permission_view_estimates       = has_permission('estimates', '', 'view');
+        // $has_permission_view_estimates_own   = has_permission('estimates', '', 'view_own');
+        // $allow_staff_view_estimates_assigned = get_option('allow_staff_view_estimates_assigned');
         // if ($has_permission_view_estimates || $has_permission_view_estimates_own || $allow_staff_view_estimates_assigned) {
         //     $noPermissionQuery = get_estimates_where_sql_for_staff(get_staff_user_id());
 
@@ -886,58 +932,122 @@ class Misc_model extends App_Model
         return $result;
     }
 
+    // public function _search_leads($q, $limit = 0, $where = "")
+    // {
+    //     $result = [
+    //         'result'         => [],
+    //         'type'           => 'leads',
+    //         'search_heading' => _l('leads'),
+    //     ];
+
+    //     $has_permission_view = has_permission('leads', '', 'view');
+
+    //     if (is_staff_member()) {
+    //         // Leads
+    //         $this->db->select();
+    //         $this->db->from(db_prefix() . 'leads');
+
+    //         if (!$has_permission_view) {
+    //             $this->db->where('(assigned = ' . get_staff_user_id() . ' OR addedfrom = ' . get_staff_user_id() . ' OR is_public=1)');
+    //         }
+
+    //         if (!startsWith($q, '#')) {
+    //             $this->db->where('(name LIKE "%' . $this->db->escape_like_str($q) . '%" ESCAPE \'!\'
+    //                 OR title LIKE "%' . $this->db->escape_like_str($q) . '%" ESCAPE \'!\'
+    //                 OR company LIKE "%' . $this->db->escape_like_str($q) . '%" ESCAPE \'!\'
+    //                 OR zip LIKE "%' . $this->db->escape_like_str($q) . '%" ESCAPE \'!\'
+    //                 OR city LIKE "%' . $this->db->escape_like_str($q) . '%" ESCAPE \'!\'
+    //                 OR state LIKE "%' . $this->db->escape_like_str($q) . '%" ESCAPE \'!\'
+    //                 OR address LIKE "%' . $this->db->escape_like_str($q) . '%" ESCAPE \'!\'
+    //                 OR email LIKE "%' . $this->db->escape_like_str($q) . '%" ESCAPE \'!\'
+    //                 OR phonenumber LIKE "%' . $this->db->escape_like_str($q) . '%" ESCAPE \'!\'
+    //                 OR alternative_phonenumber LIKE "%' . $this->db->escape_like_str($q) . '%" ESCAPE \'!\'
+    //                 )');
+    //         } else {
+    //             $this->db->where('id IN
+    //                 (SELECT rel_id FROM ' . db_prefix() . 'taggables WHERE tag_id IN
+    //                 (SELECT id FROM ' . db_prefix() . 'tags WHERE name="' . $this->db->escape_str(strafter($q, '#')) . '")
+    //                 AND ' . db_prefix() . 'taggables.rel_type=\'lead\' GROUP BY rel_id HAVING COUNT(tag_id) = 1)
+    //                 ');
+    //         }
+
+    //         if (!empty($where)) {
+    //             $this->db->where($where);
+    //         }
+
+    //         if ($limit != 0) {
+    //             $this->db->limit($limit);
+    //         }
+    //         $this->db->order_by('name', 'ASC');
+    //         $result['result'] = $this->db->get()->result_array();
+    //     }
+
+    //     return $result;
+    // }
+    
+    
     public function _search_leads($q, $limit = 0, $where = "")
-    {
-        $result = [
-            'result'         => [],
-            'type'           => 'leads',
-            'search_heading' => _l('leads'),
-        ];
+{
+    $result = [
+        'result'         => [],
+        'type'           => 'leads',
+        'search_heading' => _l('leads'),
+    ];
 
-        $has_permission_view = has_permission('leads', '', 'view');
+    $has_permission_view = has_permission('leads', '', 'view');
 
-        if (is_staff_member()) {
-            // Leads
-            $this->db->select();
-            $this->db->from(db_prefix() . 'leads');
+    if (is_staff_member()) {
 
-            if (!$has_permission_view) {
-                $this->db->where('(assigned = ' . get_staff_user_id() . ' OR addedfrom = ' . get_staff_user_id() . ' OR is_public=1)');
-            }
+        $this->db->from(db_prefix() . 'leads');
 
-            if (!startsWith($q, '#')) {
-                $this->db->where('(name LIKE "%' . $this->db->escape_like_str($q) . '%" ESCAPE \'!\'
-                    OR title LIKE "%' . $this->db->escape_like_str($q) . '%" ESCAPE \'!\'
-                    OR company LIKE "%' . $this->db->escape_like_str($q) . '%" ESCAPE \'!\'
-                    OR zip LIKE "%' . $this->db->escape_like_str($q) . '%" ESCAPE \'!\'
-                    OR city LIKE "%' . $this->db->escape_like_str($q) . '%" ESCAPE \'!\'
-                    OR state LIKE "%' . $this->db->escape_like_str($q) . '%" ESCAPE \'!\'
-                    OR address LIKE "%' . $this->db->escape_like_str($q) . '%" ESCAPE \'!\'
-                    OR email LIKE "%' . $this->db->escape_like_str($q) . '%" ESCAPE \'!\'
-                    OR phonenumber LIKE "%' . $this->db->escape_like_str($q) . '%" ESCAPE \'!\'
-                    OR alternative_phonenumber LIKE "%' . $this->db->escape_like_str($q) . '%" ESCAPE \'!\'
-                    )');
-            } else {
-                $this->db->where('id IN
-                    (SELECT rel_id FROM ' . db_prefix() . 'taggables WHERE tag_id IN
-                    (SELECT id FROM ' . db_prefix() . 'tags WHERE name="' . $this->db->escape_str(strafter($q, '#')) . '")
-                    AND ' . db_prefix() . 'taggables.rel_type=\'lead\' GROUP BY rel_id HAVING COUNT(tag_id) = 1)
-                    ');
-            }
-
-            if (!empty($where)) {
-                $this->db->where($where);
-            }
-
-            if ($limit != 0) {
-                $this->db->limit($limit);
-            }
-            $this->db->order_by('name', 'ASC');
-            $result['result'] = $this->db->get()->result_array();
+        // permission filter
+        if (!$has_permission_view) {
+            $this->db->where('(assigned = ' . get_staff_user_id() . '
+                OR addedfrom = ' . get_staff_user_id() . '
+                OR is_public = 1)');
         }
 
-        return $result;
+        // tag search (unchanged but optimized)
+        if (startsWith($q, '#')) {
+
+            $tag = strafter($q, '#');
+
+            $this->db->where('id IN (
+                SELECT rel_id 
+                FROM ' . db_prefix() . 'taggables 
+                WHERE tag_id IN (
+                    SELECT id FROM ' . db_prefix() . 'tags 
+                    WHERE name = ' . $this->db->escape($tag) . '
+                )
+                AND rel_type = "lead"
+            )');
+        }
+
+        // 🔥 FULLTEXT SEARCH (MAIN OPTIMIZATION)
+        else {
+
+            $this->db->where("
+                MATCH(name, title, company, zip, city, state, address, email, phonenumber, alternative_phonenumber)
+                AGAINST(".$this->db->escape($q.'*')." IN BOOLEAN MODE)
+            ", NULL, FALSE);
+        }
+
+        // optional extra filter
+        if (!empty($where)) {
+            $this->db->where($where);
+        }
+
+        if ($limit != 0) {
+            $this->db->limit($limit);
+        }
+
+        $this->db->order_by('name', 'ASC');
+
+        $result['result'] = $this->db->get()->result_array();
     }
+
+    return $result;
+}
 
     public function _search_tickets($q, $limit = 0)
     {

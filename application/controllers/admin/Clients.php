@@ -11,6 +11,7 @@ class Clients extends AdminController
         $this->load->model('quotation_model');
     }
     /* List all clients */
+    
     public function index()
     {
         $lastSegment = $this->uri->segment($this->uri->total_segments());
@@ -63,6 +64,13 @@ class Clients extends AdminController
         $data['sources']  = $this->leads_model->get_source();
         $data['leadType'] = $this->leads_model->get_type();
         $data['vendorType'] = $this->leads_model->get_vendor();
+        $data['university_priority_3'] = $this->clients_model->get_priority_university(3);
+        
+        // if(!empty($data['university_priority_3']))
+        // {
+        //     print_r($data['university_priority_3']);
+        //     die;
+        // }
         // $view_page = 'admin/clients/' . $lastSegment . "_manage";
 
         $view_page = 'admin/clients/' . $lastSegment . "_manage";
@@ -184,7 +192,10 @@ class Clients extends AdminController
         if (!empty($id)) {
             $client = $this->clients_model->get($id);
         }
-        $data["dropdown_country_university_selection"] = $this->s_db->query("SELECT co.name,c.country_name,u.university_name,c.id country_id,u.id university_id FROM course co left join countries c ON (co.id = c.segment_id) left join universities u on (u.country_id = c.id and u.status ='0') ")->result_array();
+        // $data["dropdown_country_university_selection"] = $this->s_db->query("SELECT co.name,c.country_name,u.university_name,c.id country_id,u.id university_id FROM course co left join countries c ON (co.id = c.segment_id) left join universities u on (u.country_id = c.id and u.status ='0') ")->result_array();
+        $data["dropdown_country_university_selection"] = get_universityList();
+        
+        
         // $data["dropdown_courses"] = $this->s_db->query("SELECT id,course_name FROM tbl_courses where status = 0 group by course_name order by course_name asc")->result_array();
         if (!has_permission('customers', '', 'view')) {
             if ($id != '' && !is_customer_admin($id)) {
@@ -319,7 +330,7 @@ class Clients extends AdminController
                     $data['course_list_ug'] =  $this->get_courses("Bachelor");
                     $data['course_list_pg'] =  $this->get_courses("Master");
                 } else {
-                    $data['university_shortlisting'] = $this->clients_model->university_shortlisting($id, 1);
+                    $data['university_shortlisting'] = $this->clients_model->university_shortlisting($id);
                 }
                 $data['passport_info'] = $this->clients_model->getPassportDetails($id);
                 $data['admissionpreferences'] = $this->clients_model->getAdmissionPreferences($id);
@@ -527,7 +538,9 @@ class Clients extends AdminController
         if (!empty($id)) {
             $client = $this->clients_model->get($id);
         }
-        $data["dropdown_country_university_selection"] = $this->s_db->query("SELECT co.name,c.country_name,u.university_name FROM course co left join countries c ON (co.id = c.segment_id) left join universities u on (u.country_id = c.id and u.status ='0') ")->result_array();
+        // $data["dropdown_country_university_selection"] = $this->s_db->query("SELECT co.name,c.country_name,u.university_name FROM course co left join countries c ON (co.id = c.segment_id) left join universities u on (u.country_id = c.id and u.status ='0') ")->result_array();
+        
+        $data["dropdown_country_university_selection"] = get_universityList();
         if (!has_permission('customers', '', 'view')) {
             if ($id != '' && !is_customer_admin($id)) {
                 if ($client->addedfrom == get_staff_user_id()) {
@@ -865,7 +878,9 @@ class Clients extends AdminController
         if (!empty($id)) {
             $client = $this->clients_model->get($id);
         }
-        $data["dropdown_country_university_selection"] = $this->s_db->query("SELECT co.name,c.country_name,u.university_name,c.id country_id,u.id university_id FROM course co left join countries c ON (co.id = c.segment_id) left join universities u on (u.country_id = c.id and u.status ='0') ")->result_array();
+        // $data["dropdown_country_university_selection"] = $this->s_db->query("SELECT co.name,c.country_name,u.university_name,c.id country_id,u.id university_id FROM course co left join countries c ON (co.id = c.segment_id) left join universities u on (u.country_id = c.id and u.status ='0') ")->result_array();
+        
+        $data["dropdown_country_university_selection"] = get_universityList();
         if (!has_permission('customers', '', 'view')) {
             if ($id != '' && !is_customer_admin($id)) {
                 if ($client->addedfrom == get_staff_user_id()) {
@@ -1856,6 +1871,8 @@ class Clients extends AdminController
                 $payment_date = $this->input->post('apostille_payment_date');
                 $currency_id_apostile = $this->input->post('currency_id_apostile');
                 $currency_text_apostile = $this->input->post('currency_text_apostile');
+                $apostile_payment_mode = $this->input->post('apostile_payment_mode');
+                $apostile_exchange_rate= $this->input->post('apostile_exchange_rate');
 
                 if (!empty($courier_date) && !empty($receiving_date)) {
                     if (strtotime($receiving_date) < strtotime($courier_date)) {
@@ -1888,6 +1905,7 @@ class Clients extends AdminController
                 } else {
                     $check_status = 2; // update apostile data 
                 }
+
 
                 if (!empty($receiving_date)) {
                     //   if (!empty($_POST["apostile_id"])) {
@@ -1971,7 +1989,6 @@ class Clients extends AdminController
 
                 // else if (empty($courier_date) && empty($documents_id) && (!empty($receiving_date) || !empty($payment_date))) {
                 //     $check_status = 2; // update apostile data 
-                // }
 
                 $get_data_from_document = get_orignal_document_data_list_apostille($ids, $documents_id, $check_status, $vendor_id, $apostille_document_vendor);
 
@@ -1983,6 +2000,12 @@ class Clients extends AdminController
                     ];
                     echo json_encode($data);
                     exit;
+                }
+                
+                
+                if(empty($get_data_from_document))
+                {
+                    
                 }
 
                 if ($check_status == 1) {
@@ -2005,14 +2028,26 @@ class Clients extends AdminController
                                 "courier_date" => $courier_date,
                                 "apostille_received" => $receiving_date,
                                 "apostille_cost" => !empty($document_cost[$doc_id]) ? $document_cost[$doc_id] : 0,
-                                "payment_date" => $payment_date,
+                                "payment_date" => $payment_date??'NULL',
                                 "created_at" => date('Y-m-d H:i:s'),
                                 "created_by" => get_staff_user_id(),
                                 "received_status" => !empty($receiving_date) ? 1 : 0,
                                 "by_vendor" => $by_vendor,
-                                "currency_type" => ($document_cost[$doc_id] != "") ? $currency_id_apostile : '',
-                                "currency_text" => ($document_cost[$doc_id] != "") ? $currency_text_apostile : '',
+                                "currency_type" => !empty($document_cost[$doc_id])
+                                ? $document_cost[$doc_id]
+                                : (!empty($currency_id_apostile) ? $currency_id_apostile : ''),
+                                
+                                "currency_text" => !empty($document_cost[$doc_id])
+                                ? $document_cost[$doc_id]
+                                : (!empty($currency_text_apostile) ? $currency_text_apostile : ''),
                                 "bulk" => empty($_POST["manual_status"]) ? 1 : 0,
+                                "payment_mode" =>!empty($apostile_payment_mode)
+                                ? $apostile_payment_mode
+                                : (!empty($_POST['payment_mode']) ? $_POST['payment_mode'] : 0),
+                                "exchange_rate"=> !empty($apostile_exchange_rate)
+                                ? $apostile_exchange_rate
+                                : (!empty($_POST['exchange_rate']) ? $_POST['exchange_rate'] : 0),
+
                             ];
                             $doc_name = !empty($apostille_documents[$doc_id]['name']) ? $apostille_documents[$doc_id]['name'] : 'Unknown Document';
                             $cost = !empty($document_cost[$doc_id]) ? " with cost ₹{$document_cost[$doc_id]}" : '';
@@ -2036,6 +2071,12 @@ class Clients extends AdminController
                     // Insert into DB
                     if (!empty($insert_apostille_data)) {
                         $inserted = $this->db->insert_batch(db_prefix() . "client_apostille_data", $insert_apostille_data);
+                        
+//                   if(is_admin())
+// {
+//     echo $this->db->last_query();
+//     die;
+// }
                         if ($inserted) {
 
                             $this->db->insert_batch(db_prefix() . 'apostille_document_activity', $activity_data);
@@ -2083,14 +2124,21 @@ class Clients extends AdminController
                         if (!empty($courier_date)) {
                             $row["courier_date"] = $courier_date;
                         }
+                        
+                        if (!empty($apostile_exchange_rate)) {
+                            $row["exchange_rate"] = $apostile_exchange_rate;
+                        }
+                           if (!empty($apostile_payment_mode)) {
+                            $row["payment_mode"] = $apostile_payment_mode;
+                        }
 
                         if (!empty($_POST["manual_status"])) {
                             $row["bulk"] = 0;
                         }
 
-
-
                         $update_apostille_data[] = $row;
+                        
+                     
 
 
                         $doc_name = !empty($apostille_documents[$rec_apostille['doc_id']]['name']) ? $apostille_documents[$rec_apostille['doc_id']]['name'] : 'Unknown Document';
@@ -2110,7 +2158,8 @@ class Clients extends AdminController
                         ];
                     }
 
-                    // Perform batch update
+                // }
+                  // Perform batch update
                     if (!empty($update_apostille_data)) {
                         $updated = $this->db->update_batch(db_prefix() . "client_apostille_data", $update_apostille_data, "id");
                         $this->db->insert_batch(db_prefix() . 'apostille_document_activity', $activity_data);
@@ -2144,6 +2193,7 @@ class Clients extends AdminController
                 $visa_payment_date = $this->input->post('visa_payment_date');
                 $visa_cost = $this->input->post('visa_cost');
                 $visa_payment_mode = $this->input->post('visa_payment_mode');
+                $visa_exchange_rate= $this->input->post('visa_exchange_rate');
                 $visa_sub_status = VISA_PENDING;
                 if (!empty($courier_date)) {
                     $visa_sub_status = VISA_SENT;
@@ -2198,6 +2248,7 @@ class Clients extends AdminController
                             "created_at" => date('Y-m-d H:i:s'),
                             "created_by" => get_staff_user_id(),
                             "received_status" => !empty($receiving_date) ? 1 : 0,
+                            "exchange_rate"=>$visa_exchange_rate
                         ];
 
                         $cost = !empty($visa_cost) ? " with cost ₹{$visa_cost}" : '';
@@ -2278,6 +2329,9 @@ class Clients extends AdminController
                         if (!empty($visa_courier_type)) {
                             $row["courier_type"] = $visa_courier_type;
                         }
+                        if (!empty($visa_exchange_rate)) {
+                            $row["exchange_rate"] = $visa_exchange_rate;
+                        }
                         $update_visa_data[] = $row;
 
 
@@ -2350,7 +2404,8 @@ class Clients extends AdminController
                 $payment_date = $this->input->post('translation_payment_date');
                 $currency_id_translation = $this->input->post('currency_id_translation');
                 $currency_text_translation = $this->input->post('currency_text_translation');
-
+ $translation_payment_mode = $this->input->post('translation_payment_mode');
+ $translation_exchange_rate= $this->input->post('translation_exchange_rate');
                 if (!empty($courier_date) && !empty($receiving_date)) {
                     if (strtotime($receiving_date) < strtotime($courier_date)) {
                         $error_message = "Receiving date cannot be earlier than courier date.";
@@ -2457,6 +2512,8 @@ class Clients extends AdminController
                                 "currency_type" => ($document_cost[$doc_id] != "") ? $currency_id_translation : '',
                                 "currency_text" => ($document_cost[$doc_id] != "") ? $currency_text_translation : '',
                                 "bulk" => empty($_POST["manual_status"]) ? 1 : 0,
+                                "payment_mode"=>$translation_payment_mode,
+                                "exchange_rate"=>$translation_exchange_rate
                             ];
                             $doc_name = !empty($translation_documents[$doc_id]['name']) ? $translation_documents[$doc_id]['name'] : 'Unknown Document';
                             $cost = !empty($document_cost[$doc_id]) ? " with cost ₹{$document_cost[$doc_id]}" : '';
@@ -2526,6 +2583,12 @@ class Clients extends AdminController
 
                         if (!empty($courier_date)) {
                             $row["courier_date"] = $courier_date;
+                        }
+                          if (!empty($translation_exchange_rate)) {
+                            $row["exchange_rate"] = $translation_exchange_rate;
+                        }
+                           if (!empty($translation_payment_mode)) {
+                            $row["payment_mode"] = $translation_payment_mode;
                         }
 
                         if (!empty($_POST["manual_status"])) {
@@ -2864,8 +2927,14 @@ class Clients extends AdminController
                 'acadmic_year' => !empty($params['acadmic_year']) ? $params['acadmic_year'] : '',
                 'userid' => $params['client_id'],
                 'course_name' => !empty($params['course_name']) ? $params['course_name'] : '',
+                // 'university_priority'=>!empty($params['university_priority'])?json_encode($params['university_priority'], true):''
             ];
+            
 
+if (!empty($params['university_priority'])) {
+                $dataArr['university_priority'] = !empty($params['university_priority'])?json_encode($params['university_priority'], true):null;
+
+            }
             if ($params['countries'] != "") {
                 $dataArr['study_country'] = $params['countries'];
                 $dataArr['university'] = json_encode($params['universities'], true);
@@ -2985,14 +3054,50 @@ class Clients extends AdminController
                     }
 
 
+
                     if (!empty($primary_university) && !empty($primary_country)) {
                         $this->db->where("userid", $client_id);
                         $this->db->update(db_prefix() . 'admission_preferences', [
                             "primary_university" => $primary_university,
                             "primary_country"    => $primary_country
                         ]);
+                        
+                         $update_data = [
+                             'fees_error'   => 1,
+                            ];
+                         $this->db->where('userid', $client_id);
+                            $this->db->update(db_prefix() . 'clients', $update_data);
                     }
                 }
+                
+                
+                        if (!empty($_POST['resetFeesStatus']) && !empty($client_id)) {
+                        
+                        $this->db->where('client_id', $client_id);
+                        $this->db->delete(db_prefix() . 'applicant_fees_details');
+                        
+                        }
+                        
+                         if (!empty($_POST['resetScholarshipStatus']) && !empty($client_id)) {
+                             
+                            $update_data = [
+                            'scholarship_status'   => 0,
+                            'scholarship_amount'   => '',
+                            'scholarship_currency' => 0,
+                            'scholarship_reason'   => '',
+                            'scholarship_reason_id'   => 0,
+                            'air_ticket_include'   => 0,
+                            'fees_error'   => 1,
+                            ];
+                            
+                            $this->db->where('userid', $client_id);
+                            $this->db->update(db_prefix() . 'clients', $update_data);
+                            
+                            
+                            
+                            
+
+                         }
 
                 $responseData['resp_code'] = 'RCS';
                 $responseData['resp_desc'] = 'Admission Preferences successfully updated';
@@ -3155,6 +3260,8 @@ class Clients extends AdminController
             $document_data =  $this->db->select("id,data");
             $this->db->where('client_id', $client_id);
             $check_ = $this->db->get(db_prefix() . 'client_documents')->row();
+            
+       
             if (!empty($check_->id)) {
                 // Ensure $check_->data is valid JSON
                 $already_data = json_decode($check_->data, true);
@@ -3205,6 +3312,19 @@ class Clients extends AdminController
                         $data['resp_desc'] = "Some this went wrong delete data";
                         set_alert('danger', "Some this went wrong delete data");
                     }
+                    
+                    if(!empty($documents_type[$doc_id]['whatsapp_message']) && $documents_type[$doc_id]['whatsapp_message']==1)
+                    {
+                    $file_name_ = str_replace(" ", "-", $documents_type[$doc_id]['name']);
+                    if(!empty($client_id) && !empty($file_name_)){
+                    clientsWhatsappAttachments_delete($client_id,$file_name_);
+                    }
+                    
+                    }
+                    
+                     updateOriginalDocument($client_id,$doc_id,1);
+                    
+                    
                     echo json_encode($data);
                     die;
                 }
@@ -3242,6 +3362,43 @@ class Clients extends AdminController
                                     get_staff_user_id(),
                                     $doc_id
                                 );
+     
+         if(!empty($documents_type[$doc_id]['whatsapp_message']) && $documents_type[$doc_id]['whatsapp_message']==1)
+                    {
+                    $file_name_ = str_replace(" ", "-", $documents_type[$doc_id]['name']);
+                    if(!empty($client_id) && !empty($file_name_)){
+                    clientsWhatsappAttachments_delete($client_id,$file_name_);
+                    }
+                    
+                    }
+                            
+                                    $bulkNotifications = [];
+                                    
+                                    $assignedStaff = assignedClient($client_id);
+                                    
+                                    $fcmToken = getfcmToken($assignedStaff);
+                                    
+                                    if (!empty($fcmToken)) {
+                                    
+                                    $bulkNotifications[] = [
+                                    "staffid"=>$assignedStaff,
+                                    'token' => $fcmToken,
+                                    'notification' => [
+                                    'title' => '❌ Document Rejected',
+                                    'body' => 'The ' .
+                                    documentName($doc_id) .
+                                    ' document has been rejected by ' .
+                                    get_staff_full_name(get_staff_user_id()) . '.'
+                                    ],
+                                    'data' => [
+                                    'type' => 'document_reject',
+                                    'client_id' => (string)$client_id
+                                    ]
+                                    ];
+                                    
+                                    send_Fcm_Notification($bulkNotifications, "Document Reject");
+                                    }
+                                
                             } else {
                                 log_message('error', 'Staff details not found or email missing for client ID: ' . $client_id);
                             }
@@ -3251,7 +3408,10 @@ class Clients extends AdminController
                     }
                 }
 
-                $update = $this->db->where("id", $check_->id);
+    if($status == 1){
+  updateOriginalDocument($client_id,$doc_id);
+    }
+            $update = $this->db->where("id", $check_->id);
                 $this->db->update(db_prefix() . 'client_documents', array("data" => json_encode($already_data, true)));
                 $rows_affected = $this->db->affected_rows();
                 if ($rows_affected > 0) {
@@ -3279,6 +3439,7 @@ class Clients extends AdminController
         $data = array();
         if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             $doc_ids = $this->input->post("doc_type_id");
+            $doc_whatsaapStatus =  $this->input->post("doc_whatsaapStatus");
             $doc_names = $this->input->post("doc_type_name");
             $document_url = $this->input->post("doc_url");
             $sample_collect_date = $this->input->post("sample_collect_date");
@@ -3292,7 +3453,7 @@ class Clients extends AdminController
             $this->db->select("data");
             $this->db->where('client_id', $client_id);
             $already_data = $this->db->get(db_prefix() . 'client_documents')->row();
-
+            $dataStaffGet = $this->clients_model->get($client_id);
 
             if (!empty($already_data->data)) {
                 // Ensure $check_->data is valid JSON
@@ -3315,19 +3476,27 @@ class Clients extends AdminController
                     if ($upload_data["error"] === UPLOAD_ERR_OK) {
 
                         if ($doc_ids[$i] == 16) {
-
-
-                            $update = $this->db->query("
-UPDATE tblclient_university_shortlisting AS s
-JOIN tbladmission_preferences AS p 
-ON p.userid = s.client_id
-AND s.university_name = p.primary_university
-AND p.primary_country = 'georgia'
-SET s.ministry_document_recived = 1
-WHERE s.client_id = " . (int)$client_id . "
-");
+                        
+                        
+                        $update = $this->db->query("
+                        UPDATE tblclient_university_shortlisting AS s
+                        JOIN tbladmission_preferences AS p 
+                        ON p.userid = s.client_id
+                        AND s.university_name = p.primary_university
+                        AND p.primary_country = 'georgia'
+                        SET s.ministry_document_recived = 1
+                        WHERE s.client_id = " . (int)$client_id . "
+                        ");
                         }
+                        
                         $file_name = upload_applicant_documents($client_id, $upload_data);
+                        
+                        if($doc_whatsaapStatus[$i] == 1)
+                        {
+                            
+                              clientsWhatsappAttachments($client_id, $dataStaffGet->addedfrom,$file_name_,$file_name["file_path"],$file_name_);
+                        }
+                        
                         array_push($update_array, array("id" => $doc_ids[$i], "document_file" => $file_name["file_path"], "updated_by" => get_staff_user_id(), "updated_date" => date('Y-m-d H:i:s')));
                         $doc_name = $documents_type[$doc_ids[$i]]["name"];
 
@@ -4936,10 +5105,11 @@ WHERE s.client_id = " . (int)$client_id . "
 
     public function student_update()
     {
+        
         $data = array();
         if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             // try {
-
+            $client_data=[];
             $client_id = $this->input->post("clientid");
             $media_upload_data = $_POST;
             $update_student_data = [];
@@ -4954,6 +5124,9 @@ WHERE s.client_id = " . (int)$client_id . "
             $client_type = trim($_POST["client_type"] ?? '');
             $a_country = trim($_POST["a_country"] ?? '');
             $country_code = trim($_POST["country_code"] ?? '');
+             $loan_requried = trim($_POST["loan_requried"] ?? '');
+              $loan_type = trim($_POST["loan_type"] ?? '');
+              $partner_type = trim($_POST["partner_type"] ?? '');
             unset($_POST["clientid"]);
             unset($_POST["doc_type_id"]);
             unset($_POST["doc_type_name"]);
@@ -4970,7 +5143,11 @@ WHERE s.client_id = " . (int)$client_id . "
             unset($_POST["client_type"]);
             unset($_POST["a_country"]);
             unset($_POST["country_code"]);
-
+             unset($_POST["loan_requried"]);
+              unset($_POST["loan_type"]);
+               unset($_POST["partner_type"]);
+              
+    
 
             if (empty($client_id) || !empty($agent_id)) {
                 $first_name = trim($_POST["first_name"] ?? '');
@@ -5002,7 +5179,7 @@ WHERE s.client_id = " . (int)$client_id . "
 
                 if (empty($client_id)) {
 
-                    $client_data = ["active" => 1, "datecreated" => date('Y-m-d H:i:s'), "addedfrom" => get_staff_user_id(), "applicant_status" => 0, "applicant_stage" => 1, "applicant_sub_status" => 1, "tracker_id" => 0, "client_type" => !empty($client_type) ? $client_type : 2, "agent_id" => $agent_id, "unique_agent_id" => $unique_agent_id];
+                    $client_data = ["active" => 1, "datecreated" => date('Y-m-d H:i:s'), "addedfrom" => get_staff_user_id(), "applicant_status" => 0, "applicant_stage" => 1, "applicant_sub_status" => 1, "tracker_id" => 0, "client_type" => !empty($client_type) ? $client_type : 2, "agent_id" => $agent_id, "unique_agent_id" => $unique_agent_id,"partner_type"=>$partner_type];
                     $this->db->insert(db_prefix() . 'clients', $client_data);
                     $client_id = $this->db->insert_id();
                 } else {
@@ -5012,7 +5189,29 @@ WHERE s.client_id = " . (int)$client_id . "
                 }
             }
 
-
+              
+                
+                if(isset($loan_required))
+                {
+                $client_data["loan_required"]= $loan_required;
+                }
+                if(isset($loan_type))
+                {
+                $client_data["loan_type"]= $loan_type;
+                }
+                
+                 if(isset($partner_type))
+                {
+                $client_data["partner_type"]= $partner_type;
+                }
+               
+               
+        
+              if(!empty($client_data)){
+                    $this->db->where("userid", $client_id);
+                    $this->db->update(db_prefix() . 'clients', $client_data);
+              }
+                    
 
             foreach ($_POST as $key => $value) {
                 if (!empty($value) && strpos($key, 'custom_fields') !== false) {
@@ -5027,6 +5226,13 @@ WHERE s.client_id = " . (int)$client_id . "
                     }
                 }
             }
+            
+            // if(is_admin())
+            // {
+            //   echo "<pre>"; 
+            //   print_r($update_student_data);
+            //   die;
+            // }
             // Assuming this is part of a function or method in a CodeIgniter controller or model
             $check_client = $this->db->select('id')
                 ->where('userid', $client_id)
@@ -5085,11 +5291,12 @@ WHERE s.client_id = " . (int)$client_id . "
             }
             // }
 
-
-            if ($rows_affected) {
-                if (!empty($media_upload_data["doc_type"])) {
+if (!empty($media_upload_data["doc_type"])) {
                     $this->media_upload($media_upload_data, $_FILES);
                 }
+
+            if ($rows_affected) {
+                
                 // handle_custom_fields_post($client_id, $update_applicant_custom_data);
                 applicant_last_update($client_id);
                 $data['resp_code'] = 'RCS';
@@ -5142,7 +5349,7 @@ WHERE s.client_id = " . (int)$client_id . "
                 unset($_POST['visa_year']);
                 unset($_POST['visa_country']);
 
-
+$passpot_data['new_passport_status']=0;
 
                 foreach ($_POST as $key => $value) {
                     if (!empty($value) && strpos($key, 'custom_fields') !== false) {
@@ -5183,7 +5390,7 @@ WHERE s.client_id = " . (int)$client_id . "
 
                 if ($rows_affected) {
 
-                    if (!empty($pcc_status)) {
+                    if (isset($pcc_status)) {
                         $this->db->where("userid", $client_id);
                         $this->db->update(db_prefix() . 'clients', array("pcc_status" => $pcc_status));
                     }
@@ -7723,7 +7930,7 @@ WHERE s.client_id = " . (int)$client_id . "
                         ));
                     } else {
                         $this->db->where("userid", $client_id);
-                        $this->db->update(db_prefix() . 'clients', array("applicant_status" => 0, "applicant_stage" => UNIVERSITY_SHORTLISTING, "applicant_sub_status" => UNIVERSITY_DOC_PENDING));
+                        $this->db->update(db_prefix() . 'clients', array("applicant_status" => 0, "applicant_stage" => UNIVERSITY_SHORTLISTING, "applicant_sub_status" => UNIVERSITY_SHORTLISTING_PENDING));  
                     }
                 }
 
@@ -7914,8 +8121,13 @@ WHERE s.client_id = " . (int)$client_id . "
                     if (!empty($uploaded_file["file_path"])) {
                         $update_entry['application_file'] = $uploaded_file["file_path"];
                         $update_entry['application_updated_date'] = date('Y-m-d H:i:s');
+                        $dataStaffGet = $this->clients_model->get($client_id);
+                          clientsWhatsappAttachments($client_id, $dataStaffGet->addedfrom,"Admission letter",$uploaded_file["file_path"],$university_name);
+                      
                     }
 
+
+                    
                     // Log file upload
                     $this->db->insert(db_prefix() . 'application_activity_log', [
                         "description" => "Admission letter uploaded for {$university_name}, {$country_name} by staff ID: " . get_staff_user_id(),
@@ -8231,10 +8443,10 @@ WHERE s.client_id = " . (int)$client_id . "
                 "resp_desc" => "Invalid entrance exam data format",
             ];
         }
-
+$examStatus = false;
         if (!empty($entrance_exam_data)) {
             // Delete old exam status and manual data for this client
-
+$examStatus = true;
 
             $status_insert_data = [];
             $manual_insert_data = [];
@@ -8245,6 +8457,21 @@ WHERE s.client_id = " . (int)$client_id . "
                 $exam_date = $exam['exam_date'] ?? null;
                 $batch_id = isset($exam['batch_id']) ? (int)$exam['batch_id'] : 0;
                 $is_manual = isset($exam['manually']) && (int)$exam['manually'] === 1;
+
+// if(empty($exam_id) || empty($exam_date) || empty($status) )
+// {
+//     $examStatus = false;
+// }
+
+
+if (
+    empty($exam_id) ||
+    empty($exam_date) ||
+    empty($status) ||
+    strtolower(trim($status)) !== 'pass'
+) {
+    $examStatus = false;
+} 
 
                 if ($is_manual) {
                     if (empty($exam_id) || empty($status)) {
@@ -8295,6 +8522,32 @@ WHERE s.client_id = " . (int)$client_id . "
         if (!empty($manual_insert_data)) {
             $this->db->where('client_id', $client_id)->where("batch_id", 0)->delete(db_prefix() . 'clients_exam');
             $this->db->insert_batch(db_prefix() . 'clients_exam', $manual_insert_data);
+        }
+        
+        if(!empty($_POST['save']) && $_POST['save'] == 1)
+        {
+            
+          
+            $this->db->where("userid", $client_id);
+        $this->db->update(db_prefix() . 'clients', [
+            "applicant_status" => 0,
+            "applicant_stage" => ENTRANCE_EXAM,
+            "applicant_sub_status" => $examStatus==false?ENTRANCE_EXAM_PENDING:ENTRANCE_EXAM_DONE,
+        ]); 
+        $this->update_applicant_tracker_stages($client_id, $tracker_id);
+        
+         $this->db->insert(db_prefix() . 'application_activity_log', [
+            "description" => "Entrance Exam updated by " . get_staff_full_name(get_staff_user_id()),
+            "date" => date('Y-m-d H:i:s'),
+            "staffid" => get_staff_user_id(),
+            "client_id" => $client_id
+        ]);
+         return [
+            "resp_code" => "RCS",
+            "resp_desc" => "Entrance exam data updated successfully",
+            // "legalization" => $legalization
+        ];
+        die;
         }
 
         // Update applicant status
@@ -8649,6 +8902,9 @@ WHERE s.client_id = " . (int)$client_id . "
 
                     if (!empty($uploaded_file["file_path"])) {
                         $update_entry['university_fees_payment_slip'] = $uploaded_file["file_path"];
+                        
+                        $dataStaffGet = $this->clients_model->get($client_id);
+                          clientsWhatsappAttachments($client_id, $dataStaffGet->addedfrom,"University Payment Slip",$uploaded_file["file_path"],$row["university_name"]??'');
                     }
 
                     // Log file upload
@@ -8839,6 +9095,10 @@ WHERE s.client_id = " . (int)$client_id . "
 
                     if (!empty($uploaded_file["file_path"])) {
                         $update_entry['invitation_letter'] = $uploaded_file["file_path"];
+                        
+                        
+                        $dataStaffGet = $this->clients_model->get($client_id);
+                          clientsWhatsappAttachments($client_id, $dataStaffGet->addedfrom,"Invitation letter",$uploaded_file["file_path"],$row["university_name"]??'');
                     }
 
                     // Log file upload
@@ -8878,7 +9138,7 @@ WHERE s.client_id = " . (int)$client_id . "
             }
             //check neet 
             $admissionpreferences = $this->clients_model->getAdmissionPreferences($client_id);
-            if (strtolower($admissionpreferences->primary_country) == "georgia" && $admissionpreferences->session_intake >= "2026-09") {
+            if (strtolower($admissionpreferences->primary_country) == "georgia" && $admissionpreferences->session_intake > "2026-09") {
                 $checkNeet = check_neet_credentials($client_id);
                 if ($checkNeet == 0) {
 
@@ -9165,7 +9425,7 @@ WHERE s.client_id = " . (int)$client_id . "
                 $visa_status = 2;
                 $visa_sub_stage = VISA_SENT;
             }
-            if (!empty($row['visa_payment_date'])) {
+            if (!empty($row['visa_apply_date'])) {
                 $visa_status = 2;
                 $visa_sub_stage = VISA_APPLY;
             }
@@ -9175,7 +9435,7 @@ WHERE s.client_id = " . (int)$client_id . "
                 $visa_sub_stage = VISA_STAMP;
             }
 
-            if (!empty($row['visa_receiving_date']) && !empty($row['visa_payment_date'])) {
+            if (!empty($row['visa_receiving_date']) && !empty($row['visa_apply_date'])) {
                 $received_status_pass = true;
             }
 
@@ -9202,7 +9462,9 @@ WHERE s.client_id = " . (int)$client_id . "
                 'receiving_date'           => $row['visa_receiving_date'] ?? "",
                 'apply_date'           => $row['visa_apply_date'] ?? "",
                 'status'           =>      $visa_status,
-                'received_status'           => $received_status
+                'received_status'           => $received_status,
+                'visa_username'=>$row['visa_username'] ?? "",
+                'visa_password'=>$row['visa_password'] ?? ""
             ];
 
 
@@ -9234,6 +9496,8 @@ WHERE s.client_id = " . (int)$client_id . "
                         "staffid"     => get_staff_user_id(),
                         "client_id"   => $client_id
                     ]);
+                    $dataStaffGet = $this->clients_model->get($client_id);
+                      clientsWhatsappAttachments($client_id, $dataStaffGet->addedfrom,"Visa Ticket",$uploaded_file["file_path"],"Visa Ticket",16);
                 }
             }
 
@@ -9772,6 +10036,11 @@ WHERE s.client_id = " . (int)$client_id . "
     {
 
 
+ $get_currencies = array_column(get_currencies(),"symbol","id");
+ 
+
+
+
 
         try {
             $data = $this->input->post();
@@ -9787,6 +10056,13 @@ WHERE s.client_id = " . (int)$client_id . "
                 ]);
                 die;
             }
+            
+            
+            // if(is_admin())
+            // {
+            //     print_r($data);
+            //     die;
+            // }
 
             $fees_array = [];
             $fees_array_update = [];
@@ -9833,9 +10109,27 @@ WHERE s.client_id = " . (int)$client_id . "
                 $updated_rows = $this->db->update_batch(db_prefix() . 'applicant_fees_details', $fees_array_update, 'id');
 
                 if ($updated_rows > 0) {
+                    
+                $log = "Applicant Fee Details Updated\n";
+                foreach ($_POST['applicant_fees'] as $fee) {
+                if (!empty($_POST[$fee])) {
+                $label = ucwords(str_replace('_', ' ', $fee));
+                $currency = $_POST[$fee . '_currency_type'] ?? '';
+                $log .= "- {$label}: $get_currencies[$currency]{$_POST[$fee]} \n";
+                }
+                }
+                if (!empty($_POST['scholarship_status'])) {
+                $log .= "\nScholarship:\n";
+                $log .= "- Status: Enabled\n";
+                $log .= "- Amount: " . $get_currencies[$_POST['scholarship_currency_type']].($_POST['scholarship_amount'] ?? 0) . "\n";
+                $log .= "- Reason: " . ($_POST['scholarship_reason'] ?? '') . "\n";
+                }
+                $log .= "\nAir Ticket Included: " . (!empty($_POST['air_ticket_include']) ? 'Yes' : 'No');
+                
+                
                     $this->db->insert(db_prefix() . 'application_fees_activity_log', [
                         "fees_details" => json_encode($fees_array_update),
-                        "description"  => "Fees information updated by staff ID: " . get_staff_user_id(),
+                        "description"  => $log."\n Fees information updated by staff ID: " . get_staff_user_id(),
                         "date"         => date('Y-m-d H:i:s'),
                         "staffid"      => get_staff_user_id(),
                         "client_id"    => $data["clientid"]
@@ -9855,21 +10149,51 @@ WHERE s.client_id = " . (int)$client_id . "
                 "scholarship_amount" => $_POST["scholarship_amount"] ?? '',
                 "scholarship_currency" => $_POST["scholarship_currency_type"] ?? 0,
                 "scholarship_reason" => $_POST["scholarship_reason"] ?? '',
+                "scholarship_reason_id" => $_POST["scholarship_reason_id"] ?? 0,
                 "air_ticket_include" => $air_ticket_include,
             ];
             $this->db->where('userid', $data['clientid']);
             $this->db->update(db_prefix() . 'clients', $update_data);
 
+
+
+
             if ($this->db->affected_rows() > 0) {
+                
+                
+                
+                $log = "Applicant Fee Details Updated\n";
+                foreach ($_POST['applicant_fees'] as $fee) {
+                if (!empty($_POST[$fee])) {
+                $label = ucwords(str_replace('_', ' ', $fee));
+                $currency = $_POST[$fee . '_currency_type'] ?? '';
+                $log .= "- {$label}: $get_currencies[$currency]{$_POST[$fee]} \n";
+                }
+                }
+                if (!empty($_POST['scholarship_status'])) {
+                $log .= "\nScholarship:\n";
+                $log .= "- Status: Enabled\n";
+                $log .= "- Amount: " . $get_currencies[$_POST['scholarship_currency_type']].($_POST['scholarship_amount'] ?? 0) . "\n";
+                $log .= "- Reason: " . ($_POST['scholarship_reason'] ?? '') . "\n";
+                }
+                $log .= "\nAir Ticket Included: " . (!empty($_POST['air_ticket_include']) ? 'Yes' : 'No');
+                
+                
+
                 $this->db->insert(db_prefix() . 'application_fees_activity_log', [
                     'fees_details' => json_encode($fees_array_update),
-                    'description'  => 'Fees,Air Ticket and Scholarship info updated by Staff ID: ' . get_staff_user_id(),
+                    'description'  => $log."\n Fees,Air Ticket and Scholarship info updated by Staff ID: " . get_staff_user_id(),
                     'date'         => date('Y-m-d H:i:s'),
                     'staffid'      => get_staff_user_id(),
                     'client_id'    => $data['clientid']
                 ]);
+                
+           
             }
-
+            $this->db->where('userid', $client_id);
+            $this->db->update(db_prefix() . 'clients', array( 'fees_error'   => 0));
+                      
+                            
             // Return success response
             echo json_encode([
                 'resp_code' => 'RCS',
@@ -9993,6 +10317,8 @@ WHERE s.client_id = " . (int)$client_id . "
                         "applicant_stage"  => ADMISSION,
                         "applicant_sub_status" => ADMISSION_LETTER_APPLY
                     ];
+                    
+                    clientsWhatsappAttachments_delete($client_id,"Admission letter");
                     break;
 
                 case 2:
@@ -10048,6 +10374,7 @@ WHERE s.client_id = " . (int)$client_id . "
                         "applicant_stage" => FEES_DEPOSITE,
                         "applicant_sub_status" => FEES_DEPOSITE_PENDING,
                     ];
+                    clientsWhatsappAttachments_delete($client_id,"University Payment Slip");
                     break;
 
                 case 5:
@@ -10067,6 +10394,7 @@ WHERE s.client_id = " . (int)$client_id . "
                         "applicant_stage" => INVITATION,
                         "applicant_sub_status" => INVITATION_PENDING,
                     ];
+                     clientsWhatsappAttachments_delete($client_id,"Invitation letter");
                     break;
 
                 case 6:
@@ -10107,6 +10435,26 @@ WHERE s.client_id = " . (int)$client_id . "
                         "applicant_sub_status" => VISA_SENT
                     ];
                     break;
+                //   case 7:
+                //     if (empty($data["id"])) {
+                //         return $this->json_response('ERR', 'Missing shortlisting ID');
+                //     }
+                //     $document_type = "invitation Letter";
+
+                //     $this->db->update($shortlisting_tbl, [
+                //         "invitation_letter" => "",
+                //         "invitation_receiving_date" => "",
+                //         "updated_by" => $staff_id,
+                //         "updated_date" => $timestamp
+                //     ], ['id' => $data["id"]]);
+                //     $update_client_data = [
+                //         "applicant_status" => 0,
+                //         "applicant_stage" => INVITATION,
+                //         "applicant_sub_status" => INVITATION_PENDING,
+                //     ];
+                //      clientsWhatsappAttachments_delete($client_id,"Invitation letter");
+                //     break;
+
 
                 default:
                     return $this->json_response('ERR', 'Invalid document type');
@@ -10333,13 +10681,36 @@ WHERE s.client_id = " . (int)$client_id . "
                 $table = db_prefix() . "application_activity_log";
                 $like_query = "document uploaded by -";
                 break;
+                
+                 case 6:
+                $table = db_prefix() . "application_activity_log";
+                $like_query = "Admission Preferences";
+                break;
+                
+                     case 7:
+                $table = db_prefix() . "application_activity_log";
+                $like_query = "Basic Information";
+                break;
+                
+                    case 8:
+                $table = db_prefix() . "application_activity_log";
+                $like_query = "Passport Information";
+                break;
+                
+                  case 9:
+                $table = db_prefix() . "application_activity_log";
+                $like_query = "Academic Details";
+                break;
+                
+                
+                
             default:
                 http_response_code(400);
                 echo "Invalid activity type.";
                 exit;
         }
 
-        $activity_log = $this->clients_model->activity_logs($table, $client_id, $like_query, $section);
+        $activity_log = $this->clients_model->activity_logs($table, $client_id, $like_query);
 
         $html = '';
 
@@ -10913,6 +11284,7 @@ WHERE s.client_id = " . (int)$client_id . "
             $inr_value  = $this->input->post("inr_value") ?? 0;
             $currency_disabled  = $this->input->post("currency_disabled") ?? 0;
             $quotation_id  = $this->input->post("quotation_id") ?? 0;
+            $transaction_id =  $this->input->post("transaction_id") ?? '';
             $total_inr_amount  = $this->input->post("total_inr_amount") ?? 0;
             $payment_quotations = $this->input->post("payment_quotations")
                 ? json_decode($this->input->post("payment_quotations"), true)
@@ -10982,7 +11354,8 @@ WHERE s.client_id = " . (int)$client_id . "
                     "currency_disabled" => isset($currency_disabled) ? $currency_disabled : 0,
                     "quotation_id"     => isset($quotation_id) ? $quotation_id : 0,
                     "location_id"      => isset($location_id) ? $location_id : 0,
-                    "remark" =>$remark
+                    "remark" =>$remark,
+                    "transaction_id" => isset($transaction_id) ? $transaction_id : "",
                 ];
 
 

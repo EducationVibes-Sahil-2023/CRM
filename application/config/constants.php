@@ -255,6 +255,7 @@ define('VISA_STAMP', '15');
 define('VISA_REJECTED', '16');
 define('SC_PENDING', '17');
 define('VISA_SENT', '26');
+define('ENTRANCE_EXAM_DONE', '27');
 
 
 // study abroad tracker
@@ -316,7 +317,7 @@ define('CONFORMATION_COMPLETED', '33');
 
 
 
-define('MAX_UNIVERSITY_MBBS_ABROAD', '2');
+define('MAX_UNIVERSITY_MBBS_ABROAD', '3');
 define('MAX_UNIVERSITY_STUDY_ABROAD', '10');
 
 define('ORG_REST', 'original rest');
@@ -336,3 +337,10 @@ define('KNOWLEDGE_BASE_FEES_PATH', 'Fees Structure/MBBS Abroad/'); // highest au
 
 define('META_FEEDBACK_TOKEN', '1096482432619866');
 define('META_FEEDBACK_ACCESS_TOKEN', 'EABWR6clhKL0BQ1ZCRgZBVhK8inoJeKT4PrC9teZBF49l1CWifAQ1TgT1iPiAtBGF4H7c8DGiNGDVp6zEsGN1zOMbAmHoGJbEmAEsG7JDnjmW359waKqRnIBL6MXTOzZCyF1VDC5CPZA5UZA87cgKM7BoMDPtOgBCa8f4yYX3PSLFYEZBTzQ86n9JXbGovlQNnsF6AZDZD');
+
+
+define('WHATSAPP_HOST', 'https://wa.educationvibes.in/');
+
+define('YOUR_SHARED_SECRET', '715c1587a4c8aa7540f385ad60cd72eab79016162000ac23');
+define('WHATSAPP_SHARED_SECRET', '715c1587a4c8aa7540f385ad60cd72eab79016162000ac23');
+

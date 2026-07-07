@@ -25,7 +25,7 @@
 							'Department',
 							'Office Region',
 							'Lead State Region',
-				// 			'State',
+							'Counsellor',
 							_l('role'),
 							_l('staff_dt_last_Login'),
 							_l('staff_dt_active'),

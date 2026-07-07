@@ -107,7 +107,8 @@ foreach ($result as $row) {
         }
         
         
-    if($key == "834681a14c5d64a07d1fabcd11a5f9a8"){
+       
+   
         /* Get JSON body */
 $json = file_get_contents('php://input');
 $json_data = json_decode($json, true);
@@ -117,7 +118,21 @@ if (is_array($json_data)) {
     $_POST = array_merge($_POST, $json_data);
 }
 
+
+
+if(!empty($_POST["type_check"])){
+$typeCheck = (!empty($_POST["type_check"]) && strtolower($_POST["type_check"]) == "mbbs abroad") ? 2 : 1;
 }
+
+if(!empty($typeCheck))
+{
+  $_POST["type"]   = $typeCheck;
+}
+
+ if($key =="46caf4c626d57718921e79832c99e009")
+        {
+             $this->db->insert(db_prefix() . 'facebook_webhook_data', ['data' => json_encode($_POST, JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES),"form_id"=>"whatsapp"]);
+        }
 
         
           //  if($key == "c04d2a1fda6448b12c7fe55c5f2184f2"){
@@ -286,19 +301,41 @@ if (is_array($json_data)) {
                 }
 
 
-                if (!empty($post_data['tag_assign'])  && $post_data['tag_assign'] > 0) {
-                    $form->responsible = 1; // Default responsible staff ID
+                // if (!empty($post_data['tag_assign'])  && $post_data['tag_assign'] > 0) {
+                //     $form->responsible = 1; // Default responsible staff ID
 
-                    // Check if the staff is active and exists
-                    $check_staff = $this->db->select("staffid")->where('active', 1)
-                        ->where('staffid', $post_data['tag_assign'])
-                        ->get(db_prefix() . 'staff')->row();
+                //     // Check if the staff is active and exists
+                //     $check_staff = $this->db->select("staffid")->where('active', 1)
+                //         ->where('staffid', $post_data['tag_assign'])
+                //         ->get(db_prefix() . 'staff')->row();
 
-                    // If staff exists and is active, update the responsible staff ID
-                    if (!empty($check_staff)) {
-                        $form->responsible = $check_staff->staffid;
-                    }
-                }
+                //     // If staff exists and is active, update the responsible staff ID
+                //     if (!empty($check_staff)) {
+                //         $form->responsible = $check_staff->staffid;
+                //     }
+                // }
+                
+                if (!empty($post_data['tag_assign']) && $post_data['tag_assign'] > 0) {
+
+    $form->responsible = 1; // Default responsible staff ID
+
+    // Get active staff with rank_assign = 1
+    $check_staff = $this->db->select("staffid")
+        ->where('active', 1)
+        ->where('rank_assign', 1)
+        ->get(db_prefix() . 'staff')
+        ->result_array();
+        $staffIDS = array_column($check_staff,'staffid');
+
+    // Auto assign from eligible staff
+    $assign_staff_id = $this->leads_model->automatic_assign_staff('', '', '', '', $staffIDS);
+
+    // If assignment returned a valid staff ID
+    
+    if (!empty($assign_staff_id[0]["staffid"])) {
+                            $form->responsible = $assign_staff_id[0]["staffid"];
+                        }
+}
                 
                 
                 if($key == "834681a14c5d64a07d1fabcd11a5f9a8"){
@@ -751,6 +788,11 @@ if (is_array($json_data)) {
                                 
                                               $updateStatus_dup['upcomming_date'] = date('Y-m-d H:i:s');
 $updateStatus_dup['upcomming_count'] = ($duplicateLead->upcomming_count ?? 1) + 1;
+
+                            if(!empty($_POST['ai_status']) && $_POST['ai_status']== 1)
+                            {
+                            $updateStatus_dup["ai_status"] =1;
+                            }
                             $this->db->where('id', $duplicateLead->id);
                             $this->db->update(db_prefix() . 'leads', $updateStatus_dup);
                             
@@ -801,6 +843,11 @@ $updateStatus_dup['upcomming_count'] = ($duplicateLead->upcomming_count ?? 1) + 
                                 // 'lastcontact' => date("Y-m-d H:i:s"),
                                 // 'dateassigned' => date("Y-m-d H:i:s"),
                                 ];
+                                
+                                if(!empty($_POST['ai_status']) && $_POST['ai_status']== 1)
+                                {
+                                    $updateStatus['ai_status'] =1;
+                                }
                                                         
 
     
@@ -1064,6 +1111,11 @@ $updateStatus_dup['upcomming_count'] = ($duplicateLead->upcomming_count ?? 1) + 
                     $regular_fields['dateadded']    = date('Y-m-d H:i:s');
                     $regular_fields['from_form_id'] = $form->id;
                     $regular_fields['is_public']    = $form->mark_public;
+                    
+                      if(!empty($_POST['ai_status']) && $_POST['ai_status']== 1)
+                                {
+                                    $regular_fields['ai_status'] =1;
+                                }
 
                     $this->db->insert(db_prefix() . 'leads', $regular_fields);
                     $lead_id = $this->db->insert_id();

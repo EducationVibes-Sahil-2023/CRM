@@ -227,7 +227,13 @@ $select_staff_state_region = staff_state_region();
                            </select>
                         </div>
              
-
+<div class="checkbox checkbox-primary">
+                           <input type="checkbox" value="1" name="is_counsoller" id="is_counsoller" <?php if (isset($member->is_counsoller) && $member->is_counsoller == 1) {
+                                                                                                   echo ' checked';
+                                                                                                } ?>>
+                           <label for="is_counsoller"><i class="fa fa-question-circle" data-toggle="tooltip" data-title="Counsoller"></i>
+                              Counsoller</label>
+                        </div>
                         <div class="checkbox checkbox-primary">
                            <input type="checkbox" value="1" name="post_sales" id="post_sales" <?php if (isset($member->post_sales) && $member->post_sales == 1) {
                                                                                                    echo ' checked';

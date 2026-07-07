@@ -19,28 +19,65 @@ function is_gdpr()
     return get_option('enable_gdpr') === '1';
 }
 
-function getLastEmailWhatsappDate($type, $id, $clientid)
+function getLastEmailWhatsappDate($type, $templateId, $clientid = '', $visitorid = '')
 {
     $CI = &get_instance();
-    $data = $CI->db->select("*")
-        ->from(db_prefix() . "whatsapp_email_logs")
-        ->where(array("type" => $type, "template_id" => $id, "clientid" => $clientid))
-        ->order_by("id", "DESC")
+
+    if (empty($type) || empty($templateId)) {
+        return '';
+    }
+
+    $CI->db->select('datetime, documents')
+        ->from(db_prefix() . 'whatsapp_email_logs')
+        ->where('type', $type)
+        ->where('template_id', $templateId);
+
+    if (!empty($clientid)) {
+        $CI->db->where('clientid', $clientid);
+    }
+
+    if (!empty($visitorid)) {
+        $CI->db->where('visitor_id', $visitorid);
+    }
+    
+    
+    if (empty($clientid) && empty($visitorid)) {
+        return '';
+    }
+
+
+    $data = $CI->db
+        ->order_by('id', 'DESC')
         ->limit(1)
         ->get()
         ->row();
 
-    if (!empty($data->datetime)) {
-        // Format the date using strtotime to convert datetime string to timestamp.
-        $formattedDate = date("F j, Y, g:i:s A", strtotime($data->datetime));
-        // Capitalize the first letter of the type
-        $capitalizedType = ucfirst($type);
-        $message = $capitalizedType . " Last send - " . $formattedDate;
-        $documentList = "";
-        if (!empty($data->documents)) {
-            $documentList = "Document List : " . $data->documents;
-            $message = $documentList . " " . $message;
-        }
-        return '<button type="button" data-bs-toggle="tooltip" data-bs-placement="bottom" title="' . $message . '" class="btn btn-success btn-xs"><i class="fa fa-check"></i></button> &nbsp;';
+    if (empty($data) || empty($data->datetime)) {
+        return '';
     }
+
+    $formattedDate = date(
+        'F j, Y, g:i:s A',
+        strtotime($data->datetime)
+    );
+
+    $message = ucfirst($type) . ' Last sent - ' . $formattedDate;
+
+    if (!empty($data->documents)) {
+        $message = 'Document List: ' . $data->documents . ' | ' . $message;
+    }
+
+    // Prevent tooltip XSS issues
+    $message = htmlspecialchars($message, ENT_QUOTES, 'UTF-8');
+
+    return '
+        <button
+            type="button"
+            data-bs-toggle="tooltip"
+            data-bs-placement="bottom"
+            title="' . $message . '"
+            class="btn btn-success btn-xs">
+            <i class="fa fa-check"></i>
+        </button>&nbsp;
+    ';
 }

@@ -1,6 +1,29 @@
+<script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+
 <script>
     // comman functions
 
+
+    $(document).ready(function()
+    {
+        // console.log("start");
+        // universityPrefrences_div(university_priority_array);
+          if (typeof checkFeesDisable === 'function') {
+            //   console.log("start 2");
+        checkFeesDisable();
+    }
+    })
+    
+//     if (
+//     $('#sample_collect_modal').length &&
+//     typeof $('#sample_collect_modal').modal === 'function'
+// ) {
+//     $('#sample_collect_modal').modal({
+//         backdrop: 'static',
+//         keyboard: false
+//     });
+// }
+    
     var complete_application = <?= !empty($client->sc_100) && $client->sc_100 == 1 ? 1 : 0 ?>;
     var client_type = <?= !empty($client->client_type)  ? $client->client_type : 0 ?>;
 
@@ -14,6 +37,7 @@
                 let docType = $(this).find("input[name='doc_type[]']").val()?.trim(); // Get doc_type
                 let docName = $(this).find("input[name='doc_name[]']").val()?.trim(); // Get doc_name
                 let docUrl = $(this).find("input[name='doc_url[]']").val()?.trim(); // Get doc_url
+                let whatsaapStatus = $(this).find("input[name='doc_whatsaapStatus[]']").val()??0; // Get doc_url
 
                 if (files.length > 0) {
                     // Append files to FormData
@@ -23,12 +47,14 @@
 
                     if (docType) formData.append("doc_type_id[]", docType);
                     if (docName) formData.append("doc_type_name[]", docName);
+                    if (whatsaapStatus) formData.append("doc_whatsaapStatus[]", whatsaapStatus);
                     formData.append("doc_url[]", ""); // Empty URL since file is uploaded
                 } else if (docUrl) {
                     // Handle URL-based documents if no file is uploaded
                     formData.append("doc_url[]", docUrl);
                     if (docType) formData.append("doc_type_id[]", docType);
                     if (docName) formData.append("doc_type_name[]", docName);
+                    if (whatsaapStatus) formData.append("doc_whatsaapStatus[]", whatsaapStatus);
                 }
             });
 
@@ -109,7 +135,7 @@
             dataType: "JSON",
             success: function(res) {
                 hide_loader();
-                console.log(res);
+                // console.log(res);
                 if (res.resp_code === "RCS") {
                     let url = new URL(window.location.href);
                     let segments = url.pathname.split('/');
@@ -189,21 +215,58 @@
     function change_passport_status() {
         $("#passport_number").val("");
         let status = $("#passport option:selected").attr("data-passport_number_status");
-        if (status == 1) {
-            $(".passport-div-status").show();
-            $(".passport-div-status").removeClass("hide");
-        } else {
-            $(".passport-div-status").hide();
+        let arn_status = $("#passport option:selected").attr("data-passport_arn_status");
+        let showing_data = $("#passport option:selected").attr("data-passport_showing_data");
+
+
+ $(".passport-div-status").hide();
             $(".passport-div-status input").val('');
             $(".passport-div-status").addClass("hide");
+            
+            
+//   $(".passport-arn-status").addClass("hide");
+//       $(".passport-arn-status").hide();
+        if (status == 1) {
+            // $(".passport-div-status").show();
+            $(".media-files.passport-div-status").val('').show().removeClass("hide");
+            
+           
+        } else {
+            // $(".passport-div-status").hide();
+            // $(".passport-div-status input").val('');
+            // $(".passport-div-status").addClass("hide");
+            
+            $(".media-files.passport-div-status").val('').hide().addClass("hide");
         }
+        
+    //       if (arn_status == 2) {
+    //         $(".passport-arn-status").removeClass("hide");
+    //          $(".passport-div-status").show();
+    //     }else
+    //     {
+    //          $(".passport-arn-status").addClass("hide");
+    //   $(".passport-arn-status").hide();
+    //     }
+        
+        
+        
+            
+            
+       let showingArray = showing_data.split(",");
+console.log(showingArray);
+showingArray.forEach(function(item) {
+    item = item.trim(); // Remove extra spaces
+    $("[name='" + item + "']").parents(".passport-div-status").show().removeClass("hide");;
+});
+        
+        
     }
 
 
     function change_pcc_status() {
 
         let status = $("#pcc_status option:selected").attr("data-pcc_status");
-        console.log(status);
+        // console.log(status);
         if (status == 1) {
             $(".pcc-div-status").show();
             $(".pcc-div-status").removeClass("hide");
@@ -279,10 +342,13 @@
 
 
     });
+    
 
-    function save_admission_preferences() {
+async function save_admission_preferences() {
         var additional_fields = {};
         var form_status = true;
+        let oldPrimaryCountry = "<?=$admissionpreferences->primary_country??''?>";
+        let oldPrimaryUniversity = "<?=$admissionpreferences->primary_university??''?>";
         set_primary_enabled();
         show_loader();
         // Iterate through inputs, selects, and date fields
@@ -300,6 +366,75 @@
                 }
             }
         });
+        
+        let university_priority = [];
+  if ($("#universityPrefrences").length !== 0) {
+
+
+    let selectedPriorities = [];
+    let hasError = false;
+
+    $("#universityPrefrences select").each(function (index) {
+
+        let priority = $(this).val()?.trim();
+        
+        
+        let universityName = $(".universityName-selected")
+            .eq(index)
+            .val()
+            ?.trim();
+            let countryName = $(".countryName-selected")
+            .eq(index)
+            .val()
+            ?.trim();
+
+        let primaryUniversity = $("#primary_university")
+            .val()
+            ?.trim();
+
+university_priority.push({
+    priority: priority,
+    country: countryName,
+    university: universityName
+});
+        // Check empty priority
+        if (!priority) {
+            alert("Please select all priorities.");
+            $(this).focus();
+            hasError = true;
+            form_status = false;
+            return false;
+        }
+
+        // Check duplicate priority
+        if (selectedPriorities.includes(priority)) {
+            alert("Duplicate priority selected!");
+            $(this).focus();
+            hasError = true;
+            form_status = false;
+            return false;
+        }
+
+        // P1 university must match primary university
+        if (priority === "1") {
+
+            if (universityName !== primaryUniversity) {
+                alert("P1 university must match Primary University.");
+                $(".universityName-selected").eq(index).focus();
+
+                hasError = true;
+                form_status = false;
+                return false;
+            }
+        }
+
+        selectedPriorities.push(priority);
+    });
+
+    if (!hasError) {
+        console.log("Valid priorities:", selectedPriorities);
+    }
+}
 
         // console.log(form_status);
         if (!form_status) {
@@ -308,6 +443,11 @@
             hide_loader();
             return false; // Prevent form submission if validation fails
         }
+        
+        let resetFeesStatus = 0;
+        let resetScholarshipStatus = 0;
+        
+        
 
         // Collect form data
         const params = {
@@ -320,7 +460,9 @@
             admissionPreferencesId: $('#admissionpreferencesid').val(),
             client_id: $('#client_id').val(),
             course_name: $('#course_name').val(),
-            universities: {}
+            universities: {},
+            university_priority:university_priority
+            
         };
 
         // Conditionally add properties if they have values
@@ -333,6 +475,36 @@
         if (primaryCountry) {
             params.primary_country = primaryCountry;
         }
+
+        if(oldPrimaryCountry!=primaryCountry)
+        {
+            resetFeesStatus = 1;
+            params.resetFeesStatus = resetFeesStatus;
+        }
+        
+          if(oldPrimaryUniversity!=primaryUniversity)
+        {
+            resetScholarshipStatus = 1;
+            params.resetScholarshipStatus = resetScholarshipStatus;
+        }
+        
+        
+            if(resetFeesStatus || resetScholarshipStatus)
+            {
+                 hide_loader(); // if loader is already shown
+            // const confirmed = confirm(
+            // "Changing the Primary Country or University will reset all applicant fee details and scholarship information.\n\nAre you sure you want to continue?"
+            // );
+            
+const confirmed = await showConfirmation(
+    "Changing the Primary Country or University will reset all applicant fee details and scholarship information.\n\nAre you sure you want to continue?"
+);
+            
+            if (!confirmed) {
+            hide_loader(); // if loader is already shown
+            return false;
+            }
+            }
 
         try {
             // Validate selected universities for each country
@@ -457,7 +629,7 @@
 
         // console.log(additional_fields);
 
-        console.log(additional_fields);
+        // console.log(additional_fields);
         if (!form_status) {
             appValidateForm($("#admission-details-form"), additional_fields);
             hide_loader();
@@ -564,7 +736,7 @@
 
         $("#entrance_result_status").on("change", function() {
             let ers = $(this).val();
-            let isAwaitedOrNotAppeared = ers === "Awaited" || ers === "Not Appeared" || ers === "" || ers === "Fail";
+            let isAwaitedOrNotAppeared = ers === "Awaited" || ers === "Not Appeared" || ers === "" || ers === "Fail" | ers === "Without Neet";
 
             // Toggle visibility of the elements with class "hide_"
             $(".hide_").toggle(!isAwaitedOrNotAppeared); // Hide when either "Awaited" or "Not Appeared" is selected
@@ -639,6 +811,7 @@
             let doc_type = row.find("input[name='doc_type[]']").val(); // Get doc_type from the row
             let doc_name = row.find("input[name='doc_name[]']").val(); // Get doc_name from the row
             let doc_url = row.find("input[name='doc_url[]']").val(); // Get doc_url from the row
+             let whatsaapStatus = row.find("input[name='doc_whatsaapStatus[]']").val()??0; 
             formData.append("sample_collect_date", $('#sample_collect_date').val()); // Append
             if (files.length > 0) {
                 file_upload_status = true;
@@ -653,6 +826,11 @@
                 if (doc_name) {
                     formData.append("doc_type_name[]", doc_name); // Append doc_type name
                 }
+                
+                 if (whatsaapStatus)
+                 {
+                     formData.append("doc_whatsaapStatus[]", whatsaapStatus);
+                 }
                 formData.append("doc_url[]", ''); // Append URL
             } else if (doc_url && doc_url.trim() !== '') {
                 // Handle URLs if no files are uploaded
@@ -663,6 +841,11 @@
                 if (doc_name) {
                     formData.append("doc_type_name[]", doc_name); // Append doc_type name
                 }
+                
+                 if (whatsaapStatus)
+                 {
+                     formData.append("doc_whatsaapStatus[]", whatsaapStatus);
+                 }
             }
         });
 
@@ -712,25 +895,39 @@
     function fees_details() {
         var additional_fields = {};
         var form_status = true;
+        let partnerType = $("#partner_type").val();
         show_loader();
-        $("#fees-details-form input:visible, #fees-details-form select:visible, #fees-details-form input[type='date']:visible").each(function() {
-            const value = $(this).val()?.trim(); // Get trimmed value
-            const isRequired = $(this).attr("required-check") !== undefined; // Check if 'required-check' exists
-            const name = $(this).attr("name"); // Get name attribute
-            // console.log(isRequired);
-            if (isRequired && name) {
-                additional_fields[name] = "required";
-                if (!value) {
-                    form_status = false;
-                }
-            }
-        });
+       const ignoreFields = ['total_service_charge', 'registration_amount', 'medical_insurance'];
 
+$("#fees-details-form input:visible, #fees-details-form select:visible, #fees-details-form input[type='date']:visible").each(function () {
+    const value = $(this).val()?.trim();
+    const isRequired = $(this).attr("required") !== undefined;
+    const name = $(this).attr("name");
+
+    if (isRequired && name) {
+
+        // Ignore these fields when partnerType == 1
+    if (partnerType == 1 && ignoreFields.includes(name)) {
+    $(this).removeAttr('required');   // Remove required attribute
+    // console.log("ignore");
+    return true; // continue to next element
+}
+
+        additional_fields[name] = "required";
+
+        if (!value) {
+            form_status = false;
+        }
+    }
+});
+
+// console.log(additional_fields);
         if (!form_status) {
             appValidateForm($("#fees-details-form"), additional_fields);
             hide_loader();
             return false;
         }
+     
 
         let formData = new FormData(document.getElementById('fees-details-form')); // Correct way to initialize FormData
 
@@ -869,6 +1066,8 @@
             handleActivityChange();
         }, 300);
 
+
+$('.readonlyy').prop('disabled', true);
     });
 
 
@@ -908,11 +1107,12 @@
                 if (isRequired && name) {
                     additional_fields[name] = "required";
                     if (!value) {
-                        console.log(name);
+                        // console.log(name);
                         form_status = false;
                     }
                 }
             });
+
 
             // Validate the form if any required field is missing
             if (!form_status) {
@@ -922,6 +1122,23 @@
                 return false;
             }
         });
+        
+        
+//  let partnerType = $("#partner_type").val();
+
+// let MAX_UNIVERSITY_MBBS_ABROAD =
+//     (partnerType !== undefined && partnerType === "1")
+//         ? 1
+//         : 2;
+        
+//         if (
+//     MAX_UNIVERSITY_MBBS_ABROAD !== undefined &&
+//     MAX_UNIVERSITY_MBBS_ABROAD != null && MAX_UNIVERSITY_MBBS_ABROAD == 1 &&
+//     Number($("#primary_university option[value!='']").length) !== 1) {
+//     alert("Select single country and university");
+//     return false;
+// }
+
 
         if (!form_status) {
 
@@ -1004,19 +1221,119 @@
         window.location.href = url.href;
     }
 
+let universityPreferences = [];
 
+function universityPrefrences_div(universityPreferencesCheck=universityPreferences) {
+    
+    if(universityPreferencesCheck.length === 0)
+    {
+        universityPreferencesCheck = universityPreferences;
+    }
+//  console.log('updated');
+//  console.log(universityPreferences);
 
+    $("#universityPrefrences").html('');
+    
+    $.each(universityPreferencesCheck, function(index, data) {
+        
+      if (!data.university || data.university.trim() === '') {
+            // console.log('stop');
+    return true;
+}
+
+        // First default option
+        let options = `<option value='' >Select Preference</option>`;
+
+        // Create P1, P2, P3 options
+      for (let i = 1; i <= universityPreferencesCheck.length; i++) {
+
+    let selected = '';
+
+    if ((data.priority !== undefined && data.priority == i) ) {
+        selected = 'selected';
+    }
+
+    options += `
+        <option value="${i}" ${selected}>
+            P${i}
+        </option>
+    `;
+}
+
+        let html = `
+            <div class="row mb-2 align-items-end">
+
+                <!-- Preference Dropdown -->
+                <div class="col-md-2 form-group">
+                    <label>Preference <span class='text-danger'>*</span></label>
+                    <select  required required-check class="form-control">
+                        ${options}
+                    </select>
+                </div>
+
+                <!-- Country -->
+                <div class="col-md-4">
+                    <label>Country Name</label>
+                    <input 
+                        type="text" 
+                        class="form-control readonlyy countryName-selected" 
+                        value="${data.country}" 
+                        readonly
+                        
+                        
+                    >
+                </div>
+
+                <!-- University -->
+                <div class="col-md-4">
+                    <label>University Name</label>
+                    <input 
+                        type="text" 
+                        class="form-control readonlyy universityName-selected" 
+                        value="${data.university}" 
+                        
+                        
+                    >
+                </div>
+
+            </div>
+        `;
+
+        $("#universityPrefrences").append(html);
+    });
+    
+   $('.readonlyy').prop('disabled', true);
+    running = false;
+
+}
+
+        
+        $('select#scholarship_reason_id').on('change', function () {
+    $('textarea[name="scholarship_reason"]').val($.trim($(this).find('option:selected').text())??'');
+});
+
+let running = false;
     function check_primary_university() {
 
-
+universityPreferences=[];
         let universitiesArray = {};
         let countriesArrr = $('#study_country').val();
+        
+        var countries = $("#countries").val();
+
+if (isCounsollor) {
+     countriesArrr = countries.split(',');
+    // console.log(countriesArrr);
+
+}
+
         let primary_university = "<?= $admissionpreferences->primary_university ?>"; // Get selected value
         $("#primary_country").val("");
         if (countriesArrr) {
             $.each(countriesArrr, function(index, value) {
                 const key = value.replace(/\s+/g, "_"); // Replace spaces with underscores
                 universitiesArray[key] = $(`#university${index}`).val();
+
 
             });
         }
@@ -1033,6 +1350,11 @@
 
             // Append new university options
             $.each(universityList, function(index, university) {
+                
+universityPreferences.push({
+    country: country,
+    university: university
+});
                 let trimmedUniversity = university.trim();
                 let isSelected = primary_university === trimmedUniversity ? 'selected' : '';
                 if (isSelected === 'selected') {
@@ -1044,14 +1366,61 @@
                     .text(trimmedUniversity).attr("data-country", country)
                     .prop("selected", isSelected === 'selected') // Set selected option
                 );
+                
+
             });
         });
+        
+
+
 
         // Refresh selectpicker UI if used
         if ($select.hasClass("selectpicker")) {
             $select.selectpicker("refresh");
         }
+        
+
+
+if (!running) {
+ running = true;
+   
+
+    setTimeout(function () {
+
+        // console.log("runnnn");
+
+        // Remove universities not present
+        university_priority_array = university_priority_array.filter(item =>
+            universityPreferences.some(pref =>
+                pref.university.trim() === item.university.trim()
+            )
+        );
+
+        // Add missing universities
+        universityPreferences.forEach(pref => {
+
+            let exists = university_priority_array.some(item =>
+                item.university.trim() === pref.university.trim()
+            );
+
+            if (!exists) {
+                university_priority_array.push({
+                    priority: '',
+                    country: pref.country,
+                    university: pref.university
+                });
+            }
+        });
+
+        universityPrefrences_div(university_priority_array);
+
+       
+
+    }, 1000);
+}
+        
     }
+
 
     function select_primary_university(obj) {
         var country_name = $(obj).find("option:selected").data("country") || ""; // Default to empty if undefined
@@ -1234,7 +1603,8 @@
         tag.appendChild(closeIcon);
         this.wrapper.insertBefore(tag, this.input);
         this.orignal_input.value = this.arr.join(',');
-        check_primary_university();
+         check_primary_university();
+        // universityPrefrences_div(universityPreferences);
         return this;
     }
 
@@ -1244,6 +1614,7 @@
         this.arr.splice(i, 1);
         this.orignal_input.value = this.arr.join(',');
         check_primary_university();
+        // universityPrefrences_div(universityPreferences);
         return this;
     }
 
@@ -1268,7 +1639,9 @@
 
         array.forEach(function(string) {
             plugin.addTag(string);
+            
         })
+       
         return this;
     }
 
@@ -1428,6 +1801,7 @@
         });
     }
 
+   
     async function set_university() {
         try {
             const str = await set_university_div();
@@ -1508,4 +1882,21 @@
             });
         }
     }
+    
+    
+    
+$(document).ready(function () {
+     if (typeof checkFeesDisable === 'function') {
+            //   console.log("start 2");
+        checkFeesDisable();
+    }
+
+
+    $("#primary_country, #primary_university").on("change", function () {
+        checkFeesDisable();
+    });
+});
+
+    
+    
 </script>

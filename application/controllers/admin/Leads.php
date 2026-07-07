@@ -33,6 +33,45 @@ public function test()
 //     echo "okkkkkk";
     
 //     die;
+// $notifiedUsers =[];
+
+// $notified = add_notification([
+
+//                     'description'     => "fresh_lead_not_connected_notification",
+
+//                     'touserid'        => 154,
+
+//                                 'fromcompany'     => 1,
+//                                 'fromuserid'      => ,
+//                     'link'            => '#leadid=' . 502375,
+
+//                     'additional_data' => serialize([
+
+//                       'Sahil Chaudhary',
+//                       '9876545678',
+//                       'Google',
+//                       '02 Hour',
+//                       '01 Hour'
+                       
+
+//                     ])
+                    
+//                      ]);
+                    
+                
+              
+
+//                 if ($notified) {
+
+//                     array_push($notifiedUsers, 154);
+//                 }
+                
+                
+//                      if($notifiedUsers){
+//       pusher_trigger_notification($notifiedUsers);
+//       }
+          
+                
 }
     public function index($id = '')
 
@@ -736,7 +775,7 @@ $data['lead_sub_status'] = $this->leads_model->lead_sub_status();
 
                 $check_lead_transfer_request = $this->leads_model->get_lead_visitor_request_exist($id);
                 //  print_r($check_lead_transfer_request); die;
-                if (empty($check_lead_transfer_request->created_by) && !is_admin()) {
+                if (empty($check_lead_transfer_request->created_by) && !is_admin() && !has_permission('visit_leads', '', 'modify')) {
                     header('HTTP/1.0 404 Not Found');
 
                     echo "Visit Request not found";
@@ -945,7 +984,7 @@ $data['lead_sub_status'] = $this->leads_model->lead_sub_status();
                             $update_array = [
                                 'assigned' => $assigned,
                                 "type" => $type,
-                                "status" => 2
+                                "status" => OPPORTUNITY_STATUS
                             ];
                             $success = $this->leads_model->update_leads($update_array, $lead_id);
                             if ($success) {
@@ -3893,7 +3932,7 @@ if ($reference_name !== '') {
                 $update_array = [
                     'assigned' => $assigned,
                     "type" => $lead_type,
-                    "status" => 2
+                    "status" => OPPORTUNITY_STATUS
                 ];
                 if (!empty($source)) {
                     $update_array["source"] =  $source;
@@ -4061,6 +4100,16 @@ if ($reference_name !== '') {
             'request_type'   => $request_type
         ]);
     }
+    
+        public function table_lead_visitor_update($request_type = "")
+    {
+
+        $this->app->get_table_data('lead_visitor_update', [
+            'request_type'   => $request_type
+        ]);
+    }
+    
+    
 
 
     public function lead_visitor_notification($lead_id, $status = '', $to_user_id = "", $from_user_id = "")
@@ -4362,6 +4411,231 @@ public function todayCalls()
     echo json_encode([
         'status' => true,
         'data' => $data
+    ]);
+}
+
+  public function whatsapp_notification_visitor_leads($visit_id = "")
+{
+//           error_reporting(E_ALL);
+// ini_set('display_errors', 1);
+// ini_set('display_startup_errors', 1);
+    try {
+
+        // Validate Visit ID
+        if (empty($visit_id) || !is_numeric($visit_id)) {
+            http_response_code(400);
+
+            echo json_encode([
+                'success' => false,
+                'message' => 'Invalid or missing visit ID.'
+            ]);
+            return;
+        }
+
+        // Send WhatsApp message
+        $whatsapp_sent = whatsapp_message_send_visitor_logs((int)$visit_id);
+
+    if ($whatsapp_sent === true) {
+            http_response_code(200);
+//       error_reporting(E_ALL);
+// ini_set('display_errors', 1);
+// ini_set('display_startup_errors', 1);
+            echo json_encode([
+                'success' => true,
+                'message' => 'WhatsApp message sent successfully.'
+            ]);
+        } else {
+            http_response_code(500);
+
+            echo json_encode([
+                'success' => false,
+                'message' => 'Failed to send WhatsApp message.'
+            ]);
+        }
+    
+
+    } catch (Exception $e) {
+
+        error_log('WhatsApp Message Send Error: ' . $e->getMessage());
+
+        http_response_code(500);
+
+        echo json_encode([
+            'success' => false,
+            'message' => 'An unexpected error occurred.',
+            // Remove this in production
+            //'error' => $e->getMessage()
+        ]);
+    }
+}
+
+public function save_seminar_data()
+{
+    if (!$this->input->is_ajax_request()) {
+        ajax_access_denied();
+    }
+
+    $location         = (int) $this->input->post('location');
+    $visitor_type     = (int) $this->input->post('visitor_type');
+    $lead_type        = (int) $this->input->post('lead_type');
+    $date_of_visit    = trim($this->input->post('date_of_visit'));
+    $seminar_address  = trim($this->input->post('seminar_address'));
+    $whatsapp_notify  = trim($this->input->post('whatsapp_notify'));
+
+    $errors = [];
+
+    if (empty($location)) {
+        $errors[] = 'Location is required.';
+    }
+
+    if (empty($visitor_type)) {
+        $errors[] = 'Visitor Type is required.';
+    }
+
+    if (empty($lead_type)) {
+        $errors[] = 'Lead Type is required.';
+    }
+
+    // if (empty($date_of_visit)) {
+    //     $errors[] = 'Date Of Visit is required.';
+    // }
+
+    // if (empty($seminar_address)) {
+    //     $errors[] = 'Address is required.';
+    // }
+
+    // if (empty($whatsapp_notify)) {
+    //     $errors[] = 'Whatsapp Notification date/time is required.';
+    // }
+
+    if (!empty($errors)) {
+        echo json_encode([
+            'success' => false,
+            'message' => implode(' ', $errors)
+        ]);
+        exit;
+    }
+
+    /*
+    |--------------------------------------------------------------------------
+    | Date Validation
+    |--------------------------------------------------------------------------
+    */
+
+    $visitDate = strtotime($date_of_visit);
+    $notifyDate = strtotime($whatsapp_notify);
+
+    if (!$visitDate) {
+        echo json_encode([
+            'success' => false,
+            'message' => 'Invalid Date Of Visit.'
+        ]);
+        exit;
+    }
+
+    // if (!$notifyDate) {
+    //     echo json_encode([
+    //         'success' => false,
+    //         'message' => 'Invalid Whatsapp Notification date.'
+    //     ]);
+    //     exit;
+    // }
+
+    // Whatsapp notification must be BEFORE visit date
+    if ($notifyDate >= $visitDate) {
+        echo json_encode([
+            'success' => false,
+            'message' => 'Whatsapp notification date/time must be earlier than Date Of Visit.'
+        ]);
+        exit;
+    }
+
+    $data = [
+        'seminar_address' => $seminar_address,
+        'whatsapp_notify' => !empty($notifyDate)?date('Y-m-d H:i:s', $notifyDate):''
+    ];
+
+
+if(!empty($notifyDate))
+{
+    $data['whatsapp_status']=3;
+}
+else
+{
+    $data['whatsapp_status']='';
+}
+    /*
+    |--------------------------------------------------------------------------
+    | Upload Image
+    |--------------------------------------------------------------------------
+    */
+
+    if (!empty($_FILES['visit_image']['name'])) {
+
+        $path = FCPATH . 'uploads/seminar_details/';
+
+        if (!is_dir($path)) {
+            mkdir($path, 0777, true);
+        }
+
+         $filename = time() . '_' . preg_replace('/[^a-zA-Z0-9._-]/', '', $_FILES['visit_image']['name']);
+
+        if (move_uploaded_file($_FILES['visit_image']['tmp_name'], $path . $filename)) {
+            $data['image'] = 'uploads/seminar_details/' . $filename;
+        } else {
+            echo json_encode([
+                'success' => false,
+                'message' => 'Image upload failed.'
+            ]);
+            exit;
+        }
+    }
+
+    /*
+    |--------------------------------------------------------------------------
+    | Find Records
+    |--------------------------------------------------------------------------
+    */
+
+    $this->db->select(db_prefix() . 'visitor_request.id');
+    $this->db->from(db_prefix() . 'visitor_request');
+    $this->db->join(
+        db_prefix() . 'leads',
+        db_prefix() . 'leads.id = ' . db_prefix() . 'visitor_request.lead_id',
+        'inner'
+    );
+
+    $this->db->where(db_prefix() . 'visitor_request.location', $location);
+    $this->db->where(db_prefix() . 'visitor_request.visitor_type', $visitor_type);
+    $this->db->where('DATE(' . db_prefix() . 'visitor_request.date_of_visit)', date('Y-m-d', $visitDate));
+    $this->db->where(db_prefix() . 'leads.type', $lead_type);
+    $this->db->where_in(db_prefix() . 'visitor_request.status', [1, 3]);
+
+    $ids = array_column(
+        $this->db->get()->result_array(),
+        'id'
+    );
+
+    if (empty($ids)) {
+        echo json_encode([
+            'success' => false,
+            'message' => 'No matching seminar records found.'
+        ]);
+        exit;
+    }
+
+    $this->db->where_in('id', $ids);
+
+    $success = $this->db->update(
+        db_prefix() . 'visitor_request',
+        $data
+    );
+
+    echo json_encode([
+        'success' => $success,
+        'message' => $success
+            ? 'Seminar data updated successfully.'
+            : 'No records updated.'
     ]);
 }
 }

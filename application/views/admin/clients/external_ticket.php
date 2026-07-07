@@ -276,7 +276,7 @@ if (!empty(!empty($country))) {
                         </div>
 
                         <div class="row">
-                            <div class="col-md-3">
+                            <div class="col-md-3 hide">
                                 <?= render_input(
                                     'passport',
                                     'Passport Number',
@@ -291,11 +291,11 @@ if (!empty(!empty($country))) {
                                     ]
                                 ); ?>
                             </div>
-                            <div class="col-md-3">
+                            <div class="col-md-3 hide">
                                 <?= render_input('issue_date', 'Issue Date', $ticketData->issue_date ?? '', 'date'); ?>
                             </div>
 
-                            <div class="col-md-3">
+                            <div class="col-md-3 hide">
                                 <?= render_input('exp_date', 'Exp Date', $ticketData->exp_date ?? '', 'date'); ?>
                             </div>
                             <div class="col-md-3">

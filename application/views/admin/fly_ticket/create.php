@@ -1,7 +1,7 @@
 <?php defined('BASEPATH') or exit('No direct script access allowed'); ?>
 <?php init_head(); ?>
 <?php
-
+$airline_data   = getDataInformation('airline', ['id', 'name'], ['status' => 1]);
 $required = "";
 $batch_id = "";
 $batch_name = "";
@@ -14,6 +14,7 @@ $selected_payment_mode = '';
 $fly_date = '';
 $departure = '';
 $selected_vendor = '';
+$airline = '';
 $selected_client_ids = [];
 if (!empty($batch_data["id"])) {
     $batch_id = $batch_data["id"];
@@ -47,6 +48,9 @@ if (!empty($batch_data["departure_location"])) {
 }
 if (!empty($batch_data["client_ids"])) {
     $selected_client_ids = explode(",", $batch_data["client_ids"]);
+}
+if (!empty($batch_data["airline"])) {
+    $airline =  $batch_data["airline"];
 }
 
 
@@ -156,6 +160,12 @@ for ($i = 1; $i <= 10; $i++) {
                         <div class="form-group col-md-3">
                             <?php echo render_select('departure_location', $departure_location, array("id", "name"), "Departure Location", [$departure]); ?>
                         </div>
+                        
+                          <div class="form-group col-md-3">
+                            <?php echo render_select('airline', $airline_data, array("id", "name"), "Airline", [$airline]); ?>
+                        </div>
+
+
 
 
 
@@ -380,6 +390,7 @@ for ($i = 1; $i <= 10; $i++) {
         let fly_date = $("#fly_date").val();
         let vendor_name = $("#vendor_name").val();
         let departure_location = $("#departure_location").val();
+        let airline = $("#airline").val();
         let university_ids = $("#university_name").val(); // multi-select
         let university_name = $("#university_name option:selected").map(function() {
             return $(this).text();
@@ -417,6 +428,7 @@ for ($i = 1; $i <= 10; $i++) {
         formData.append("fly_date", fly_date);
         formData.append("vendor_name", vendor_name);
         formData.append("departure_location", departure_location);
+        formData.append("airline", airline);
         formData.append("batch_date", batch_date);
         formData.append("country_ids", country_ids);
         formData.append("country_name", country_name);

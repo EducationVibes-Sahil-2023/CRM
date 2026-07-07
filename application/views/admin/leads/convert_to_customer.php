@@ -3,6 +3,7 @@
 $states = get_states();
 $yesNO_Array = [array("id" => 0, "name" => "No"), array("id" => 1, "name" => "Yes")];
 $countryCode = get_country_code();
+$passpost_status = get_passport_stages();
 ?>
 <style>
    .currency-selector {
@@ -451,27 +452,34 @@ if ($lead->type == 1) {
                               $required = !empty($fees["mandatry"]) ? "required" : "false";
                               $mandatry = !empty($fees["mandatry"]) ? "<small class='text-danger'>*</small>" : "";
                               if (!empty($lead->type) && $lead->type == 2 && $fees["id"] == 6) {
-                                 $required .= " readonly ";
+                                //  $required .= " readonly ";
                               }
 
 
                            ?>
                               <div class="col-lg-4 col-md-4 col-6 fees-block-<?= $id ?>">
-                                 <label><?= $fees['name'] ?> <?= $mandatry ?><span class="fees_label_<?= $id ?>"></span></label><br>
+                                 <label for="<?= $field_name ?>" ><?= $fees['name'] ?> <?= $mandatry ?><span class="fees_label_<?= $id ?>"></span></label><br>
                                  <div class="input-group mb-2 mr-sm-2 mb-sm-0 col-3 form-group">
                                     <input type="hidden" value="<?= $field_name ?>" name="applicant_fees[]">
                                     <input type="hidden" value="<?= $fees['id'] ?>" name="<?= $field_name ?>_id">
 
                                     <div class="input-group-addon currency-symbol-<?= $id ?>"><?= !empty($get_currencies[$fees["default_currency"]]["symbol"]) ? $get_currencies[$fees["default_currency"]]["symbol"] : '$' ?></div>
-                                    <input type="text" onkeypress="return acceptText(this,'number')" name="<?= $field_name ?>" <?= $required ?> class="form-control currency-refefees_<?= $fees['id'] ?>" placeholder="0.00" id="<?= $field_name ?>" size="8">
+                                    <input type="text" onkeypress="return acceptText(this,'number')" name="<?= $field_name ?>" <?= $required ?> class="form-control <?= $field_name ?> currency-refefees_<?= $fees['id'] ?>" placeholder="0.00" id="<?= $field_name ?>" size="8">
                                     <div class="input-group-addon currency-addon">
 
-                                       <select name="<?= $field_name ?>_currency_type" id="<?= $field_name ?>" class="currency-selector currency-selector-<?= $id ?>" onchange="updateSymbol(<?= $id ?>)">
+                                       <select name="<?= $field_name ?>_currency_type" id="<?= $field_name ?>" class="currency-selector <?= $field_name ?> currency-selector-<?= $id ?>" onchange="updateSymbol(<?= $id ?>)">
                                           <?php foreach ($get_currencies as $c) {
-
+if($fees["default_currency"] == $c["id"] ){
                                           ?>
                                              <option data-symbol="<?= $c["symbol"] ?>" value="<?= $c['id'] ?>" data-placeholder="0.00" <?= !empty($fees["default_currency"]) && $fees["default_currency"] == $c["id"]  ? "selected" : "" ?>><?= $c["name"] ?></option>
                                           <?php
+                                          }
+                                          
+                                          if(empty($fees["default_currency"])){
+                                          ?>
+                                             <option data-symbol="<?= $c["symbol"] ?>" value="<?= $c['id'] ?>" data-placeholder="0.00" <?=  1 == $c["id"]  ? "selected" : "" ?>><?= $c["name"] ?></option>
+                                          <?php
+                                          }
                                           }
                                           ?>
 
@@ -655,6 +663,7 @@ if ($lead->type == 1) {
 
          $("#university_country").val(countryName || ""); // Set university country value, default to empty string if undefined
          validate_lead_convert_to_client_form();
+         checkFeesDisable();
       });
 
       var examList = <?= !empty($examList) ? json_encode($examList, true) : '[]' ?>;
@@ -842,5 +851,192 @@ $refusalDiv.find('input')
         
     }
 }
+ var getClientsFees = <?= json_encode($get_clients_fees, JSON_UNESCAPED_UNICODE) ?>;
+ 
+// $('#country').on('change', function () {
+//     var country = $(this).val();
+
+//     getClientsFees.forEach(function (fee) {
+
+//         // Convert "One time Charge" -> "one_time_charge"
+//         let feeName = fee.name.toLowerCase().replace(/\s+/g, "_");
+
+//         // Convert JSON string to array
+//         let disabledCountries = [];
+//         if (fee.disabled_country) {
+//             disabledCountries = JSON.parse(fee.disabled_country);
+//         }
+
+//         if (disabledCountries.includes(country)) {
+//             $('.' + feeName).prop('disabled', true);
+//         } else {
+//             $('.' + feeName).prop('disabled', false);
+//         }
+//     });
+
+//     $(".selectpicker").selectpicker("refresh");
+// });
+
+
+function checkFeesDisable()
+{
+    
+
+   var country = ($("#university_country").val() || "").toLowerCase();
+
+getClientsFees.forEach(function (fee) {
+
+    // "One time Charge" -> "one_time_charge"
+    let feeName = fee.name
+        .toLowerCase()
+        .replace(/[^a-z0-9]+/g, "_")
+        .replace(/^_|_$/g, "");
+
+    let disabledCountries = [];
+    let infoData = {};
+
+    // Disabled countries
+    if (fee.disabled_country) {
+        try {
+            disabledCountries = JSON.parse(fee.disabled_country)
+                .map(c => c.toLowerCase());
+        } catch (e) {
+            disabledCountries = [];
+        }
+    }
+
+    // Info JSON
+    if (fee.info) {
+        try {
+            infoData = JSON.parse(fee.info);
+        } catch (e) {
+            infoData = {};
+        }
+    }
+
+    // Enable by default
+    $('.' + feeName).prop('disabled', false);
+
+    // Disable if country matches (case-insensitive)
+    if (disabledCountries.includes(country)) {
+        $('.' + feeName).prop('disabled', true);
+    }
+
+    // Find country key ignoring case
+    let countryKey = Object.keys(infoData).find(
+        key => key.toLowerCase() === country
+    );
+
+    if (countryKey) {
+        console.log(infoData[countryKey]);
+
+        // Loop through all fields for that country
+        Object.keys(infoData[countryKey]).forEach(function (key) {
+            console.log(key);                    // e.g. university_package
+            console.log(infoData[countryKey][key]); // Description
+
+            // Example: add/update tooltip
+            $('label[for="' + key + '"] .package-info').remove();
+
+            $('label[for="' + key + '"]').append(
+                ' <i class="package-info info-details-icon fa fa-info-circle" title="' +
+                infoData[countryKey][key] +
+                '"></i>'
+            );
+        });
+    }
+
+});
+
+$(".selectpicker").selectpicker("refresh");
+
+
+    
+    
+//     console.log("check");
+//     let country = ($("#university_country").val() || "").toLowerCase();
+//     let university = ($("#university_name").val() || "").toLowerCase();
+
+//     let allowedUniversities = [
+//         "smolensk state medical university",
+//         "izhevsk state medical academy"
+//     ];
+
+//     $(".info-details-icon").remove();
+
+//     // Reset all fields
+//     $(".one_time_charge, .medical_insurance, .ev_hostel, .ev_mess, .university_package")
+//         .prop("disabled", false);
+
+//     $(".selectpicker").selectpicker("refresh");
+
+//     // Russia
+//     if (
+//         country === "russia" &&
+//         !allowedUniversities.includes(university)
+//     ) {
+//         $(".university_package")
+//             .prop("disabled", true);
+
+//         $(".university_package.selectpicker")
+//             .selectpicker("refresh");
+            
+//             $('label[for="medical_insurance"]')
+//             .append(
+//                 ' <i class="otc-info info-details-icon fa fa-info-circle" title="Medical Insurance includes --  Medical Test and visa Extension"></i>'
+//             );
+//     }
+
+//     // Georgia
+//     if (country === "georgia") {
+
+//         $(".university_package, .ev_mess")
+//             .prop("disabled", true);
+
+//         $(".university_package.selectpicker")
+//             .selectpicker("refresh");
+
+//         $('label[for="medical_insurance"]')
+//             .append(
+//                 ' <i class="medical-info info-details-icon fa fa-info-circle" title="Medical Insurance package includes Medical Insurance, TRC and Ministry charges"></i>'
+//             );
+//     }
+
+//     // Uzbekistan / Kazakhstan / Kyrgyzstan / Bangladesh
+//     if (
+//         ["uzbekistan", "kazakhstan", "kyrgyzstan", "bangladesh"].includes(country)
+//     ) {
+//         $(".one_time_charge, .medical_insurance, .ev_hostel")
+//             .prop("disabled", true);
+
+//         $('label[for="university_package"]')
+//             .append(
+//                 ' <i class="package-info info-details-icon fa fa-info-circle" title="Complete package with Tuition Fee, Hostel, One Time Charge, Documentation and Visa Extension"></i>'
+//             );
+//     }
+
+//     // Smolensk & Izhevsk
+//     if (allowedUniversities.includes(university)) {
+
+//         $(".one_time_charge")
+//             .prop("disabled", true);
+
+// $(".medical_insurance")
+//             .prop("disabled", true);
+            
+//             $(".ev_hostel")
+//             .prop("disabled", true);
+            
+            
+//         // $('label[for="one_time_charge"]')
+//         //     .append(
+//         //         ' <i class="otc-info info-details-icon fa fa-info-circle" title="Medical Insurance includes --  Medical Test and visa Extension"></i>'
+//         //     );
+//     }
+
+//     $(".selectpicker").selectpicker("refresh");
+}
+
+checkFeesDisable();
 
    </script>

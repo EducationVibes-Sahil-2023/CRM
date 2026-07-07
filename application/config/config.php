@@ -598,6 +598,6 @@ $config['csrf_exclude_uris'] = array_merge($config['csrf_exclude_uris'], array('
 $config['csrf_exclude_uris'] = array_merge($config['csrf_exclude_uris'], array('external/weekend_lead_assignation_auto'));
 
 
-$config['log_threshold'] = 3; // Logs error messages and debug information
-$db['default']['save_queries'] = TRUE;
+$config['log_threshold'] = 0; // Logs error messages and debug information
+$db['default']['save_queries'] = false;
 

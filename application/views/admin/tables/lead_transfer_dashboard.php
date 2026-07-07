@@ -97,6 +97,12 @@ if (!empty($_POST['source'])) {
 }
 
 
+if (!empty($_POST['c_status'])) {
+    $statusIds = implode(',', array_map('intval', $_POST['c_status']));
+    $where[] = " AND (".db_prefix()."leads.status IN ({$statusIds})) ";
+}
+
+$where[] = " AND ({$sTable}.created_by != " . IVR_AUTO_ASIGNATION . ")";
 
 if (!empty($_POST['assigned'])) {
     $assignedIds = implode(',', array_map('intval', $_POST['assigned']));
@@ -153,7 +159,7 @@ $rResult = $result['rResult'];
         $lead_type = !empty($aRow['lead_type']) ? $aRow['lead_type'] : '';
         $leadid = !empty($aRow['leadid']) ? $aRow['leadid'] : '';
         $row[] = !empty($staff_data[$aRow["created_by"]]["full_name"]) ? $staff_data[$aRow["created_by"]]["full_name"] : '';
-        $row[] = !empty($lead_status[$aRow["status"]]["name"]) ? $lead_status[$aRow["status"]]["name"] : '';
+        $row[] = !empty($lead_status[$aRow["lead_status"]]["name"]) ? $lead_status[$aRow["lead_status"]]["name"] : '';
         $row[] = !empty($lead_data[$aRow["old_lead_type"]]["name"]) ? $lead_data[$aRow["old_lead_type"]]["name"] : '';
         $row[] = !empty($lead_source[$aRow["old_lead_source"]]["name"]) ? $lead_source[$aRow["old_lead_source"]]["name"] : '';
         $row[] = !empty($staff_data[$aRow["assign"]]["full_name"]) ? $staff_data[$aRow["assign"]]["full_name"] : "";

@@ -60,7 +60,9 @@ $role = $this->db->where('staffid', get_staff_user_id())->get(db_prefix() . 'sta
             flex-direction: column;
             gap: 16px;
             max-width: 1440px;
-            margin: 0 auto
+            margin: 0 auto;
+            height: 60rem;
+            overflow: auto;
         }
 
         .row {
@@ -236,7 +238,9 @@ $role = $this->db->where('staffid', get_staff_user_id())->get(db_prefix() . 'sta
             color: var(--text3);
             text-transform: uppercase;
             letter-spacing: .5px;
-            margin-bottom: 14px
+            /*margin-bottom: 14px*/
+            height: 12px;
+            margin-bottom:10px;
         }
 
         .card-header {
@@ -365,7 +369,8 @@ $role = $this->db->where('staffid', get_staff_user_id())->get(db_prefix() . 'sta
         /* TABLE */
         .tbl {
             border-collapse: collapse;
-            font-size: 12px
+            font-size: 12px;
+            width: 100%;;
         }
 
         .tbl th {
@@ -390,7 +395,9 @@ $role = $this->db->where('staffid', get_staff_user_id())->get(db_prefix() . 'sta
             padding: 9px 10px;
             border-bottom: .5px solid var(--border);
             color: var(--text);
-            vertical-align: middle
+            vertical-align: middle;
+            max-width: 150px;
+        overflow: hidden;
         }
 
         .tbl tr:last-child td {
@@ -402,9 +409,19 @@ $role = $this->db->where('staffid', get_staff_user_id())->get(db_prefix() . 'sta
         }
 
         .tbl-wrap {
-            overflow-x: auto
+             max-height: 450px;   /* adjust height */
+    overflow-y: auto;
+    position: relative;
             /*overflow: hidden;*/
         }
+        .tbl thead {
+    position: sticky;
+    height: 30px;
+    top: 0;
+    z-index: 10;
+    background: var(--card-bg, #fff);
+    box-shadow: 0 2px 2px rgba(0,0,0,0.05);
+}
 
         /* AVATAR */
         .av {
@@ -954,8 +971,8 @@ $role = $this->db->where('staffid', get_staff_user_id())->get(db_prefix() . 'sta
             }
         }
 
-        #completionLegend {
-            padding-top: 50px;
+        #completionLegend,#completionLegendOverdue {
+            padding: 0px;
         }
 
         .prio-dot {
@@ -1000,6 +1017,34 @@ $role = $this->db->where('staffid', get_staff_user_id())->get(db_prefix() . 'sta
     #show-follow-status span {
         cursor: pointer;
     }
+    .cursor
+    {
+        cursor: pointer;
+    }
+    .p-5
+    {
+        padding: 5px !important;
+    }
+    .chart-design
+    {
+        display: none;
+        margin-left: 200px;
+        height: 200px;
+    }
+    .badge
+    {
+        cursor: pointer;
+    }
+    .btn-ex
+    {
+            font-size: 10px;
+    padding: 3px 6px;
+    }
+    #ghostAreaSection
+    {
+        max-height: 450px;
+        overflow: auto;
+    }
 </style>
 
 <div id="wrapper" class="follow-up-div">
@@ -1026,7 +1071,8 @@ $role = $this->db->where('staffid', get_staff_user_id())->get(db_prefix() . 'sta
                         <div class="filter-div-section">
                             <div class="filter-div">
                                 <label>Follow-up Date</label><br>
-                                <input type="date" id="dateFrom" class="form-control" value="<?php echo date('Y-m-d'); ?>">
+                                <!--<input type="date" id="dateFrom" class="form-control dateRange" value="<?php echo date('Y-m-d'); ?>">-->
+                                <input type="text" class="dateRange form-control" id="updateDate" readonly placeholder="Select Date Range">
                             </div>
 
 
@@ -1044,9 +1090,9 @@ $role = $this->db->where('staffid', get_staff_user_id())->get(db_prefix() . 'sta
                             echo '</div>';
                             ?>
 
-                            <?php if (is_admin() || $role == 3) {  ?>
+                            <?php if (is_admin() || $role == 3 || get_staff_user_id() == IVR_AUTO_ASIGNATION ) {  ?>
                                 <?php
-                                if (is_admin()) {
+                                if (is_admin() ||get_staff_user_id() == IVR_AUTO_ASIGNATION ) {
                                     echo '<div class="filter-div">';
                                     echo ' <label>Department</label>';
                                     echo render_select('staff_department[]', $staff_department, array('id', 'name'), '', [], array('data-width' => '100%', 'data-none-selected-text' => _l('Department'), 'multiple' => true, 'data-actions-box' => true), array(), 'no-mbot', '', false, 'staff_department');
@@ -1075,7 +1121,7 @@ $role = $this->db->where('staffid', get_staff_user_id())->get(db_prefix() . 'sta
 
                         <!-- TAB BAR -->
                         <div class="tab-bar row">
-                            <button class="tab-btn active" data-active='Queue' onclick="switchTab('dashboard',this)">
+                            <button class="tab-btn active" data-active='Follow-up Queue' onclick="switchTab('dashboard',this)">
                                 <svg width="14" height="14" viewBox="0 0 14 14" fill="none">
                                     <rect x="1" y="1" width="5" height="5" rx="1" fill="currentColor" opacity=".7" />
                                     <rect x="8" y="1" width="5" height="5" rx="1" fill="currentColor" />
@@ -1094,12 +1140,48 @@ $role = $this->db->where('staffid', get_staff_user_id())->get(db_prefix() . 'sta
                                 Follow-up queue
                                 <span class="tab-count" id="queueCount">—</span>
                             </button>
+                            
+                              <button class="tab-btn" onclick="switchTab('overdue',this)">
+                                <svg width="14" height="14" viewBox="0 0 14 14" fill="none">
+                                    <rect x="1" y="2" width="8" height="1.5" rx=".75" fill="currentColor" />
+                                    <rect x="1" y="5.5" width="12" height="1.5" rx=".75" fill="currentColor" />
+                                    <rect x="1" y="9" width="10" height="1.5" rx=".75" fill="currentColor" />
+                                    <rect x="1" y="12.5" width="6" height="1.5" rx=".75" fill="currentColor" />
+                                </svg>
+                                Follow-up Overdue
+                                <span class="tab-count" id="overdueCount">—</span>
+                            </button>
+                            
+                              <button class="tab-btn" onclick="switchTab('future',this)">
+                                <svg width="14" height="14" viewBox="0 0 14 14" fill="none">
+                                    <rect x="1" y="2" width="8" height="1.5" rx=".75" fill="currentColor" />
+                                    <rect x="1" y="5.5" width="12" height="1.5" rx=".75" fill="currentColor" />
+                                    <rect x="1" y="9" width="10" height="1.5" rx=".75" fill="currentColor" />
+                                    <rect x="1" y="12.5" width="6" height="1.5" rx=".75" fill="currentColor" />
+                                </svg>
+                                Follow-up Future
+                                <span class="tab-count" id="futureCount">—</span>
+                                
+                                <button class="tab-btn" onclick="switchTab('completed',this)">
+                                <svg width="14" height="14" viewBox="0 0 14 14" fill="none">
+                                    <rect x="1" y="2" width="8" height="1.5" rx=".75" fill="currentColor" />
+                                    <rect x="1" y="5.5" width="12" height="1.5" rx=".75" fill="currentColor" />
+                                    <rect x="1" y="9" width="10" height="1.5" rx=".75" fill="currentColor" />
+                                    <rect x="1" y="12.5" width="6" height="1.5" rx=".75" fill="currentColor" />
+                                </svg>
+                                Follow-up completed
+                                <span class="tab-count" id="completedCount">—</span>
+                            </button>
                         </div>
 
                         <!-- MAIN DB -->
                         <div class="db">
 
-                            <div class="overdue-band row" id="overdueBand" style="display:none">
+                          
+                            <!-- ═══ TAB 1: DASHBOARD ═══ -->
+                            <div class="tab-pane active" id="tab-dashboard">
+                                
+                                  <div class="overdue-band row" id="overdueBand" style="display:none">
                                 <div class="ob-icon">
                                     <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
                                         <path d="M8 2a6 6 0 100 12A6 6 0 008 2zm0 3v3.5l2 2" stroke="white" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" />
@@ -1109,12 +1191,10 @@ $role = $this->db->where('staffid', get_staff_user_id())->get(db_prefix() . 'sta
                                     <div class="ob-title" id="obTitle"></div>
                                     <div class="ob-sub" id="obSub"></div>
                                 </div>
-                                <div class="ob-cta">
-                                    <button class="btn-fu b-red" style="border-color:var(--red);color:var(--red);background:transparent" onclick="switchTab()">Go to <span id="active-section"></span> &rarr;</button>
-                                </div>
+                                <!--<div class="ob-cta">-->
+                                <!--    <button class="btn-fu b-red" style="border-color:var(--red);color:var(--red);background:transparent" onclick="switchTab()">Go to <span id="active-section"></span> &rarr;</button>-->
+                                <!--</div>-->
                             </div>
-                            <!-- ═══ TAB 1: DASHBOARD ═══ -->
-                            <div class="tab-pane  active" id="tab-dashboard">
 
                                 <!-- OVERDUE ALERT BAND -->
 
@@ -1140,12 +1220,14 @@ $role = $this->db->where('staffid', get_staff_user_id())->get(db_prefix() . 'sta
                                     <div class="skeleton"></div>
                                 </div>
 
-                                <div class="section-sep">Counsellor accountability</div>
+                                <div class="row section-sep">Counsellor accountability</div>
 
                                 <!-- COUNSELLOR TABLE -->
-                                <div class="card">
+                                <div class="row card">
                                     <div class="card-header">
                                         <div class="card-title">Counsellor follow-up workload &amp; accountability</div>
+                                        <div id="counsellorStatusFilter" style="display:flex;gap:6px;align-items:center">
+                                        </div>
                                         <!--<div style="display:flex;gap:6px">-->
                                         <!--  <button class="btn-fu" onclick="sortCounsellorTable('name')">Sort: Name</button>-->
                                         <!--  <button class="btn-fu" onclick="sortCounsellorTable('overdue')">Sort: Overdue</button>-->
@@ -1157,7 +1239,7 @@ $role = $this->db->where('staffid', get_staff_user_id())->get(db_prefix() . 'sta
                                             <thead id="counsellorHead"></thead>
                                             <tbody id="counsellorBody">
                                                 <tr>
-                                                    <td colspan="12" style="text-align:center;padding:30px;color:var(--text3)">Loading...</td>
+                                                    <td colspan="11" style="text-align:center;padding:30px;color:var(--text3)">Loading...</td>
                                                 </tr>
                                             </tbody>
                                         </table>
@@ -1169,7 +1251,13 @@ $role = $this->db->where('staffid', get_staff_user_id())->get(db_prefix() . 'sta
                                     <div class="card">
                                         <div class="card-title">Follow-up volume by lead status</div>
                                         <div style="display:flex;flex-wrap:wrap;gap:8px;margin-bottom:12px" id="statusLegend"></div>
-                                        <div style="position:relative;height:300px"><canvas id="statusChart"></canvas></div>
+                                        <p class="text-right">
+                                                <button class="btn btn-ex btn-primary" onclick="setStatusFilter('all')">All</button>
+                                                <button class="btn btn-ex btn-success" onclick="setStatusFilter('completed')">Completed</button>
+                                                <button class="btn btn-ex btn-warning" onclick="setStatusFilter('pending')">Pending</button>
+                                        </p>
+                                        
+                                        <div style="position:relative;height:300px; margin-top:20px;"><canvas id="statusChart"></canvas></div>
                                     </div>
                                     <div class="card">
                                         <div class="card-title">Overdue aging analysis</div>
@@ -1178,18 +1266,27 @@ $role = $this->db->where('staffid', get_staff_user_id())->get(db_prefix() . 'sta
                                 </div>
 
                                 <!-- CHARTS ROW 2 -->
-                                <div class="row r2">
-                                    <div class="card">
-                                        <div class="card-title">Missed follow-ups — by counsellor</div>
+                                <div class="col-md-12 row">
+                                    <div class="">
+                                        <div class="card-title row">Missed follow-ups — by counsellor</div>
                                         <div id="missedArea"></div>
                                     </div>
-                                    <div class="card">
-                                        <div class="card-title">Follow-up completion split — by lead type</div>
-                                        <div style="" class="row d-flex">
-                                            <div class="col-md-4"><canvas id="completionChart"></canvas></div>
-                                            <div id="completionLegend" class="col-md-8"></div>
+                                    
+                                        <div  class="row r2">
+                                            
+                                                <div style="" class="col-md-12 card">
+                                                <div class="card-title">Follow-up completion split — by lead type</div>
+                                                <div class="col-md-4 chart-design"><canvas id="completionChart"></canvas></div>
+                                                <div id="completionLegend" class="col-md-12"></div>
+                                                </div>
+                                                
+                                                <div class="col-md-12 card">
+                                                <div class="card-title">Follow-up pending Overdue split — by lead type</div>
+                                                <div class="col-md-4 chart-design"><canvas id="completionChartOverdue"></canvas></div>
+                                                <div id="completionLegendOverdue" class="col-md-12"></div>
+                                                </div>
                                         </div>
-                                    </div>
+                                   
                                 </div>
 
                                 <!-- TREND — full width -->
@@ -1199,8 +1296,14 @@ $role = $this->db->where('staffid', get_staff_user_id())->get(db_prefix() . 'sta
                                 <!--</div>-->
 
                                 <!-- GHOSTED -->
-                                <div class="card">
-                                    <div class="card-title">Ghosted leads — no response after 3+ attempts</div>
+                                 <div class="card-title row d-flex">Ghosted leads — no response after 3+ attempts 
+                                 <?php if($role==3 || is_admin()){ ?>
+                                 <span><button onclick="exportExcel('ghosted')" class="btn btn-ex btn-success" id="ghostedDownload"><i class="fa fa-download"></i> Export Excel</button></span>
+                                 <?php } ?> 
+                                 
+                                 </div>
+                                <div class="card row" id="ghostAreaSection">
+                                   
                                     <div id="ghostArea"></div>
                                 </div>
 
@@ -1214,7 +1317,7 @@ $role = $this->db->where('staffid', get_staff_user_id())->get(db_prefix() . 'sta
                                         <div id="show-follow-status" style="display:flex;gap:6px;align-items:center">
                                         </div>
                                     </div>
-                                    <div class="tbl-wrap">
+                                    <div class="tbl-wrap tbl-wrap-scroll">
                                         <table class="tbl" id="queueTable">
                                             <thead>
                                                 <tr>
@@ -1226,13 +1329,134 @@ $role = $this->db->where('staffid', get_staff_user_id())->get(db_prefix() . 'sta
                                                     <th>Created date</th>
                                                     <th>Follow Up date</th>
                                                     <th>Counsellor</th>
-                                                    <th>Last contact</th>
+                                                    <th>Last connected</th>
                                                     <th>Due time</th>
                                                     <th>Attempts</th>
                                                     <th>Notes</th>
                                                 </tr>
                                             </thead>
                                             <tbody id="queueBody" class="">
+                                                <tr>
+                                                    <td colspan="12" style="text-align:center;padding-top:20px;">
+                                                        <div class="table-loader"></div>
+                                                        <div style="font-size:12px;color:#9aa0b3;margin-top:6px;">
+                                                            Loading follow-ups...
+                                                        </div>
+                                                    </td>
+                                                </tr>
+                                            </tbody>
+                                        </table>
+                                    </div>
+                                </div>
+                            </div><!-- end tab-queue -->
+                            
+                             <div class="tab-pane row" id="tab-overdue">
+                                <div class="card">
+                                    <div class="card-header">
+                                        <div class="card-title">Overdue follow-ups — sorted by priority &amp; time</div>
+                                        <div id="overdue-show-follow-status" style="display:flex;gap:6px;align-items:center">
+                                        </div>
+                                    </div>
+                                    <div class="tbl-wrap tbl-wrap-scroll">
+                                        <table class="tbl" id="overdueTable">
+                                            <thead>
+                                                <tr>
+                                                    <th>Priority</th>
+                                                    <th>Student name</th>
+                                                    <th>Contact no.</th>
+                                                    <th>Lead status</th>
+                                                    <th>Source</th>
+                                                    <th>Created date</th>
+                                                    <th>Follow Up date</th>
+                                                    <th>Counsellor</th>
+                                                    <th>Last connected</th>
+                                                    <th>Due time</th>
+                                                    <th>Attempts</th>
+                                                    <th>Notes</th>
+                                                </tr>
+                                            </thead>
+                                            <tbody id="overdueBody" class="">
+                                                <tr>
+                                                    <td colspan="12" style="text-align:center;padding-top:20px;">
+                                                        <div class="table-loader"></div>
+                                                        <div style="font-size:12px;color:#9aa0b3;margin-top:6px;">
+                                                            Loading follow-ups...
+                                                        </div>
+                                                    </td>
+                                                </tr>
+                                            </tbody>
+                                        </table>
+                                    </div>
+                                </div>
+                            </div><!-- end tab-queue -->
+                            
+                            <div class="tab-pane row" id="tab-future">
+                                <div class="card">
+                                    <div class="card-header">
+                                        <div class="card-title">Future follow-ups — sorted by priority &amp; time</div>
+                                        <div id="future-show-follow-status" style="display:flex;gap:6px;align-items:center">
+                                        </div>
+                                    </div>
+                                    <div class="tbl-wrap tbl-wrap-scroll">
+                                        <table class="tbl" id="futureTable">
+                                            <thead>
+                                                <tr>
+                                                    <th>Priority</th>
+                                                    <th>Student name</th>
+                                                    <th>Contact no.</th>
+                                                    <th>Lead status</th>
+                                                    <th>Source</th>
+                                                    <th>Created date</th>
+                                                    <th>Follow Up date</th>
+                                                    <th>Counsellor</th>
+                                                    <th>Last connected</th>
+                                                    <th>Due time</th>
+                                                    <th>Attempts</th>
+                                                    <th>Notes</th>
+                                                </tr>
+                                            </thead>
+                                            <tbody id="futureBody" class="">
+                                                <tr>
+                                                    <td colspan="12" style="text-align:center;padding-top:20px;">
+                                                        <div class="table-loader"></div>
+                                                        <div style="font-size:12px;color:#9aa0b3;margin-top:6px;">
+                                                            Loading follow-ups...
+                                                        </div>
+                                                    </td>
+                                                </tr>
+                                            </tbody>
+                                        </table>
+                                    </div>
+                                </div>
+                            </div><!-- end tab-queue -->
+                            
+                            
+                             <div class="tab-pane row" id="tab-completed">
+                                <div class="card">
+                                    <div class="card-header">
+                                        <div class="card-title">Completed follow-ups — sorted by priority &amp; time</div>
+                                        <div id="completed-show-follow-status" style="display:flex;gap:6px;align-items:center">
+                                        </div>
+                                    </div>
+                                    <div class="tbl-wrap tbl-wrap-scroll">
+                                        <table class="tbl" id="completedTable">
+                                            <thead>
+                                                <tr>
+                                                    <th>Priority</th>
+                                                    <th>Student name</th>
+                                                    <th>Contact no.</th>
+                                                    <th>Lead status</th>
+                                                    <th>Source</th>
+                                                    <th>Created date</th>
+                                                    <th>Follow Up date</th>
+                                                    <th>Counsellor</th>
+                                                    <th>Last connected</th>
+                                                    <th>Due time</th>
+                                                    <th>Attempts</th>
+                                                    <th>Notes</th>
+                                                </tr>
+                                            </thead>
+                                            <tbody id="completedBody" class="">
                                                 <tr>
                                                     <td colspan="12" style="text-align:center;padding-top:20px;">
                                                         <div class="table-loader"></div>
@@ -1306,8 +1530,90 @@ $role = $this->db->where('staffid', get_staff_user_id())->get(db_prefix() . 'sta
 <?php init_tail(); ?>
 
 <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/chartjs-plugin-datalabels@2"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/bootstrap-daterangepicker/3.1/daterangepicker.min.js"></script>
+
+<script src="https://cdn.jsdelivr.net/npm/xlsx/dist/xlsx.full.min.js"></script>
 
 <script>
+    
+    function initDatePicker(selector, extraRanges = {}) {
+
+    const $el = $(selector);
+
+    $el.daterangepicker({
+
+        autoUpdateInput: false,
+        autoApply: false,
+        showDropdowns: true,
+        linkedCalendars: false,
+
+        startDate: moment(),
+        endDate: moment(),
+
+        minDate: moment("2023-01-01"),
+        maxDate: moment(),
+
+        opens: "left",
+
+        locale: {
+            cancelLabel: "Clear",
+            format: "YYYY-MM-DD"
+        },
+
+        ranges: Object.assign({
+
+            "Today": [moment(), moment()],
+            "Yesterday": [moment().subtract(1, "days"), moment().subtract(1, "days")],
+            "Last 7 Days": [moment().subtract(6, "days"), moment()],
+            "Last 30 Days": [moment().subtract(29, "days"), moment()],
+            "This Month": [moment().startOf("month"), moment().endOf("month")],
+            "Last Month": [
+                moment().subtract(1, "month").startOf("month"),
+                moment().subtract(1, "month").endOf("month")
+            ]
+
+        }, extraRanges)
+
+    });
+
+    // ✅ DEFAULT = TODAY
+    updateDateText($el, moment(), moment());
+
+    // APPLY EVENT
+    $el.on("apply.daterangepicker", function(ev, picker) {
+
+        updateDateText($el, picker.startDate, picker.endDate);
+
+    });
+
+    // CLEAR EVENT
+    $el.on("cancel.daterangepicker", function() {
+
+        $el.val('');
+        $el.removeData("from").removeData("to");
+
+    });
+
+}
+      
+      
+      function updateDateText($el, start, end) {
+
+    const text = start.isSame(end, 'day')
+        ? start.format("MMM D")
+        : `${start.format("MMM D")} - ${end.format("MMM D")}`;
+
+    // ✅ set value in input (NOT span)
+    $el.val(text);
+
+    // ✅ store values for backend
+    $el.data("from", start.format("YYYY-MM-DD"));
+    $el.data("to", end.format("YYYY-MM-DD"));
+}
+
+      
+initDatePicker("#updateDate");
     
      function bindHoverEffect() {
         console.log("okkkkk");
@@ -1333,9 +1639,30 @@ $role = $this->db->where('staffid', get_staff_user_id())->get(db_prefix() . 'sta
 }
 
     function applyFilter() {
+        
+          let from = $('#updateDate').data('from') || '';
+        let to   = $('#updateDate').data('to') || '';
+        
+        if (from && to) {
+        
+        let fromDate = new Date(from);
+        let toDate   = new Date(to);
+        
+        // Calculate difference in days
+        let diffTime = toDate - fromDate;
+        let diffDays = diffTime / (1000 * 60 * 60 * 24);
+        
+        if (diffDays > 31) {
+            hide_loader();
+        alert("Date range cannot be more than 31 days");
+        return false; // ⛔ stop execution
+        }
+        }
+        
+        
 
         loadFollowupDashboard();
-        $('#queueBody').html(`<tr>
+        $('#queueBody,#overdueBody,#futureBody').html(`<tr>
       <td colspan="12" style="text-align:center;padding:20px;">
         <div class="table-loader"></div>
         <div style="font-size:12px;color:#9aa0b3;margin-top:6px;">
@@ -1368,7 +1695,7 @@ $role = $this->db->where('staffid', get_staff_user_id())->get(db_prefix() . 'sta
         GRAY = '#737985';
 
     var statusChartInstance = null;
-    var completionChartInstance = null;
+    var completionChartInstance = {};
     var trendChartInstance = null;
 
     var _counsellorData = [];
@@ -1453,6 +1780,8 @@ $role = $this->db->where('staffid', get_staff_user_id())->get(db_prefix() . 'sta
 
             setTimeout(function() {
                 $(".tab-btn.active").trigger('click');
+                  
+
             }, 100); // runs after 1 second
 
 
@@ -1488,14 +1817,13 @@ $role = $this->db->where('staffid', get_staff_user_id())->get(db_prefix() . 'sta
             // console.warn('Button not found for tab:', id);
         }
 
-        window.scrollTo({
-            top: 0,
-            behavior: 'smooth'
-        });
+       
 
         let label = $(".tab-bar button.tab-btn.active").data('active');
 
         $("#active-section").text(label);
+        
+         $(".db").animate({ scrollTop: 0 }, 300);
 
     };
     window.openModal = function() {
@@ -1511,10 +1839,13 @@ $role = $this->db->where('staffid', get_staff_user_id())->get(db_prefix() . 'sta
     /* ═══════════════════════════════════════════════
        FILTER DATA
        ═══════════════════════════════════════════════ */
-    function get_filterData() {
+    function get_filterData(limit=0) {
+        
+      
+        
         return {
             csrf_token_name: typeof csrfData !== 'undefined' ? csrfData.hash : '',
-            follow_up_date: $('#dateFrom').val() || '',
+            follow_up_date: $('#updateDate').val() || '',
             from: $('#updateDate').data('from') || '',
             to: $('#updateDate').data('to') || '',
             lead_type: $('#lead_type').val() || [],
@@ -1522,7 +1853,8 @@ $role = $this->db->where('staffid', get_staff_user_id())->get(db_prefix() . 'sta
             view_status: $('#view_status').val() || [],
             staff_department: $('#staff_department').val() || [],
             office_location: $('#office_location').val() || [],
-            staff: $('#staff').val() || []
+            staff: $('#staff').val() || [],
+            limit:limit
         };
     }
 
@@ -1530,10 +1862,14 @@ $role = $this->db->where('staffid', get_staff_user_id())->get(db_prefix() . 'sta
        AJAX LOAD
        ═══════════════════════════════════════════════ */
     window.loadFollowupDashboard = function() {
+        
+         
         // Show skeletons
         $('#kpiRow1').html('<div class="skeleton"></div><div class="skeleton"></div><div class="skeleton"></div>');
         $('#kpiRow3').html('<div class="skeleton"></div><div class="skeleton"></div><div class="skeleton"></div>');
         $('#kpiRow2').html('<div class="skeleton"></div><div class="skeleton"></div><div class="skeleton"></div>');
+
+
 
         $.ajax({
             url: admin_url + 'Dashboard/getFollowupDashboard',
@@ -1544,7 +1880,7 @@ $role = $this->db->where('staffid', get_staff_user_id())->get(db_prefix() . 'sta
 
 
                 if (!res) return;
-                // console.log('Dashboard data:', res);
+                console.log('Dashboard data:', res);
 
                 renderKPIs(res.data_stus);
                 renderFunnelKPIs(res.funnel_data);
@@ -1554,9 +1890,13 @@ $role = $this->db->where('staffid', get_staff_user_id())->get(db_prefix() . 'sta
                 renderMissedBars(res.missed_range, res.missed_range_least);
                 renderOverdueAging(res.overdue_aging);
                 renderStatusChart(res.status_chart);
-                renderCompletionChart(res.status_chart);
+                renderCompletionChart(res.status_chart,1,"completionChart","completionLegend");
+                 renderCompletionChart(res.status_chart_overdue,2,"completionChartOverdue","completionLegendOverdue");
                 // renderTrendChart(res.team_trend);
                 renderOverdueBand(res);
+                console.log("check",res.past_data);
+                // followUpTable(res.past_data,"overdueBody");
+                
             },
             error: function(xhr) {
                 console.error('Dashboard error:', xhr.responseText);
@@ -1564,32 +1904,122 @@ $role = $this->db->where('staffid', get_staff_user_id())->get(db_prefix() . 'sta
         });
     };
 
+var getDataScroll = true;
 
-    function loadTable() {
+$(".tbl-wrap-scroll").on("scroll", function () {
+
+    let element = $(this);
+
+    let scrollTop = element.scrollTop();
+    let innerHeight = element.innerHeight();
+    let scrollHeight = element[0].scrollHeight;
+
+    // bottom reached within 10px
+    if (scrollTop + innerHeight >= scrollHeight - 10 && getDataScroll) {
+
+        console.log("scroll Start");
+
+        getDataScroll = false;
+
+        if ($("#queueTable").is(":visible")) {
+
+            loadTable(0,$("#queueBody tr").length);
+
+        }
+        
+        if ($("#overdueBody").is(":visible")) {
+
+            loadTable(1,$("#overdueBody tr").length);
+
+        }
+        
+          if ($("#futureBody").is(":visible")) {
+
+            loadTable(2,$("#futureBody tr").length);
+
+        }
+        
+          if ($("#completedBody").is(":visible")) {
+
+            loadTable(3,$("#completedBody tr").length);
+
+        }
+        
+        
+
+    }
+
+});
+    function loadTable(checkstaus=0,limit=0) {
         // ──────────────────────────────────────
         // AJAX 2: Counsellor table (parallel)
         // ──────────────────────────────────────
         $.ajax({
-            url: admin_url + 'Dashboard/getFollow_up_datatable',
+            url: admin_url + 'Dashboard/getFollow_up_datatable?tableStatus='+checkstaus,
             type: 'POST',
-            data: get_filterData(),
+            data: get_filterData(limit),
             dataType: 'json',
             success: function(res) {
-                $("#show-follow-status").html('');
-                $("#queueCount").text(0 + " Pending");
-                if (!res) return;
-                if (res.length == 0) {
-                    $('#queueBody').html(
-                        '<tr><td colspan="12" style="text-align:center;padding:20px;color:var(--red)">' +
-                        'No data Found</td></tr>'
+                // $("#show-follow-status").html('');
+                // $("#queueCount").text(0 + " Pending");
+                
+                    if(checkstaus==0 && limit ==0){
+                    $('#queueBody,#futureBody,#overdueBody').html(
+                    '<tr><td colspan="12" style="text-align:center;padding:20px;color:var(--red)">' +
+                    'No data Found</td></tr>'
                     );
+                    setGostedData([]);
+                    }
+                    
+                if (!res) return;
+                if (res.length == 0 && limit ==0) {
+                
+                    
+                    
+                    if(checkstaus==0)
+                {
+                     loadTable(1); 
+                }
+                if(checkstaus==1)
+                {
+                    loadTable(2); 
+                }
+                if(checkstaus==2)
+                {
+                    loadTable(3); 
+                }
                     return false;
                 }
-                followUpTable(res)
+              getDataScroll = true;
+                
+                if(checkstaus==0)
+                {
+                    followUpTable(res,"queueBody",limit)
+                    if(limit == 0){
+                  loadTable(1); 
+                    }
+                }
+                if(checkstaus==1)
+                {
+                    followUpTable(res,"overdueBody",limit)
+                     if(limit == 0){
+                    loadTable(2); 
+                     }
+                }
+                if(checkstaus==2)
+                {
+                    followUpTable(res,"futureBody",limit)
+                    loadTable(3); 
+                }
+                
+                if(checkstaus==3)
+                {
+                    followUpTable(res,"completedBody",limit)
+                }
 
             },
             error: function(xhr) {
-                $("#show-follow-status").html('');
+                // $("#show-follow-status").html('');
                 console.error('Counsellor table error:', xhr.responseText);
                 $('#queueBody').html(
                     '<tr><td colspan="12" style="text-align:center;padding:20px;color:var(--red)">' +
@@ -1667,7 +2097,7 @@ $role = $this->db->where('staffid', get_staff_user_id())->get(db_prefix() . 'sta
             result = 'Just now';
         }
 
-        return isFuture ? `${result} remaining` : `${result} overdue`;
+        return isFuture ? `${result}` : `${result}`;
     }
 
     // const ghostLeads=[
@@ -1678,18 +2108,38 @@ $role = $this->db->where('staffid', get_staff_user_id())->get(db_prefix() . 'sta
     //   {n:'Yash Patel',    status:'cold',country:'Germany',counsellor:'Vikram Das', att:3,last:'4 days ago'},
     //   {n:'Aditi Sharma',  status:'warm',country:'Ireland',counsellor:'Sneha Kapoor',att:3,last:'3 days ago'},
     // ];
+    
+    var ghostLeadsExport=[];
 
     function setGostedData(ghostLeads) {
+        
+        ghostLeadsExport =[];
+        $("#ghostedDownload").attr("disabled",true);
+        
+        if(ghostLeads.length > 0)
+        {
+             $("#ghostedDownload").attr("disabled",false);
+        }
 
         const ghEl = document.getElementById('ghostArea');
         ghEl.innerHTML = '';
         ghostLeads.forEach(g => {
+            
+            ghostLeadsExport.push({
+        name: g.name,
+        phonenumber: g.phonenumber,
+        staff: g.staff_name,
+        status: g.status_name,
+        attempts: g.attempts,
+        last_connected: g.last_connect_dt || "Not Connected"
+    });
+    
             ghEl.innerHTML += `<div style="display:flex;align-items:center;justify-content:space-between;padding:7px 0;border-bottom:0.5px solid var(--border)">
     <div style="display:flex;align-items:center;gap:8px">
-      <div class="av" style="background:var(--gray-lt);color:var(--gray)">${g.name.split(' ').map(w=>w[0]).join('')}</div>
+     
       <div>
         <div style="font-size:12px;font-weight:600;color:var(--text)">${g.name}</div>
-        <div style="font-size:11px;color:var(--text3)">${g.staff_name} &bull; ${g.country}</div>
+        <div style="font-size:11px;color:var(--text3)">${g.staff_name} &bull; ${g.phonenumber}</div>
       </div>
     </div>
     <div style="display:flex;align-items:center;gap:8px">
@@ -1725,15 +2175,18 @@ $role = $this->db->where('staffid', get_staff_user_id())->get(db_prefix() . 'sta
         return `${day} ${month} ${year} <br> ${hours}:${minutes} ${ampm}`;
     }
 
-    function followUpTable(queLeads) {
+    function followUpTable(queLeads,id="queueBody",limit=0) {
 
-        const qBody = document.getElementById('queueBody');
+console.log(id);
+        const qBody = document.getElementById(id);
 
         let total = 0;
         let ghostLeads = [];
 
         let statusArray = {}; // { priority: {color, name, count} }
+        if(limit==0){
         qBody.innerHTML = '';
+        }
         queLeads.forEach(l => {
 
 
@@ -1770,14 +2223,10 @@ $role = $this->db->where('staffid', get_staff_user_id())->get(db_prefix() . 'sta
 
   <td>
     <div class="av-cell">
-      <div class="av" style="background:var(--surface2);color:var(--text2)">
-        ${getInitials(l.name)}
-        
-      </div>
       <span style="font-size:12px;font-weight:600;color:var(--text)">
         ${l.name || ''}
         <br>
-        <a href="#" onclick="init_lead(${l.lead_id}, '', '#lead_reminders'); return false;">view</a>
+        <a href="#" onclick="init_lead(${l.lead_id},'','','','lead_reminders'); return false;">view</a>
       </span>
     </div>
   </td>
@@ -1842,6 +2291,8 @@ $role = $this->db->where('staffid', get_staff_user_id())->get(db_prefix() . 'sta
 </tr>
 `);
 
+if(id == "queueBody")
+{
             total++;
 
             // ✅ FIXED statusArray
@@ -1856,41 +2307,75 @@ $role = $this->db->where('staffid', get_staff_user_id())->get(db_prefix() . 'sta
             if (l.attempts > 3) {
                 ghostLeads.push(l);
             }
+}
         });
 
+        if(id != "queueBody")
+        {
+        return  false;
+        }
+        
+  
         setGostedData(ghostLeads);
 
 
         // ✅ total count
-        $("#queueCount").text(total + " Pending");
+        // $("#queueCount").text(total + " Pending");
 
         // ✅ render status badges
-        let statusHtml = '';
-        if  (Object.keys(statusArray).length > 0) {
-            statusHtml += `
-            <span onclick="changeTableStatus(${total})" class="badge " >
-                All
-            </span>`;
-        }
-        Object.values(statusArray).forEach(item => {
-            // console.log(item);
-            statusHtml += `
-            <span onclick="changeTableStatus( ${item.count},'${item.name}')" class="badge prio-${item.color}" style="color:${item.color}">
-                ${item.count} ${item.name}
-            </span>
-        `;
-        });
+        // let statusHtml = '';
+        // if  (Object.keys(statusArray).length > 0) {
+        //     statusHtml += `
+        //     <span onclick="changeTableStatus(${total})" class="badge " >
+        //         All
+        //     </span>`;
+        // }
+        // Object.values(statusArray).forEach(item => {
+        //     // console.log(item);
+        //     statusHtml += `
+        //     <span onclick="changeTableStatus( ${item.count},'${item.name}')" class="badge prio-${item.color}" style="color:${item.color}">
+        //         ${item.count} ${item.name}
+        //     </span>
+        // `;
+        // });
 
-        $("#show-follow-status").html(statusHtml);
+        // $("#show-follow-status").html(statusHtml);
     }
 
-    function changeTableStatus(count, name) {
-        $("tr.row-hide-show").hide();
+   function changeTableStatus(count, name) {
+
+    const $table =  $("table.tbl:visible");
+
+    // hide all rows first
+    $table.find("tr.row-hide-show").hide();
+
+    if (!name || name === 'all') {
+        $table.find("tr.row-hide-show").show();
+    } else {
+        $table.find("tr.change-" + name).show();
+    }
+
+    // check visible rows
+    const visibleRows = $table.find("tr.row-hide-show:visible").length;
+
+    if (visibleRows === 0) {
+        console.log("No rows visible in table");
+        // optional: show empty state row
+        $table.find(".no-data-row").show();
+    } else {
+        $table.find(".no-data-row").hide();
+    }
+}
+    
+      function changeTableStatus_c(count, name="") {
+          console.log(count);
+          console.log(name);
+        $("#counsellorTable tr.row-hide-show").hide();
 
         if (!name) {
-            $("tr.row-hide-show").show();
+            $("#counsellorTable tr.row-hide-show").show();
         } else {
-            $("tr.change-" + name).show();
+            $("#counsellorTable tr.counsollor-tr-" + name).show();
         }
     }
 
@@ -1899,7 +2384,7 @@ $role = $this->db->where('staffid', get_staff_user_id())->get(db_prefix() . 'sta
 
         if (!_counsellorData.length) {
             $('#counsellorHead').html('');
-            $('#counsellorBody').html('<tr><td colspan="12" style="text-align:center;padding:20px;color:var(--text3)">No counsellor data</td></tr>');
+            $('#counsellorBody').html('<tr><td colspan="11" style="text-align:center;padding:20px;color:var(--text3)">No counsellor data</td></tr>');
             return;
         }
 
@@ -1928,15 +2413,14 @@ $role = $this->db->where('staffid', get_staff_user_id())->get(db_prefix() . 'sta
             '<th onclick="sortCounsellorTable(\'name\')">Counsellor</th>' +
             '<th onclick="sortCounsellorTable(\'total_followups\')" style="text-align:center">Assigned today</th>' +
             '<th onclick="sortCounsellorTable(\'completed\')" style="text-align:center">Completed</th>' +
+            '<th onclick="sortCounsellorTable(\'due\')" style="text-align:center">Pending</th>'+
             '<th onclick="sortCounsellorTable(\'overdue\')" style="text-align:center">Overdue</th>';
 
         _funnelNames.forEach(function(fn) {
             thHtml += '<th style="text-align:center">' + fn.name + '</th>';
         });
 
-        thHtml += '<th onclick="sortCounsellorTable(\'completion_percentage\')" style="text-align:center">Today\'s %</th>' +
-            '<th onclick="sortCounsellorTable(\'avg30\')" style="text-align:center">Avg % <span style="font-weight:400;color:var(--text3)">(30d)</span></th>' +
-            '<th>7-day trend</th>' +
+        thHtml += '<th onclick="sortCounsellorTable(\'completion_percentage\')" style="text-align:center">Completed %</th>' +
             '<th>Status</th></tr>';
 
         $('#counsellorHead').html(thHtml);
@@ -1955,13 +2439,78 @@ $role = $this->db->where('staffid', get_staff_user_id())->get(db_prefix() . 'sta
             band.style.display = 'flex';
             document.getElementById('obTitle').textContent = missed + ' follow-ups are overdue right now';
             var parts = [];
-            (d.funnel_data || []).forEach(function(f) {
-                if (n(f.due_count) > 0) parts.push(f.funnel_name + ': ' + f.due_count);
-            });
-            document.getElementById('obSub').innerHTML = parts.join(' &nbsp;&bull;&nbsp; ');
+            // (d.funnel_data_overdue || []).forEach(function(f) {
+            //     if (n(f.due_count) > 0) parts.push(f.funnel_name + ': ' + f.due_count);
+            // });
+            
+            let funnelMap = {};
+
+(d.funnel_data_overdue || []).forEach(function (f) {
+
+    if (n(f.due_count) <= 0) return;
+
+    // merge same funnel names
+    if (!funnelMap[f.funnel_name]) {
+        funnelMap[f.funnel_name] = 0;
+    }
+
+    funnelMap[f.funnel_name] += n(f.due_count);
+});
+
+Object.keys(funnelMap).forEach(function (name) {
+
+    parts.push(name + ': ' + funnelMap[name]);
+
+});
+            document.getElementById('obSub').innerHTML =
+    parts.length
+        ? parts.join(' &nbsp;&bull;&nbsp; ')
+        : 'No overdue follow-ups';
         } else {
             band.style.display = 'none';
         }
+        
+        
+     
+        
+let today_status = d?.data_stus?.today_status || {};  
+let future_status = d?.data_stus?.future_status || {}; 
+let missed_status = d?.data_stus?.missed_status || {}; 
+let completed_status = d?.data_stus?.completed_status || {}; 
+
+
+setStatus("show-follow-status",today_status);
+setStatus("future-show-follow-status",future_status);
+setStatus("overdue-show-follow-status",missed_status);
+setStatus("completed-show-follow-status",completed_status);   
+    }
+    
+    function setStatus(id,data)
+    {
+         let statusHtml = '';
+        let today_status=data;
+
+if (today_status) {
+
+    statusHtml += `
+        <span onclick="changeTableStatus(${today_status.all}, 'all')" class="badge">
+            All
+        </span>
+    `;
+
+    Object.entries(today_status).forEach(([key, value]) => {
+
+        if (key === 'all') return;
+
+        statusHtml += `
+            <span  tooltip="fsds" onclick="changeTableStatus(${value??0}, '${key}')" class="badge prio-${key}">
+                ${value??0} ${key}
+            </span>
+        `;
+    });
+}
+
+$("#"+id).html(statusHtml);
     }
 
     /* ═══════════════════════════════════════════════
@@ -1983,28 +2532,34 @@ $role = $this->db->where('staffid', get_staff_user_id())->get(db_prefix() . 'sta
         // Due today
         html += '<div class="kpi">' +
             '<div class="kpi-accent" style="background:var(--coral)"></div>' +
-            '<div class="kpi-lbl">Total due today</div>' +
+            '<div class="kpi-lbl">Total due</div>' +
             '<div class="kpi-val">' + due + '</div>' +
             '<div class="kpi-row"><span class="kpi-sub">Across all counsellors</span></div>' +
             '</div>';
-
-        // Missed
-        html += '<div class="kpi">' +
-            '<div class="kpi-accent" style="background:var(--red)"></div>' +
-            '<div class="kpi-lbl">Overdue &amp; missed</div>' +
-            '<div class="kpi-val">' + missed + '</div>' +
-            '<div class="kpi-row"><span class="kpi-sub">Not actioned yet</span>' +
-            (missed > 10 ? '<span class="badge b-red">&#9650; Critical</span>' : missed > 0 ? '<span class="badge b-amber">Needs review</span>' : '<span class="badge b-green">All clear</span>') +
-            '</div></div>';
-
-        // Completed
-        html += '<div class="kpi">' +
+            
+            
+             html += '<div class="kpi">' +
             '<div class="kpi-accent" style="background:var(--teal)"></div>' +
-            '<div class="kpi-lbl">Completed today</div>' +
+            '<div class="kpi-lbl">Completed</div>' +
             '<div class="kpi-val">' + completed + '</div>' +
             '<div class="kpi-row"><span class="kpi-sub">of ' + total + ' scheduled</span>' +
             '<span class="badge ' + rateColor(compPct) + '">' + compPct + '% done</span>' +
             '</div></div>';
+
+        // Missed
+        html += '<div class="kpi">' +
+            '<div class="kpi-accent" style="background:var(--red)"></div>' +
+            '<div class="kpi-lbl">Overdue Till Now</div>' +
+            '<div class="kpi-val">' + missed + '</div>' +
+            '<div class="kpi-row"><span class="kpi-sub">Not actioned yet</span>' +
+            (missed > 10 ? '<span class="badge b-red">&#9650; Critical</span>' : missed > 0 ? '<span class="badge b-amber">Needs review</span>' : '<span class="badge b-green">All clear</span>') +
+            '</div></div>';
+            
+            $("#overdueCount").text(missed + ' Missed'||0);
+            $("#queueCount").text(due + " Pending")
+
+        // Completed
+       
 
         $('#kpiRow1').html(html);
     }
@@ -2039,7 +2594,7 @@ $role = $this->db->where('staffid', get_staff_user_id())->get(db_prefix() . 'sta
         var html = '';
         $.each(grouped, function(funnelName, data) {
             var statusDetail = data.statuses.map(function(s) {
-                return s.status_name + ': ' + s.lead_count;
+                return s.status_name + ': ' + s.due_count;
             }).join(' &bull; ');
 
             html += '<div class="kpi">' +
@@ -2065,6 +2620,7 @@ $role = $this->db->where('staffid', get_staff_user_id())->get(db_prefix() . 'sta
         var due = n(st.due),
             completed = n(st.completed);
         var total = due + completed;
+         var future = st.future || 0;
         var teamPct = pct(completed, total);
 
         var html = '';
@@ -2080,7 +2636,7 @@ $role = $this->db->where('staffid', get_staff_user_id())->get(db_prefix() . 'sta
             '</div></div>';
 
         // Ghosted placeholder
-        html += '<div class="kpi">' +
+        html += `<div class="kpi cursor" onclick="scrollSection('ghostAreaSection')">`+
             '<div class="kpi-accent" style="background:var(--gray)"></div>' +
             '<div class="kpi-lbl">Ghosted / No response</div>' +
             '<div class="kpi-val" id="ghosted-count">—</div>' +
@@ -2088,12 +2644,23 @@ $role = $this->db->where('staffid', get_staff_user_id())->get(db_prefix() . 'sta
             '</div>';
 
         // At-risk counsellors (count only — tooltip is rendered by renderAtRisk)
+        // html += '<div class="kpi">' +
+        //     '<div class="kpi-accent" style="background:var(--red)"></div>' +
+        //     '<div class="kpi-lbl">Counsellors at risk</div>' +
+        //     '<div class="follow_up_counsellors_risk_wrap" onhover="bindHoverEffect()" id="atRiskWrap"></div>' +
+        //     '<div class="kpi-row"><span class="kpi-sub">Below 50% completion</span><span class="badge b-red">Needs attention</span></div>' +
+        //     '</div>';
+        
         html += '<div class="kpi">' +
             '<div class="kpi-accent" style="background:var(--red)"></div>' +
-            '<div class="kpi-lbl">Counsellors at risk</div>' +
-            '<div class="follow_up_counsellors_risk_wrap" onhover="bindHoverEffect()" id="atRiskWrap"></div>' +
-            '<div class="kpi-row"><span class="kpi-sub">Below 50% completion today</span><span class="badge b-red">Needs attention</span></div>' +
+            '<div class="kpi-lbl">Future follow-ups</div>' +
+            '<div class="kpi-val" id="future-follow-ups">'+future+'</div>' +
+            '<div class="kpi-row"></div>' +
             '</div>';
+            
+            $("#futureCount").text(future + ' future'||0);
+            
+             $("#completedCount").text(completed + ' completed'||0);
 
         $('#kpiRow3').html(html);
     }
@@ -2109,7 +2676,7 @@ $role = $this->db->where('staffid', get_staff_user_id())->get(db_prefix() . 'sta
         var tooltipHtml = '';
         if (count > 0) {
             tooltipHtml = '<div class="risk-tooltip">';
-            tooltipHtml += '<div class="risk-tooltip-title">Counsellors below 50% today</div>';
+            tooltipHtml += '<div class="risk-tooltip-title">Counsellors below 50%</div>';
             list.forEach(function(c) {
                 var p = parseFloat(c.completion_percentage) || 0;
                 var barColor = p < 20 ? '#c83232' : p < 35 ? '#d44c2e' : '#c07a0a';
@@ -2211,105 +2778,116 @@ $role = $this->db->where('staffid', get_staff_user_id())->get(db_prefix() . 'sta
         // Build dynamic <thead>
         var thHtml = '<tr>' +
             '<th onclick="sortCounsellorTable(\'name\')">Counsellor</th>' +
-            '<th onclick="sortCounsellorTable(\'total_followups\')" style="text-align:center">Assigned today</th>' +
+            '<th onclick="sortCounsellorTable(\'total_followups\')" style="text-align:center">Assigned</th>' +
             '<th onclick="sortCounsellorTable(\'completed\')" style="text-align:center">Completed</th>' +
+            '<th onclick="sortCounsellorTable(\'due\')" style="text-align:center">Pending</th>'+
             '<th onclick="sortCounsellorTable(\'overdue\')" style="text-align:center">Overdue</th>';
 
         _funnelNames.forEach(function(fn) {
             thHtml += '<th style="text-align:center">' + fn.name + '</th>';
         });
 
-        thHtml += '<th onclick="sortCounsellorTable(\'completion_percentage\')" style="text-align:center">Today\'s %</th>' +
-            '<th onclick="sortCounsellorTable(\'avg30\')" style="text-align:center">Avg % <span style="font-weight:400;color:var(--text3)">(30d)</span></th>' +
-            '<th>7-day trend</th>' +
+        thHtml += '<th onclick="sortCounsellorTable(\'completion_percentage\')" style="text-align:center">Completed %</th>' +
             '<th>Status</th></tr>';
 
         $('#counsellorHead').html(thHtml);
         buildCounsellorRows();
     }
 
-    function buildCounsellorRows() {
-        var sorted = _counsellorData.slice().sort(function(a, b) {
-            if (sortKey === 'name') return sortDir * (a.counsellor_name || '').localeCompare(b.counsellor_name || '');
-            var va = parseFloat(a[sortKey]) || 0,
-                vb = parseFloat(b[sortKey]) || 0;
-            return sortDir * (vb - va);
-        });
+   function buildCounsellorRows() {
+    var sorted = _counsellorData.slice().sort(function(a, b) {
+        if (sortKey === 'name') {
+            return sortDir * (a.counsellor_name || '').localeCompare(b.counsellor_name || '');
+        }
+        var va = parseFloat(a[sortKey]) || 0;
+        var vb = parseFloat(b[sortKey]) || 0;
+        return sortDir * (vb - va);
+    });
 
-        var html = '';
-        sorted.forEach(function(c) {
-            var name = c.counsellor_name || 'Unknown';
-            var assigned = n(c.total_followups);
-            var done = n(c.completed);
-            var overdue = n(c.overdue);
-            var rate = parseFloat(c.completion_percentage) || 0;
-            var avg30 = parseFloat(c.avg30) || 0;
+    var html = '';
 
-            var trend = c.trend;
-            if (typeof trend === 'string') {
-                try {
-                    trend = JSON.parse(trend);
-                } catch (e) {
-                    trend = [];
-                }
-            }
-            if (!Array.isArray(trend)) trend = [];
+    // Pre-seed all three status buckets so we can keep their order + colour
+    var statusCounsollor = {
+        'On track': { count: 0, name: 'On track', cls: 'b-green', color: '#16A34A' },
+        'At risk':  { count: 0, name: 'At risk',  cls: 'b-amber', color: '#D97706' },
+        'Critical': { count: 0, name: 'Critical', cls: 'b-red',   color: '#DC2626' }
+    };
+    var total = 0;
 
-            var av = avatarColor(name);
-            var ini = initials(name);
+    sorted.forEach(function(c) {
+        var name     = c.counsellor_name || 'Unknown';
+        var assigned = n(c.total_followups);
+        var done     = n(c.completed);
+        var overdue  = n(c.overdue);
+        var due      = n(c.due);
+        var rate     = parseFloat(c.completion_percentage) || 0;
+        var av       = avatarColor(name);
+        var ini      = initials(name);
 
-            var status, statusCls;
-            if (rate >= 75) {
-                status = 'On track';
-                statusCls = 'b-green';
-            } else if (rate >= 50) {
-                status = 'At risk';
-                statusCls = 'b-amber';
+        var status, statusCls;
+        if (rate >= 85)      { status = 'On track'; statusCls = 'b-green'; }
+        else if (rate >= 40) { status = 'At risk';  statusCls = 'b-amber'; }
+        else                 { status = 'Critical'; statusCls = 'b-red';   }
+
+        // funnel_counts may come back as a JSON string (MySQL JSON_ARRAYAGG)
+        var funnels = c.funnel_counts;
+        if (typeof funnels === 'string') {
+            try { funnels = JSON.parse(funnels); }
+            catch (e) { funnels = []; }
+        }
+        var fMap = {};
+        if (Array.isArray(funnels)) {
+            funnels.forEach(function(f) { fMap[f.funnel_name] = n(f.count); });
+        }
+
+        html += '<tr class="row-hide-show counsollor-tr-' + status.replace(/\s+/g, '-') + '" data-status="' + status + '">';
+        html +=   '<td><div class="av-name">' + name + '</div></td>';
+        html +=   '<td style="font-weight:700;text-align:center">' + assigned + '</td>';
+        html +=   '<td style="color:' + TEAL + ';font-weight:700;text-align:center">' + done + '</td>';
+        html +=   '<td style="text-align:center;font-weight:700;"><span class="text-danger">' + due + '</span></td>';
+        html +=   '<td style="text-align:center"><span class="badge ' +
+                    (overdue > 3 ? 'b-red' : overdue > 0 ? 'b-amber' : 'b-green') +
+                  '">' + overdue + '</span></td>';
+
+        _funnelNames.forEach(function(fn) {
+            var count = fMap[fn.name] || 0;
+            if (count > 0) {
+                html += '<td style="text-align:center">' +
+                          '<span class="ls-pill" style="background:' + fn.bg + ';color:' + fn.color + '">' +
+                            count +
+                          '</span>' +
+                        '</td>';
             } else {
-                status = 'Critical';
-                statusCls = 'b-red';
+                html += '<td style="text-align:center;color:var(--text3)">0</td>';
             }
-
-            // Parse funnel_counts
-            var funnels = c.funnel_counts;
-            if (typeof funnels === 'string') {
-                try {
-                    funnels = JSON.parse(funnels);
-                } catch (e) {
-                    funnels = [];
-                }
-            }
-            var fMap = {};
-            if (Array.isArray(funnels)) {
-                funnels.forEach(function(f) {
-                    fMap[f.funnel_name] = n(f.count);
-                });
-            }
-
-            html += '<tr>';
-            html += '<td><div class="av-cell"><div class="av" style="background:' + av[0] + ';color:' + av[1] + '">' + ini + '</div><div><div class="av-name">' + name + '</div></div></div></td>';
-            html += '<td style="font-weight:700;text-align:center">' + assigned + '</td>';
-            html += '<td style="color:' + TEAL + ';font-weight:700;text-align:center">' + done + '</td>';
-            html += '<td style="text-align:center"><span class="badge ' + (overdue > 3 ? 'b-red' : overdue > 0 ? 'b-amber' : 'b-green') + '">' + overdue + '</span></td>';
-
-            _funnelNames.forEach(function(fn) {
-                var count = fMap[fn.name] || 0;
-                if (count > 0) {
-                    html += '<td style="text-align:center"><span class="ls-pill" style="background:' + fn.bg + ';color:' + fn.color + '">' + count + '</span></td>';
-                } else {
-                    html += '<td style="text-align:center;color:var(--text3)">0</td>';
-                }
-            });
-
-            html += '<td style="text-align:center"><span class="badge ' + rateColor(rate) + '">' + Math.round(rate) + '%</span></td>';
-            html += '<td style="text-align:center"><span class="badge ' + rateColor(avg30) + '">' + Math.round(avg30) + '%</span></td>';
-            html += '<td>' + sparkHTML(trend) + '</td>';
-            html += '<td><span class="badge ' + statusCls + '">' + status + '</span></td>';
-            html += '</tr>';
         });
 
-        $('#counsellorBody').html(html);
-    }
+        html += '<td style="text-align:center"><span class="badge ' + rateColor(rate) + '">' +
+                  Math.round(rate) + '%' +
+                '</span></td>';
+        html += '<td><span class="badge ' + statusCls + '">' + status + '</span></td>';
+        html += '</tr>';
+
+        statusCounsollor[status].count++;
+        total++;
+    });
+
+    // Build the status filter chips (top-of-table)
+    var statusHtml = '<span onclick="changeTableStatus_c(' + total + ')" ' +
+                       'class="badge b-grey" style="cursor:pointer">All ' + total + '</span>';
+
+    Object.keys(statusCounsollor).forEach(function(key) {
+        var item = statusCounsollor[key];
+        if (item.count === 0) return;       // skip empty buckets
+        statusHtml += '<span onclick="changeTableStatus_c(' + item.count + ', \'' + item.name.replace(/\s+/g, '-') + '\')" ' +
+                        'class="badge ' + item.cls + '" style="cursor:pointer;color:' + item.color + '">' +
+                          item.count + ' ' + item.name +
+                      '</span>';
+    });
+
+    $('#counsellorBody').html(html);
+    $('#counsellorStatusFilter').html(statusHtml);   // <-- put the chips wherever you want them
+}
 
     /* ═══════════════════════════════════════════════
        RENDER: MISSED BARS — Top 5 & Least 5
@@ -2329,10 +2907,10 @@ $role = $this->db->where('staffid', get_staff_user_id())->get(db_prefix() . 'sta
             if (v > globalMax) globalMax = v;
         });
 
-        var html = '<div style="ror">';
+        var html = '<div style="ror" class="row r2">';
 
         // Left: Top 5
-        html += '<div class="col-md-12">' +
+        html += '<div class="col-md-12 card">' +
             '<div style="display:flex;align-items:center;gap:6px;margin-bottom:12px">' +
             '<span style="width:8px;height:8px;border-radius:50%;background:' + RED + '"></span>' +
             '<span style="font-size:11px;font-weight:700;color:var(--text3);text-transform:uppercase;letter-spacing:.4px">Top 5 — Most Missed</span>' +
@@ -2345,10 +2923,10 @@ $role = $this->db->where('staffid', get_staff_user_id())->get(db_prefix() . 'sta
         html += '</div>';
 
         // Right: Least 5
-        html += '<div class="col-md-12" style="margin-top:20px;">' +
+        html += '<div class="col-md-12 card" style="">' +
             '<div style="display:flex;align-items:center;gap:6px;margin-bottom:12px">' +
             '<span style="width:8px;height:8px;border-radius:50%;background:' + GREEN + '"></span>' +
-            '<span style="font-size:11px;font-weight:700;color:var(--text3);text-transform:uppercase;letter-spacing:.4px">Least 5 — Fewest Missed</span>' +
+            '<span style="font-size:11px;font-weight:700;color:var(--text3);text-transform:uppercase;letter-spacing:.4px">Least 5 — created follow-ups</span>' +
             '</div>';
         if (least5 && least5.length) {
             html += buildMissedRows(least5, globalMax);
@@ -2361,6 +2939,17 @@ $role = $this->db->where('staffid', get_staff_user_id())->get(db_prefix() . 'sta
         el.innerHTML = html;
     }
 
+
+function scrollSection(sectionID) {
+    console.log("scroll");
+    const element = document.getElementById(sectionID);
+    if (element) {
+        element.scrollIntoView({ 
+            behavior: 'smooth',
+            block: 'start'
+        });
+    }
+}
     function buildMissedRows(list, globalMax) {
         var html = '';
         list.forEach(function(c) {
@@ -2374,8 +2963,8 @@ $role = $this->db->where('staffid', get_staff_user_id())->get(db_prefix() . 'sta
             var badgeTxt = cnt >= 6 ? 'High' : cnt >= 3 ? 'Med' : 'Low';
 
             html += '<div class="bar-row" style="margin-bottom:10px">' +
-                '<div class="av" style="background:' + av[0] + ';color:' + av[1] + '">' + initials(name) + '</div>' +
-                '<div class="bar-lbl" title="' + name + '">' + name.split(' ')[0] + '</div>' +
+               
+                '<div class="bar-lbl" title="' + name + '">' + name.split(' ')[0]+' '+ name.split(' ')[1] + '</div>' +
                 '<div class="bar-track"><div class="bar-fill" style="width:' + w + '%;background:' + barColor + '"></div></div>' +
                 '<div style="display:flex;align-items:center;gap:6px">' +
                 '<span style="font-size:12px;font-weight:700;color:var(--text);min-width:24px;text-align:right">' + cnt + '</span>' +
@@ -2458,124 +3047,313 @@ $role = $this->db->where('staffid', get_staff_user_id())->get(db_prefix() . 'sta
         return 'rgba(' + r + ',' + g + ',' + b + ',' + alpha + ')';
     }
 
-    function renderStatusChart(data) {
+    // function renderStatusChart(data) {
 
-        if (!data || !data.length) {
-            document.getElementById('statusLegend').innerHTML = '';
-            return;
-        }
+    //     if (!data || !data.length) {
+    //         document.getElementById('statusLegend').innerHTML = '';
+    //         return;
+    //     }
 
-        var labels = [];
-        var colors = [];
-        var completed = [];
-        var pending = [];
-        var totals = [];
+    //     var labels = [];
+    //     var colors = [];
+    //     var completed = [];
+    //     var pending = [];
+    //     var totals = [];
 
-        data.forEach(function(d) {
-            var comp = parseInt(d.completed) || 0;
-            var pend = parseInt(d.pending) || 0;
+    //     data.forEach(function(d) {
+    //         var comp = parseInt(d.completed) || 0;
+    //         var pend = parseInt(d.pending) || 0;
 
-            labels.push(d.status_name || '—');
-            colors.push(d.status_color || '#737985');
-            completed.push(comp);
-            pending.push(pend);
-            totals.push(comp + pend);
-        });
+    //         labels.push(d.status_name || '—');
+    //         colors.push(d.status_color || '#737985');
+    //         completed.push(comp);
+    //         pending.push(pend);
+    //         totals.push(comp + pend);
+    //     });
 
-        // ✅ Legend (same style as your reference)
-        const sLeg = document.getElementById('statusLegend');
-        sLeg.innerHTML = '';
-        labels.forEach((l, i) => {
-            sLeg.innerHTML += `
-        <span style="display:flex;align-items:center;gap:4px;font-size:11px;color:var(--text2)">
-            <span style="width:9px;height:9px;border-radius:2px;background:${colors[i]}"></span>
-            ${l} (${totals[i]})
-        </span>`;
-        });
+    //     // ✅ Legend (same style as your reference)
+    //     const sLeg = document.getElementById('statusLegend');
+    //     sLeg.innerHTML = '';
+    //     labels.forEach((l, i) => {
+    //         sLeg.innerHTML += `
+    //     <span style="display:flex;align-items:center;gap:4px;font-size:11px;color:var(--text2)">
+    //         <span style="width:9px;height:9px;border-radius:2px;background:${colors[i]}"></span>
+    //         ${l} (${totals[i]})
+    //     </span>`;
+    //     });
 
-        // Destroy old chart
-        if (window.statusChartInstance) {
-            statusChartInstance.destroy();
-        }
+    //     // Destroy old chart
+    //     if (window.statusChartInstance) {
+    //         statusChartInstance.destroy();
+    //     }
 
-        // ✅ Chart (MATCHED TO YOUR WORKING VERSION)
-        statusChartInstance = new Chart(document.getElementById('statusChart'), {
-            type: 'bar',
-            data: {
-                labels: labels,
-                datasets: [{
-                        label: 'Completed',
-                        data: completed,
-                        backgroundColor: colors.map(c => hexToRgba(c, 0.6)), // like 'aa'
-                        borderRadius: 4,
-                        stack: 's'
-                    },
-                    {
-                        label: 'Pending',
-                        data: pending,
-                        backgroundColor: colors,
-                        borderRadius: 4,
-                        stack: 's'
-                    }
-                ]
+    //     // ✅ Chart (MATCHED TO YOUR WORKING VERSION)
+    //     statusChartInstance = new Chart(document.getElementById('statusChart'), {
+    //         type: 'bar',
+    //         data: {
+    //             labels: labels,
+    //             datasets: [{
+    //                     label: 'Completed',
+    //                     data: completed,
+    //                     backgroundColor: colors.map(c => hexToRgba(c, 0.6)), // like 'aa'
+    //                     borderRadius: 4,
+    //                     stack: 's'
+    //                 },
+    //                 {
+    //                     label: 'Pending',
+    //                     data: pending,
+    //                     backgroundColor: colors,
+    //                     borderRadius: 4,
+    //                     stack: 's'
+    //                 }
+    //             ]
+    //         },
+    //         options: {
+    //             responsive: true,
+    //             maintainAspectRatio: false,
+
+    //             // ✅ EXACT SAME HOVER BEHAVIOR
+    //             interaction: {
+    //                 mode: 'index',
+    //                 intersect: false
+    //             },
+
+    //             plugins: {
+    //                 legend: {
+    //                     display: false
+    //                 },
+
+    //                 // ✅ DEFAULT TOOLTIP (FIXED)
+    //                 tooltip: {
+    //                     mode: 'index',
+    //                     intersect: false
+    //                 }
+    //             },
+
+    //             scales: {
+    //                 x: {
+    //                     stacked: true,
+    //                     grid: {
+    //                         display: false
+    //                     },
+    //                     ticks: {
+    //                         font: {
+    //                             size: 11
+    //                         },
+    //                         color: '#9aa0b3'
+    //                     }
+    //                 },
+    //                 y: {
+    //                     stacked: true,
+    //                     beginAtZero: true,
+    //                     grid: {
+    //                         color: 'rgba(128,128,128,0.1)'
+    //                     },
+    //                     ticks: {
+    //                         font: {
+    //                             size: 11
+    //                         },
+    //                         color: '#9aa0b3'
+    //                     }
+    //                 }
+    //             }
+    //         }
+    //     });
+    // }
+    
+   let statusFilterMode = 'all';
+window.statusChartData = null;
+
+function setStatusFilter(mode) {
+
+    statusFilterMode = mode;
+
+    if (window.statusChartData) {
+        renderStatusChart(window.statusChartData);
+    }
+}
+    
+  function renderStatusChart(data) {
+
+    if (!data || !data.length) {
+        document.getElementById('statusLegend').innerHTML = '';
+        return;
+    }
+
+    window.statusChartData = data;
+
+    let labels = [];
+    let colors = [];
+    let completed = [];
+    let pending = [];
+    let totals = [];
+
+    data.forEach(d => {
+
+        let comp = parseInt(d.completed) || 0;
+        let pend = parseInt(d.pending) || 0;
+
+        labels.push(d.status_name || '—');
+        colors.push(d.status_color || '#737985');
+
+        completed.push(comp);
+        pending.push(pend);
+       totals.push(
+    statusFilterMode == "completed"
+        ? comp
+        : statusFilterMode == "pending"
+            ? pend
+            : comp + pend
+);
+    });
+
+    // legend
+    const sLeg = document.getElementById('statusLegend');
+    sLeg.innerHTML = '';
+
+    labels.forEach((l, i) => {
+        sLeg.innerHTML += `
+            <span style="display:flex;align-items:center;gap:4px;font-size:11px;color:var(--text2)">
+                <span style="width:9px;height:9px;border-radius:2px;background:${colors[i]}"></span>
+                ${l} (${totals[i]})
+            </span>`;
+    });
+
+    if (statusChartInstance) {
+        statusChartInstance.destroy();
+    }
+
+    // datasets
+    let datasets = [];
+
+    if (statusFilterMode === 'all') {
+
+        datasets = [
+            {
+                label: 'Completed',
+                data: completed,
+                backgroundColor: colors.map(c => hexToRgba(c, 0.6)),
+                borderRadius: 4,
+                stack: 's'
             },
-            options: {
-                responsive: true,
-                maintainAspectRatio: false,
+            {
+                label: 'Pending',
+                data: pending,
+                backgroundColor: colors,
+                borderRadius: 4,
+                stack: 's'
+            }
+        ];
 
-                // ✅ EXACT SAME HOVER BEHAVIOR
-                interaction: {
+    } else if (statusFilterMode === 'completed') {
+
+        datasets = [{
+            label: 'Completed',
+            data: completed,
+            backgroundColor: colors.map(c => hexToRgba(c, 0.6)),
+            borderRadius: 4
+        }];
+
+    } else if (statusFilterMode === 'pending') {
+
+        datasets = [{
+            label: 'Pending',
+            data: pending,
+            backgroundColor: colors,
+            borderRadius: 4
+        }];
+    }
+
+    // chart
+    statusChartInstance = new Chart(document.getElementById('statusChart'), {
+        type: 'bar',
+        data: {
+            labels: labels,
+            datasets: datasets
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: false,
+
+            interaction: {
+                mode: 'index',
+                intersect: false
+            },
+
+            plugins: {
+
+                legend: {
+                    display: false
+                },
+
+                tooltip: {
                     mode: 'index',
                     intersect: false
                 },
 
-                plugins: {
-                    legend: {
-                        display: false
+                // 🔥 VALUE ON BAR FIXED
+                datalabels: {
+                    anchor: 'end',
+                    align: 'end',
+                    offset: 2,
+                    color: '#111',
+                    font: {
+                        size: 10,
+                        weight: 'bold'
                     },
 
-                    // ✅ DEFAULT TOOLTIP (FIXED)
-                    tooltip: {
-                        mode: 'index',
-                        intersect: false
+                    formatter: function (value, context) {
+
+                        let index = context.dataIndex;
+
+                        // STACKED MODE → show TOTAL only once
+                        if (statusFilterMode === 'all') {
+
+                            let total = (completed[index] || 0) + (pending[index] || 0);
+
+                            if (context.datasetIndex === 0) {
+                                return total > 0 ? total : '';
+                            }
+
+                            return '';
+                        }
+
+                        // SINGLE MODE
+                        return value > 0 ? value : '';
+                    }
+                }
+            },
+
+            scales: {
+                x: {
+                    stacked: statusFilterMode === 'all',
+                    grid: { display: false },
+                    ticks: {
+                        font: { size: 11 },
+                        color: '#9aa0b3'
                     }
                 },
-
-                scales: {
-                    x: {
-                        stacked: true,
-                        grid: {
-                            display: false
-                        },
-                        ticks: {
-                            font: {
-                                size: 11
-                            },
-                            color: '#9aa0b3'
-                        }
+                y: {
+                    stacked: statusFilterMode === 'all',
+                    beginAtZero: true,
+                    grid: {
+                        color: 'rgba(128,128,128,0.1)'
                     },
-                    y: {
-                        stacked: true,
-                        beginAtZero: true,
-                        grid: {
-                            color: 'rgba(128,128,128,0.1)'
-                        },
-                        ticks: {
-                            font: {
-                                size: 11
-                            },
-                            color: '#9aa0b3'
-                        }
+                    ticks: {
+                        font: { size: 11 },
+                        color: '#9aa0b3'
                     }
                 }
             }
-        });
-    }
+        }
+    });
+}
+
 
     /* ═══════════════════════════════════════════════
        RENDER: COMPLETION DOUGHNUT
        ═══════════════════════════════════════════════ */
-    function renderCompletionChart(data) {
+    function renderCompletionChart(data,Chartid,id="",id2="") {
         if (!data || !data.length) return;
 
         var labels = [],
@@ -2590,19 +3368,19 @@ $role = $this->db->where('staffid', get_staff_user_id())->get(db_prefix() . 'sta
         var legHtml = '';
         data.forEach(function(d, i) {
             var total = n(d.completed) + n(d.pending);
-            legHtml += '<div class="col-md-4 card"  style="display:flex;align-items:center;gap:7px;margin-bottom:10px;">' +
+            legHtml += '<div class="col-md-3 p-5"><div class="card"  style="display:flex;align-items:center;gap:7px;margin-bottom:10px;">' +
                 '<span style="width:10px;height:10px;border-radius:2px;background:' + colorsArr[i] + ';flex-shrink:0"></span>' +
                 '<div><div style="font-size:12px;font-weight:600">' + labels[i] + '</div>' +
-                '<div style="font-size:11px;color:var(--text3)">' + compData[i] + '/' + total + ' done</div></div></div>';
+                '<div style="font-size:11px;color:var(--text3)">' + compData[i] + '/' + total + ' done</div></div></div></div>';
         });
-        document.getElementById('completionLegend').innerHTML = legHtml;
+        document.getElementById(id2).innerHTML = legHtml;
 
-        if (completionChartInstance) {
-            completionChartInstance.destroy();
-            completionChartInstance = null;
+        if (completionChartInstance[Chartid]) {
+            completionChartInstance[Chartid].destroy();
+            completionChartInstance[Chartid] = null;
         }
 
-        completionChartInstance = new Chart(document.getElementById('completionChart'), {
+        completionChartInstance[Chartid] = new Chart(document.getElementById(id), {
             type: 'doughnut',
             data: {
                 labels: labels,
@@ -2731,6 +3509,23 @@ $role = $this->db->where('staffid', get_staff_user_id())->get(db_prefix() . 'sta
 
 
     });
+    
+    function exportExcel(type)
+    {
+        if(type == "ghosted")
+        {
+        downloadExcel(ghostLeadsExport,type)
+        }
+    }
+    
+      function downloadExcel(data,sheetName) {
+        const worksheet = XLSX.utils.json_to_sheet(data);
+
+        const workbook = XLSX.utils.book_new();
+        XLSX.utils.book_append_sheet(workbook, worksheet, sheetName);
+
+        XLSX.writeFile(workbook, "leads.xlsx");
+    }
     
     
    

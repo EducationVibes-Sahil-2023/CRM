@@ -358,6 +358,8 @@ if(!empty($admissionpreferences->primary_country) && strtolower($admissionprefer
                 <div class="panel-body">
                     <h4>Quotation Payments</h4>
                     <hr class="hr-panel-heading" />
+                    
+            
 
                     <?= form_open(admin_url('clients/payment_quotation'), ['id' => 'applicant-payment-form', 'enctype' => 'multipart/form-data']); ?>
                     <input type="hidden" name="client_id" value="<?= $client_id ?>">
@@ -538,6 +540,14 @@ if(!empty($admissionpreferences->primary_country) && strtolower($admissionprefer
                                                 </select>
                                             </div>
                                         </div>
+                                        
+                                        
+                                        <div class="col-md-2 transaction_id_div">
+                                            <div class=" form-group">
+                                                <label>Transaction Id <span class="text-danger">*</span></label><br>
+                                                <input required type="text" id="transaction_id" class="from-control transaction_id"  value="<?= !empty($applicant_payment_data->transaction_id) ? $applicant_payment_data->transaction_id : '' ?>" name="transaction_id" data-name="transaction_id">
+                                                </div>
+                                                </div>
 
 
 
@@ -874,11 +884,12 @@ if(!empty($admissionpreferences->primary_country) && strtolower($admissionprefer
         const getClientsFees = <?= json_encode($get_clients_fees ?? []) ?>;
         const TSC = 0;
  const primaryCountry = "<?= strtolower($admissionpreferences->primary_country ?? '') ?>";
+  const primaryUniversity = "<?= strtolower($admissionpreferences->primary_university ?? '') ?>";
         let exchangeRates = {};
         const applicant_payment_data = <?= json_encode($applicant_payment_data ?? []) ?>;
         const payment_mod = <?= json_encode($modes ?? []) ?>;
         const payment_mode_vendors = <?= json_encode($modes_vendor ?? []) ?>;
-
+const enableUniversity = ["Smolensk State Medical University","Izhevsk State Medical Academy","Perm State Medical University","Orenburg State Medical University","Pskov State Medical University","Kalmyk State University","Mari State Medical University"];
         // Cache DOM elements for better performance
         let $exchangeTableBody, $applicantForm;
 
@@ -886,6 +897,7 @@ if(!empty($admissionpreferences->primary_country) && strtolower($admissionprefer
         const toInt = val => parseInt(val) || 0;
         const toFloat = val => parseFloat(val) || 0;
         const formatCurrency = (value, decimals = 2) => value.toFixed(decimals);
+
 
         // global counter for unique IDs
         window._cloneCounter = window._cloneCounter || 0;
@@ -896,6 +908,15 @@ if(!empty($admissionpreferences->primary_country) && strtolower($admissionprefer
         function check_quotations(id) {
         check_warning_message();
         }
+        
+        $("#transaction_id").on("input", function () {
+    let value = $(this).val().toUpperCase();
+
+    // Remove invalid characters
+    value = value.replace(/[^A-Z0-9]/g, "");
+
+    $(this).val(value);
+});
         
         
        
@@ -1297,7 +1318,13 @@ if(!empty($admissionpreferences->primary_country) && strtolower($admissionprefer
                     .prop("disabled", false)
                     .prop("required", true)
                     .selectpicker('refresh'); // only if it's a <select>
+                    
+                    $("#transaction_id").val('');
+                    $("#transaction_id_div").hide();
             } else {
+                
+                 $("#transaction_id").val('');
+                    $("#transaction_id_div").show();
                 vendor_select.attr('required');
                 $(obj).closest('.payment_payment')
                     .find("[name='location_id']")
@@ -1530,6 +1557,73 @@ check_warning_message();
             }
 
             calculateInrValue();
+
+try {
+
+    const country = String(
+        primaryCountry || ""
+    ).toLowerCase();
+
+    const universityList =
+        Array.isArray(primaryUniversity)
+            ? primaryUniversity
+            : String(
+                  primaryUniversity || ""
+              )
+                  .split(",");
+
+    const university =
+        String(
+            enableUniversity || ""
+        ).toLowerCase();
+
+    const isAllowedUniversity =
+        universityList
+            .map(item =>
+                String(item)
+                    .trim()
+                    .toLowerCase()
+            )
+            .includes(university);
+
+    const shouldDisable =
+        (
+            country === "russia" ||
+            country === "georgia"
+        ) &&
+        !isAllowedUniversity;
+
+    $("select[name='type'] option[value='14']")
+        .prop(
+            "disabled",
+            shouldDisable
+        );
+
+    $("select[name='type']")
+        .selectpicker(
+            "refresh"
+        );
+
+} catch (error) {
+
+    console.error(
+        "Payment type validation error:",
+        error
+    );
+
+    // fallback: keep option enabled
+    $("select[name='type'] option[value='14']")
+        .prop(
+            "disabled",
+            false
+        );
+
+    $("select[name='type']")
+        .selectpicker(
+            "refresh"
+        );
+}
+
         }
 
 
@@ -1856,6 +1950,7 @@ if(idd == undefined)
                     let totalAmountCheck = $(this).find("input[name='amount']").val() || 0;
                     let totalAmountCheck_ = 0;
                     let totalINRCheck = $(this).find("input[name='inr_value']").val() || 0;
+                    let transaction_id = $(this).find("input[name='transaction_id']").val() || 0 ;
                     let totalINRCheck_ = 0;
                     // 🔹 Collect all form data
                     $payment.find("input, select, textarea").each(function() {

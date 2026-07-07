@@ -990,6 +990,24 @@ function get_user_lead_type_name()
     return $staff_role_name;
 }
 
+function get_staff_user_department_lead_type()
+{
+    $CI = &get_instance();
+
+    $CI->db->select('sd.leadType as lead_type')
+        ->from(db_prefix() . 'staff s')
+        ->join(
+            db_prefix() . 'staff_department sd',
+            'sd.id = s.department',
+            'left'
+        )
+        ->where('s.staffid', get_staff_user_id());
+
+    $query = $CI->db->get();
+
+    return $query->row() ?? null;
+}
+
 function get_staff_user_department()
 {
     $CI = &get_instance();
@@ -1067,3 +1085,10 @@ function get_staff_user_name_by_id($id)
     $query = $CI->db->get(db_prefix() . 'staff');
     return $query->row()->staffname;
 }
+
+
+/**
+ * Unread announcement counts grouped by department, for one user.
+ * Returns an associative array: [ department_id => unread_count, ... ]
+ * Admins see every department; staff see only the department(s) they belong to.
+ */

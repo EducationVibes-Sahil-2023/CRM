@@ -60,11 +60,14 @@ if (!is_postSale() && !is_admin()) {
                                 <th scope="col">Orignal Status</th>
                                 <th scope="col">Cost</th>
                                 <th scope="col">Currency</th>
+                                                   <th scope="col">Exchange Rate</th>
+                                <th scope="col">Total Amount</th>
                                 <th scope="col">Status</th>
                                 <th scope="col">Vendor</th>
                                 <th scope="col">Apply By Vendor</th>
                                 <th scope="col">Courier Date</th> <!-- Corrected "Courior" to "Courier" -->
                                 <th scope="col">Receiving Date</th>
+                                <th scope="col">Payment Mode</th>
                                 <th scope="col">Payment Date</th>
                                 <th scope="col">Created By</th>
                                 <th scope="col">Created Date</th>
@@ -101,11 +104,24 @@ if (!is_postSale() && !is_admin()) {
                                         <td><?= !empty($doc["original_received"]) ? $doc["original_received"] : '' ?></td>
                                         <td><?= !empty($doc["translation_cost"]) ? $doc["translation_cost"] : '' ?></td>
                                         <td><?= !empty($doc["currency_text"]) ? $doc["currency_text"] : '' ?></td>
+                                                                               <td><?= (!empty($doc["exchange_rate"]) && !empty($doc["apostille_cost"])) ? $doc["exchange_rate"] : '' ?></td>
+
+<td>
+<?php
+$cost = str_replace(',', '', $doc['apostille_cost']);
+$rate = !empty($doc['exchange_rate']) ? (float)$doc['exchange_rate'] : 1;
+
+echo is_numeric($cost)
+    ? number_format($rate * (float)$cost, 2, '.', '')
+    : $doc['apostille_cost'];
+?>
+</td>
                                         <td><?= !empty($doc["translation_status"]) ? $doc["translation_status"] : '' ?></td>
                                         <td><?= !empty($doc["vendor_name"]) ? $doc["vendor_name"] : '' ?></td>
                                         <td><?= !empty($doc["by_vendor"]) ? 'Yes' : 'No' ?></td>
                                         <td><?= !empty($doc["courier_date"]) ? $doc["courier_date"] : '' ?></td>
                                         <td><?= !empty($doc["translation_received"]) & $doc["translation_received"] != "0000-00-00"  ? $doc["translation_received"] : '' ?></td>
+                                         <td><?= !empty($doc["payment_mode"]) ? $doc["payment_mode"] : '' ?></td>
                                         <td><?= !empty($doc["payment_date"]) && $doc["payment_date"] != "0000-00-00" ? $doc["payment_date"] : '' ?></td>
                                         <td><?= !empty($doc["created_by"]) ? $doc["created_by"] : '' ?></td>
                                         <td><?= !empty($doc["created_at"]) ? $doc["created_at"] : '' ?></td>

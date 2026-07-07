@@ -358,8 +358,10 @@
             <div class="col-md-12">
                 <!-- Main Tabs -->
                 <div class="tabs">
-                    <div class="tab active" data-tab="not_reachable_leads">Not Reachable Leads</div>
-                    <div class="tab" data-tab="self_transfer_leads">Self Transfer Leads</div>
+                    <div class="tab active" onclick="setStatus(20)" data-tab="not_reachable_leads">Not Reachable Leads</div>
+                    <div class="tab" onclick="setStatus(2)" data-tab="not_reachable_leads">Fresh Leads (NR) </div>
+                    <div class="tab" onclick="setStatus()"data-tab="self_transfer_leads">Self Transfer Leads</div>
+                    <div class="tab" onclick="setStatus()" data-tab="fresh_transfer_leads">Fresh Leads</div>
                 </div>
 
                 <!-- Tab 1: Not Reachable Leads -->
@@ -411,19 +413,13 @@
                                 <canvas id="counselorChart"></canvas>
                                 <div class="ranking-card">
                                 <h5><i class="fa fa-ranking-star"></i> Counselor Ranking</h5>
-                                <div id="counselorRankingList"></div>
-                                  
-                                
+                                <div id="counselorRankingList"></div> 
                             </div>
                                    <div class="ranking-card source-card">
-                                <h5><i class="fa fa-ranking-star"></i> sources Ranking</h5>
-                                 <div id="topSourcesList"></div>
-                                  
-                                
+                                <h5><i class="fa fa-ranking-star"></i> Sources Ranking</h5>
+                                 <div id="topSourcesList"></div> 
                             </div>
-                           
                             </div>
-                            
                         </div>
                     </div>
 
@@ -441,17 +437,23 @@
                                             <label><i class="fa fa-user-circle"></i> Department</label>
                                             <?php echo render_select('department[]', $departments, array('id', 'name'), '', '', array('data-width' => '100%', 'data-none-selected-text' => 'Select department', 'multiple' => true, 'data-actions-box' => true, 'data-live-search' => true), array(), 'no-mbot', '', false, 'department'); ?>
                                         </div>
+                                         <div class="filter-group hide">
+                                            <label><i class="fa fa-user-circle"></i> Department</label>
+                                            <?php echo render_select('status[]', $lead_statuses, array('id', 'name'), '', '', array('data-width' => '100%', 'data-none-selected-text' => 'Select Status', 'multiple' => true, 'data-actions-box' => true, 'data-live-search' => true), array(), 'no-mbot', '', false, 'status'); ?>
+                                        </div>
                                         <div class="filter-group">
                                             <label><i class="fa fa-user"></i> Counselor</label>
                                             <?php echo render_select('view_assigned[]', $staff, array('staffid', array('firstname', 'lastname')), '', '', array('data-width' => '100%', 'data-none-selected-text' => 'All Counselors', 'multiple' => true, 'data-actions-box' => true), array(), 'no-mbot', '', false, 'view_assigned'); ?>
                                         </div>
                                     <?php } ?>
                                     <div class="filter-group">
-                                    <!--    <label><i class="fa fa-tag"></i> Lead Status</label>-->
-                                    <!--    <?php echo render_select('view_status[]', $lead_statuses, array('id', 'name'), '', '', array('data-width' => '100%', 'data-none-selected-text' => 'All Statuses', 'multiple' => true, 'data-actions-box' => true), array(), 'no-mbot', '', false, 'view_status'); ?>-->
-                                    <!--</div>-->
-                                         <label><i class="fa fa-tag"></i> Lead Source</label>
+                                        <label><i class="fa fa-tag"></i> Lead Source</label>
                                         <?php echo render_select('view_sources[]', $lead_sources, array('id', 'name'), '', '', array('data-width' => '100%', 'data-none-selected-text' => 'All Sources', 'multiple' => true, 'data-actions-box' => true), array(), 'no-mbot', '', false, 'view_sources'); ?>
+                                    </div>
+                                    
+                                    <div class="filter-group">
+                                           <label><i class="fa fa-tag"></i> Lead Status</label>
+                                        <?php echo render_select('c_status[]', $lead_statuses, array('id', 'name'), '', '', array('data-width' => '100%', 'data-none-selected-text' => 'All Status', 'multiple' => true, 'data-actions-box' => true), array(), 'no-mbot', '', false, 'c_status'); ?>
                                     </div>
                                     <div class="filter-group">
                                         <label><i class="fa fa-history"></i> Update Count</label>
@@ -480,8 +482,10 @@
                                     $_table_data[] = ['name' => _l('Phone Number')];
                                     $_table_data[] = ['name' => _l('Source')];
                                     $_table_data[] = ['name' => _l('Update Count')];
+                                    $_table_data[] = ['name' => _l('Sub Status')];
                                     $_table_data[] = ['name' => _l('Old Status')];
                                     $_table_data[] = ['name' => _l('New Status')];
+                                    $_table_data[] = ['name' => _l('Current Status')];
                                     $_table_data[] = ['name' => _l('Old Assigned')];
                                     $_table_data[] = ['name' => _l('New Assigned')];
                                     $_table_data[] = ['name' => _l('Old Assigned Date')];
@@ -516,10 +520,8 @@
                         <div class="chart-ranking-wrapper">
                             <div class="chart-container"><canvas id="counselorChart_self"></canvas>
                             <div class="ranking-card"><h5><i class="fa fa-ranking-star"></i> Counselor Ranking</h5><div id="counselorRankingList_self"></div></div>
-                            <div class="ranking-card source-card"><h5><i class="fa fa-ranking-star"></i> Counselor Ranking</h5><div id="topSourcesList_self"></div></div>
-                       
-                            </div>
-                            
+                            <div class="ranking-card source-card"><h5><i class="fa fa-ranking-star"></i> Sources Ranking</h5><div id="topSourcesList_self"></div></div>
+                        </div>
                         </div>
                     </div>
 
@@ -555,6 +557,132 @@
                         </div>
                     </div>
                 </div>
+                
+                <!-- Tab 3: Fresh Leads -->
+                <div id="fresh_transfer_leads" class="tab-content hide">
+                    <!-- Stats Cards -->
+                    <div class="stats-grid">
+                        <div class="stat-card">
+                            <div class="stat-icon blue"><i class="fa fa-exchange"></i></div>
+                            <div class="stat-info">
+                                <h4>Total Transfers</h4>
+                                <div class="stat-number" id="totalTransfers_fresh">0</div>
+                                <small>Fresh leads</small>
+                            </div>
+                        </div>
+                        <div class="stat-card">
+                            <div class="stat-icon green"><i class="fa fa-users"></i></div>
+                            <div class="stat-info">
+                                <h4>Active Counselors</h4>
+                                <div class="stat-number" id="activeCounselors_fresh">0</div>
+                                <small>With transfers</small>
+                            </div>
+                        </div>
+                        <div class="stat-card">
+                            <div class="stat-icon orange"><i class="fa fa-trophy"></i></div>
+                            <div class="stat-info">
+                                <h4>Top Counselor</h4>
+                                <div class="stat-number" id="topCounselorName_fresh">—</div>
+                                <small id="topCounselorLeadsCount_fresh">0 leads</small>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Counselor Performance Panel -->
+                    <div class="counselor-panel">
+                        <div class="counselor-header">
+                            <div class="header-title">
+                                <i class="fa fa-chalkboard-user"></i> Counselor Performance
+                                <div class="tabs_">
+                                    <button class="tab-btn active" data-type="transfer" data-tab="fresh">Lead Transfer</button>
+                                    <button class="tab-btn" data-type="assign" data-tab="fresh">Lead Assignation</button>
+                                </div>
+                            </div>
+                            <button type="button" class="btn-icon btn btn-primary" onclick="refreshCurrentTabData()" title="Refresh">
+                                <i class="fa fa-refresh"></i>
+                            </button>
+                        </div>
+                        <div class="chart-ranking-wrapper">
+                            <div class="chart-container">
+                                <canvas id="counselorChart_fresh"></canvas>
+                                <div class="ranking-card">
+                                    <h5><i class="fa fa-ranking-star"></i> Counselor Ranking</h5>
+                                    <div id="counselorRankingList_fresh"></div>
+                                </div>
+                                <div class="ranking-card source-card">
+                                    <h5><i class="fa fa-ranking-star"></i> Sources Ranking</h5>
+                                    <div id="topSourcesList_fresh"></div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Filters & Table -->
+                    <div class="mtop15">
+                        <div class="panel_s">
+                            <div class="panel-body">
+                                <div class="filter-header">
+                                    <div class="filter-title"><i class="fa fa-filter"></i> Advanced Filters</div>
+                                    <button type="button" class="btn-reset" onclick="resetFiltersFresh()"><i class="fa fa-undo-alt"></i> Reset All</button>
+                                </div>
+                                <div class="filter-row">
+                                    <?php if (has_permission('leads', '', 'view')) { ?>
+                                        <div class="filter-group">
+                                            <label><i class="fa fa-user-circle"></i> Department</label>
+                                            <?php echo render_select('department_fresh[]', $departments, array('id', 'name'), '', '', array('data-width' => '100%', 'data-none-selected-text' => 'Select department', 'multiple' => true, 'data-actions-box' => true, 'data-live-search' => true), array(), 'no-mbot', '', false, 'department_fresh'); ?>
+                                        </div>
+                                        <div class="filter-group">
+                                            <label><i class="fa fa-user"></i> Counselor</label>
+                                            <?php echo render_select('view_assigned_fresh[]', $staff, array('staffid', array('firstname', 'lastname')), '', '', array('data-width' => '100%', 'data-none-selected-text' => 'All Counselors', 'multiple' => true, 'data-actions-box' => true), array(), 'no-mbot', '', false, 'view_assigned_fresh'); ?>
+                                        </div>
+                                    <?php } ?>
+                                    <div class="filter-group">
+                                        <label><i class="fa fa-tag"></i> Lead Source</label>
+                                        <?php echo render_select('view_sources_fresh[]', $lead_sources, array('id', 'name'), '', '', array('data-width' => '100%', 'data-none-selected-text' => 'All Sources', 'multiple' => true, 'data-actions-box' => true), array(), 'no-mbot', '', false, 'view_sources_fresh'); ?>
+                                    </div>
+                                      <div class="filter-group">
+                                        <label><i class="fa fa-tag"></i> Lead Status</label>
+                                        <?php echo render_select('c_status_fresh[]', $lead_statuses, array('id', 'name'), '', '', array('data-width' => '100%', 'data-none-selected-text' => 'All Status', 'multiple' => true, 'data-actions-box' => true), array(), 'no-mbot', '', false, 'c_status_fresh'); ?>
+                                    </div>
+                                    <div class="filter-group">
+                                        <label><i class="fa fa-history"></i> Update Count</label>
+                                        <?php echo render_select('view_update_count_fresh[]', $update_counts, array('id', 'name'), '', '', array('data-width' => '100%', 'data-none-selected-text' => 'Any Count', 'multiple' => true, 'data-actions-box' => true), array(), 'no-mbot', '', false, 'view_update_count_fresh'); ?>
+                                    </div>
+                                    <div class="filter-group">
+                                        <label><i class="fa fa-calendar"></i> Transfer Date</label>
+                                        <input type="text" readonly name="transfer_date_fresh" id="date_range_fresh" class="date-range-input" placeholder="Select date range">
+                                    </div>
+                                    <div class="filter-actions">
+                                        <button class="btn-apply" onclick="applyFiltersFresh()"><i class="fa fa-filter"></i> Apply Filters</button>
+                                    </div>
+                                </div>
+
+                                <div class="table-header">
+                                    <div class="table-title"><i class="fa fa-history"></i> Leads Transfer Logs <small>Fresh leads history</small></div>
+                                    <div class="table-info">Showing <span id="recordCount_fresh">0</span> records</div>
+                                </div>
+                                <div class="table-responsive">
+                                    <?php
+                                    $_table_data_fresh = [];
+                                    $_table_data_fresh[] = ['name' => 'ID', 'th_attrs' => ['class' => 'id']];
+                                    $_table_data_fresh[] = ['name' => _l('Name')];
+                                    $_table_data_fresh[] = ['name' => _l('Phone Number')];
+                                    $_table_data_fresh[] = ['name' => _l('Source')];
+                                    $_table_data_fresh[] = ['name' => _l('Update Count')];
+                                    $_table_data_fresh[] = ['name' => _l('Old Status')];
+                                    $_table_data_fresh[] = ['name' => _l('New Status')];
+                                    $_table_data_fresh[] = ['name' => _l('Current Status')];
+                                    $_table_data_fresh[] = ['name' => _l('Old Assigned')];
+                                    $_table_data_fresh[] = ['name' => _l('New Assigned')];
+                                    $_table_data_fresh[] = ['name' => _l('Old Assigned Date')];
+                                    $_table_data_fresh[] = ['name' => _l('New Assigned Date')];
+                                    render_datatable($_table_data_fresh, 'leads-transfers-fresh', ['customizable-table', 'sticky-header']);
+                                    ?>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
             </div>
         </div>
     </div>
@@ -571,10 +699,23 @@
 var staffListArray = <?= json_encode($staff ?? []) ?>;
 var currentMainType = 'transfer';
 var currentSelfType = 'transfer';
-var leadsTable, leadsTableSelf;
-var mainChart = null, selfChart = null;
+var currentFreshType = 'transfer';
+var leadsTable, leadsTableSelf, leadsTableFresh;
+var mainChart = null, selfChart = null, freshChart = null;
 var currentActiveTab = 'not_reachable_leads';
 
+
+function setStatus(status = "")
+{
+    if (status !== "" && status !== null && status !== undefined) {
+        $('#status').selectpicker('val', String(status));
+    } else {
+        $('#status').selectpicker('val', '');
+        $('#status').selectpicker('refresh');
+    }
+}
+
+setStatus(20);
 // ======================== HELPER FUNCTIONS ========================
 function showNotification(message, type) {
     if (typeof alert_float === 'function') alert_float(type, message);
@@ -616,9 +757,10 @@ function updateStaffDropdown(staffList) {
 }
 
 // ======================== MAIN TAB (NOT REACHABLE) ========================
-var r = { department: "[name='department[]']", status: "[name='view_status[]']", assigned: "[name='view_assigned[]']", update_count: "[name='view_update_count[]']", transfer_date: "[name='transfer_date']",sources: "[name='view_sources[]']" };
+var r = { department: "[name='department[]']", status: "[name='status[]']", assigned: "[name='view_assigned[]']", update_count: "[name='view_update_count[]']", transfer_date: "[name='transfer_date']", sources: "[name='view_sources[]']",c_status:"[name='c_status[]']" };
 
 function refreshLeadTransferTable() {
+
     let tableSelector = '.table-leads-transfers';
     if (!$(tableSelector).length) return;
     if ($.fn.DataTable.isDataTable(tableSelector)) {
@@ -631,188 +773,11 @@ function refreshLeadTransferTable() {
     updateMainStatsAndChart();
 }
 
-// function updateMainStatsAndChart() {
-
-//     let postData = {
-//         'department[]': $("[name='department[]']").val() || [],
-//         'view_status[]': $('[name="view_status[]"]').val() || [],
-//         'view_sources[]': $('[name="view_sources[]"]').val() || [],
-//         'view_assigned[]': $('[name="view_assigned[]"]').val() || [],
-//         'view_update_count[]': $('[name="view_update_count[]"]').val() || [],
-//         'date_range': $('#date_range').val() || '',
-//         'csrf_token_name': csrfData.hash,
-//         'summary': 1,
-//         'leadType': currentMainType === 'transfer' ? 'Lead Transfer' : 'Lead Assignation'
-//     };
-
-//     $.ajax({
-//         url: admin_url + 'dashboard/leads_transfers',
-//         type: 'POST',
-//         data: postData,
-//         traditional: true,
-
-//         success: function(response) {
-
-//             let parsed = JSON.parse(response);
-//             let data = Array.isArray(parsed.data) ? parsed.data : [];
-
-//             let total = 0;
-//             let sorted = [...data];
-
-//             sorted.forEach(item => {
-//                 total += Number(item?.counts) || 0;
-//             });
-
-//             // ✅ Stats
-//             $('#totalTransfers').text(total);
-//             $('#activeCounselors').text(sorted.length);
-
-//             if (sorted.length) {
-//                 $('#topCounselorName').text(sorted[0]?.staff_name || '—');
-//                 $('#topCounselorLeadsCount').text((sorted[0]?.counts || 0) + ' leads');
-//             } else {
-//                 $('#topCounselorName').text('—');
-//                 $('#topCounselorLeadsCount').text('0 leads');
-//             }
-
-//             // ✅ Labels + Values
-//             let labels = sorted.map(s =>
-//                 s?.staff_name?.length > 20
-//                     ? s.staff_name.substring(0, 18) + '..'
-//                     : (s?.staff_name || 'Unknown')
-//             );
-
-//             let values = sorted.map(s => Number(s?.counts) || 0);
-
-//             // ✅ Top 5 Ranking
-//             let top5 = sorted.slice(0, 5);
-//             let rankingHtml = '';
-
-//             top5.forEach((item, idx) => {
-//                 let medal =
-//                     idx === 0 ? '🥇' :
-//                     idx === 1 ? '🥈' :
-//                     idx === 2 ? '🥉' :
-//                     '#' + (idx + 1);
-
-//                 let percent = top5[0]?.counts > 0
-//                     ? (item.counts / top5[0].counts * 100)
-//                     : 0;
-
-//                 rankingHtml += `
-//                     <div class="ranking-item">
-//                         <div class="rank-info">
-//                             <span>${medal} ${item?.staff_name || 'Unknown'}</span>
-//                             <span>${item?.counts || 0} leads</span>
-//                         </div>
-//                         <div class="rank-bar">
-//                             <div class="bar-fill" style="width:${percent}%;"></div>
-//                         </div>
-//                     </div>
-//                 `;
-//             });
-
-//             $('#counselorRankingList').html(
-//                 rankingHtml || '<div class="empty-state">No data available</div>'
-//             );
-
-//             // 🔥 Destroy old chart
-//             if (mainChart) mainChart.destroy();
-
-//             let canvas = document.getElementById('counselorChart');
-//             if (!canvas) return;
-
-//             let ctx = canvas.getContext('2d');
-
-//             // ✅ Create Chart
-//             mainChart = new Chart(ctx, {
-//                 type: 'bar',
-
-//                 data: {
-//                     labels: labels,
-//                     datasets: [{
-//                         label: 'Leads',
-//                         data: values,
-//                         backgroundColor: 'rgba(59, 130, 246, 0.85)',
-//                         borderRadius: 8,
-
-//                         // ✅ better spacing
-//                         barPercentage: 0.6,
-//                         categoryPercentage: 0.7
-//                     }]
-//                 },
-
-//                 options: {
-//                     responsive: true,
-//                     maintainAspectRatio: true,
-
-//                     plugins: {
-//                         legend: { display: false },
-
-//                         tooltip: {
-//                             callbacks: {
-//                                 label: ctx => `${ctx.raw} leads`
-//                             }
-//                         },
-
-//                         datalabels: {
-//                             anchor: 'end',
-//                             align: 'top',
-//                             offset: 4,
-//                             color: '#000',
-//                             font: {
-//                                 weight: 'bold',
-//                                 size: 11
-//                             },
-//                             formatter: v => v
-//                         }
-//                     },
-
-//                     scales: {
-
-//                         // ✅ REMOVE X GRID LINES
-//                         x: {
-//                             grid: {
-//                                 display: false
-//                             },
-//                             ticks: {
-//                                 font: { size: 11 }
-//                             }
-//                         },
-
-//                         // ✅ ADD TOP SPACE + CLEAN GRID
-//                         y: {
-//                             beginAtZero: true,
-
-//                             grace: '20%', // 🔥 key spacing fix
-
-//                             grid: {
-//                                 color: 'rgba(128,128,128,0.1)'
-//                             },
-
-//                             title: {
-//                                 display: true,
-//                                 text: 'Number of Transfers'
-//                             }
-//                         }
-//                     }
-//                 },
-
-//                 plugins: [ChartDataLabels]
-//             });
-//         },
-
-//         error: function(xhr) {
-//             console.error(xhr);
-//         }
-//     });
-// }
-
 function updateMainStatsAndChart() {
-
     let postData = {
         'department[]': $("[name='department[]']").val() || [],
-        'view_status[]': $('[name="view_status[]"]').val() || [],
+        'view_status[]': $('[name="status[]"]').val() || [],
+        'c_status[]': $('[name="c_status[]"]').val() || [],
         'view_sources[]': $('[name="view_sources[]"]').val() || [],
         'view_assigned[]': $('[name="view_assigned[]"]').val() || [],
         'view_update_count[]': $('[name="view_update_count[]"]').val() || [],
@@ -822,21 +787,16 @@ function updateMainStatsAndChart() {
         'leadType': currentMainType === 'transfer' ? 'Lead Transfer' : 'Lead Assignation'
     };
 
-    // 🔄 Loading UI
     $('#counselorRankingList').html('<div class="loading">Loading...</div>');
     $('#topSourcesList').html('<div class="loading">Loading...</div>');
-    $('#topLeadsList').html('<div class="loading">Loading...</div>');
 
     $.ajax({
         url: admin_url + 'dashboard/leads_transfers',
         type: 'POST',
         data: postData,
         traditional: true,
-
-        success: function (response) {
-
+        success: function(response) {
             let parsed;
-
             try {
                 parsed = typeof response === 'object' ? response : JSON.parse(response);
             } catch (e) {
@@ -845,32 +805,20 @@ function updateMainStatsAndChart() {
             }
 
             let apiData = parsed?.data || {};
-
             let data = Array.isArray(apiData.leads_summary) ? apiData.leads_summary : [];
             let topSources = Array.isArray(apiData.top_sources) ? apiData.top_sources : [];
-            let topLeads = Array.isArray(apiData.top_leads) ? apiData.top_leads : [];
 
-            // =========================
-            // ✅ STATS
-            // =========================
             let total = data.reduce((sum, item) => sum + (Number(item?.counts) || 0), 0);
 
             $('#totalTransfers').text(total);
             $('#activeCounselors').text(data.length);
-
             $('#topCounselorName').text(data[0]?.staff_name || '—');
             $('#topCounselorLeadsCount').text((data[0]?.counts || 0) + ' leads');
 
-            // =========================
-            // 🥇 STAFF RANKING
-            // =========================
             let top5 = data.slice(0, 5);
-
             let rankingHtml = top5.map((item, idx) => {
-
                 let medal = ['🥇','🥈','🥉'][idx] || `#${idx + 1}`;
                 let percent = top5[0]?.counts ? (item.counts / top5[0].counts * 100) : 0;
-
                 return `
                 <div class="ranking-item">
                     <div class="rank-info">
@@ -882,19 +830,11 @@ function updateMainStatsAndChart() {
                     </div>
                 </div>`;
             }).join('');
+            $('#counselorRankingList').html(rankingHtml || '<div class="empty-state">No data</div>');
 
-            $('#counselorRankingList').html(
-                rankingHtml || '<div class="empty-state">No data</div>'
-            );
-
-            // =========================
-            // 📊 TOP SOURCES
-            // =========================
             let sourceHtml = topSources.map((s, idx) => {
-
                 let medal = ['🥇','🥈','🥉'][idx] || `#${idx + 1}`;
                 let percent = topSources[0]?.total ? (s.total / topSources[0].total * 100) : 0;
-
                 return `
                 <div class="ranking-item">
                     <div class="rank-info">
@@ -906,40 +846,9 @@ function updateMainStatsAndChart() {
                     </div>
                 </div>`;
             }).join('');
+            $('#topSourcesList').html(sourceHtml || '<div class="empty-state">No sources</div>');
 
-            $('#topSourcesList').html(
-                sourceHtml || '<div class="empty-state">No sources</div>'
-            );
-
-            // =========================
-            // 📊 TOP LEADS
-            // =========================
-            let leadsHtml = topLeads.map((s, idx) => {
-
-                let medal = ['🥇','🥈','🥉'][idx] || `#${idx + 1}`;
-                let percent = topLeads[0]?.total ? (s.total / topLeads[0].total * 100) : 0;
-
-                return `
-                <div class="ranking-item">
-                    <div class="rank-info">
-                        <span>${medal} ${s.status_name || 'Unknown'}</span>
-                        <span>${s.total || 0}</span>
-                    </div>
-                    <div class="rank-bar">
-                        <div class="bar-fill" style="width:${percent}%;"></div>
-                    </div>
-                </div>`;
-            }).join('');
-
-            $('#topLeadsList').html(
-                leadsHtml || '<div class="empty-state">No leads</div>'
-            );
-
-            // =========================
-            // 📊 MAIN CHART (WITH COUNT ON TOP)
-            // =========================
             if (window.mainChart) mainChart.destroy();
-
             let ctx = document.getElementById('counselorChart')?.getContext('2d');
             if (!ctx) return;
 
@@ -958,66 +867,40 @@ function updateMainStatsAndChart() {
                 options: {
                     responsive: true,
                     maintainAspectRatio: true,
-
                     plugins: {
                         legend: { display: false },
-
-                        tooltip: {
-                            callbacks: {
-                                label: ctx => `${ctx.raw} leads`
-                            }
-                        },
-
-                        // 🔥 SHOW VALUE ON TOP
+                        tooltip: { callbacks: { label: ctx => `${ctx.raw} leads` } },
                         datalabels: {
                             anchor: 'end',
                             align: 'top',
                             offset: 4,
                             color: '#000',
-                            font: {
-                                weight: 'bold',
-                                size: 12
-                            },
+                            font: { weight: 'bold', size: 12 },
                             formatter: value => value
                         }
                     },
-
                     scales: {
-                        x: {
-                            grid: { display: false }
-                        },
-                        y: {
-                            beginAtZero: true,
-                            grace: '25%',   // 🔥 space above bars
-                            grid: {
-                                color: 'rgba(128,128,128,0.1)'
-                            }
-                        }
+                        x: { grid: { display: false } },
+                        y: { beginAtZero: true, grace: '25%', grid: { color: 'rgba(128,128,128,0.1)' } }
                     }
                 },
-
                 plugins: [ChartDataLabels]
             });
         },
-
-        error: function (xhr) {
+        error: function(xhr) {
             console.error(xhr);
             showErrorState();
         }
     });
 
-    // =========================
-    // ❌ ERROR UI
-    // =========================
     function showErrorState() {
         $('#counselorRankingList').html('<div class="error-state">Error</div>');
         $('#topSourcesList').html('<div class="error-state">Error</div>');
-        $('#topLeadsList').html('<div class="error-state">Error</div>');
     }
 }
 
 // ======================== SELF TAB ========================
-var r_self = { department: "[name='department_self[]']", status: "[name='view_status_self[]']", assigned: "[name='view_assigned_self[]']", update_count: "[name='view_update_count_self[]']", transfer_date: "[name='transfer_date_self']", self_table: 1,source:"[name='view_sources_self[]']" };
+var r_self = { department: "[name='department_self[]']", status: "[name='view_status_self[]']", assigned: "[name='view_assigned_self[]']", update_count: "[name='view_update_count_self[]']", transfer_date: "[name='transfer_date_self']", self_table: 1, source: "[name='view_sources_self[]']",c_status:"[name='view_status_self[]']" };
 
 function refreshSelfTransferTable() {
     let tableSelector = '.table-leads-transfers-self';
@@ -1032,188 +915,10 @@ function refreshSelfTransferTable() {
     updateSelfStatsAndChart();
 }
 
-// function updateSelfStatsAndChart() {
-
-//     let postData = {
-//         'department_self[]': $("[name='department_self[]']").val() || [],
-//         'view_status_self[]': $('[name="view_status_self[]"]').val() || [],
-//         'view_sources_self[]': $('[name="view_sources_self[]"]').val() || [],
-//         'view_assigned_self[]': $('[name="view_assigned_self[]"]').val() || [],
-//         'view_update_count_self[]': $('[name="view_update_count_self[]"]').val() || [],
-//         'date_range_self': $('#date_range_self').val() || '',
-//         'csrf_token_name': csrfData.hash,
-//         'summary_self': 1,
-//         'leadType': currentSelfType === 'transfer' ? 'Lead Transfer' : 'Lead Assignation'
-//     };
-
-//     $.ajax({
-//         url: admin_url + 'dashboard/leads_transfers',
-//         type: 'POST',
-//         data: postData,
-//         traditional: true,
-
-//         success: function(response) {
-
-//             let parsed = JSON.parse(response);
-//             let data = Array.isArray(parsed.data) ? parsed.data : [];
-
-//             let total = 0;
-//             let sorted = [...data];
-
-//             sorted.forEach(item => {
-//                 total += Number(item?.counts) || 0;
-//             });
-
-//             // ✅ Stats
-//             $('#totalTransfers_self').text(total);
-//             $('#activeCounselors_self').text(sorted.length);
-
-//             if (sorted.length) {
-//                 $('#topCounselorName_self').text(sorted[0]?.staff_name || '—');
-//                 $('#topCounselorLeadsCount_self').text((sorted[0]?.counts || 0) + ' leads');
-//             } else {
-//                 $('#topCounselorName_self').text('—');
-//                 $('#topCounselorLeadsCount_self').text('0 leads');
-//             }
-
-//             // ✅ Labels + Values
-//             let labels = sorted.map(s =>
-//                 s?.staff_name?.length > 20
-//                     ? s.staff_name.substring(0, 18) + '..'
-//                     : (s?.staff_name || 'Unknown')
-//             );
-
-//             let values = sorted.map(s => Number(s?.counts) || 0);
-
-//             // ✅ Top 5 Ranking
-//             let top5 = sorted.slice(0, 5);
-//             let rankingHtml = '';
-
-//             top5.forEach((item, idx) => {
-//                 let medal =
-//                     idx === 0 ? '🥇' :
-//                     idx === 1 ? '🥈' :
-//                     idx === 2 ? '🥉' :
-//                     '#' + (idx + 1);
-
-//                 let percent = top5[0]?.counts > 0
-//                     ? (item.counts / top5[0].counts * 100)
-//                     : 0;
-
-//                 rankingHtml += `
-//                     <div class="ranking-item">
-//                         <div class="rank-info">
-//                             <span>${medal} ${item?.staff_name || 'Unknown'}</span>
-//                             <span>${item?.counts || 0} leads</span>
-//                         </div>
-//                         <div class="rank-bar">
-//                             <div class="bar-fill" style="width:${percent}%;"></div>
-//                         </div>
-//                     </div>
-//                 `;
-//             });
-
-//             $('#counselorRankingList_self').html(
-//                 rankingHtml || '<div class="empty-state">No data available</div>'
-//             );
-
-//             // 🔥 Destroy old chart
-//             if (selfChart) selfChart.destroy();
-
-//             let ctx = document.getElementById('counselorChart_self');
-//             if (!ctx) return;
-
-//             ctx = ctx.getContext('2d');
-
-//             // ✅ Create Chart
-//             selfChart = new Chart(ctx, {
-//                 type: 'bar',
-
-//                 data: {
-//                     labels: labels,
-//                     datasets: [{
-//                         label: 'Leads',
-//                         data: values,
-//                         backgroundColor: 'rgba(59, 130, 246, 0.85)',
-//                         borderRadius: 8,
-
-//                         // ✅ spacing improvements
-//                         barPercentage: 0.6,
-//                         categoryPercentage: 0.7
-//                     }]
-//                 },
-
-//                 options: {
-//                     responsive: true,
-//                     maintainAspectRatio: true,
-
-//                     plugins: {
-//                         legend: {
-//                             display: false
-//                         },
-
-//                         tooltip: {
-//                             callbacks: {
-//                                 label: ctx => `${ctx.raw} leads`
-//                             }
-//                         },
-
-//                         datalabels: {
-//                             anchor: 'end',
-//                             align: 'top',
-//                             offset: 4,
-//                             color: '#000',
-//                             font: {
-//                                 weight: 'bold',
-//                                 size: 11
-//                             },
-//                             formatter: v => v
-//                         }
-//                     },
-
-//                     scales: {
-
-//                         // ✅ REMOVE X GRID
-//                         x: {
-//                             grid: {
-//                                 display: false
-//                             },
-//                             ticks: {
-//                                 font: { size: 11 }
-//                             }
-//                         },
-
-//                         // ✅ ADD TOP SPACE
-//                         y: {
-//                             beginAtZero: true,
-//                             grace: '20%',   // 🔥 key fix
-
-//                             grid: {
-//                                 color: 'rgba(128,128,128,0.1)'
-//                             },
-
-//                             title: {
-//                                 display: true,
-//                                 text: 'Number of Transfers'
-//                             }
-//                         }
-//                     }
-//                 },
-
-//                 plugins: [ChartDataLabels]
-//             });
-//         },
-
-//         error: function(xhr) {
-//             console.error(xhr);
-//         }
-//     });
-// }
-
 function updateSelfStatsAndChart() {
-
     let postData = {
         'department_self[]': $("[name='department_self[]']").val() || [],
+        'c_status[]': $("[name='view_status_self[]']").val() || [],
         'view_status_self[]': $('[name="view_status_self[]"]').val() || [],
         'view_sources_self[]': $('[name="view_sources_self[]"]').val() || [],
         'view_assigned_self[]': $('[name="view_assigned_self[]"]').val() || [],
@@ -1224,7 +929,6 @@ function updateSelfStatsAndChart() {
         'leadType': currentSelfType === 'transfer' ? 'Lead Transfer' : 'Lead Assignation'
     };
 
-    // 🔄 Loading UI
     $('#counselorRankingList_self').html('<div class="loading">Loading...</div>');
     $('#topSourcesList_self').html('<div class="loading">Loading...</div>');
 
@@ -1233,12 +937,8 @@ function updateSelfStatsAndChart() {
         type: 'POST',
         data: postData,
         traditional: true,
-
         success: function(response) {
-
             let parsed;
-
-            // ✅ SAFE PARSE
             try {
                 parsed = typeof response === 'object' ? response : JSON.parse(response);
             } catch (e) {
@@ -1247,44 +947,21 @@ function updateSelfStatsAndChart() {
             }
 
             let apiData = parsed?.data || {};
-
             let data = Array.isArray(apiData.leads_summary) ? apiData.leads_summary : [];
             let topStaff = Array.isArray(apiData.top_lead) ? apiData.top_lead : [];
             let topSources = Array.isArray(apiData.top_sources) ? apiData.top_sources : [];
 
-            // =========================
-            // ✅ STATS
-            // =========================
             let total = data.reduce((sum, item) => sum + (Number(item?.counts) || 0), 0);
 
             $('#totalTransfers_self').text(total);
             $('#activeCounselors_self').text(data.length);
+            $('#topCounselorName_self').text(data[0]?.staff_name || '—');
+            $('#topCounselorLeadsCount_self').text((data[0]?.counts || 0) + ' leads');
 
-            if (data.length) {
-                $('#topCounselorName_self').text(data[0]?.staff_name || '—');
-                $('#topCounselorLeadsCount_self').text((data[0]?.counts || 0) + ' leads');
-            } else {
-                $('#topCounselorName_self').text('—');
-                $('#topCounselorLeadsCount_self').text('0 leads');
-            }
-
-            // =========================
-            // 🥇 TOP STAFF
-            // =========================
             let top5 = topStaff.length ? topStaff : data.slice(0, 5);
-
             let rankingHtml = top5.map((item, idx) => {
-
-                let medal =
-                    idx === 0 ? '🥇' :
-                    idx === 1 ? '🥈' :
-                    idx === 2 ? '🥉' :
-                    '#' + (idx + 1);
-
-                let percent = (top5[0]?.counts || 0) > 0
-                    ? (item.counts / top5[0].counts * 100)
-                    : 0;
-
+                let medal = ['🥇','🥈','🥉'][idx] || `#${idx + 1}`;
+                let percent = (top5[0]?.counts || 0) > 0 ? (item.counts / top5[0].counts * 100) : 0;
                 return `
                     <div class="ranking-item">
                         <div class="rank-info">
@@ -1297,26 +974,11 @@ function updateSelfStatsAndChart() {
                     </div>
                 `;
             }).join('');
+            $('#counselorRankingList_self').html(rankingHtml || '<div class="empty-state">No data available</div>');
 
-            $('#counselorRankingList_self').html(
-                rankingHtml || '<div class="empty-state">No data available</div>'
-            );
-
-            // =========================
-            // 📊 TOP SOURCES
-            // =========================
             let sourceHtml = topSources.map((s, idx) => {
-
-                let medal =
-                    idx === 0 ? '🥇' :
-                    idx === 1 ? '🥈' :
-                    idx === 2 ? '🥉' :
-                    '#' + (idx + 1);
-
-                let percent = (topSources[0]?.total || 0) > 0
-                    ? (s.total / topSources[0].total * 100)
-                    : 0;
-
+                let medal = ['🥇','🥈','🥉'][idx] || `#${idx + 1}`;
+                let percent = (topSources[0]?.total || 0) > 0 ? (s.total / topSources[0].total * 100) : 0;
                 return `
                     <div class="ranking-item">
                         <div class="rank-info">
@@ -1329,116 +991,215 @@ function updateSelfStatsAndChart() {
                     </div>
                 `;
             }).join('');
+            $('#topSourcesList_self').html(sourceHtml || '<div class="empty-state">No sources</div>');
 
-            $('#topSourcesList_self').html(
-                sourceHtml || '<div class="empty-state">No sources</div>'
-            );
-
-            // =========================
-            // 📊 CHART WITH LABELS
-            // =========================
             if (selfChart) selfChart.destroy();
-
             let canvas = document.getElementById('counselorChart_self');
             if (!canvas) return;
-
             let ctx = canvas.getContext('2d');
 
-            let labels = data.map(s =>
-                s?.staff_name?.length > 20
-                    ? s.staff_name.substring(0, 18) + '..'
-                    : (s?.staff_name || 'Unknown')
-            );
-
+            let labels = data.map(s => s?.staff_name?.length > 20 ? s.staff_name.substring(0, 18) + '..' : (s?.staff_name || 'Unknown'));
             let values = data.map(s => Number(s?.counts) || 0);
 
             selfChart = new Chart(ctx, {
                 type: 'bar',
-                data: {
-                    labels: labels,
-                    datasets: [{
-                        data: values,
-                        backgroundColor: 'rgba(59, 130, 246, 0.85)',
-                        borderRadius: 8,
-                        barPercentage: 0.6,
-                        categoryPercentage: 0.7
-                    }]
-                },
-
+                data: { labels: labels, datasets: [{ data: values, backgroundColor: 'rgba(59, 130, 246, 0.85)', borderRadius: 8, barPercentage: 0.6, categoryPercentage: 0.7 }] },
                 options: {
-                    responsive: true,
-                    maintainAspectRatio: true,
-
+                    responsive: true, maintainAspectRatio: true,
                     plugins: {
                         legend: { display: false },
-
-                        tooltip: {
-                            callbacks: {
-                                label: ctx => `${ctx.raw} leads`
-                            }
-                        },
-
-                        // 🔥 SHOW COUNT ON TOP
-                        datalabels: {
-                            anchor: 'end',
-                            align: 'top',
-                            offset: 4,
-                            color: '#000',
-                            font: {
-                                weight: 'bold',
-                                size: 12
-                            },
-                            formatter: function(value) {
-                                return value;
-                            }
-                        }
+                        tooltip: { callbacks: { label: ctx => `${ctx.raw} leads` } },
+                        datalabels: { anchor: 'end', align: 'top', offset: 4, color: '#000', font: { weight: 'bold', size: 12 }, formatter: value => value }
                     },
-
-                    scales: {
-                        x: {
-                            grid: { display: false }
-                        },
-                        y: {
-                            beginAtZero: true,
-                            grace: '25%', // space for labels
-                            grid: {
-                                color: 'rgba(128,128,128,0.1)'
-                            }
-                        }
-                    }
+                    scales: { x: { grid: { display: false } }, y: { beginAtZero: true, grace: '25%', grid: { color: 'rgba(128,128,128,0.1)' } } }
                 },
-
                 plugins: [ChartDataLabels]
             });
         },
-
         error: function(xhr) {
             console.error('API error:', xhr);
             showError();
         }
     });
 
-    // =========================
-    // ❌ ERROR UI
-    // =========================
     function showError() {
         $('#counselorRankingList_self').html('<div class="error-state">Failed to load data</div>');
         $('#topSourcesList_self').html('<div class="error-state">Failed to load</div>');
-
         $('#totalTransfers_self').text('0');
         $('#activeCounselors_self').text('0');
         $('#topCounselorName_self').text('—');
         $('#topCounselorLeadsCount_self').text('0 leads');
-
         if (selfChart) selfChart.destroy();
     }
+}
+
+// ======================== FRESH TAB ========================
+var r_fresh = { department: "[name='department_fresh[]']", status: "[name='view_status_fresh[]']", assigned: "[name='view_assigned_fresh[]']", update_count: "[name='view_update_count_fresh[]']", transfer_date: "[name='transfer_date_fresh']", sources: "[name='view_sources_fresh[]']",c_status_fresh:"[name='c_status_fresh[]']"};
+
+function refreshFreshTransferTable() {
+    let tableSelector = '.table-leads-transfers-fresh';
+    if (!$(tableSelector).length) return;
+    if ($.fn.DataTable.isDataTable(tableSelector)) {
+        leadsTableFresh = $(tableSelector).DataTable();
+        leadsTableFresh.ajax.reload(null, false);
+    } else {
+        leadsTableFresh = initDataTable(tableSelector, admin_url + 'dashboard/leads_transfers?tbl=fresh_table', 'undefined', 'undefined', r_fresh, [0, 'desc']);
+        leadsTableFresh.on('draw', function() { $('#recordCount_fresh').text(leadsTableFresh.page.info().recordsDisplay); });
+    }
+    updateFreshStatsAndChart();
+}
+
+function updateFreshStatsAndChart() {
+    let postData = {
+        'department_fresh[]': $("[name='department_fresh[]']").val() || [],
+        'view_status_fresh[]': $('[name="view_status_fresh[]"]').val() || [],
+        'c_status_fresh[]': $('[name="c_status_fresh[]"]').val() || [],
+        'view_sources_fresh[]': $('[name="view_sources_fresh[]"]').val() || [],
+        'view_assigned_fresh[]': $('[name="view_assigned_fresh[]"]').val() || [],
+        'view_update_count_fresh[]': $('[name="view_update_count_fresh[]"]').val() || [],
+        'date_range_fresh': $('#date_range_fresh').val() || '',
+        'csrf_token_name': csrfData.hash,
+        'summary_fresh': 1,
+        'leadType': currentFreshType === 'transfer' ? 'Lead Transfer' : 'Lead Assignation'
+    };
+
+    $('#counselorRankingList_fresh').html('<div class="loading">Loading...</div>');
+    $('#topSourcesList_fresh').html('<div class="loading">Loading...</div>');
+
+    $.ajax({
+        url: admin_url + 'dashboard/leads_transfers',
+        type: 'POST',
+        data: postData,
+        traditional: true,
+        success: function(response) {
+            let parsed;
+            try {
+                parsed = typeof response === 'object' ? response : JSON.parse(response);
+            } catch (e) {
+                console.error('JSON parse error:', e);
+                return showErrorState();
+            }
+
+            let apiData = parsed?.data || {};
+            let data = Array.isArray(apiData.leads_summary) ? apiData.leads_summary : [];
+            let topSources = Array.isArray(apiData.top_sources) ? apiData.top_sources : [];
+
+            let total = data.reduce((sum, item) => sum + (Number(item?.counts) || 0), 0);
+
+            $('#totalTransfers_fresh').text(total);
+            $('#activeCounselors_fresh').text(data.length);
+            $('#topCounselorName_fresh').text(data[0]?.staff_name || '—');
+            $('#topCounselorLeadsCount_fresh').text((data[0]?.counts || 0) + ' leads');
+
+            let top5 = data.slice(0, 5);
+            let rankingHtml = top5.map((item, idx) => {
+                let medal = ['🥇','🥈','🥉'][idx] || `#${idx + 1}`;
+                let percent = top5[0]?.counts ? (item.counts / top5[0].counts * 100) : 0;
+                return `
+                <div class="ranking-item">
+                    <div class="rank-info">
+                        <span>${medal} ${item?.staff_name || 'Unknown'}</span>
+                        <span>${item?.counts || 0} leads</span>
+                    </div>
+                    <div class="rank-bar">
+                        <div class="bar-fill" style="width:${percent}%;"></div>
+                    </div>
+                </div>`;
+            }).join('');
+            $('#counselorRankingList_fresh').html(rankingHtml || '<div class="empty-state">No data</div>');
+
+            let sourceHtml = topSources.map((s, idx) => {
+                let medal = ['🥇','🥈','🥉'][idx] || `#${idx + 1}`;
+                let percent = topSources[0]?.total ? (s.total / topSources[0].total * 100) : 0;
+                return `
+                <div class="ranking-item">
+                    <div class="rank-info">
+                        <span>${medal} ${s.source_name || 'Unknown'}</span>
+                        <span>${s.total || 0}</span>
+                    </div>
+                    <div class="rank-bar">
+                        <div class="bar-fill" style="width:${percent}%;"></div>
+                    </div>
+                </div>`;
+            }).join('');
+            $('#topSourcesList_fresh').html(sourceHtml || '<div class="empty-state">No sources</div>');
+
+            if (window.freshChart) freshChart.destroy();
+            let ctx = document.getElementById('counselorChart_fresh')?.getContext('2d');
+            if (!ctx) return;
+
+            freshChart = new Chart(ctx, {
+                type: 'bar',
+                data: {
+                    labels: data.map(s => s.staff_name),
+                    datasets: [{
+                        data: data.map(s => Number(s.counts)),
+                        backgroundColor: 'rgba(59,130,246,0.85)',
+                        borderRadius: 8,
+                        barPercentage: 0.6,
+                        categoryPercentage: 0.7
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: true,
+                    plugins: {
+                        legend: { display: false },
+                        tooltip: { callbacks: { label: ctx => `${ctx.raw} leads` } },
+                        datalabels: {
+                            anchor: 'end',
+                            align: 'top',
+                            offset: 4,
+                            color: '#000',
+                            font: { weight: 'bold', size: 12 },
+                            formatter: value => value
+                        }
+                    },
+                    scales: {
+                        x: { grid: { display: false } },
+                        y: { beginAtZero: true, grace: '25%', grid: { color: 'rgba(128,128,128,0.1)' } }
+                    }
+                },
+                plugins: [ChartDataLabels]
+            });
+        },
+        error: function(xhr) {
+            console.error(xhr);
+            showErrorState();
+        }
+    });
+
+    function showErrorState() {
+        $('#counselorRankingList_fresh').html('<div class="error-state">Error</div>');
+        $('#topSourcesList_fresh').html('<div class="error-state">Error</div>');
+    }
+}
+
+function applyFiltersFresh() { 
+    if (leadsTableFresh) leadsTableFresh.ajax.reload(); 
+    updateFreshStatsAndChart(); 
+    showNotification('Filters applied', 'success'); 
+}
+
+function resetFiltersFresh() {
+    $('[name="department_fresh[]"], [name="view_sources_fresh[]"], [name="view_assigned_fresh[]"], [name="view_update_count_fresh[]"]').val('').trigger('change');
+    $('#date_range_fresh').val('');
+    if ($('#date_range_fresh').data('daterangepicker')) { 
+        $('#date_range_fresh').data('daterangepicker').setStartDate(moment().subtract(6, 'days')); 
+        $('#date_range_fresh').data('daterangepicker').setEndDate(moment()); 
+    }
+    $('.selectpicker').selectpicker('refresh');
+    if (leadsTableFresh) leadsTableFresh.ajax.reload();
+    updateFreshStatsAndChart();
+    showNotification('Filters reset', 'info');
 }
 
 // ======================== FILTER & TAB HANDLERS ========================
 function applyFilters() { if (leadsTable) leadsTable.ajax.reload(); updateMainStatsAndChart(); showNotification('Filters applied', 'success'); }
 function applyFiltersSelf() { if (leadsTableSelf) leadsTableSelf.ajax.reload(); updateSelfStatsAndChart(); showNotification('Filters applied', 'success'); }
+
 function resetFilters() {
-    $('[name="view_status[]"],[name="view_sources[]", [name="view_assigned[]"], [name="view_update_count[]"], [name="view_status_self[]"], [name="view_assigned_self[]"],[name="view_sources_self[]"], [name="view_update_count_self[]"],[name="view_sources_self[]"]').val('').trigger('change');
+    $('[name="department[]"],[name="view_sources[]"],[name="view_assigned[]"],[name="view_update_count[]"],[name="view_status_self[]"],[name="view_assigned_self[]"],[name="view_sources_self[]"],[name="view_update_count_self[]"]').val('').trigger('change');
     $('#date_range, #date_range_self').val('');
     if ($('#date_range').data('daterangepicker')) { $('#date_range').data('daterangepicker').setStartDate(moment().subtract(6, 'days')); $('#date_range').data('daterangepicker').setEndDate(moment()); }
     if ($('#date_range_self').data('daterangepicker')) { $('#date_range_self').data('daterangepicker').setStartDate(moment().subtract(6, 'days')); $('#date_range_self').data('daterangepicker').setEndDate(moment()); }
@@ -1451,8 +1212,18 @@ function resetFilters() {
 }
 
 function refreshCurrentTabData() {
-    if (currentActiveTab === 'not_reachable_leads') { if (leadsTable) leadsTable.ajax.reload(); updateMainStatsAndChart(); }
-    else { if (leadsTableSelf) leadsTableSelf.ajax.reload(); updateSelfStatsAndChart(); }
+    if (currentActiveTab === 'not_reachable_leads') { 
+        if (leadsTable) leadsTable.ajax.reload(); 
+        updateMainStatsAndChart(); 
+    }
+    else if (currentActiveTab === 'self_transfer_leads') { 
+        if (leadsTableSelf) leadsTableSelf.ajax.reload(); 
+        updateSelfStatsAndChart(); 
+    }
+    else if (currentActiveTab === 'fresh_transfer_leads') { 
+        if (leadsTableFresh) leadsTableFresh.ajax.reload(); 
+        updateFreshStatsAndChart(); 
+    }
     showNotification('Data refreshed', 'success');
 }
 
@@ -1460,16 +1231,15 @@ function refreshCurrentTabData() {
 $(document).ready(function() {
     initDateRangePicker('#date_range', true);
     initDateRangePicker('#date_range_self', true);
+    initDateRangePicker('#date_range_fresh', true);
     $('.selectpicker').selectpicker({ iconBase: 'fa', tickIcon: 'fa-check', width: '100%' });
     
-    // Department filter for main tab
     $("#department").change(function() {
         let deptId = $(this).val();
         let filteredStaff = deptId > 0 ? staffListArray.filter(s => s.department == deptId) : staffListArray;
         updateStaffDropdown(filteredStaff);
     });
     
-    // Tab switching
     $('.tab').on('click', function() {
         $('.tab').removeClass('active');
         $(this).addClass('active');
@@ -1477,11 +1247,24 @@ $(document).ready(function() {
         let tabId = $(this).data('tab');
         $('#' + tabId).removeClass('hide').addClass('active');
         currentActiveTab = tabId;
-        if (tabId === 'not_reachable_leads') { if (!leadsTable) refreshLeadTransferTable(); else leadsTable.ajax.reload(); updateMainStatsAndChart(); }
-        else { if (!leadsTableSelf) refreshSelfTransferTable(); else leadsTableSelf.ajax.reload(); updateSelfStatsAndChart(); }
+        
+        if (tabId === 'not_reachable_leads') { 
+            if (!leadsTable) refreshLeadTransferTable(); 
+            else leadsTable.ajax.reload(); 
+            updateMainStatsAndChart(); 
+        }
+        else if (tabId === 'self_transfer_leads') { 
+            if (!leadsTableSelf) refreshSelfTransferTable(); 
+            else leadsTableSelf.ajax.reload(); 
+            updateSelfStatsAndChart(); 
+        }
+        else if (tabId === 'fresh_transfer_leads') { 
+            if (!leadsTableFresh) refreshFreshTransferTable(); 
+            else leadsTableFresh.ajax.reload(); 
+            updateFreshStatsAndChart(); 
+        }
     });
     
-    // Type buttons for main tab
     $('[data-tab="main"]').on('click', function() {
         $('[data-tab="main"]').removeClass('active');
         $(this).addClass('active');
@@ -1490,7 +1273,6 @@ $(document).ready(function() {
         if (leadsTable) leadsTable.ajax.reload();
     });
     
-    // Type buttons for self tab
     $('[data-tab="self"]').on('click', function() {
         $('[data-tab="self"]').removeClass('active');
         $(this).addClass('active');
@@ -1499,9 +1281,16 @@ $(document).ready(function() {
         if (leadsTableSelf) leadsTableSelf.ajax.reload();
     });
     
-  refreshLeadTransferTable();
-    // refreshSelfTransferTable();
+    $('[data-tab="fresh"]').on('click', function() {
+        $('[data-tab="fresh"]').removeClass('active');
+        $(this).addClass('active');
+        currentFreshType = $(this).data('type');
+        updateFreshStatsAndChart();
+        if (leadsTableFresh) leadsTableFresh.ajax.reload();
+    });
+    
+    refreshLeadTransferTable();
+    refreshSelfTransferTable();
+    refreshFreshTransferTable();
 });
-
-
 </script>

@@ -107,6 +107,10 @@ class Authentication_model extends App_Model
                 if ($remember) {
                     $this->create_autologin($user->$_id, $staff);
                 }
+                else
+                {
+                    $this->create_autologin($user->$_id, $staff);
+                }
 
                 $this->update_login_info($user->$_id, $staff);
             } else {

@@ -7859,11 +7859,20 @@ $filtered = array_filter($dataParam);
         }
     }
     
-       if (!empty($params['sub_status'])) {
-        $check_today = false;
-        $sql .= " AND l.sub_status IN (" . implode(",", $params['sub_status']) . ") ";
-    }
+    if (isset($params['sub_status'])) {
+    $check_today = false;
 
+    if (empty($params['sub_status'])) {
+        $sql .= " AND (l.sub_status IS NULL || l.sub_status = '') ";
+    } else {
+        $escaped = array_map(
+            [$CI->db, 'escape'],
+            (array) $params['sub_status']
+        );
+
+        $sql .= " AND l.sub_status IN (" . implode(",", $escaped) . ") ";
+    }
+}
 
     if (!empty($params['last_update_date'])) {
         $check_today = false;
@@ -7995,12 +8004,19 @@ $filtered = array_filter($dataParam);
     $having = "";
     if (!empty($params['last_contact_date']) ||  (isset($params['update_count_max']) && $params['update_count_max'] != '') || !empty($params['last_update_date'])) {
 
-        if (isset($params['update_count_max']) && $params['update_count_max'] != "") {
+        // if (isset($params['update_count_max']) && $params['update_count_max'] != "") {
+        //     $min = $params['update_count_min'];
+        //     $max = $params['update_count_max'];
+        //     $having .= ' HAVING COUNT(call_id) BETWEEN "' . $CI->db->escape_str($min) . '" AND "' . $CI->db->escape_str($max) . '"';
+        // }
+    }
+    
+    
+    if (isset($params['update_count_max']) && $params['update_count_max'] != "") {
             $min = $params['update_count_min'];
             $max = $params['update_count_max'];
             $having .= ' HAVING COUNT(call_id) BETWEEN "' . $CI->db->escape_str($min) . '" AND "' . $CI->db->escape_str($max) . '"';
         }
-    }
 
 
     // $sql .= " GROUP BY l.id " . $grup_by . " " . $having . $sql_add;
@@ -8118,10 +8134,15 @@ $filtered = array_filter($dataParam);
         $type = implode(",", array_map('intval', $params['lead_type']));
         $where[] = "l.type IN ($type)";
     }
-    if (!empty($params['sub_status'])) {
-        $type = implode(",", array_map('intval', $params['sub_status']));
+    if (isset($params['sub_status'])) {
+
+    if (empty($params['sub_status'])) {
+        $where[] = "(l.sub_status = '' OR l.sub_status IS NULL)";
+    } else {
+        $type = implode(',', array_map('intval', (array) $params['sub_status']));
         $where[] = "l.sub_status IN ($type)";
     }
+}
 
     if (!is_admin()) {
         $role = $CI->db->where('staffid', get_staff_user_id())->get(db_prefix() . 'staff')->row()->role;
@@ -8544,9 +8565,19 @@ function get_leads_summary_filter_neww($params)
         $conditions[] = 'type IN (' . implode(',', $CI->db->escape_str($params['lead_type'])) . ')';
     }
     
-     if (!empty($params['sub_status'])) {
-        $conditions[] = 'sub_status IN (' . implode(',', $CI->db->escape_str($params['sub_status'])) . ')';
+     if (isset($params['sub_status'])) {
+
+    if (empty($params['sub_status'])) {
+        $conditions[] = "(sub_status = '' OR sub_status IS NULL )";
+    } else {
+        $escaped = array_map(
+            [$CI->db, 'escape'],
+            (array) $params['sub_status']
+        );
+
+        $conditions[] = 'sub_status IN (' . implode(',', $escaped) . ')';
     }
+}
     if (!empty($params['from_date']) && !empty($params['to_date'])) {
         $conditions[] = 'DATE(' . $tblleads . '.dateadded) BETWEEN "' . $CI->db->escape_str($params['from_date']) . '" AND "' . $CI->db->escape_str($params['to_date']) . '"';
     }
@@ -8817,10 +8848,7 @@ GROUP BY lead_data.status
 ";
     // }
 
-//   if (is_admin()) {
-//         echo $sql;
-//         die;
-//     }
+
     // Execute query
     $result = $CI->db->query($sql)->result();
 
@@ -8883,7 +8911,7 @@ function get_leads_summary_filter_neww_test($params)
     $sql .= 'FROM ' . $tblleads . ' ';
     $sql .= 'LEFT JOIN ' . db_prefix() . 'leads_status ON ' . $tblleads . '.status = ' . db_prefix() . 'leads_status.id ';
 
-    if (!empty($params['up_to_date']) || (isset($params['update_count_min']) && $params['update_count_min'] != '')) {
+    if (!empty($params['up_to_date']) || (isset($params['update_count_min']) && $params['update_count_min'] != '' && $params['update_count_max'] != 0) ) {
         $sql .= ' JOIN ' . db_prefix() . 'calls_activity_logs ON  ' . db_prefix() . 'calls_activity_logs.contact = ' . $tblleads . '.phonenumber AND ' . db_prefix() . 'calls_activity_logs.staffid = ' . $tblleads . '.assigned ';
     } else {
         $sql .= 'LEFT JOIN ' . db_prefix() . 'calls_activity_logs ON  ' . db_prefix() . 'calls_activity_logs.contact = ' . $tblleads . '.phonenumber AND ' . db_prefix() . 'calls_activity_logs.staffid = ' . $tblleads . '.assigned ';
@@ -8919,7 +8947,36 @@ function get_leads_summary_filter_neww_test($params)
             db_prefix() . 'customfieldsvalues.value != ""';
     }
     if (!empty($params['lead_type']))        $conditions[] = 'type IN (' . implode(',', $CI->db->escape_str($params['lead_type'])) . ')';
-    if (!empty($params['sub_status']))       $conditions[] = 'sub_status IN (' . implode(',', $CI->db->escape_str($params['sub_status'])) . ')';
+    // if (!empty($params['sub_status']))       $conditions[] = 'sub_status IN (' . implode(',', $CI->db->escape_str($params['sub_status'])) . ')';
+    
+if (isset($params['sub_status'])) {
+
+    $sub_status = (array) $params['sub_status'];
+
+    // Only one item and it's blank
+    if (count($sub_status) === 1 && $sub_status[0] === '') {
+
+        $conditions[] = "( sub_status IS NULL OR sub_status='' )";
+
+        // OR use NULL if your DB stores null:
+        // $conditions[] = "sub_status IS NULL";
+
+    } else {
+
+        $sub_status = array_filter($sub_status, function ($v) {
+            return $v !== '';
+        });
+
+        if (!empty($sub_status)) {
+            $escaped = array_map(
+                [$CI->db, 'escape'],
+                $sub_status
+            );
+
+            $conditions[] = "sub_status IN (" . implode(',', $escaped) . ")";
+        }
+    }
+}
     if (!empty($params['from_date']) && !empty($params['to_date'])) $conditions[] = 'DATE(' . $tblleads . '.dateadded) BETWEEN "' . $CI->db->escape_str($params['from_date']) . '" AND "' . $CI->db->escape_str($params['to_date']) . '"';
     if (!empty($params['followup_to_date'])) $conditions[] = 'DATE(' . db_prefix() . 'reminders.date) BETWEEN "' . $CI->db->escape_str($params['followup_from_date']) . '" AND "' . $CI->db->escape_str($params['followup_to_date']) . '"';
     if (!empty($params['assign_from_date'])) $conditions[] = 'DATE(' . $tblleads . '.dateassigned) BETWEEN "' . $CI->db->escape_str($params['assign_from_date']) . '" AND "' . $CI->db->escape_str($params['assign_to_date']) . '"';
@@ -8928,7 +8985,7 @@ function get_leads_summary_filter_neww_test($params)
 
     $having_query = "";
     if (isset($params['update_count_min']) && $params['update_count_min'] != '') {
-        $having_query = ' HAVING IFNULL(COUNT(' . db_prefix() . 'calls_activity_logs.id), 0)  BETWEEN "' . $CI->db->escape_str($params['update_count_min']) . '" AND "' . $CI->db->escape_str($params['update_count_max']) . '" ';
+        $having_query = ' HAVING IFNULL(call_count, 0)  BETWEEN "' . $CI->db->escape_str($params['update_count_min']) . '" AND "' . $CI->db->escape_str($params['update_count_max']) . '" ';
     }
 
     if (!empty($params["utm_status"]) && $params["utm_status"] == 1) $conditions[] = ' ' . $tblleads . '.utm_campaign_name != " " ';
@@ -8986,7 +9043,7 @@ function get_leads_summary_filter_neww_test($params)
         $sql .= 'WHERE ' . implode(' AND ', $conditions) . ' ';
     }
 
-    $sql .= 'GROUP BY ' . $tblleads . '.id ' . $having_query . ' ';
+    $sql .= 'GROUP BY ' . $tblleads . '.id  ';
 
     // UNION phone + alternative_phonenumber
     $unionSql = " ( " . $sql . " ) UNION ALL ( " . str_replace('phonenumber', 'alternative_phonenumber', $sql) . " ) ";
@@ -8996,12 +9053,18 @@ function get_leads_summary_filter_neww_test($params)
         SELECT 
             combined.id,
             combined.status,
-            combined.sub_status
+            combined.sub_status,
+            sum(combined.call_count) as call_count
         FROM (
             $unionSql
         ) AS combined
-        GROUP BY combined.id
+        GROUP BY combined.id " . $having_query . " 
     ";
+    
+    //   if (is_admin()) {
+    //     echo $finalSql;
+    //     die;
+    // }
 $rows = $CI->db->query($finalSql)->result();
 
 
@@ -9072,9 +9135,28 @@ return [
 function get_university_list($lead_type)
 {
     $CI = &get_instance();
-    return $CI->s_db->query("SELECT c.id country_id,co.name,c.country_name,u.university_name,u.university_name university_name_id,u.id university_id,u.fees_mandatory,u.exam FROM course co left join countries c ON (co.id = c.segment_id) left join universities u on (u.country_id = c.id) where name='$lead_type' and status = 0 ")->result_array();
+    return $CI->s_db->query("SELECT 
+    c.id AS country_id,
+    co.name,
+    c.country_name,
+    u.university_name,
+    u.id AS university_id,
+    u.fees_mandatory,
+    u.exam
+FROM course co
+LEFT JOIN countries c 
+    ON co.id = c.segment_id
+LEFT JOIN universities u 
+    ON u.country_id = c.id
+WHERE (
+        co.name = '$lead_type'
+        AND c.country_name != ''
+        AND u.university_name != ''
+        AND u.show_crm = 1
+      )
+  ")->result_array();
 }
-
+ 
 function get_country_list($segment_id)
 {
     $CI = &get_instance();
@@ -9248,7 +9330,7 @@ function whatsapp_message_send($client_id, $whatsapp_template_id, $document_data
             !empty($staff_data->phonenumber) ? $staff_data->phonenumber : "7217219100",
             $admission_preferences->primary_country ?? "",
             $admission_preferences->primary_university ?? "",
-            $amount_details[0]["total_amount"] ?? "",
+            str_replace(",","",$amount_details[0]["total_amount"]) ?? "",
             $admission_preferences->acadmic_year ?? "",
             $entrance_exam_details ?? "",
             $counsellor_name ?? "",
@@ -9270,6 +9352,8 @@ function whatsapp_message_send($client_id, $whatsapp_template_id, $document_data
             $parameters[] = ["type" => "text", "text" => $data];
         }
     }
+    
+
 
     // Construct JSON payload
     $data = [
@@ -9727,6 +9811,903 @@ function welcome_whatsapp_channel_study_abroad($contact_number, $staff_id, $lead
         return json_encode(["error" => $e->getMessage()]);
     }
 }
+
+
+// function whatsapp_message_send_visitor_logs($visitorId)
+// {
+//     try {
+//         $CI = &get_instance();
+ 
+//         // Validate Inputs
+//         if (empty($visitorId) || !is_numeric($visitorId)) {
+//             log_message('error', 'Invalid Visitor ID');
+//             return false;
+//         }
+ 
+//         // WhatsApp Configuration
+//         $productToken      = WHATSAAP_PRODUCT_KEY;
+//         $fromNumber        = WHATSAAP_FROM_NUMBER;
+//         $templateNamespace = WHATSAAP_NAMESPACE;
+ 
+//         if (empty($productToken) || empty($fromNumber) || empty($templateNamespace)) {
+//             log_message('error', 'WhatsApp configuration missing');
+//             return false;
+//         }
+ 
+//         // Fetch Visitor Details
+//         // NOTE: no trailing comma after the last selected column.
+//         $visitorDetails = $CI->db
+//             ->select("
+//                 visitor_request.id,
+//                 visitor_request.lead_id,
+//                 visitor_request.address,
+//                 visitor_request.date_of_visit,
+//                 tblleads.name AS lead_name,
+//                 tblleads.phonenumber,
+//                 tblvisitor_type.name AS visitor_type_name,
+//                 CONCAT(tblstaff.firstname,' ',tblstaff.lastname,' - (',tblstaff.phonenumber,')') AS staff_name,
+//                 CONCAT(tblstaff_assigned.firstname,' ',tblstaff_assigned.lastname,' - (',tblstaff_assigned.phonenumber,')') AS staff_name_assigned
+//             ", false)
+//             ->from(db_prefix() . 'visitor_request AS visitor_request')
+//             ->join(
+//                 db_prefix() . 'leads AS tblleads',
+//                 'tblleads.id = visitor_request.lead_id',
+//                 'left'
+//             )
+//             ->join(
+//                 db_prefix() . 'visitor_type AS tblvisitor_type',
+//                 'tblvisitor_type.id = visitor_request.visitor_type',
+//                 'left'
+//             )
+//             ->join(
+//                 db_prefix() . 'staff AS tblstaff',
+//                 'tblstaff.staffid = visitor_request.created_by',
+//                 'left'
+//             )
+//             ->join(
+//                 db_prefix() . 'staff AS tblstaff_assigned',
+//                 'tblstaff_assigned.staffid = visitor_request.assigned',
+//                 'left'
+//             )
+//             ->where('visitor_request.id', $visitorId)
+//             ->where_in('visitor_request.status', [1, 3])
+//             ->where_in('visitor_request.visitor_type', [2, 3])
+//             ->limit(1)
+//             ->get()
+//             ->row();
+ 
+//         if (!$visitorDetails) {
+//             log_message('error', 'Visitor record not found');
+//             return false;
+//         }
+ 
+//         $whatsapp_template_id = 15;
+ 
+//         if (empty($whatsapp_template_id) || !is_numeric($whatsapp_template_id)) {
+//             log_message('error', 'Invalid WhatsApp Template ID');
+//             return false;
+//         }
+ 
+//         // Validate Lead Mobile Number
+//         if (empty($visitorDetails->phonenumber)) {
+//             log_message('error', 'Lead phone number not found');
+//             return false;
+//         }
+ 
+//         $toNumber = '91' . getLast10Digits($visitorDetails->phonenumber);
+// //  $toNumber = "919871159668";
+//         // Fetch WhatsApp Template
+//         $whatsapp = $CI->db
+//             ->where('id', $whatsapp_template_id)
+//             ->where('status', 1)
+//             ->get(db_prefix() . 'whatsapptemplates')
+//             ->row();
+ 
+//         if (!$whatsapp) {
+//             log_message('error', 'WhatsApp template not found');
+//             return false;
+//         }
+ 
+//         $templateName = $whatsapp->template_name;
+//         $languageCode = !empty($whatsapp->languageCode)
+//             ? $whatsapp->languageCode
+//             : 'en';
+ 
+//         // Protect any commas inside the address so explode(',') below
+//         // does not split a single address value into multiple parameters.
+//         $address = str_replace(',', '#COMMA#', $visitorDetails->address ?? '');
+ 
+//         // Replace Template Variables
+//         $variables = str_replace(
+//             [
+//                 '{lead_name}',
+//                 '{address}',
+//                 '{visit_date}',
+//                 '{visit_type}',
+//                 '{counsellor_name}',
+//                 '{counsellor_attend_name}',
+//             ],
+//             [
+//                 $visitorDetails->lead_name ?? '',
+//                 $address,
+//                 !empty($visitorDetails->date_of_visit)
+//                     ? date('d-m-Y', strtotime($visitorDetails->date_of_visit))
+//                     : '',
+//                 $visitorDetails->visitor_type_name ?? '',
+//                 $visitorDetails->staff_name ?? '',
+//                 $visitorDetails->staff_name_assigned ?? '',
+//             ],
+//             $whatsapp->variables_name ?? ''
+//         );
+ 
+//         // Prepare Parameters
+//         $parameters = [];
+//         if (!empty($variables)) {
+//             $variablesArray = explode(',', $variables);
+//             foreach ($variablesArray as $value) {
+//                 $value = trim($value);
+//                 if ($value === '') {
+//                     continue;
+//                 }
+//                 $parameters[] = [
+//                     'type' => 'text',
+//                     'text' => str_replace('#COMMA#', ',', $value),
+//                 ];
+//             }
+//         }
+ 
+//         // Construct Payload
+//         $payload = [
+//             'messages' => [
+//                 'authentication' => [
+//                     'producttoken' => $productToken,
+//                 ],
+//                 'msg' => [
+//                     [
+//                         'from' => $fromNumber,
+//                         'to' => [
+//                             ['number' => $toNumber],
+//                         ],
+//                         'body' => [
+//                             'type'    => 'auto',
+//                             'content' => $templateName,
+//                         ],
+//                         'allowedChannels' => ['WhatsApp'],
+//                         'richContent' => [
+//                             'conversation' => [
+//                                 [
+//                                     'template' => [
+//                                         'whatsapp' => [
+//                                             'namespace'    => $templateNamespace,
+//                                             'element_name' => $templateName,
+//                                             'language' => [
+//                                                 'policy' => 'deterministic',
+//                                                 'code'   => $languageCode,
+//                                             ],
+//                                             'components' => [],
+//                                         ],
+//                                     ],
+//                                 ],
+//                             ],
+//                         ],
+//                     ],
+//                 ],
+//             ],
+//         ];
+ 
+//         // Add Body Parameters
+//         if (!empty($parameters)) {
+//             $payload['messages']['msg'][0]['richContent']['conversation'][0]['template']['whatsapp']['components'][] = [
+//                 'type'       => 'body',
+//                 'parameters' => $parameters,
+//             ];
+//         }
+ 
+//         // Initialize cURL
+//         $curl = curl_init();
+//         curl_setopt_array($curl, [
+//             CURLOPT_URL            => 'https://gw.messaging.cm.com/v1.0/message',
+//             CURLOPT_RETURNTRANSFER => true,
+//             CURLOPT_ENCODING       => '',
+//             CURLOPT_MAXREDIRS      => 10,
+//             CURLOPT_TIMEOUT        => 10,
+//             CURLOPT_FOLLOWLOCATION => true,
+//             CURLOPT_HTTP_VERSION   => CURL_HTTP_VERSION_1_1,
+//             CURLOPT_CUSTOMREQUEST  => 'POST',
+//             CURLOPT_POSTFIELDS     => json_encode($payload),
+//             CURLOPT_HTTPHEADER     => ['Content-Type: application/json'],
+//         ]);
+ 
+//         // Execute cURL request
+//         $response  = curl_exec($curl);
+//         $curlError = curl_error($curl);
+//         curl_close($curl);
+ 
+
+//         // Handle cURL errors
+//         if ($curlError) {
+//             log_message('error', 'WhatsApp API cURL error: ' . $curlError);
+//             return false;
+//             // return json_encode(['error' => 'Failed to send message. API request error.']);
+//         }
+ 
+//         // Decode API response and check for errors
+//         $responseArray = json_decode($response, true);
+        
+
+//         if (!$responseArray || isset($responseArray['error'])) {
+//             log_message('error', 'WhatsApp API response error: ' . $response);
+//             return false;
+//             return json_encode(['error' => 'WhatsApp API error', 'details' => $responseArray]);
+//         }
+ 
+//         // Log the sent message
+//         $insert_data = [
+//             'type'        => 'whatsapp',
+//             'template_id' => $whatsapp_template_id,
+//             'lead_id'     => $visitorDetails->lead_id ?? '',
+//             'visitor_id'  => $visitorId ?? '',
+//             'datetime'    => date('Y-m-d H:i:s'),
+//         ];
+//         $CI->db->insert(db_prefix() . 'whatsapp_email_logs', $insert_data);
+        
+//         $message  = sprintf(
+//     'WhatsApp notification sent to %s (%s). Visit Type: %s, Visit Date: %s, Address: %s, Created By: %s, Assigned Counsellor: %s.',
+//     $visitorDetails->lead_name ?? 'Visitor',
+//     $visitorDetails->phonenumber ?? '',
+//     $visitorDetails->visitor_type_name ?? 'N/A',
+//     !empty($visitorDetails->date_of_visit)
+//         ? date('d-m-Y', strtotime($visitorDetails->date_of_visit))
+//         : 'N/A',
+//     $visitorDetails->address ?? 'N/A',
+//     $visitorDetails->staff_name ?? 'N/A',
+//     $visitorDetails->staff_name_assigned ?? 'N/A'
+// );
+//         $CI->db->insert(db_prefix() . 'visitor_activity_log', array("description" => $message, "date" => date('Y-m-d H:i:s'), "staffid" => get_staff_user_id(), "lead_id" => $visitorDetails->lead_id, "visit_id" => $visitorId));
+//  return true;
+//         return json_encode(['status'=>true,'success' => 'Message sent successfully.', 'response' => $responseArray]);
+//     } catch (Exception $e) {
+//         log_message('error', 'WhatsApp Send Exception: ' . $e->getMessage());
+//         return false;
+//     }
+// }
+
+
+function whatsapp_message_send_visitor_logs()
+{
+    
+    $CI = &get_instance();
+ 
+    // effective time: updated_date if it has a real value, otherwise created_date
+ $effectiveTime = "
+COALESCE(
+    NULLIF(visitor_request.updated_at, '0000-00-00 00:00:00'),
+    visitor_request.created_at
+)";
+
+$currentDateTime = date('Y-m-d H:i:s');
+ 
+    $dueVisitors = $CI->db
+        ->select('visitor_request.id', false)
+        ->from(db_prefix() . 'visitor_request AS visitor_request')
+        ->where_in('visitor_request.status', [1, 3])
+        ->where_in('visitor_request.visitor_type', [3])
+       ->where('(visitor_request.whatsapp_status IS NULL OR visitor_request.whatsapp_status = 0)', NULL, FALSE)
+        ->where("{$effectiveTime} <= DATE_SUB('{$currentDateTime}', INTERVAL 1 HOUR)", null, false)
+        ->where('visitor_request.date_of_visit >=', $currentDateTime)
+        ->order_by($effectiveTime, 'ASC', false)
+        ->limit(10)
+        ->get()
+        ->result();
+      
+       
+ 
+    if (empty($dueVisitors)) {
+        log_message('debug', 'WhatsApp batch: no due visitor records.');
+        return ['processed' => 0, 'sent' => 0, 'failed' => 0];
+    }
+    
+   
+ 
+    $sent   = 0;
+    $failed = 0;
+ 
+    foreach ($dueVisitors as $visitor) {
+        $ok = whatsapp_send_visitor_single((int) $visitor->id);
+        if ($ok) {
+            $sent++;
+        } else {
+            $failed++;
+        }
+    }
+ 
+    return [
+        'processed' => count($dueVisitors),
+        'sent'      => $sent,
+        'failed'    => $failed,
+    ];
+}
+ 
+/**
+ * Sends the WhatsApp template for a single visitor record.
+ * On success, sets visitor_request.whatsapp_status = 4 and writes the logs.
+ *
+ * @return bool
+ */
+function whatsapp_send_visitor_single($visitorId)
+{
+    try {
+        $CI = &get_instance();
+ 
+        // Validate Inputs
+        if (empty($visitorId) || !is_numeric($visitorId)) {
+            log_message('error', 'Invalid Visitor ID');
+            return false;
+        }
+ 
+        // WhatsApp Configuration
+        $productToken      = WHATSAAP_PRODUCT_KEY;
+        $fromNumber        = WHATSAAP_FROM_NUMBER;
+        $templateNamespace = WHATSAAP_NAMESPACE;
+ 
+        if (empty($productToken) || empty($fromNumber) || empty($templateNamespace)) {
+            log_message('error', 'WhatsApp configuration missing');
+            return false;
+        }
+        
+         $CI->db
+            ->where('id', $visitorId)
+            ->update(db_prefix() . 'visitor_request', [
+                'whatsapp_status' => 5
+            ]);
+ 
+        // Fetch Visitor Details
+        $visitorDetails = $CI->db
+            ->select("
+                visitor_request.id,
+                visitor_request.lead_id,
+                visitor_request.address,
+                visitor_request.date_of_visit,
+                tblleads.name AS lead_name,
+                tblleads.phonenumber,
+                tblvisitor_type.name AS visitor_type_name,
+                CONCAT(tblstaff.firstname,' ',tblstaff.lastname,' - (',tblstaff.phonenumber,')') AS staff_name,
+                CONCAT(tblstaff_assigned.firstname,' ',tblstaff_assigned.lastname,' - (',tblstaff_assigned.phonenumber,')') AS staff_name_assigned
+            ", false)
+            ->from(db_prefix() . 'visitor_request AS visitor_request')
+            ->join(db_prefix() . 'leads AS tblleads', 'tblleads.id = visitor_request.lead_id', 'left')
+            ->join(db_prefix() . 'visitor_type AS tblvisitor_type', 'tblvisitor_type.id = visitor_request.visitor_type', 'left')
+            ->join(db_prefix() . 'staff AS tblstaff', 'tblstaff.staffid = tblleads.assigned', 'left')
+            ->join(db_prefix() . 'staff AS tblstaff_assigned', 'tblstaff_assigned.staffid = visitor_request.assigned', 'left')
+            ->where('visitor_request.id', $visitorId)
+            ->where_in('visitor_request.status', [1, 3])
+            ->where_in('visitor_request.visitor_type', [3])
+            ->limit(1)
+            ->get()
+            ->row();
+            
+            // print_r($visitorDetails);
+            // die;
+ 
+        if (!$visitorDetails) {
+            log_message('error', 'Visitor record not found: ' . $visitorId);
+            return false;
+        }
+ 
+        $whatsapp_template_id = 15;
+ 
+        if (empty($whatsapp_template_id) || !is_numeric($whatsapp_template_id)) {
+            log_message('error', 'Invalid WhatsApp Template ID');
+            return false;
+        }
+ 
+        // Validate Lead Mobile Number
+        if (empty($visitorDetails->phonenumber)) {
+            log_message('error', 'Lead phone number not found for visitor ' . $visitorId);
+            return false;
+        }
+ 
+        $toNumber = '91' . getLast10Digits($visitorDetails->phonenumber);
+ 
+        // Fetch WhatsApp Template
+        $whatsapp = $CI->db
+            ->where('id', $whatsapp_template_id)
+            ->where('status', 1)
+            ->get(db_prefix() . 'whatsapptemplates')
+            ->row();
+ 
+        if (!$whatsapp) {
+            log_message('error', 'WhatsApp template not found');
+            return false;
+        }
+ 
+        $templateName = $whatsapp->template_name;
+        $languageCode = !empty($whatsapp->languageCode) ? $whatsapp->languageCode : 'en';
+ 
+        // Protect commas inside the address so explode(',') doesn't split it.
+        $address = str_replace(',', '#COMMA#', $visitorDetails->address ?? '');
+ 
+        // Replace Template Variables
+        $variables = str_replace(
+            [
+                '{lead_name}',
+                '{address}',
+                '{visit_date}',
+                '{visit_type}',
+                '{counsellor_name}',
+                '{counsellor_attend_name}',
+            ],
+            [
+                $visitorDetails->lead_name ?? '',
+                $address,
+                !empty($visitorDetails->date_of_visit) ? date('d-m-Y', strtotime($visitorDetails->date_of_visit)) : '',
+                $visitorDetails->visitor_type_name ?? '',
+                $visitorDetails->staff_name ?? '',
+                $visitorDetails->staff_name_assigned ?? '',
+            ],
+            $whatsapp->variables_name ?? ''
+        );
+ 
+        // Prepare Parameters
+        $parameters = [];
+        if (!empty($variables)) {
+            $variablesArray = explode(',', $variables);
+            foreach ($variablesArray as $value) {
+                $value = trim($value);
+                if ($value === '') {
+                    continue;
+                }
+                $parameters[] = [
+                    'type' => 'text',
+                    'text' => str_replace('#COMMA#', ',', $value),
+                ];
+            }
+        }
+ 
+        // Construct Payload
+        $payload = [
+            'messages' => [
+                'authentication' => [
+                    'producttoken' => $productToken,
+                ],
+                'msg' => [
+                    [
+                        'from' => $fromNumber,
+                        'to'   => [
+                            ['number' => $toNumber],
+                        ],
+                        'body' => [
+                            'type'    => 'auto',
+                            'content' => $templateName,
+                        ],
+                        'allowedChannels' => ['WhatsApp'],
+                        'richContent'     => [
+                            'conversation' => [
+                                [
+                                    'template' => [
+                                        'whatsapp' => [
+                                            'namespace'    => $templateNamespace,
+                                            'element_name' => $templateName,
+                                            'language'     => [
+                                                'policy' => 'deterministic',
+                                                'code'   => $languageCode,
+                                            ],
+                                            'components' => [],
+                                        ],
+                                    ],
+                                ],
+                            ],
+                        ],
+                    ],
+                ],
+            ],
+        ];
+ 
+        // Add Body Parameters
+        if (!empty($parameters)) {
+            $payload['messages']['msg'][0]['richContent']['conversation'][0]['template']['whatsapp']['components'][] = [
+                'type'       => 'body',
+                'parameters' => $parameters,
+            ];
+        }
+ 
+        // Initialize cURL
+        $curl = curl_init();
+        curl_setopt_array($curl, [
+            CURLOPT_URL            => 'https://gw.messaging.cm.com/v1.0/message',
+            CURLOPT_RETURNTRANSFER => true,
+            CURLOPT_ENCODING       => '',
+            CURLOPT_MAXREDIRS      => 10,
+            CURLOPT_TIMEOUT        => 10,
+            CURLOPT_FOLLOWLOCATION => true,
+            CURLOPT_HTTP_VERSION   => CURL_HTTP_VERSION_1_1,
+            CURLOPT_CUSTOMREQUEST  => 'POST',
+            CURLOPT_POSTFIELDS     => json_encode($payload),
+            CURLOPT_HTTPHEADER     => ['Content-Type: application/json'],
+        ]);
+ 
+        $response  = curl_exec($curl);
+        $curlError = curl_error($curl);
+        curl_close($curl);
+ 
+        if ($curlError) {
+            log_message('error', 'WhatsApp API cURL error: ' . $curlError);
+            return false;
+        }
+ 
+        $responseArray = json_decode($response, true);
+ 
+        if (!$responseArray || isset($responseArray['error'])) {
+            log_message('error', 'WhatsApp API response error: ' . $response);
+            return false;
+        }
+ 
+        // SUCCESS — mark this visitor as sent (whatsapp_status = 4)
+        $CI->db
+            ->where('id', $visitorId)
+            ->update(db_prefix() . 'visitor_request', [
+                'whatsapp_status' => 4,
+                'whatsapp_notify' =>date('Y-m-d H:i:s')
+            ]);
+ 
+        // Log the sent message
+        $CI->db->insert(db_prefix() . 'whatsapp_email_logs', [
+            'type'        => 'whatsapp',
+            'template_id' => $whatsapp_template_id,
+            'lead_id'     => $visitorDetails->lead_id ?? '',
+            'visitor_id'  => $visitorId ?? '',
+            'datetime'    => date('Y-m-d H:i:s'),
+        ]);
+ 
+        $message = sprintf(
+            'WhatsApp notification sent to %s (%s). Visit Type: %s, Visit Date: %s, Address: %s, Created By: %s, Assigned Counsellor: %s.',
+            $visitorDetails->lead_name ?? 'Visitor',
+            $visitorDetails->phonenumber ?? '',
+            $visitorDetails->visitor_type_name ?? 'N/A',
+            !empty($visitorDetails->date_of_visit) ? date('d-m-Y', strtotime($visitorDetails->date_of_visit)) : 'N/A',
+            $visitorDetails->address ?? 'N/A',
+            $visitorDetails->staff_name ?? 'N/A',
+            $visitorDetails->staff_name_assigned ?? 'N/A'
+        );
+ 
+        $CI->db->insert(db_prefix() . 'visitor_activity_log', [
+            'description' => $message,
+            'date'        => date('Y-m-d H:i:s'),
+            'staffid'     => get_staff_user_id(),
+            'lead_id'     => $visitorDetails->lead_id,
+            'visit_id'    => $visitorId,
+        ]);
+ 
+        return true;
+    } catch (Exception $e) {
+        log_message('error', 'WhatsApp Send Exception: ' . $e->getMessage());
+        return false;
+    }
+}
+ 
+
+
+
+function visitor_seminar_whatsapp_notification()
+{
+    try {
+
+        $CI = &get_instance();
+
+        $productToken      = WHATSAAP_PRODUCT_KEY;
+        $fromNumber        = WHATSAAP_FROM_NUMBER;
+        $templateNamespace = WHATSAAP_NAMESPACE;
+
+        if (empty($productToken) || empty($fromNumber) || empty($templateNamespace)) {
+            log_message('error', 'WhatsApp configuration missing');
+            return false;
+        }
+
+        $visitorDetails = $CI->db
+            ->select("
+                visitor_request.id,
+                visitor_request.lead_id,
+                visitor_request.address,
+                visitor_request.date_of_visit,
+                visitor_request.whatsapp_notify,
+                visitor_request.seminar_address,
+                visitor_request.whatsapp_status,
+                tblleads.name AS lead_name,
+                tblleads.phonenumber,
+                tblleads_type.name lead_type,
+                tblvisitor_type.name AS visitor_type_name,
+                visitor_request.image AS image,
+                CONCAT(tblstaff.firstname,' ',tblstaff.lastname) AS staff_name,
+                tblstaff.phonenumber AS staff_contact
+            ", false)
+            ->from(db_prefix() . 'visitor_request AS visitor_request')
+            ->join(db_prefix() . 'leads AS tblleads', 'tblleads.id = visitor_request.lead_id', 'left')
+            ->join(db_prefix() . 'leads_type', 'tblleads_type.id = tblleads.type', 'left')
+            ->join(db_prefix() . 'visitor_type AS tblvisitor_type', 'tblvisitor_type.id = visitor_request.visitor_type', 'left')
+            ->join(db_prefix() . 'staff AS tblstaff', 'tblstaff.staffid = tblleads.assigned', 'left')
+            ->join(db_prefix() . 'staff AS tblstaff_assigned', 'tblstaff_assigned.staffid = visitor_request.assigned', 'left')
+            ->where_in('visitor_request.status', [1, 3])
+            ->where('visitor_request.visitor_type', 2)
+            ->where('visitor_request.whatsapp_status', 3) 
+            ->where('visitor_request.seminar_address !=' , '')
+            ->where('visitor_request.image !=' , '')
+            ->where('date(visitor_request.date_of_visit) >', date('Y-m-d'))
+            ->where('visitor_request.whatsapp_notify IS NOT NULL', null, false)
+            ->where('visitor_request.whatsapp_notify <=', date('Y-m-d H:i:s'))
+            ->group_by("visitor_request.id")
+            ->limit(20)
+            ->get()
+            ->result();
+
+
+        if (empty($visitorDetails)) {
+            log_message('error', 'No visitor records found');
+            return false;
+        }
+        
+    
+
+        $whatsapp_template_id = 17;
+
+        $whatsapp = $CI->db
+            ->where('id', $whatsapp_template_id)
+            ->where('status', 1)
+            ->get(db_prefix() . 'whatsapptemplates')
+            ->row();
+
+        if (!$whatsapp) {
+            log_message('error', 'WhatsApp template not found');
+            return false;
+        }
+
+        foreach ($visitorDetails as $visitor) {
+
+            // Default failed status
+            $status = 2;
+
+            if (empty($visitor->phonenumber)) {
+
+                log_message(
+                    'error',
+                    'Phone number missing for Visitor ID: ' . $visitor->id
+                );
+
+                $CI->db->where('id', $visitor->id)
+                    ->update(db_prefix() . 'visitor_request', [
+                        'whatsapp_status' => 2
+                    ]);
+
+                continue;
+            }
+
+            $toNumber = '91' . getLast10Digits($visitor->phonenumber);
+//  $toNumber = "919871159668";
+            $address = str_replace(',', '#COMMA#', $visitor->address ?? '');
+ $imageURL = $visitor->image;
+
+
+            $variables = str_replace(
+                [
+                    '{lead_name}',
+                    '{lead_type}',
+                    '{address}',
+                    '{visit_date}',
+                    '{visit_time}',
+                    '{counsellor_name}',
+                    '{counsellor_contact}',
+                ],
+                [
+                    $visitor->lead_name ?? '',
+                    $visitor->lead_type ?? '',
+                    $address,
+                    !empty($visitor->date_of_visit)
+                        ? date('d-m-Y', strtotime($visitor->date_of_visit))
+                        : '',
+                    !empty($visitor->date_of_visit)
+                        ? date('h:i A', strtotime($visitor->date_of_visit))
+                        : '',
+                    $visitor->staff_name ?? '',
+                    $visitor->staff_contact ?? '',
+                ],
+                $whatsapp->variables_name ?? ''
+            );
+
+            $parameters = [];
+
+            if (!empty($variables)) {
+                foreach (explode(',', $variables) as $value) {
+
+                    $value = trim($value);
+
+                    if ($value === '') {
+                        continue;
+                    }
+
+                    $parameters[] = [
+                        'type' => 'text',
+                        'text' => str_replace('#COMMA#', ',', $value)
+                    ];
+                }
+            }
+
+            $payload = [
+                'messages' => [
+                    'authentication' => [
+                        'producttoken' => $productToken
+                    ],
+                    'msg' => [[
+                        'from' => $fromNumber,
+                        'to' => [[
+                            'number' => $toNumber
+                        ]],
+                        'body' => [
+                            'type' => 'auto',
+                            'content' => $whatsapp->template_name
+                        ],
+                        'allowedChannels' => ['WhatsApp'],
+                        'richContent' => [
+                            'conversation' => [[
+                                'template' => [
+                                    'whatsapp' => [
+                                        'namespace' => $templateNamespace,
+                                        'element_name' => $whatsapp->template_name,
+                                        'language' => [
+                                            'policy' => 'deterministic',
+                                            'code' => !empty($whatsapp->languageCode)
+                                                ? $whatsapp->languageCode
+                                                : 'en'
+                                        ],
+                                        'components' => [[
+                                            'type' => 'body',
+                                            'parameters' => $parameters
+                                        ]]
+                                    ]
+                                ]
+                            ]]
+                        ]
+                    ]]
+                ]
+            ];
+            
+            
+                // Add document attachment if URL exists
+ if (!empty($imageURL)) {
+     
+     $mimeType = mime_content_type(FCPATH . $imageURL);
+// or from extension:
+$ext      = strtolower(pathinfo($imageURL, PATHINFO_EXTENSION));
+$mimeType = ($ext === 'png') ? 'image/png' : 'image/jpeg';
+
+
+    $payload["messages"]["msg"][0]["richContent"]["conversation"][0]["template"]["whatsapp"]["components"][] = [
+        "type" => "header",
+        "parameters" => [
+            [
+                "type" => "image",
+                "media" => [
+                    "mediaName" => $imageName??'Seminar Image',                 // e.g. "seat-confirmed.jpg"
+                    "mediaUri"  => base_url() . $imageURL,
+                    "mimeType"  => $mimeType                   // "image/jpeg" or "image/png"
+                ]
+            ]
+        ]
+    ];
+}
+
+
+            $curl = curl_init();
+
+            curl_setopt_array($curl, [
+                CURLOPT_URL            => 'https://gw.messaging.cm.com/v1.0/message',
+                CURLOPT_RETURNTRANSFER => true,
+                CURLOPT_POST           => true,
+                CURLOPT_POSTFIELDS     => json_encode($payload),
+                CURLOPT_HTTPHEADER     => [
+                    'Content-Type: application/json'
+                ]
+            ]);
+
+            $response = curl_exec($curl);
+            $error    = curl_error($curl);
+            // print_r($response);
+            // die;
+
+            curl_close($curl);
+
+            if ($error) {
+
+                log_message(
+                    'error',
+                    'Visitor ID ' . $visitor->id . ' cURL Error: ' . $error
+                );
+
+                $CI->db->where('id', $visitor->id)
+                    ->update(db_prefix() . 'visitor_request', [
+                        'whatsapp_status' => 2
+                    ]);
+
+                continue;
+            }
+
+            $responseArray = json_decode($response, true);
+
+            if (
+                isset($responseArray['error']) ||
+                isset($responseArray['errors'])
+            ) {
+
+                log_message(
+                    'error',
+                    'Visitor ID ' . $visitor->id . ' API Error: ' . $response
+                );
+
+                $CI->db->where('id', $visitor->id)
+                    ->update(db_prefix() . 'visitor_request', [
+                        'whatsapp_status' => 2
+                    ]);
+
+                continue;
+            }
+
+            // SUCCESS
+            $status = 1;
+
+            $CI->db->insert(db_prefix() . 'whatsapp_email_logs', [
+                'type'        => 'whatsapp',
+                'template_id' => $whatsapp_template_id,
+                'lead_id'     => $visitor->lead_id,
+                'visitor_id'  => $visitor->id,
+                'datetime'    => date('Y-m-d H:i:s'),
+            ]);
+
+            $CI->db->where('id', $visitor->id)
+                ->update(db_prefix() . 'visitor_request', [
+                    'whatsapp_status' => $status
+                ]);
+                
+         $assignedCounsellor = trim(
+    ($visitor->staff_name ?? '') .
+    (!empty($visitor->staff_contact) ? ' (' . $visitor->staff_contact . ')' : '')
+);
+
+$message = sprintf(
+    'WhatsApp notification sent to %s (%s). Lead Type: %s, Visit Date: %s, Address: %s, Assigned Counsellor: %s.',
+    $visitor->lead_name ?? 'Visitor',
+    $visitor->phonenumber ?? '',
+    $visitor->lead_type ?? 'N/A',
+    !empty($visitor->date_of_visit) ? date('d-m-Y', strtotime($visitor->date_of_visit)) : 'N/A',
+    $visitor->address ?? 'N/A',
+    $assignedCounsellor ?: 'N/A'
+);
+ 
+        $CI->db->insert(db_prefix() . 'visitor_activity_log', [
+            'description' => $message,
+            'date'        => date('Y-m-d H:i:s'),
+            'staffid'     => get_staff_user_id(),
+            'lead_id'     => $visitor->lead_id,
+            'visit_id'    => $visitor->id,
+        ]);
+
+            log_message(
+                'info',
+                'WhatsApp sent successfully to Visitor ID: ' . $visitor->id
+            );
+
+            echo "WhatsApp sent to Visitor ID: {$visitor->id}\n";
+
+            sleep(1);
+        }
+
+        return true;
+
+    } catch (Exception $e) {
+
+        log_message('error', 'WhatsApp Cron Exception: ' . $e->getMessage());
+
+        return false;
+    }
+}
+
 
 
 
@@ -10902,6 +11883,8 @@ WITH lead_base AS (
         l.utm_ads_name
     FROM tblleads l  
     $whereLead and from_form_id > 0
+        GROUP BY id,assigned, source, status, website, utm_campaign_name, utm_ads_set_name, utm_ads_name
+
 ),
 
 source_counts AS (
@@ -11383,10 +12366,260 @@ function get_todayCalls()
     SEC_TO_TIME(SUM(duration)) AS duration_hms,
     FROM_UNIXTIME(MAX(call_start) + 19800) AS last_call_time
 FROM tblcalls_activity_logs 
-WHERE staffid = '".get_staff_user_id()."' 
+WHERE staffid = '".get_staff_user_id()."'  AND (
+    calls_source = 2
+)                                                               
   AND adjusted_call_start = '${current_date}'";
 
   
   return $CI->db->query($sql)->row();
   
+}
+
+/* Normalize Numbers */
+function normalizeNumber($number)
+{
+    $number = preg_replace('/\D/', '', $number);
+    return substr($number, -10);
+}
+
+function not_reachable_notification()
+{
+     $CI = &get_instance();
+    $today = date('Y-m-d');
+    $sql ="SELECT CONCAT(s.firstname,' ',s.lastname) staffname,s.fcm_token,count(id) leadCount,s.staffid FROM ".db_prefix()."leads_transfer_logs l join ".db_prefix()."staff s on l.old_assignation = s.staffid where date(created_at) = '{$today}' and l.old_assignation!='".IVR_AUTO_ASIGNATION."' and l.old_status= 20 and s.fcm_token!=''  GROUP by old_assignation";
+     return $CI->db->query($sql)->result_array();
+}
+
+function fresh_notification()
+{
+     $CI = &get_instance();
+    $today = date('Y-m-d');
+    $sql ="SELECT CONCAT(s.firstname,' ',s.lastname) staffname,s.fcm_token,count(id) leadCount,s.staffid FROM ".db_prefix()."leads_transfer_logs l join ".db_prefix()."staff s on l.old_assignation = s.staffid where date(created_at) = '{$today}' and l.old_assignation!='".IVR_AUTO_ASIGNATION."' and l.old_status= 2 and s.fcm_token!=''  GROUP by old_assignation";
+     return $CI->db->query($sql)->result_array();
+}
+
+function send_Fcm_Notification($bulkNotification,$type)
+{
+    $CI = &get_instance();
+    $CI->load->library('Fcm_lib');
+    $CI->load->driver('cache', ['adapter' => 'file']);
+    if(!empty($bulkNotification))
+    {
+        $logs=[];
+        foreach($bulkNotification as $bN)
+        {
+             $logs[] = array("staff_id"=>$bN["staffid"],"type"=>$type,"data"=>json_encode($bN,true),"created_at"=>date('Y-m-d H:i:s'));
+
+        }
+        
+    }
+    
+    if (!empty($bulkNotification)) {
+       $CI->fcm_lib->sendBulk_message($bulkNotification);
+ 
+        if(!empty($logs))
+        {
+            $CI->db->insert_batch(db_prefix()."fcm_notifications_log",$logs);
+        }
+    }
+    
+    return true;
+    
+}
+
+
+function update_reminder_data()
+{
+    
+    $current_date_time = date('Y-m-d');
+
+$CI = &get_instance();
+
+$sql = "
+
+UPDATE tblreminders r
+
+JOIN (
+
+    SELECT 
+        x.reminder_id,
+
+        MIN(x.call_date) AS min_call_start,
+
+        MIN(n.dateadded) AS min_note_date,
+
+        CASE 
+            WHEN MIN(n.dateadded) IS NOT NULL
+                 AND MIN(n.dateadded) < MIN(x.call_date)
+            THEN 'notes'
+            ELSE 'calls'
+        END AS update_type,
+
+        CASE 
+            WHEN MIN(n.dateadded) IS NOT NULL
+                 AND MIN(n.dateadded) < MIN(x.call_date)
+            THEN MIN(n.dateadded)
+            ELSE MIN(x.call_date)
+        END AS final_update_date
+
+    FROM (
+
+        /* Primary phone */
+        SELECT 
+            r.id AS reminder_id,
+            r.rel_id,
+            r.creator,
+            FROM_UNIXTIME(c.call_start + 19800) AS call_date
+
+        FROM tblreminders r
+
+        INNER JOIN tblleads l 
+            ON l.id = r.rel_id
+
+        INNER JOIN tblcalls_activity_logs c 
+            ON c.contact = l.phonenumber
+           AND c.staffid = r.creator
+
+        WHERE r.rel_type = 'lead'
+          AND r.status = 0
+          AND r.date >= '2026-03-01 00:00:00'
+          AND c.adjusted_call_start >= '{$current_date_time}'
+          AND r.date < FROM_UNIXTIME(c.call_start + 19800)
+
+        UNION ALL
+
+        /* Alternative phone */
+        SELECT 
+            r.id AS reminder_id,
+            r.rel_id,
+            r.creator,
+            FROM_UNIXTIME(c.call_start + 19800) AS call_date
+
+        FROM tblreminders r
+
+        INNER JOIN tblleads l 
+            ON l.id = r.rel_id
+
+        INNER JOIN tblcalls_activity_logs c 
+            ON c.contact = l.alternative_phonenumber
+           AND c.staffid = r.creator
+
+        WHERE r.rel_type = 'lead'
+          AND r.status = 0
+          AND r.date >= '2026-03-01 00:00:00'
+          AND c.adjusted_call_start >= '{$current_date_time}'
+          AND r.date < FROM_UNIXTIME(c.call_start + 19800)
+
+    ) x
+
+    LEFT JOIN tblnotes n
+        ON n.rel_id = x.rel_id
+       AND n.addedfrom = x.creator
+       AND n.rel_type = 'lead'
+       AND n.dateadded >= '{$current_date_time} 00:00:00'
+       AND n.dateadded > x.call_date
+
+    GROUP BY x.reminder_id
+
+) z 
+ON z.reminder_id = r.id
+
+SET
+    r.status = 1,
+    r.type = z.update_type,
+    r.updated_date = z.final_update_date
+
+WHERE r.status = 0
+
+
+";
+
+
+$CI->db->query($sql);
+
+return $CI->db->affected_rows();
+}
+
+
+function sendCallData(string $endpoint, string $apiKey, array $call, int $timeout = 15): array
+{
+    $fail = static function (int $status, string $error, $raw = null): array {
+        return [
+            'ok'        => false,
+            'status'    => $status,
+            'inserted'  => 0,
+            'skipped'   => 0,
+            'message'   => $error,
+            'error'     => $error,
+            'raw'       => $raw
+        ];
+    };
+
+    if ($endpoint === '' || $apiKey === '') {
+        return $fail(0, 'Endpoint and API Key are required.');
+    }
+
+    // Wrap the single call in the expected payload
+    $payload = json_encode([
+        'calls' => [$call]
+    ]);
+
+    if ($payload === false) {
+        return $fail(0, 'JSON Encode Error: ' . json_last_error_msg());
+    }
+
+    log_message('info', 'Call API Request: ' . $payload);
+
+    $ch = curl_init($endpoint);
+
+    curl_setopt_array($ch, [
+        CURLOPT_POST            => true,
+        CURLOPT_POSTFIELDS      => $payload,
+        CURLOPT_RETURNTRANSFER  => true,
+        CURLOPT_CONNECTTIMEOUT  => $timeout,
+        CURLOPT_TIMEOUT         => $timeout,
+        CURLOPT_HTTPHEADER      => [
+            'Content-Type: application/json',
+            'Accept: application/json',
+            'X-API-Key: ' . $apiKey
+        ]
+    ]);
+
+    $body   = curl_exec($ch);
+    $status = curl_getinfo($ch, CURLINFO_HTTP_CODE);
+    $error  = curl_error($ch);
+
+    curl_close($ch);
+
+    log_message('info', 'Call API Response (' . $status . '): ' . $body);
+
+    if ($body === false) {
+        return $fail(0, 'cURL Error: ' . $error);
+    }
+
+    $data = json_decode($body, true);
+
+    if (!is_array($data)) {
+        return $fail($status, 'Invalid JSON Response', $body);
+    }
+
+    if ($status < 200 || $status >= 300) {
+
+        $msg = $data['messages']['error']
+            ?? $data['message']
+            ?? 'API Request Failed';
+
+        return $fail($status, $msg, $data);
+    }
+
+    return [
+        'ok'        => true,
+        'status'    => $status,
+        'inserted'  => $data['inserted'] ?? 0,
+        'skipped'   => $data['skipped'] ?? 0,
+        'message'   => $data['message'] ?? 'Success',
+        'error'     => null,
+        'raw'       => $data
+    ];
 }

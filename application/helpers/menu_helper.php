@@ -911,7 +911,33 @@ function app_init_admin_sidebar_menu_items()
                         'position' => 15,
                 ]);
         }
+        
+        if(is_admin()){
 
+ $CI->app_menu->add_setup_menu_item('cron', [
+                        'collapse' => true,
+                        'name'     => _l('Cron'),
+                        'position' => 15,
+                ]);
+
+$CI->app_menu->add_setup_children_item('cron', [
+                        'name'     => "Not Reachable Leads",
+                        'href'     => admin_url('cron/not_reachable_cron'),
+                        'position' => 1,
+                ]);
+                
+                $CI->app_menu->add_setup_children_item('cron', [
+                        'name'     => "Fresh Leads (NR)",
+                        'href'     => admin_url('cron/fresh_cron'),
+                        'position' => 2,
+                ]);
+                
+                 $CI->app_menu->add_setup_children_item('cron', [
+                        'name'     => "Daily Fresh Leads",
+                        'href'     => admin_url('cron/daily_fresh_cron'),
+                        'position' => 3,
+                ]);
+        }
 
         if (has_permission('settings', '', 'view')) {
                 $CI->app_menu->add_setup_menu_item('settings', [

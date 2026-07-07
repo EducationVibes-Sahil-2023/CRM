@@ -162,11 +162,27 @@ $category[] = array("id" => "2", "name" => "Upcoming");
                                 </div>
                             </div>
                         </div>
+                        <?php if(is_admin()){ ?>
+                        <div>
+                            <h4>Seminar Visits Update</h4>
+                            <?php 
+                             render_datatable(array( _l('Date Of Visit'), _l('No of Visitors'),_l('Place of Visit'), _l('Visit Type'),  _l('Lead type'),'Image','Address','Whatsapp Notificate','Action'), 'lead-visitor-update-table');
+                            ?>
+                        <hr>
+                        </div>
+                        <?php } ?>
+                        
                         <h4>Request Generate</h4>
                         <hr>
 
                         <?php
-                        render_datatable(array("Status", _l('Date Of Visit'), _l('Student Name'), "Contact no.", "Update Count", "Duration", _l('Place of Visit'), _l('Visit Type'), _l('Attendee'), "Assignee", _l('Lead type'), "Lead Status", "Lead Source", "Fb Form Name", "Created Date", "Updated Date", "connected date"), 'lead-visitor-genrate-table');
+                        if(!is_admin()){
+                               render_datatable(array("Status", _l('Date Of Visit'), _l('Student Name'), "Contact no.", "Update Count", "Duration", _l('Place of Visit'), _l('Visit Type'), _l('Attendee'), "Assignee", _l('Lead type'), "Lead Status", "Lead Source","Created Date", "Updated Date", "connected date"), 'lead-visitor-genrate-table');
+                        }
+                        else{
+                               render_datatable(array("Status", _l('Date Of Visit'), _l('Student Name'), "Contact no.", "Update Count", "Duration", _l('Place of Visit'), _l('Visit Type'), _l('Attendee'), "Assignee", _l('Lead type'), "Lead Status", "Lead Source", "Fb Form Name","Campaign","Adsset","Ads","term", "Created Date", "Updated Date", "connected date"), 'lead-visitor-genrate-table');
+                        }
+                     
                         ?>
                         <?php if (!is_admin()) { ?>
                             <h4>Request Received</h4>
@@ -211,6 +227,8 @@ $category[] = array("id" => "2", "name" => "Upcoming");
         <?php if (!is_admin()) { ?>
             initDataTable('.table-lead-visitor-request-table', admin_url + 'leads/table_lead_visitor/1', 'undefined', 'undefined', r, [0, 'desc']);
         <?php } ?>
+        
+         initDataTable('.table-lead-visitor-update-table', admin_url + 'leads/table_lead_visitor_update', 'undefined', 'undefined', r, [0, 'desc']);
     }
 
     $(document).ready(function() {
@@ -218,7 +236,7 @@ $category[] = array("id" => "2", "name" => "Upcoming");
         set_search_cities();
     })
 
-
+<?php if(is_admin()){ ?>
 document.getElementById("exportBtn").addEventListener("click", async () => {
     show_loader();
     try {
@@ -239,6 +257,7 @@ document.getElementById("exportBtn").addEventListener("click", async () => {
         alert("Export failed");
     }
 });
+<?php }?>
 
  <?php $staff_map = array_column($staff, 'full_name', 'staffid'); ?>
  
@@ -309,14 +328,14 @@ function exportToCSV(data) {
     const headers = [
         "Status","Date Of Visit","Student Name","Contact no.","Update Count",
         "Duration","Place of Visit","Visit Type","Attendee","Assignee",
-        "Lead type","Lead Status","Lead Source","Fb Form Name",
+        "Lead type","Lead Status","Lead Source","Fb Form Name","Campaign","Adsset","Ads","term",
         "Created Date","Updated Date","Connected Date"
     ];
 
     const keys = [
         "status","date_of_visit","student_name","phonenumber","update_count",
         "call_duration","location","visitor_type","assigned","created_by",
-        "lead_type","status_name","source_name","website",
+        "lead_type","status_name","source_name","website","utm_campaign_name","utm_campaign_name","utm_ads_name","utm_ads_name",
         "created_at","updated_at","lastcontact_date"
     ];
 
@@ -427,6 +446,13 @@ function secondsToHMS(s) {
             $('.table-lead-visitor-request-table tbody').empty();
             initDataTable('.table-lead-visitor-request-table', admin_url + 'leads/table_lead_visitor/1', 'undefined', 'undefined', r, [0, 'desc']);
         <?php } ?>
+        
+                 <?php if (is_admin()) { ?>
+                 
+                      $('.table-lead-visitor-update-table').DataTable().destroy();
+        $('.table-lead-visitor-update-table tbody').empty();
+        initDataTable('.table-lead-visitor-update-table', admin_url + 'leads/table_lead_visitor_update', 'undefined', 'undefined', r, [0, 'desc']);
+<?php } ?>
 
         $("#leadSum").html('');
         $(".leads-overview").hide();
@@ -560,4 +586,128 @@ function secondsToHMS(s) {
             filter_data();
         })
     }
+    
+function saveSeminar_Data(id, location, visitor_type, lead_type, date_of_visit)
+{
+    let formData = new FormData();
+
+    formData.append('id', id);
+    formData.append('location', location);
+    formData.append('visitor_type', visitor_type);
+    formData.append('lead_type', lead_type);
+    formData.append('date_of_visit', date_of_visit);
+
+    formData.append(
+        'seminar_address',
+        $('#visit_address_' + id).val() || ''
+    );
+
+    formData.append(
+        'whatsapp_notify',
+        $('#whatsapp_notify_' + id).val() || ''
+    );
+
+    let fileInput = $('#visit_image_' + id);
+
+    if (
+        fileInput.length &&
+        fileInput[0].files &&
+        fileInput[0].files.length > 0
+    ) {
+        formData.append(
+            'visit_image',
+            fileInput[0].files[0]
+        );
+    }
+    
+  let address = $('#visit_address_' + id).val().trim();
+let whatsappNotify = $('#whatsapp_notify_' + id).val();
+let imageInput = $('#visit_image_' + id);
+
+// Validate date
+if (!date_of_visit) {
+    alert_float('danger', 'Please select the date of visit.');
+    return false;
+}
+
+// Validate address
+if (!address) {
+    alert_float('danger', 'Please enter the seminar/visit address.');
+    $('#visit_address_' + id).focus();
+    return false;
+}
+
+// Validate WhatsApp notification
+if (!whatsappNotify) {
+    alert_float('danger', 'Please select the WhatsApp notification option.');
+    $('#whatsapp_notify_' + id).focus();
+    return false;
+}
+
+// Validate image
+if (
+    !imageInput.length ||
+    !imageInput[0].files ||
+    imageInput[0].files.length === 0
+) {
+    alert_float('danger', 'Please upload the visit image.');
+    return false;
+}
+
+
+
+    // CSRF Token
+    formData.append(csrfData.token_name, csrfData.hash);
+
+    $.ajax({
+        url: admin_url + 'leads/save_seminar_data',
+        type: 'POST',
+        data: formData,
+        processData: false,
+        contentType: false,
+        dataType: 'json',
+
+        beforeSend: function () {
+            $('.save-visit-row[data-id="' + id + '"]')
+                .addClass('disabled')
+                .prop('disabled', true);
+        },
+
+        success: function (response) {
+
+            if (response.success) {
+
+                alert_float('success', response.message);
+
+                // Refresh csrf token if returned
+                if (response.csrf_hash) {
+                    csrfData.hash = response.csrf_hash;
+                }
+
+            } else {
+                alert_float('danger', response.message);
+            }
+        },
+
+        error: function (xhr) {
+
+            let message = 'Something went wrong.';
+
+            if (
+                xhr.responseJSON &&
+                xhr.responseJSON.message
+            ) {
+                message = xhr.responseJSON.message;
+            }
+
+            alert_float('danger', message);
+        },
+
+        complete: function () {
+            $('.save-visit-row[data-id="' + id + '"]')
+                .removeClass('disabled')
+                .prop('disabled', false);
+        }
+    });
+}
 </script>

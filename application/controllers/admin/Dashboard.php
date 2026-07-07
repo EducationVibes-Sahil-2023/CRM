@@ -124,6 +124,19 @@ class Dashboard extends AdminController
               echo json_encode(array("status"=>1,"data"=>$data));
                die;
             }
+            else  if(!empty($_POST['summary_fresh']) && $_POST['summary_fresh'] == 1)
+            {
+                 $data =  $this->leads_model->leads_transfers_summary_fresh($_POST); 
+              echo json_encode(array("status"=>1,"data"=>$data));
+               die;
+            }
+            else if(!empty($_REQUEST['tbl']) && $_REQUEST['tbl'] == "fresh_table")
+            {
+                
+               $this->table('fresh_lead_transfer_dashboard');
+               
+            die();
+            }
             else{
             $this->table('not_reachable_transfer_leads');
             die();
@@ -136,6 +149,9 @@ class Dashboard extends AdminController
           $data["departments"] = $this->staff_model->staff_department();
         $this->load->view('admin/dashboard/leads_transfers', $data);
     }
+    
+    
+
     
     public function leads_assignation()
     {
@@ -182,7 +198,7 @@ class Dashboard extends AdminController
     
     public function get_daily_calls_tracker()
     {
-    // $this->load->driver('cache', array('adapter' => 'file'));
+    $this->load->driver('cache', array('adapter' => 'file'));
     
     // ✅ get date from POST (from your date picker)
     $from = $this->input->post('from');
@@ -262,6 +278,18 @@ public function getFollow_up_datatable()
      $data = $this->dashboard_model->getFollow_up_datatable();
         
         echo json_encode( $data ,true);
+}
+
+public function pt_tracker()
+{
+    $data =[];
+    $data['type']  = $this->leads_model->get_type();
+    $data['sources']  = $this->leads_model->get_source();
+    $data['statuses'] = $this->leads_model->get_status();
+    $data['office_location']  = $this->staff_model->office_location();
+    $data['staff_department']  = $this->staff_model->staff_department();
+    $data['staff']  =$this->staff_model->get('', ['active' => 1]);
+    $this->load->view('admin/dashboard/pt_tracker', $data);
 }
 
 

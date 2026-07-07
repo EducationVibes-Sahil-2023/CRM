@@ -154,6 +154,17 @@ $streets = json_encode(array_column($officeAddress, 'street'))??[];
                               <?php echo _l('lead_add_edit_notes'); ?>
                            </a>
                         </li>
+                        <?php if(is_admin()){ ?>
+<!--                        <li role="presentation">-->
+<!--    <a href="#lead_whatsapp"-->
+<!--       onclick="loadInitialMessage('whatsapp-feed','<?= $lead->phonenumber??'' ?>')"-->
+<!--       aria-controls="lead_whatsapp"-->
+<!--       role="tab"-->
+<!--       data-toggle="tab">-->
+<!--        Whatsapp-->
+<!--    </a>-->
+<!--</li>-->
+                        <?php } ?>
                         <!--  <li role="presentation">
             <a href="#lead_notes" aria-controls="lead_notes" role="tab" data-toggle="tab">
             <?php echo _l('lead_add_edit_notes'); ?>
@@ -263,6 +274,17 @@ $streets = json_encode(array_column($officeAddress, 'street'))??[];
                      <?php } ?>
                   </div>
                <?php } ?>
+               
+             <div role="tabpanel" class="tab-pane" id="lead_whatsapp">
+  <div class="panel_s no-shadow" style="padding:0">
+    <div id="whatsapp-feed" style="height:480px;overflow-y:auto"></div>
+    <!--<div class="wa-compose">-->
+    <!--  <input id="wa-feed-input" type="text" placeholder="Type a message"-->
+    <!--         onkeydown="if(event.key==='Enter')WA.send('wa-feed-input')">-->
+    <!--  <button onclick="WA.send('wa-feed-input')"><i class="fa fa-paper-plane"></i></button>-->
+    <!--</div>-->
+  </div>
+</div>
                <div role="tabpanel" class="tab-pane" id="lead_activity">
                   <div class="panel_s no-shadow">
                      <div class="activity-feed">
@@ -697,6 +719,14 @@ $streets = json_encode(array_column($officeAddress, 'street'))??[];
 
 
                      <div class="form-group col-md-12 text-right">
+                        <?php if (!empty($visitor_request->id) && in_array($visitor_request->status, [1, 3])) { 
+                        //  $notificationAlert = getLastEmailWhatsappDate("whatsapp", VISITOR_NOTIFICATION,"",$visitor_request->id);
+                         ?>
+                         <?= $notificationAlert  ?>
+                         <?php if(empty($notificationAlert) ){ ?>
+                         <!--<button type="button" class="btn btn-primary btn-xs" onclick="send_visitor_notification(this,<?= $visitor_request->id?>)"><i class="fa fa-whatsapp hide-client-type"></i> </button>-->
+                         <?php } ?>
+                         <?php } ?>
                         <label> &nbsp;</label> <?php
                                                 $button_text = !empty($visitor_request->id)
                                                    ? (is_admin() ? _l('Update NOW') : _l('Update NOW'))
@@ -1217,4 +1247,49 @@ var suggestions = <?=$streets??[]?>;
          }
       });
    }
+   
+   
+   
+async function send_visitor_notification(obj,visitorId) {
+    $(obj).hide();
+    show_loader();
+
+    try {
+
+        const response = await $.ajax({
+            url: "<?= base_url('admin/leads/whatsapp_notification_visitor_leads/') ?>" + visitorId,
+            type: "GET",
+            dataType: "json"
+        });
+
+        console.log(response);
+
+        if (response.success) {
+            alert_float("success", response.message);
+        } else {
+             $(obj).show();
+            alert_float("danger", response.message || "Failed to send WhatsApp message.");
+        }
+
+        return response;
+
+    } catch (error) {
+
+$(obj).show();
+        console.error("WhatsApp send error:", error);
+
+        alert_float(
+            "danger",
+            "An error occurred while sending the WhatsApp message."
+        );
+
+        return {
+            success: false,
+            message: "An error occurred while sending the WhatsApp message."
+        };
+
+    } finally {
+        hide_loader();
+    }
+}
 </script>

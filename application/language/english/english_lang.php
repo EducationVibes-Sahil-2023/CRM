@@ -3759,3 +3759,6 @@ $lang['client_app_config_add_heading']                = 'Add New Client Config';
 
 $lang['update_customer_failed_successfully'] = "Customer failed Update Data";
 
+$lang['fresh_lead_not_connected_notification']  = '%s (%s) from %s has not been contacted for %s Hour. Please call within the next %s to avoid reassignment.';
+$lang['fresh_lead_not_connected_notification_team_lead']  = 'Dear %s, the lead %s - %s (%s) from %s has not been contacted for %s hour. Please review and take the necessary action.';
+

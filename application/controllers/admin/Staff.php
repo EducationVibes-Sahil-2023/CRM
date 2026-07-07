@@ -179,6 +179,7 @@ if (array_key_exists('alternative_phonenumber', $postData)) {
             $data['department'] = !empty($this->input->post('department')) ? $this->input->post('department') : '';
             $data['whatsapp_status'] = !empty($this->input->post('whatsapp_status')) ? $this->input->post('whatsapp_status') : '';
             $data['emp_code'] = !empty($this->input->post('emp_code')) ? $this->input->post('emp_code') : '';
+            $data['is_counsoller'] = !empty($this->input->post('is_counsoller')) ? $this->input->post('is_counsoller') : 0;
 
             // if (!empty($data['emp_code'])) {
             //     $this->db->select('emp_code');

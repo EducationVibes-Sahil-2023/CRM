@@ -103,36 +103,71 @@ $select = [];
 
 $select = [
    "l.id as id",
-    "CASE
+   "CASE
     WHEN (
         GREATEST(
             IFNULL(DATE(l.lastupdate_date), '1970-01-01'),
             IFNULL((
                 SELECT MAX(DATE(n.dateadded))
                 FROM tblnotes n
-                WHERE n.rel_id = l.id 
+                WHERE n.rel_id = l.id
                   AND n.rel_type = 'lead'
             ), '1970-01-01')
         ) >= IFNULL((
             SELECT MAX(DATE(r.date))
             FROM tblreminders r
-            WHERE r.rel_id = l.id 
+            WHERE r.rel_id = l.id
               AND r.rel_type = 'lead'
         ), '1970-01-01')
-    ) THEN 3
+    )
+    THEN CONCAT(
+        '3 - ',
+        DATE_FORMAT(
+            IFNULL((
+                SELECT MAX(DATE(n.dateadded))
+                FROM tblnotes n
+                WHERE n.rel_id = l.id
+                  AND n.rel_type = 'lead'
+            ), l.lastupdate_date),
+            '%Y-%m-%d'
+        )
+    )
 
     WHEN (
         CURDATE() <= IFNULL((
             SELECT MAX(DATE(r.date))
             FROM tblreminders r
-            WHERE r.rel_id = l.id 
+            WHERE r.rel_id = l.id
               AND r.rel_type = 'lead'
         ), '1970-01-01')
-    ) THEN 2
+    )
+    THEN CONCAT(
+        '2 - ',
+        DATE_FORMAT(
+            IFNULL((
+                SELECT MAX(DATE(n.dateadded))
+                FROM tblnotes n
+                WHERE n.rel_id = l.id
+                  AND n.rel_type = 'lead'
+            ), l.lastupdate_date),
+            '%Y-%m-%d'
+        )
+    )
 
-    ELSE 1
+    ELSE CONCAT(
+        '1 - ',
+        DATE_FORMAT(
+            IFNULL((
+                SELECT MAX(DATE(n.dateadded))
+                FROM tblnotes n
+                WHERE n.rel_id = l.id
+                  AND n.rel_type = 'lead'
+            ), l.lastupdate_date),
+            '%Y-%m-%d'
+        )
+    )
 END AS followup_status",
-    "count(DISTINCT calls.id) AS update_count"];
+    "COALESCE(COUNT(DISTINCT calls.id), 0) AS update_count"];
     
     if(is_admin())
     {
@@ -244,7 +279,7 @@ $select = array_merge($select, [
 $finalSelect = [
    "Final.id as id",
     "Final.followup_status as followup_status",
-    "SUM(Final.update_count) as update_count"];
+    "COALESCE(SUM(Final.update_count), 0) as update_count"];
     if(is_admin()){
  $finalSelect[] ="Final.total_count";
  }  
@@ -363,7 +398,25 @@ if ($this->ci->input->post('source')) {
 }
 
 if ($this->ci->input->post('sub_status')) {
-    $where[] = " AND l.sub_status IN (" . implode(',', $this->ci->db->escape_str($this->ci->input->post('sub_status'))) . ") ";
+
+    $sub_status = (array) $this->ci->input->post('sub_status');
+
+    if (count($sub_status) === 1 && $sub_status[0] === '') {
+
+        $where[] = " AND (l.sub_status IS NULL OR l.sub_status ='') ";
+
+    } else {
+
+        $sub_status = array_filter($sub_status, function ($v) {
+            return $v !== '';
+        });
+
+        if (!empty($sub_status)) {
+            $escaped = array_map([$this->ci->db, 'escape'], $sub_status);
+            $where[] = " AND l.sub_status IN (" . implode(',', $escaped) . ") ";
+        }
+    }
+    
 }
 if ($this->ci->input->post('view_form')) {
     $websites = $this->ci->input->post('view_form');
@@ -422,6 +475,82 @@ if ($this->ci->input->post('last_update_date') || $this->ci->input->post('last_c
     if (!empty($this->ci->input->post('last_update_date'))) {
         $last_update_date = $this->ci->db->escape_str($this->ci->input->post('last_update_date'));
         array_push($where, ' AND l.lastupdate_date <= "' . $this->ci->db->escape_str($last_update_date) . '" ');
+        
+// array_push($where, "
+//     AND (
+//         CASE
+//             -- If both update date and note date are blank/null
+//             WHEN NULLIF(DATE(l.lastupdate_date), '0000-00-00') IS NULL
+//                  AND COALESCE(
+//                     (
+//                         SELECT MAX(DATE(n.dateadded))
+//                         FROM tblnotes n
+//                         WHERE n.rel_id = l.id
+//                         AND n.rel_type = 'lead'
+//                     ),
+//                     ''
+//                  ) = ''
+//             THEN DATE(l.dateadded)
+
+//             -- Otherwise take latest date
+//             ELSE GREATEST(
+//                 IFNULL(
+//                     NULLIF(DATE(l.lastupdate_date), '0000-00-00'),
+//                     '1000-01-01'
+//                 ),
+//                 IFNULL(
+//                     (
+//                         SELECT MAX(DATE(n.dateadded))
+//                         FROM tblnotes n
+//                         WHERE n.rel_id = l.id
+//                         AND n.rel_type = 'lead'
+//                     ),
+//                     '1000-01-01'
+//                 )
+//             )
+//         END <= DATE('" . $this->ci->db->escape_str($last_update_date) . "')
+//     )
+// ");
+        // if(is_admin())
+        // {
+        //     die;
+        // }
+//  array_push($where, "
+//     AND (
+//         CASE
+//             WHEN l.lastupdate_date IS NULL
+//                  AND (
+//                     SELECT MAX(n.dateadded)
+//                     FROM tblnotes n
+//                     WHERE n.rel_id = l.id
+//                     AND n.rel_type = 'lead'
+//                  ) IS NULL
+//             THEN 1
+
+//             WHEN IFNULL(DATE(l.lastupdate_date), '1000-01-01') >= IFNULL(
+//                 (
+//                     SELECT MAX(DATE(n.dateadded))
+//                     FROM tblnotes n
+//                     WHERE n.rel_id = l.id
+//                     AND n.rel_type = 'lead'
+//                 ),
+//                 '1000-01-01'
+//             )
+//             THEN IFNULL(DATE(l.lastupdate_date), '1000-01-01')
+
+//             ELSE IFNULL(
+//                 (
+//                     SELECT MAX(DATE(n.dateadded))
+//                     FROM tblnotes n
+//                     WHERE n.rel_id = l.id
+//                     AND n.rel_type = 'lead'
+//                 ),
+//                 '1000-01-01'
+//             )
+//         END <= '" . $this->ci->db->escape_str($last_update_date) . "'
+//     )
+// ");
+        
     }
 }
 
@@ -582,6 +711,7 @@ $otherLength = ($otherLength == 0)
     $otherLength = intval($otherLength);
    $sql ="";
    
+  
 if (empty($this->ci->input->post('assigned'))  && (is_admin() || $get_staff_user_id == 306 || $role == 3)) {
    
    $startLength =  $_POST['start'];
@@ -591,8 +721,8 @@ if (empty($this->ci->input->post('assigned'))  && (is_admin() || $get_staff_user
     }
    
  }
- 
- 
+ $Result_ =[];
+if((count($Result) < $_POST['length'] )) {
     $sql = "
 SELECT $final_select_query FROM ( 
    ( SELECT ".$select_query." FROM tblleads l LEFT JOIN tblcalls_activity_logs calls
@@ -627,6 +757,7 @@ WHERE l.lost = 0 AND l.junk = 0 and l.status!=33 $where_condition GROUP BY l.id 
     // $Result = $this->ci->db->query($sql)->result_array();
 
 $Result_ = $this->ci->db->query($sql)->result_array();
+}
 
 
 // if(is_admin())
@@ -664,6 +795,46 @@ if ($is_admin) {
 }
 
 foreach ($rResult as $aRow) {
+    
+//  $lastupdate_date = '';
+
+// Validate followup_status before explode
+$followupStatus = trim($aRow['followup_status'] ?? '');
+
+if (!empty($followupStatus) && strpos($followupStatus, ' - ') !== false) {
+    $parts = explode(' - ', $followupStatus, 2);
+
+    $aRow['followup_status'] = trim($parts[0] ?? '');
+    $lastupdate_date = trim($parts[1] ?? '');
+} else {
+    $aRow['followup_status'] = $followupStatus;
+    $lastupdate_date = '';
+}
+
+// // Validate first date
+// $date1 = 0;
+// if (!empty($aRow['lastupdate_date'])) {
+//     $timestamp = strtotime($aRow['lastupdate_date']);
+//     $date1 = ($timestamp !== false) ? $timestamp : 0;
+// }
+
+// // Validate second date
+// $date2 = 0;
+// if (!empty($lastupdate_date)) {
+//     $timestamp = strtotime($lastupdate_date);
+//     $date2 = ($timestamp !== false) ? $timestamp : 0;
+// }
+
+// // Set latest valid date or blank
+// if ($date1 > 0 || $date2 > 0) {
+//     $latestDate = max($date1, $date2);
+//     $aRow['lastupdate_date'] = date('Y-m-d', $latestDate);
+// } else {
+//     $aRow['lastupdate_date'] = '';
+// }
+    
+ 
+    // list($aRow['followup_status'], $aRow['lastupdate_date']) =  explode(' - ', $aRow['followup_status']);
 
     // $dates = [];
 
@@ -701,6 +872,8 @@ foreach ($rResult as $aRow) {
     // }
     // $row[]    = $col;
     
+    
+
    
      $col ='<span style="color:#fb3121;font-size: 16px;"><i class="fa fa-times-circle"></i></span>';
     if($aRow['followup_status'] == 3)

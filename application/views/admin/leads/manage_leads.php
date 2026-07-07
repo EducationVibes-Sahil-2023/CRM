@@ -460,7 +460,7 @@ $reference_name = $this->db
                                         <div class="ch-wrap" style="height:350px"><canvas id="hourlyChart"></canvas></div>
                                         </div>
                                         <div class="card graph-data col-md-6">
-                                        <div class="card-title">Call duration by lead status (minutes)</div>
+                                        <div class="card-title">Call duration by lead status (minutes) - Based on unique leads</div>
                                         <div class="legend" id="statusLegend"></div>
                                         <div class="ch-wrap" style="height:350px"><canvas id="statusChart"></canvas></div>
                                         </div>
@@ -1218,7 +1218,7 @@ $reference_name = $this->db
             </div>
          </div>
       </li>
-      <?php if (is_admin() || $role == 3) { ?>
+      
          <li class="">
             <div class="leads-filter-column">
                <div id="leads-filter-refrence">
@@ -1245,7 +1245,7 @@ $reference_name = $this->db
                </div>
             </div>
          </li>
-      <?php } ?>
+
       <li class="">
          <div id="from_date_right" data-from="from_date" data-to="to_date" class="date-filter form-control">
             <i class="fa fa-calendar"></i>
@@ -1395,102 +1395,71 @@ var lead_sub_status = <?= !empty($lead_sub_status) ? json_encode($lead_sub_statu
 
 function set_sub_status_leads()
 {
-    // console.log("=== set_sub_status() called ===");
-    
-    // ✅ Debug: Check if data exists
     if (!lead_sub_status || lead_sub_status.length === 0) {
-        // console.warn("⚠️ lead_sub_status is empty or undefined");
-        // console.log("lead_sub_status value:", lead_sub_status);
-    } else {
-        // console.log("✅ Data loaded:", lead_sub_status.length, "records");
-        // console.log("Sample data:", lead_sub_status[0]);
+        // optional debug
     }
-    
-    // ✅ Get multiple values (always array)
+
     let typeIds = $("#filter-right-side select#lead_type").val() || [];
     let statusIds = $("#filter-right-side select#view_status").val() || [];
-    
-    // console.log("Selected Lead Types:", typeIds);
-    // console.log("Selected Statuses:", statusIds);
-    
-    // ✅ Normalize (avoid number/string mismatch)
+
     typeIds = typeIds.map(String);
     statusIds = statusIds.map(String);
-    
+
     let $subStatus = $("#filter-right-side select#view_sub_status");
     $subStatus.empty();
-    
+
     let list = [];
-    
-    // ✅ CASE 1: Nothing selected → show ALL
+
+    // CASE 1: Nothing selected → show ALL
     if (typeIds.length === 0 && statusIds.length === 0) {
-        // console.log("📋 Case 1: Showing ALL sub statuses");
         list = lead_sub_status;
     }
-    
-    // ✅ CASE 2: Only lead_type selected
+
+    // CASE 2: Only lead_type selected
     else if (typeIds.length > 0 && statusIds.length === 0) {
-        // console.log("📋 Case 2: Filtering by lead_type only:", typeIds);
-        list = lead_sub_status.filter(item => 
+        list = lead_sub_status.filter(item =>
             typeIds.includes(String(item.lead_type))
         );
     }
-    
-    // ✅ CASE 3: Only status selected
+
+    // CASE 3: Only status selected
     else if (typeIds.length === 0 && statusIds.length > 0) {
-        // console.log("📋 Case 3: Filtering by status only:", statusIds);
-        list = lead_sub_status.filter(item => 
+        list = lead_sub_status.filter(item =>
             statusIds.includes(String(item.status_id))
         );
     }
-    
-    // ✅ CASE 4: Both selected
+
+    // CASE 4: Both selected
     else {
-        // console.log("📋 Case 4: Filtering by BOTH lead_type AND status");
-        // console.log("  Lead Types:", typeIds);
-        // console.log("  Statuses:", statusIds);
-        list = lead_sub_status.filter(item => 
+        list = lead_sub_status.filter(item =>
             typeIds.includes(String(item.lead_type)) &&
             statusIds.includes(String(item.status_id))
         );
     }
-    
-    // console.log("📊 Filtered results count:", list.length);
-    
-    // ❌ No data
+
+    // ✅ Add blank/default option always
+    $subStatus.append(`<option value="">Unknown Sub Status</option>`);
+
+    // No data found
     if (!list || list.length === 0) {
-        // console.warn("⚠️ No sub status found matching criteria");
-        $subStatus.append(`<option value="">No Sub Status Found</option>`);
         $subStatus.selectpicker('refresh');
         return;
     }
-    
-    // ✅ Unique by sub_status_id
+
+    // Unique by sub_status_id
     let unique = [...new Map(
         list.map(item => [item.sub_status_id, item])
     ).values()];
-    
-    // console.log("📊 Unique records after deduplication:", unique.length);
-    
-    // ✅ Default option
-    // $subStatus.append(`<option value="">Select Sub Status</option>`);
-    
-    // ✅ Populate dropdown
+
+    // Populate dropdown
     unique.forEach(item => {
-        // console.log(`  Adding option: ID=${item.sub_status_id}, Name=${item.name}`);
         $subStatus.append(
             `<option value="${item.sub_status_id}">${item.name}</option>`
         );
     });
-    
-    // console.log("✅ Sub status dropdown populated successfully");
-    
-    // ✅ Refresh selectpicker UI
-    $subStatus.selectpicker('refresh');
-    // console.log("✅ Selectpicker refreshed");
-    // console.log("=== set_sub_status() completed ===\n");
-}
 
+    $subStatus.selectpicker('refresh');
+}
 // ✅ Initial load with debug
 $(document).ready(function () {
     // console.log("🚀 Document ready - Initializing...");
@@ -2114,8 +2083,11 @@ function setCallGraph(rawData) {
       var time_condition = document.getElementById("time_condition").value;
       var time_minutes = document.getElementById("time_minutes").value;
      var reference_name = document.getElementById("reference_name")
-    ? document.getElementById("reference_name").value 
-    : '';
+    ? Array.from(document.getElementById("reference_name").selectedOptions)
+        .map(option => option.value)
+    : [];
+
+
     
     
 
@@ -2196,7 +2168,7 @@ if (totalCalls > 0) {
 $(".total-calls").text(totalCalls);
 $(".total-unique-calls").text(data.update_count || 0);
 $(".total-calls-avg").text(formatTime(avgSeconds));
-$(".total-calls-connect").text(answeredCalls + " (" + connectPercent.toFixed(2) + "%)");
+$(".total-calls-connect").text(answeredCalls + " (" + Math.round(connectPercent) + "%)");
 $(".total-calls-duration").text(data.call_count || 0);
 
             }

@@ -9,6 +9,7 @@ $apostille_visa_apostile_documents = get_orignal_document_list(0, 0, 0, 0, 0, 0,
 $apostille_vendors = get_vendor_list(1);
 $get_currencies = get_currencies();
 $get_currencies = array_column($get_currencies, null, 'id');
+$payment_mode = get_payment_mode();
 if (!is_array($apostille_documents)) {
     $apostille_documents = [];
 }
@@ -63,11 +64,14 @@ if (!is_postSale() && !is_admin()) {
                                 <th scope="col">Orignal Status</th>
                                 <th scope="col">Cost</th>
                                 <th scope="col">Currency</th>
+                                <th scope="col">Exchange Rate</th>
+                                <th scope="col">Total Amount</th>
                                 <th scope="col">Status</th>
                                 <th scope="col">Vendor</th>
                                 <th scope="col">Apply By Vendor</th>
                                 <th scope="col">Courier Date</th> <!-- Corrected "Courior" to "Courier" -->
                                 <th scope="col">Receiving Date</th>
+                                <th scope="col">Payment Mode</th>
                                 <th scope="col">Payment Date</th>
                                 <th scope="col">Created By</th>
                                 <th scope="col">Created Date</th>
@@ -104,12 +108,26 @@ if (!is_postSale() && !is_admin()) {
                                         <td><?= !empty($doc["original_received"]) ? $doc["original_received"] : '' ?></td>
                                         <td><?= !empty($doc["apostille_cost"]) ? $doc["apostille_cost"] : '' ?></td>
                                         <td><?= !empty($doc["currency_text"]) ? $doc["currency_text"] : '' ?></td>
+                                       <td><?= (!empty($doc["exchange_rate"]) && !empty($doc["apostille_cost"])) ? $doc["exchange_rate"] : '' ?></td>
+
+<td>
+<?php
+$cost = str_replace(',', '', $doc['apostille_cost']);
+$rate = !empty($doc['exchange_rate']) ? (float)$doc['exchange_rate'] : 1;
+
+echo is_numeric($cost)
+    ? number_format($rate * (float)$cost, 2, '.', '')
+    : $doc['apostille_cost'];
+?>
+</td>
                                         <td><?= !empty($doc["apostille_status"]) ? $doc["apostille_status"] : '' ?></td>
                                         <td><?= !empty($doc["vendor_name"]) ? $doc["vendor_name"] : '' ?></td>
                                         <td><?= !empty($doc["by_vendor"]) ? 'Yes' : 'No' ?></td>
                                         <td><?= !empty($doc["courier_date"]) ? $doc["courier_date"] : '' ?></td>
                                         <td><?= !empty($doc["apostille_received"]) & $doc["apostille_received"] != "0000-00-00"  ? $doc["apostille_received"] : '' ?></td>
+                                        <td><?= !empty($doc["payment_mode"]) ? $doc["payment_mode"] : '' ?></td>
                                         <td><?= !empty($doc["payment_date"]) && $doc["payment_date"] != "0000-00-00" ? $doc["payment_date"] : '' ?></td>
+                                        
                                         <td><?= !empty($doc["created_by"]) ? $doc["created_by"] : '' ?></td>
                                         <td><?= !empty($doc["created_at"]) ? $doc["created_at"] : '' ?></td>
 
@@ -248,6 +266,21 @@ if (!is_postSale() && !is_admin()) {
                                     <label>Payment Date</label>
                                     <?php echo render_input('apostille_payment_date', '', '', 'date'); ?>
                                 </div>
+                                    <div class="col-md-4">
+                        <label>Payment Mode</label>
+                        <?php
+                        array_unshift($payment_mode, array());
+                        echo render_select('apostile_payment_mode', $payment_mode, ['id', 'name'], '', [], [
+                           'data-width' => '100%',
+                           'data-none-selected-text' => 'Payment Mode',
+                           'data-actions-box' => true,
+                        ], [], 'no-mbot', '', false, 'payment_mode'); ?>
+                     </div>
+                                
+                                <div class="col-md-4">
+                                    <label>Exchange Rate</label>
+                                    <?php echo render_input('apostile_exchange_rate', '', '', 'number'); ?>
+                                </div>
                                 <div class="clearfix"></div>
                                 <div class="doc-cost-section">
 
@@ -316,8 +349,11 @@ if (!is_postSale() && !is_admin()) {
                 apostille_received,
                 payment_date,
                 apostille_cost,
-                currency_type
+                currency_type,
+                exchange_rate,
+                payment_mode_id
             } = apostileData;
+
 
             // Vendor dropdown
             if ($("#apostille_vendor").length) {
@@ -346,6 +382,14 @@ if (!is_postSale() && !is_admin()) {
             $("#apostille_date").val(courier_date || "");
             $("#apostille_receiving_date").val(apostille_received || "");
             $("#apostille_payment_date").val(payment_date || "");
+           if ($("#payment_mode").length) {
+    $("#payment_mode")
+        .val(payment_mode_id)
+        .selectpicker("refresh")
+        .trigger("change");
+}
+             $("#apostile_exchange_rate").val(exchange_rate || "");
+            
 
             setTimeout(() => {
                 // Cost input

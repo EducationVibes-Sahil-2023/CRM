@@ -29,6 +29,55 @@ function is_contact_email_verified($id = null)
     return !is_null($contact->email_verified_at);
 }
 
+function assignedClient($userid)
+{
+    $CI = &get_instance();
+
+    $CI->db->select('addedfrom');
+    $CI->db->where('userid', $userid);
+
+    $result = $CI->db->get(db_prefix() . 'clients')->row();
+
+    if (!$result) {
+        return '';
+    }
+
+    return !empty($result->addedfrom) ? $result->addedfrom : '';
+}
+
+function getfcmToken($staff_id)
+{
+    $CI = &get_instance();
+
+    $CI->db->select('fcm_token');
+    $CI->db->where('staffid', $staff_id);
+
+    $result = $CI->db->get(db_prefix() . 'staff')->row();
+
+    if (!$result) {
+        return '';
+    }
+
+    return !empty($result->fcm_token) ? $result->fcm_token : '';
+}
+
+function documentName($docId)
+{
+    $CI = &get_instance();
+
+    $CI->db->select('name');
+    $CI->db->where('id', $docId);
+
+    $result = $CI->db->get(db_prefix() . 'document_upload_type')->row();
+
+    if (!$result) {
+        return '';
+    }
+
+    return !empty($result->name) ? $result->name : '';
+}
+
+
 /**
  * Check whether the user disabled verification emails for contacts
  * @return boolean
@@ -348,7 +397,7 @@ function app_init_customer_profile_tabs()
         'name'     => _l('customer_tracker'),
         'icon'     => 'fa fa-map-marker',
         'view'     => 'admin/clients/groups/applicant_tracker',
-        'position' => 95,
+        'position' => 6,
         'leadType' => '2'
     ]);
     $CI->app_tabs->add_customer_profile_tab('quotation', [
@@ -1566,7 +1615,7 @@ function get_currencies()
         $currencies = $CI->db->select("*")
             ->from(db_prefix() . 'currencies')
             ->order_by("isdefault", "DESC")
-            ->order_by("id", "ASC")
+            ->order_by("name", "ASC")
             ->get()
             ->result_array();
 
@@ -2504,7 +2553,7 @@ function fly_status($id = "")
 function get_apostille_document_data($client_id, $visa_apostile = 0)
 {
     $CI = &get_instance();
-    $CI->db->select("r.*, 
+    $CI->db->select("r.*,r.payment_mode as payment_mode_id, 
         o.name, 
         v.name AS vendor_name, 
         CONCAT(s.firstname, ' ', s.lastname) AS created_by, 
@@ -2514,11 +2563,14 @@ function get_apostille_document_data($client_id, $visa_apostile = 0)
     WHEN r.received_status = 0 THEN 'Sent'     
     ELSE 'Pending'          
         END AS apostille_status,
-        IF(ord.id IS NULL, 'No', 'Yes') AS original_received")
+        IF(ord.id IS NULL, 'No', 'Yes') AS original_received,
+        p.name payment_mode
+        ")
         ->from(db_prefix() . 'orignal_documents o')
         ->join(db_prefix() . 'client_apostille_data r', "o.id = r.doc_id AND r.userid = {$client_id}", "LEFT")
         ->join(db_prefix() . 'orignal_documents_received ord', "ord.doc_id = o.id AND ord.userid = {$client_id}", "LEFT")
         ->join(db_prefix() . 'vendor_list v', "v.id = r.vendor_id", "LEFT")
+        ->join(db_prefix() . 'payment_mode p', "p.id = r.payment_mode", "LEFT")
         ->join(db_prefix() . 'staff s', "s.staffid = r.created_by", "LEFT");
 
     $CI->db->where("o.apostile_status", 1);
@@ -2543,11 +2595,14 @@ function get_translation_document_data($client_id, $visa_apostile = 0)
     WHEN r.received_status = 0 THEN 'Sent'     
     ELSE 'Pending'          
         END AS apostille_status,
-        IF(ord.id IS NULL, 'No', 'Yes') AS original_received")
+        IF(ord.id IS NULL, 'No', 'Yes') AS original_received,
+         p.name payment_mode
+        ")
         ->from(db_prefix() . 'orignal_documents o')
         ->join(db_prefix() . 'client_translation_data r', "o.id = r.doc_id AND r.userid = {$client_id}", "LEFT")
         ->join(db_prefix() . 'orignal_documents_received ord', "ord.doc_id = o.id AND ord.userid = {$client_id}", "LEFT")
         ->join(db_prefix() . 'vendor_list v', "v.id = r.vendor_id", "LEFT")
+        ->join(db_prefix() . 'payment_mode p', "p.id = r.payment_mode", "LEFT")
         ->join(db_prefix() . 'staff s', "s.staffid = r.created_by", "LEFT");
 
     $CI->db->where("o.translation_status", 1);
@@ -3837,4 +3892,630 @@ function check_neet_credentials($clientid, $select = 'id')
     $query = $CI->db->get();
 
     return $query->row()->id ?? 0; // returns single row
+}
+
+function clientsWhatsappAttachments_delete($clientid, $documentName)
+{
+    try {
+
+        $CI =& get_instance();
+
+        $table = db_prefix() . "clients_whatsaap_attachments_logs";
+
+        $CI->db->where('client_id', $clientid);
+        $CI->db->where('document_name', $documentName);
+        $CI->db->where('status', 1);
+
+        $result = $CI->db->update($table, [
+            'status' => 3
+        ]);
+
+        if (!$result) {
+            log_message('error', 'Failed to update WhatsApp attachment log. Client ID: '
+                . $clientid . ', Document: ' . $documentName);
+            return false;
+        }
+
+        return ($CI->db->affected_rows() > 0);
+
+    } catch (Exception $e) {
+
+        log_message(
+            'error',
+            'clientsWhatsappAttachments_delete Error: ' . $e->getMessage()
+            . ' | Client ID: ' . $clientid
+            . ' | Document: ' . $documentName
+        );
+
+        return false;
+    }
+}
+
+function clientsWhatsappAttachments($clientid, $stafid, $documentName,$documentURL="", $universityName ="" ,$whatsapp_template_id=14)
+{
+    $CI = &get_instance();
+    
+    
+   
+    if($clientid =='' || $stafid =='' || $documentName =='' || $documentURL=='' || $universityName =='')
+    {
+        return false;
+    }
+
+if(get_client($clientid)->client_type != 1)
+{
+    return false;
+}
+
+    
+ 
+
+    try {
+
+        $table = db_prefix() . "clients_whatsaap_attachments_logs";
+
+        /**
+         * VALIDATIONS
+         */
+        $clientid     = (int) $clientid;
+        $stafid       = (int) $stafid;
+        $documentName = trim($documentName);
+        $universityName = trim($universityName);
+
+        if ($clientid <= 0) {
+            throw new Exception("Invalid client id.");
+        }
+
+        if ($stafid <= 0) {
+            throw new Exception("Invalid staff id.");
+        }
+
+        if (empty($documentName)) {
+            throw new Exception("Document name is required.");
+        }
+
+        /**
+         * GET STAFF DETAILS
+         */
+        $staffInformation = $CI->staff_model->get($stafid);
+
+        if (!$staffInformation) {
+            throw new Exception("Staff record not found.");
+        }
+
+        /**
+         * GET CLIENT DETAILS
+         */
+        $clientInformation = get_client_name($clientid);
+
+        if (!$clientInformation) {
+            throw new Exception("Client record not found.");
+        }
+
+        $clientName = $clientInformation;
+
+        /**
+         * PREPARE DATA
+         */
+         
+         $admissionpreferences = $CI->clients_model->getAdmissionPreferences($clientid);
+         
+        $now = date("Y-m-d H:i:s");
+
+        $insertData = [
+            "client_id"          => $clientid,
+            "staff_id"           => $stafid,
+            "document_name"      => $documentName,
+            "staff_contact"      => $staffInformation->phonenumber ?? '',
+            "status"             => 1,
+            "datetime"           => date("Y-m-d H:i:s", strtotime("+1 hour")),
+            "whatsapp_template"  => $whatsapp_template_id,
+            "client_name"        => $clientName,
+            "university_name"    => !empty($universityName)
+    ? $universityName
+    : (!empty($admissionpreferences->primary_university)
+        ? $admissionpreferences->primary_university
+        : 'University'),
+            "documentURL" =>$documentURL
+        ];
+        
+        // if(is_admin())
+        // {
+        //     print_r($insertData);
+        //     die;
+        // }
+
+        /**
+         * CHECK EXISTING ACTIVE RECORD
+         */
+        $existingRecord = $CI->db
+            ->where('client_id', $clientid)
+            ->where('document_name', $documentName)
+            ->where('status', 1)
+            ->get($table)
+            ->row();
+
+        if ($existingRecord) {
+
+            $insertData["updated_at"] = $now;
+            $insertData["updated_by"] = get_staff_user_id();
+
+            $CI->db->where('id', $existingRecord->id);
+            $CI->db->update($table, $insertData);
+
+        } else {
+
+            $insertData["created_at"] = $now;
+            $insertData["created_by"] = get_staff_user_id();
+
+            $CI->db->insert($table, $insertData);
+        }
+
+        return true;
+
+    } catch (Exception $e) {
+
+        log_message(
+            'error',
+            'clientsWhatsappAttachments Error: ' . $e->getMessage()
+        );
+
+        return false;
+    }
+}
+
+function whatsaapAttachments_cron()
+{
+    $CI = &get_instance();
+
+    $table = db_prefix() . "clients_whatsaap_attachments_logs";
+    $now   = date("Y-m-d H:i:s");
+
+    // try {
+
+        /**
+         * GET PENDING RECORDS
+         */
+        $sendData = $CI->db
+            ->where('status', 1)
+            ->where('datetime <=', $now)
+            ->order_by('id', 'ASC')
+            ->limit(50) // batch process
+            ->get($table)
+            ->result();
+
+
+
+        if (empty($sendData)) {
+            return true;
+        }
+
+        foreach ($sendData as $row) {
+
+            try {
+
+                $clientid             = (int) $row->client_id;
+                $staff_id             = (int) $row->staff_id;
+                $document_name        = trim($row->document_name);
+                $whatsapp_template_id = (int) $row->whatsapp_template;
+
+                /**
+                 * GET CLIENT
+                 */
+                $clientInfo = get_client_name($clientid);
+
+                if (!$clientInfo) {
+                    throw new Exception("Client not found");
+                }
+
+
+                /**
+                 * GET STAFF
+                 */
+                $staff_data = $CI->db
+                    ->select("CONCAT(firstname,' ',lastname) as name,firstname,lastname,phonenumber,whatsapp_status")
+                    ->where('staffid', $staff_id)
+                    ->get(db_prefix() . 'staff')
+                    ->row();
+
+                if (!$staff_data) {
+                    throw new Exception("Staff not found");
+                }
+
+                // if ((int)$staff_data->whatsapp_status === 0) {
+                //     throw new Exception("WhatsApp disabled for staff");
+                // }
+            if (empty($staff_data->phonenumber)) {
+
+    $CI->db->where('id', $row->id);
+    $CI->db->update($table, [
+        "status" => 3,
+        "error_log"=>"Phone number does not exist",
+        "response" => json_encode([
+            "details"   => "Failed 1 message(s)",
+            "messages"  => "Phone number does not exist",
+            "errorCode" => 1
+        ])
+    ]);
+
+    continue;
+}
+
+                /**
+                 */
+                //  $staff_data->phonenumber ="9871159668";
+          
+                $contact_number =  "0091" . getLast10Digits($staff_data->phonenumber);
+                if (empty($contact_number)) {
+                    throw new Exception("Staff mobile missing");
+                }
+
+                /**
+                 * GET TEMPLATE
+                 */
+                $whatsapp = $CI->db
+                    ->where('status', 1)
+                    ->where('id', $whatsapp_template_id)
+                    ->get(db_prefix() . 'whatsapptemplates')
+                    ->row();
+
+                if (!$whatsapp) {
+                    throw new Exception("Template not found");
+                }
+
+                /**
+                 * VARIABLES
+                 */
+                $clientName = $clientInfo;
+
+                $variables = str_replace(
+                    ["{applicant_name}","{university_name}","{document_name}"],
+                    [
+                        $clientName,
+                        $row->university_name ?? '',
+                        $document_name,
+                    ],
+                    $whatsapp->variables_name
+                );
+
+               $parameters = [];
+
+if (!empty($variables)) {
+    $vars = explode(",", $variables);
+
+    foreach ($vars as $val) {
+        $val = trim($val);
+
+        if ($val !== '') {
+            $parameters[] = [
+                "type" => "text",
+                "text" => $val
+            ];
+        }
+    }
+}
+
+/**
+ * COMPONENTS
+ */
+$components = [];
+
+/**
+ * FIND MIME TYPE
+ */
+$mimeType = 'application/pdf';
+
+if (!empty($row->documentURL)) {
+
+    $filePath = FCPATH . ltrim($row->documentURL, '/');
+
+    if (file_exists($filePath)) {
+
+        if (function_exists('mime_content_type')) {
+            $detectedMime = mime_content_type($filePath);
+
+            if (!empty($detectedMime)) {
+                $mimeType = $detectedMime;
+            }
+        }
+
+    } else {
+
+        // fallback by extension
+        $extension = strtolower(pathinfo($row->documentURL, PATHINFO_EXTENSION));
+
+        $mimeList = [
+            'pdf'  => 'application/pdf',
+            'doc'  => 'application/msword',
+            'docx' => 'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
+            'xls'  => 'application/vnd.ms-excel',
+            'xlsx' => 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
+            'jpg'  => 'image/jpeg',
+            'jpeg' => 'image/jpeg',
+            'png'  => 'image/png',
+            'txt'  => 'text/plain'
+        ];
+
+        if (isset($mimeList[$extension])) {
+            $mimeType = $mimeList[$extension];
+        }
+    }
+
+    // $components[] = [
+    //     "type" => "header",
+    //     "parameters" => [
+    //             "type" => "document",
+    //             "media" => [
+    //                 "mediaName" => $document_name,
+    //                 "mediaUri"  => base_url($row->documentURL),
+    //                 "mimeType"  => $mimeType
+    //             ]
+    //     ]
+    // ];
+    
+    $components[] = [
+    "type" => "header",
+    "parameters" => [
+        [
+            "type" => "document",
+            "media" => [
+                "mediaName" => $document_name,
+                "mediaUri"  => base_url($row->documentURL),
+                "mimeType"  => $mimeType
+            ]
+        ]
+    ]
+];
+}
+
+
+if (!empty($parameters)) {
+    $components[] = [
+        "type" => "body",
+        "parameters" => $parameters
+    ];
+}
+
+/**
+ * PAYLOAD
+ */
+$payload = [
+    "messages" => [
+        "authentication" => [
+            "producttoken" => WHATSAAP_PRODUCT_KEY
+        ],
+        "msg" => [
+            [
+                "from" => WHATSAAP_FROM_NUMBER,
+                "to" => [
+                    [
+                        "number" => $contact_number
+                    ]
+                ],
+                "body" => [
+                    "type" => "auto",
+                    "content" => $whatsapp->template_name
+                ],
+                "allowedChannels" => ["WhatsApp"],
+                "richContent" => [
+                    "conversation" => [
+                        [
+                            "template" => [
+                                "whatsapp" => [
+                                    "namespace"    => WHATSAAP_NAMESPACE,
+                                    "element_name" => $whatsapp->template_name,
+                                    "language" => [
+                                        "policy" => "deterministic",
+                                        "code"   => $whatsapp->languageCode ?: 'en'
+                                    ],
+                                    "components" => $components
+                                ]
+                            ]
+                        ]
+                    ]
+                ]
+            ]
+        ]
+    ]
+];
+
+// echo "<pre>";
+// print_r($row);
+// print_r($payload);
+// die;
+  
+                /**
+                 * CURL SEND
+                 */
+                $curl = curl_init();
+
+    curl_setopt_array($curl, [
+        CURLOPT_URL => 'https://gw.messaging.cm.com/v1.0/message',
+        CURLOPT_RETURNTRANSFER => true,
+        CURLOPT_ENCODING => '',
+        CURLOPT_MAXREDIRS => 10,
+        CURLOPT_TIMEOUT => 10, // Set timeout to prevent hanging
+        CURLOPT_FOLLOWLOCATION => true,
+        CURLOPT_HTTP_VERSION => CURL_HTTP_VERSION_1_1,
+        CURLOPT_CUSTOMREQUEST => 'POST',
+        CURLOPT_POSTFIELDS => json_encode($payload),
+        CURLOPT_HTTPHEADER => ['Content-Type: application/json'],
+    ]);
+                $response = curl_exec($curl);
+                
+              
+                $error    = curl_error($curl);
+                
+
+                curl_close($curl);
+
+                if ($error) {
+                    throw new Exception($error);
+                }
+
+                /**
+                 * SUCCESS UPDATE
+                 */
+                $CI->db->where('id', $row->id);
+                $CI->db->update($table, [
+                    "status"      => 2, // sent
+                     "sent"  => date("Y-m-d H:i:s"),
+                    "response"    => $response
+                ]);
+
+                /**
+                 * LOG ENTRY
+                 */
+                $CI->db->insert(db_prefix() . 'whatsapp_email_logs', [
+                    "type"        => "whatsapp",
+                    "template_id" => $whatsapp_template_id,
+                    "staff_id"    => $staff_id,
+                    "datetime"    => date("Y-m-d H:i:s"),
+                    "contact"     => $contact_number
+                ]);
+
+            } catch (Exception $innerError) {
+
+                /**
+                 * FAILED RECORD ONLY
+                 */
+                $CI->db->where('id', $row->id);
+                $CI->db->update($table, [
+                    "status"      => 3, // failed
+                    "sent"  => date("Y-m-d H:i:s"),
+                    "error_log"   => $innerError->getMessage()
+                ]);
+
+                log_message('error', 'WhatsApp Cron Row Error: ' . $innerError->getMessage());
+            }
+        }
+
+        return true;
+
+    // } catch (Exception $e) {
+
+    //     log_message('error', 'WhatsApp Cron Main Error: ' . $e->getMessage());
+    //     return false;
+    // }
+}
+
+function get_universityList()
+{
+     $CI = &get_instance();
+    return $CI->s_db->query("SELECT co.name,c.country_name,u.university_name,c.id country_id,u.id university_id FROM course co left join countries c ON (co.id = c.segment_id) left join universities u on (u.country_id = c.id) where crm_not_showing!=1")->result_array();
+    
+}
+
+function ai_update_status()
+{
+    $sql = "select phonenumber,l.id,s.name,l.alternative_phonenumber,l.type from tblleads l join tblleads_status s on l.status = s.id WHERE ai_status = 1";
+    $CI = &get_instance();
+    return $CI->db->query($sql)->result_array();
+    
+    
+}
+function updateOriginalDocument($clientId, $docId,$deleteStatus=0)
+{
+    
+
+    ini_set('display_errors', 1);
+ini_set('display_startup_errors', 1);
+error_reporting(E_ALL);
+
+  $CI = &get_instance();
+$CI->load->model('clients_model');
+
+$document = $CI->db
+    ->select('
+        t.orignal_doc,
+        o.name AS document_name,
+        c.orignal_document_status,
+        ods.name AS status_text
+    ')
+    ->from(db_prefix() . 'document_upload_type t')
+    ->join(
+        db_prefix() . 'orignal_documents o',
+        'o.id = t.orignal_doc',
+        'inner'
+    )
+    ->join(
+        db_prefix() . 'clients c',
+        'c.userid = ' . (int)$clientId,
+        'inner'
+    )
+    ->join(
+        db_prefix() . 'orignal_document_status ods',
+        'ods.id = c.orignal_document_status',
+        'inner'
+    )
+    ->where('t.orignal_doc !=', 0)
+    ->where('t.id', $docId)
+    ->get()
+    ->row_array();
+
+if (empty($document) && empty($document['orignal_doc'])) {
+    return false;
+}
+
+if (
+    $deleteStatus == 1 &&
+    !empty($clientId) &&
+    !empty($document['orignal_doc'])
+) {
+    $CI->db
+        ->where('userid', $clientId)
+        ->where('doc_id', $document['orignal_doc'])
+        ->delete(db_prefix() . 'orignal_documents_received');
+        
+        return false;
+}
+    
+
+
+$existing = $CI->db
+    ->select('id')
+    ->from(db_prefix() . 'orignal_documents_received')
+    ->where('userid', $clientId)
+    ->where('doc_id', $document['orignal_doc'])
+    ->get()
+    ->row_array();
+
+$receivedId = !empty($existing) ? $existing['id'] : '';
+
+
+$updateData = [
+    'status' => $document['orignal_document_status'],
+
+    // Arrays required by update_documents()
+    'document_name'  => [$document['document_name']],
+    'locations_name' => ['Noida'],
+    'document_ids'   => [$document['orignal_doc']],
+    'locations'      => [1],
+
+    // Arrays because update_documents() uses $received_id[$key]
+     'received_id' => [$receivedId],
+
+    'status_text'      => $document['status_text'],
+    'in_transit'       => '',
+    'transit_location' => ''
+];
+
+ $CI->clients_model->update_documents(
+    $updateData,
+    $clientId
+);
+return true;
+}
+
+
+function scholarshipsData($universityName)
+{
+    $CI = &get_instance();
+
+     return $CI->db
+        ->where('university', $universityName)
+        ->get(db_prefix() . 'scholarships')
+        ->result_array();
+        
+    
 }

@@ -63,6 +63,8 @@ if (is_admin()) {
 }
 
 
+
+
 $result = data_tables_init($aColumns, $sIndexColumn, $sTable, $join, $where, []);
 
 $output  = $result['output'];

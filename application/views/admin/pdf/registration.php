@@ -85,9 +85,12 @@
                     <td class="company-info">
                         <img style="height:70px;" src="<?= base_url() ?>uploads/pdf_include/Brightroute_Logo_.png">
                         <br>
-                        First Floor, Office No 37, 38 and 39, 1184/4,<br>
-                        Shreenath Plaza, F C Road,<br>
-                        Shivaji Nagar, Pune, Maharashtra, 411005
+                        <!--First Floor, Office No 37, 38 and 39, 1184/4,<br>-->
+                        <!--Shreenath Plaza, F C Road,<br>-->
+                        <!--Shivaji Nagar, Pune, Maharashtra, 411005-->
+                        Office no 19, Second Floor,<br>
+                        Aditya Centeegra, FC road next to Mantri house,<br>
+                        Shivaji Nagar, Pune, Maharashtra, - 411005
                     </td>
                     <td></td>
                     <td style="text-align:right;">
@@ -135,7 +138,11 @@
                     <td><strong>Country</strong></td>
                 </tr>
                 <tr>
-                    <td><?= !empty($address) ? $address : '' ?></td>
+                   <td>
+<?= !empty($address)
+    ? nl2br(trim(strip_tags(html_entity_decode($address))))
+    : '' ?>
+</td>
                     <td><?= !empty($university_name) ? ucwords($university_name) : '' ?></td>
                     <td><?= !empty($country) ? ucwords($country) : '' ?></td>
                 </tr>

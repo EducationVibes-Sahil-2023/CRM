@@ -36,7 +36,7 @@ class hostel_management extends AdminController
             // $data["dropdown_country_university_selection"] = $this->s_db->query("SELECT co.name,c.country_name,u.university_name,c.id country_id,u.id university_id FROM course co left join countries c ON (co.id = c.segment_id) left join universities u on (u.country_id = c.id and u.status ='0') where co.id = 7  ")->result_array();
         }
 
-        $data["universities"] = array_column($this->s_db->query("SELECT co.name,c.country_name,u.university_name,c.id country_id,u.id university_id FROM course co left join countries c ON (co.id = c.segment_id) left join universities u on (u.country_id = c.id and u.status ='0') where co.id = 7  ")->result_array(), null, 'university_id');
+        $data["universities"] = array_column($this->Hostel_model->universitiesHostel(7), null, 'university_id');
         // $data["dropdown_country_university_selection"] = $this->s_db->query("SELECT co.name,c.country_name,u.university_name,c.id country_id,u.id university_id FROM course co left join countries c ON (co.id = c.segment_id) left join universities u on (u.country_id = c.id and u.status ='0') where co.id = 7  ")->result_array();
         $this->load->view('admin/hostel_management/' . $view_page . '_manage', $data);
     }
@@ -131,7 +131,7 @@ class hostel_management extends AdminController
         $data["getId"] = $id;
         $data['hostelData'] = $this->db->select('*')->where('id', $id)->get(db_prefix() . 'hostel_infomation')->row();
 
-        $data["universities"] = array_column($this->s_db->query("SELECT co.name,c.country_name,u.university_name,c.id country_id,u.id university_id FROM course co left join countries c ON (co.id = c.segment_id) left join universities u on (u.country_id = c.id and u.status ='0') where co.id = 7  ")->result_array(), null, 'university_id');
+        $data["universities"] = array_column($this->Hostel_model->universitiesHostel(7), null, 'university_id');
 
         $data["hostelRentelData"] = array_column($this->Hostel_model->get_hostel_rentInfo(), null, "hostel_id");
 

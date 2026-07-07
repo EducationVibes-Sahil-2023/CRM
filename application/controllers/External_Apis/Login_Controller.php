@@ -628,15 +628,27 @@ class Login_Controller extends Api_Controller
             }
 
             // Decode the ID (from JavaScript encodeURIComponent)
-            $id = rawurldecode($_REQUEST['id']);
-
+            $id = rawurldecode($_REQUEST['id'])??'';
+            $currentId = rawurldecode($_REQUEST['sheetId'])??'';
+            $sheetStatus = (int) rawurldecode($_REQUEST['sheetStatus'])??'';
+       
             // Validate the format of the ID (optional, example: only allow alphanumeric and comma)
             if (!preg_match('/^[a-zA-Z0-9,_\-]+$/', $id)) {
                 throw new Exception('Invalid sheet ID format.');
             }
 
             // Attempt to sync
-            $auto_sync = syncExcel_neww($id);
+            $auto_sync = syncExcel_neww($id,$currentId,$sheetStatus);
+         if(empty($auto_sync))
+         {
+             $response = [
+                    'status' => 0,
+                    'message' => 'Google sheet synced successfully.',
+                ];
+                echo $this->json_output([$response]);
+                die;
+                
+         }
 
             if ($auto_sync === true) {
                 $response = [
@@ -1151,16 +1163,22 @@ public function update_excelData()
 
                             $updateStatus = [
 
-                                'status' => $form->lead_status,
+                                'status' => 33??$form->lead_status,
                                 'last_status_change' => date("Y-m-d"),
-                                'lastcontact' => date("Y-m-d h:i:s"),
-                                'dateassigned' => date("Y-m-d h:i:s"),
+                                
+                                // 'lastcontact' => date("Y-m-d h:i:s"),
+                                // 'dateassigned' => date("Y-m-d h:i:s"),
                             ];
+                            
+                            $updateStatus['upcomming_date'] = date('Y-m-d H:i:s');
+                            $updateStatus['upcomming_count'] = ($duplicateLead->upcomming_count ?? 1) + 1;
 
                             if (!empty($post_data["website"])) {
                                 $updateStatus['website'] = $post_data["website"];
                             }
-
+ if (!empty($post_data["ai_status"])) {
+                                $updateStatus['ai_status'] = $post_data["ai_status"];
+                            }
 
                             $regular_fields = [];
                             $custom_fields  = [];
@@ -1395,6 +1413,10 @@ public function update_excelData()
                     $regular_fields['dateadded']    = date('Y-m-d H:i:s');
                     $regular_fields['from_form_id'] = $form->id;
                     $regular_fields['is_public']    = $form->mark_public;
+                    
+                     if (!empty($post_data["ai_status"])) {
+                                $regular_fields['ai_status'] = $post_data["ai_status"];
+                            }
 
                     $this->db->insert(db_prefix() . 'leads', $regular_fields);
                     $lead_id = $this->db->insert_id();
@@ -1565,14 +1587,204 @@ public function transfer_whatsapp_notification()
 //     }
 // }
 
-public function tbl_call_sync()
-{
-    $staff_data_ =   $this->Api_Model->getdata(db_prefix() . "staff", array("staffid" => $this->staffId));
+// public function tbl_call_sync()
+// {
+//     $staff_data_ =   $this->Api_Model->getdata(db_prefix() . "staff", array("staffid" => $this->staffId));
     
     
                 
-    try {
+//     try {
 
+//         // Allow only POST request
+//         if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
+//             return $this->output
+//                 ->set_status_header(405)
+//                 ->set_content_type('application/json')
+//                 ->set_output(json_encode([
+//                     'status'  => false,
+//                     'message' => 'Invalid request method. Only POST allowed.'
+//                 ]));
+//         }
+
+//         // Get POST data
+//         $form_data = $this->input->post();
+        
+
+
+//         // if (empty($postData)) {
+//         //     return $this->output
+//         //         ->set_status_header(400)
+//         //         ->set_content_type('application/json')
+//         //         ->set_output(json_encode([
+//         //             'status'  => false,
+//         //             'message' => 'No data received.'
+//         //         ]));
+//         // }
+
+//         // Convert to JSON
+//         $data = json_encode($form_data);
+        
+   
+//       if (!empty($form_data["type"]) && $form_data["type"] == 2 && !empty($form_data["formData"])) {
+
+//     $tbl = db_prefix() . "calls_activity_logs";
+//     $form_data_array_temp = [];
+
+//     // ✅ Get SIMs from root level
+//     $sim1_main = !empty($form_data["sim1"]) ? $form_data["sim1"] : '';
+//     $sim2_main = !empty($form_data["sim2"]) ? $form_data["sim2"] : '';
+ 
+
+//     foreach ($form_data["formData"] as $form_d) {
+
+//         $type = 2;
+//           $simnumber = !empty($form_d["simnumber"]) ? $form_d["simnumber"] : '';
+//     $simStatus = !empty($form_d["simStatus"]) ? $form_d["simStatus"] : '';
+
+//         // ✅ Safe call assignee
+//         $callassignee = !empty($staff_data_["data"][0]["phonenumber"])
+//             ? $staff_data_["data"][0]["phonenumber"]
+//             : (!empty($form_d["callassignee"]) ? $form_d["callassignee"] : '');
+
+//         // ✅ Normalize numbers
+//         $phonenumber = !empty($form_d["phonenumber"]) 
+//             ? substr(preg_replace('/\D/', '', $form_d["phonenumber"]), -10) 
+//             : '';
+
+//         $callassignee = !empty($callassignee) 
+//             ? substr(preg_replace('/\D/', '', $callassignee), -10) 
+//             : '';
+
+//         // ✅ Other fields
+//         $call_status   = !empty($form_d["form-cf-13"]) ? $form_d["form-cf-13"] : 'Not Found';
+//         $calls_type    = !empty($form_d["calls_type"]) ? $form_d["calls_type"] : '';
+//         $call_duration = !empty($form_d["call_duration"]) ? $form_d["call_duration"] : 0;
+
+//         // ✅ Time conversion
+//         $call_start = !empty($form_d["startdate_time"]) 
+//             ? strtotime($form_d["startdate_time"]) 
+//             : null;
+
+//         $call_end = !empty($form_d["enddate_time"]) 
+//             ? strtotime($form_d["enddate_time"]) 
+//             : null;
+
+//         // ❌ Skip invalid records
+//         if (empty($phonenumber)) {
+//             continue;
+//         }
+
+//         // ✅ Build array
+//         $form_data_array_temp[] = [
+//             "staffid"        => !empty($this->staffId) ? (int)$this->staffId : 0,
+//             "staff_contact"  => $callassignee,
+//             "contact"        => $phonenumber,
+//             "call_status"    => $call_status,
+//             "calls_source"   => $type,
+//             "calls_type"     => $calls_type,
+//             "duration"       => $call_duration,
+//             "call_start"     => $call_start,
+//             "call_end"       => $call_end,
+//             "datetime"       => date('Y-m-d H:i:s'),
+//             "sim1"           => $sim1_main,
+//             "sim2"           => $sim2_main,
+//             "simnumber"           => $simnumber,
+//              "simstatus"           => $simStatus
+//         ];
+//     }
+
+//     // ✅ Insert data
+//     if (!empty($form_data_array_temp)) {
+
+//         $this->load->model('Leads_model');
+
+//         $response = $this->Api_Model->update_call_data_bulk_temp_new(
+//             $form_data_array_temp
+//         );
+        
+//         if ($response['status']) {
+//         return $this->output
+//         ->set_status_header(200)
+//         ->set_content_type('application/json')
+//         ->set_output(json_encode($response));
+//         } else {
+//         return $this->output
+//         ->set_status_header(400)
+//         ->set_content_type('application/json')
+//         ->set_output(json_encode($response));
+//         }
+
+//     } else {
+
+//         // $response = [
+//         //     "status" => 0,
+//         //     "message" => "No valid call data found"
+//         // ];
+        
+//          return $this->output
+//             ->set_status_header(404)
+//             ->set_content_type('application/json')
+//             ->set_output(json_encode([
+//                 'status'  => false,
+//                 'message' => 'No valid call data found',
+//                 'error'   => $e->getMessage()
+//             ]));
+//     }
+
+// } else {
+
+//     return $this->output
+//         ->set_status_header(400)
+//         ->set_content_type('application/json')
+//         ->set_output(json_encode([
+//             'status'  => false,
+//             'message' => 'Invalid Data'
+//         ]));
+// }
+
+//         // Insert into DB
+//         $insert = $this->Api_Model->insert_data(
+//             db_prefix() . '_call_sync',
+//             [
+//                 'created_at' => date('Y-m-d H:i:s'),
+//                 'data'       => $data
+//             ]
+//         );
+
+//         if (!$insert) {
+//             throw new Exception('Database insert failed');
+//         }
+
+//         // Success response
+//         return $this->output
+//          ->set_status_header(400)
+//             ->set_content_type('application/json')
+//             ->set_output(json_encode([
+//                 'status'  => true,
+//                 'message' => 'Data synced successfully',
+//                 'data'=> json_encode($form_data)
+//             ]));
+
+//     } catch (Exception $e) {
+
+//         log_message('error', 'Call Sync API Error: ' . $e->getMessage());
+
+//         return $this->output
+//             ->set_status_header(500)
+//             ->set_content_type('application/json')
+//             ->set_output(json_encode([
+//                 'status'  => false,
+//                 'message' => 'Server error',
+//                 'error'   => $e->getMessage()
+//             ]));
+//     }
+// }
+
+public function tbl_call_sync()
+{
+    $staff_data_ = $this->Api_Model->getdata(db_prefix() . "staff", array("staffid" => $this->staffId));
+
+    try {
         // Allow only POST request
         if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
             return $this->output
@@ -1586,167 +1798,146 @@ public function tbl_call_sync()
 
         // Get POST data
         $form_data = $this->input->post();
-        
-
-
-        // if (empty($postData)) {
-        //     return $this->output
-        //         ->set_status_header(400)
-        //         ->set_content_type('application/json')
-        //         ->set_output(json_encode([
-        //             'status'  => false,
-        //             'message' => 'No data received.'
-        //         ]));
-        // }
 
         // Convert to JSON
         $data = json_encode($form_data);
-        
-   
-       if (!empty($form_data["type"]) && $form_data["type"] == 2 && !empty($form_data["formData"])) {
 
-    $tbl = db_prefix() . "calls_activity_logs";
-    $form_data_array_temp = [];
+        // ✅ API config (pulled from staff record; adjust keys to your schema)
+        $endpoint = CALLING_URL??'';
+        $apiKey   = CALLING_KEY??'';
 
-    // ✅ Get SIMs from root level
-    $sim1_main = !empty($form_data["sim1"]) ? $form_data["sim1"] : '';
-    $sim2_main = !empty($form_data["sim2"]) ? $form_data["sim2"] : '';
- 
+        if (!empty($form_data["type"]) && $form_data["type"] == 2 && !empty($form_data["formData"])) {
+            $tbl = db_prefix() . "calls_activity_logs";
+            $form_data_array_temp = [];
+            $form_data_array_api  = [];
 
-    foreach ($form_data["formData"] as $form_d) {
+            // ✅ Get SIMs from root level
+            $sim1_main = !empty($form_data["sim1"]) ? $form_data["sim1"] : '';
+            $sim2_main = !empty($form_data["sim2"]) ? $form_data["sim2"] : '';
 
-        $type = 2;
-           $simnumber = !empty($form_d["simnumber"]) ? $form_d["simnumber"] : '';
-    $simStatus = !empty($form_d["simStatus"]) ? $form_d["simStatus"] : '';
+            foreach ($form_data["formData"] as $form_d) {
+                $type = 2;
 
-        // ✅ Safe call assignee
-        $callassignee = !empty($staff_data_["data"][0]["phonenumber"])
-            ? $staff_data_["data"][0]["phonenumber"]
-            : (!empty($form_d["callassignee"]) ? $form_d["callassignee"] : '');
+                $simnumber   = !empty($form_d["simnumber"]) ? $form_d["simnumber"] : '';
+                $simStatus   = !empty($form_d["simStatus"]) ? $form_d["simStatus"] : '';
+                $callingSim  = !empty($form_d["callingSim"]) ? $form_d["callingSim"] : '';
 
-        // ✅ Normalize numbers
-        $phonenumber = !empty($form_d["phonenumber"]) 
-            ? substr(preg_replace('/\D/', '', $form_d["phonenumber"]), -10) 
-            : '';
+                // ✅ Safe call assignee
+                $callassignee = !empty($staff_data_["data"][0]["phonenumber"])
+                    ? $staff_data_["data"][0]["phonenumber"]
+                    : (!empty($form_d["callassignee"]) ? $form_d["callassignee"] : '');
 
-        $callassignee = !empty($callassignee) 
-            ? substr(preg_replace('/\D/', '', $callassignee), -10) 
-            : '';
+                // ✅ Normalize numbers
+                $phonenumber = !empty($form_d["phonenumber"])
+                    ? substr(preg_replace('/\D/', '', $form_d["phonenumber"]), -10)
+                    : '';
+                $callassignee = !empty($callassignee)
+                    ? substr(preg_replace('/\D/', '', $callassignee), -10)
+                    : '';
 
-        // ✅ Other fields
-        $call_status   = !empty($form_d["form-cf-13"]) ? $form_d["form-cf-13"] : 'Not Found';
-        $calls_type    = !empty($form_d["calls_type"]) ? $form_d["calls_type"] : '';
-        $call_duration = !empty($form_d["call_duration"]) ? $form_d["call_duration"] : 0;
+                // ✅ Other fields
+                $call_status   = !empty($form_d["form-cf-13"]) ? $form_d["form-cf-13"] : 'Not Found';
+                $calls_type    = !empty($form_d["calls_type"]) ? $form_d["calls_type"] : '';
+                $call_duration = !empty($form_d["call_duration"]) ? $form_d["call_duration"] : 0;
 
-        // ✅ Time conversion
-        $call_start = !empty($form_d["startdate_time"]) 
-            ? strtotime($form_d["startdate_time"]) 
-            : null;
+                // ✅ Time conversion (unix timestamps)
+                $call_start = !empty($form_d["startdate_time"]) ? strtotime($form_d["startdate_time"]) : null;
+                $call_end   = !empty($form_d["enddate_time"])   ? strtotime($form_d["enddate_time"])   : null;
 
-        $call_end = !empty($form_d["enddate_time"]) 
-            ? strtotime($form_d["enddate_time"]) 
-            : null;
+                // ❌ Skip invalid records
+                if (empty($phonenumber)) {
+                    continue;
+                }
 
-        // ❌ Skip invalid records
-        if (empty($phonenumber)) {
-            continue;
-        }
+                // ✅ Build array for local DB
+                $form_data_array_temp[] = [
+                    "staffid"       => !empty($this->staffId) ? (int)$this->staffId : 0,
+                    "staff_contact" => $callassignee,
+                    "contact"       => $phonenumber,
+                    "call_status"   => $call_status,
+                    "calls_source"  => $type,
+                    "calls_type"    => $calls_type,
+                    "duration"      => $call_duration,
+                    "call_start"    => $call_start,
+                    "call_end"      => $call_end,
+                    "datetime"      => date('Y-m-d H:i:s'),
+                    "sim1"          => $sim1_main,
+                    "sim2"          => $sim2_main,
+                    "simnumber"     => $simnumber,
+                    "simstatus"     => $simStatus
+                ];
 
-        // ✅ Build array
-        $form_data_array_temp[] = [
-            "staffid"        => !empty($this->staffId) ? (int)$this->staffId : 0,
-            "staff_contact"  => $callassignee,
-            "contact"        => $phonenumber,
-            "call_status"    => $call_status,
-            "calls_source"   => $type,
-            "calls_type"     => $calls_type,
-            "duration"       => $call_duration,
-            "call_start"     => $call_start,
-            "call_end"       => $call_end,
-            "datetime"       => date('Y-m-d H:i:s'),
-            "sim1"           => $sim1_main,
-            "sim2"           => $sim2_main,
-            "simnumber"           => $simnumber,
-             "simstatus"           => $simStatus
-        ];
-    }
+                // ✅ Build array for external API
+                // NOTE: $call_start/$call_end are already unix timestamps here,
+                // so format them with date() directly (do NOT strtotime() again).
+                $form_data_array_api[] = [
+                    'contact'       => $phonenumber ?: '',
+                    'staff_contact' => $callassignee ?: '',
+                    'type'          => (($calls_type ?: 0) == 1) ? 'incoming' : 'outgoing',
+                    'source'        => 'phone',
+                    'status'        => strtoupper($call_status ?: ''),
+                    'duration'      => (int)($call_duration ?: 0),
+                    'call_start'    => !empty($call_start) ? date('Y-m-d H:i:s', $call_start) : '',
+                    'call_end'      => !empty($call_end)   ? date('Y-m-d H:i:s', $call_end)   : '',
+                    'sim1'          => $sim1_main ?: '',
+                    'sim2'          => $sim2_main ?: '',
+                    'calling_sim'   => strtolower($callingSim ?: ''),
+                    'sim_status'    => strtolower($simStatus ?: ''),
+                    'calling_date'  => !empty($call_start) ? date('Y-m-d', $call_start) : '',
+                ];
+            }
 
-    // ✅ Insert data
-    if (!empty($form_data_array_temp)) {
+            // ✅ Insert data into local DB
+            if (!empty($form_data_array_temp)) {
+                $this->load->model('Leads_model');
+                $response = $this->Api_Model->update_call_data_bulk_temp_new($form_data_array_temp);
 
-        $this->load->model('Leads_model');
+                // ✅ Push each record to the external API (only if enabled for this staff)
+                if (!empty($form_data_array_api)
+                    && !empty($staff_data_["data"][0]['apiCallStatus'])
+                    && $staff_data_["data"][0]['apiCallStatus'] == 1
+                    && !empty($endpoint)) {
+                    foreach ($form_data_array_api as $call) {
+                        try {
+                            sendCallData($endpoint, $apiKey, $call);
+                        } catch (Exception $apiEx) {
+                            // Don't fail the whole sync if one push fails
+                            log_message('error', 'sendCallData failed: ' . $apiEx->getMessage());
+                        }
+                    }
+                }
 
-        $response = $this->Api_Model->update_call_data_bulk_temp_new(
-            $form_data_array_temp
-        );
-        
-        if ($response['status']) {
-        return $this->output
-        ->set_status_header(200)
-        ->set_content_type('application/json')
-        ->set_output(json_encode($response));
+                if ($response['status']) {
+                    return $this->output
+                        ->set_status_header(200)
+                        ->set_content_type('application/json')
+                        ->set_output(json_encode($response));
+                } else {
+                    return $this->output
+                        ->set_status_header(400)
+                        ->set_content_type('application/json')
+                        ->set_output(json_encode($response));
+                }
+            } else {
+                return $this->output
+                    ->set_status_header(404)
+                    ->set_content_type('application/json')
+                    ->set_output(json_encode([
+                        'status'  => false,
+                        'message' => 'No valid call data found'
+                    ]));
+            }
         } else {
-        return $this->output
-        ->set_status_header(400)
-        ->set_content_type('application/json')
-        ->set_output(json_encode($response));
+            return $this->output
+                ->set_status_header(400)
+                ->set_content_type('application/json')
+                ->set_output(json_encode([
+                    'status'  => false,
+                    'message' => 'Invalid Data'
+                ]));
         }
-
-    } else {
-
-        // $response = [
-        //     "status" => 0,
-        //     "message" => "No valid call data found"
-        // ];
-        
-         return $this->output
-            ->set_status_header(404)
-            ->set_content_type('application/json')
-            ->set_output(json_encode([
-                'status'  => false,
-                'message' => 'No valid call data found',
-                'error'   => $e->getMessage()
-            ]));
-    }
-
-} else {
-
-    return $this->output
-        ->set_status_header(400)
-        ->set_content_type('application/json')
-        ->set_output(json_encode([
-            'status'  => false,
-            'message' => 'Invalid Data'
-        ]));
-}
-
-        // Insert into DB
-        $insert = $this->Api_Model->insert_data(
-            db_prefix() . '_call_sync',
-            [
-                'created_at' => date('Y-m-d H:i:s'),
-                'data'       => $data
-            ]
-        );
-
-        if (!$insert) {
-            throw new Exception('Database insert failed');
-        }
-
-        // Success response
-        return $this->output
-         ->set_status_header(400)
-            ->set_content_type('application/json')
-            ->set_output(json_encode([
-                'status'  => true,
-                'message' => 'Data synced successfully',
-                'data'=> json_encode($form_data)
-            ]));
-
     } catch (Exception $e) {
-
         log_message('error', 'Call Sync API Error: ' . $e->getMessage());
-
         return $this->output
             ->set_status_header(500)
             ->set_content_type('application/json')
@@ -1809,15 +2000,52 @@ public function google_qualified_leads()
 
 public function check_lead_auto_transfer_lead()
 {
+//      ini_set('display_errors', 1);
+// ini_set('display_startup_errors', 1);
+// error_reporting(E_ALL);
+
     // return true;
+    
+     $currentTime = date('H:i');
+    $currentDay  = date('l'); // Sunday, Monday, etc.
+    $currentDate = date('Y-m-d');
+    
+     $startTime = '10:00';
+    $endTime   = '18:00';
+    
+     // Define holidays (example array - you can load from DB)
+    $holidays = holiday_list();
+    // Check conditions
+    if (
+        $currentTime >= $startTime &&
+        $currentTime <= $endTime &&
+        $currentDay != 'Sunday' &&
+        !in_array($currentDate, $holidays)
+    ) {
+        
     $this->load->model('Leads_model');
     $this->Leads_model->check_lead_auto_transfer_lead();
+    }
+    else {
+        // echo "not";
+        // Optional: log or return message
+        log_message('info', 'Auto assign skipped due to time/day/holiday restriction');
+    }
     
 }
 
 public function weekend_lead_assignation()
 {
-    return true;
+    
+//     ini_set('display_errors', 1);
+// ini_set('display_startup_errors', 1);
+// error_reporting(E_ALL);
+     $this->load->driver('cache');
+     
+       $staff_data_ =   $this->Api_Model->getdata(db_prefix() . "staff", array("staffid" => 170));
+       echo "<pre>";
+       print($staff_data_);
+    // return true;
     die;
     $this->load->model('Leads_model');
     $this->Leads_model->weekend_lead_assignation();
@@ -1826,18 +2054,24 @@ public function weekend_lead_assignation()
 public function check_lead_auto_assignation_lead()
 {
     
-
+  ini_set('display_errors', 1);
+ini_set('display_startup_errors', 1);
+error_reporting(E_ALL);
 
     $currentTime = date('H:i');
-    $currentDay  = date('l'); // Sunday, Monday, etc.
+    $currentDay  = date('l'); // Sunday, Monday, etc.php
     $currentDate = date('Y-m-d');
 
     // Define allowed time range
     $startTime = '13:30';
-    $endTime   = '14:00';
+    $endTime   = '14:30';
+    
+     $startTime_fresh = '14:30';
+    $endTime_fresh   = '15:00';
 
     // Define holidays (example array - you can load from DB)
     $holidays = holiday_list();
+
     // Check conditions
     if (
         $currentTime >= $startTime &&
@@ -1847,7 +2081,18 @@ public function check_lead_auto_assignation_lead()
     ) {
         $this->load->model('Leads_model');
         $this->Leads_model->check_lead_auto_assignation_lead();
-    } else {
+    }
+    else  if (
+        $currentTime >= $startTime_fresh &&
+        $currentTime <= $endTime_fresh &&
+        $currentDay != 'Sunday' &&
+        !in_array($currentDate, $holidays)
+    ) {
+        $this->load->model('Leads_model');
+        $this->Leads_model->check_lead_auto_assignation_lead(1);
+        
+    }
+    else {
         // echo "not";
         // Optional: log or return message
         log_message('info', 'Auto assign skipped due to time/day/holiday restriction');
@@ -1861,9 +2106,99 @@ public function check_lead_auto_assignation_lead()
 
 public function weekend_lead_assignation_auto()
 {
-    
-    return true;
-    die;
+    ini_set('display_errors', 1);
+ini_set('display_startup_errors', 1);
+error_reporting(E_ALL);
+
+$this->load->library('Fcm_lib');
+$this->load->driver('cache', ['adapter' => 'file']);
+
+/* Staff ID */
+$staffId = 390;
+
+/* Registered SIM Numbers */
+$sim1_main = '7410760053';   // Primary
+$sim2_main = '97300029360';  // Secondary
+
+/* Cache Key */
+$cacheKey = 'staff_' . $staffId;
+
+/* Get Staff Data */
+$staff_data_ = $this->cache->get($cacheKey);
+
+if (!$staff_data_) {
+    $staff_data_ = $this->Api_Model->getdata(
+        db_prefix() . 'staff',
+        ['staffid' => $staffId]
+    );
+
+    $this->cache->save($cacheKey, $staff_data_, 300);
+}
+
+/* Default Values */
+$primaryContact   = '';
+$secondaryContact = '';
+$fcmToken         = '';
+
+if (!empty($staff_data_['data'][0])) {
+    $row = $staff_data_['data'][0];
+
+    $primaryContact   = $row['phonenumber'] ?? '';
+    $secondaryContact = $row['alternate_number'] ?? '';
+    $fcmToken         = $row['fcm_token'] ?? '';
+}
+
+
+
+$primaryContact   = normalizeNumber($primaryContact);
+$secondaryContact = normalizeNumber($secondaryContact);
+$sim1_main        = normalizeNumber($sim1_main);
+$sim2_main        = normalizeNumber($sim2_main);
+
+/* Match Check */
+$primaryMatched   = ($primaryContact === $sim1_main);
+$secondaryMatched = ($secondaryContact === $sim2_main);
+
+/* Prepare Notification */
+$bulkNotifications = [];
+
+if (!$primaryMatched || !$secondaryMatched) {
+
+    $message = [];
+
+    if (!$primaryMatched) {
+        $message[] = "Primary number mismatch (Saved: {$primaryContact}, Required: {$sim1_main})";
+    }
+
+    if (!$secondaryMatched) {
+        $message[] = "Secondary number mismatch (Saved: {$secondaryContact}, Required: {$sim2_main})";
+    }
+
+     $body = implode('. ', $message) . ". Please update immediately.";
+
+    if (!empty($fcmToken)) {
+        $bulkNotifications[] = [
+            'token' => $fcmToken,
+            'notification' => [
+                'title' => '⚠️ Phone Number Mismatch',
+                'body'  => $body
+            ]
+        ];
+
+        $this->fcm_lib->sendBulk_message($bulkNotifications);
+    }
+}
+
+/* Debug */
+echo "<pre>";
+print_r($bulkNotifications);
+die;
+print_r($bulkNotifications);
+
+$this->fcm->sendBulk_message($bulkNotifications);
+// echo "<pre>";
+// // print_r($staff_data_);
+// die;
      $this->load->model('Leads_model');
     $this->Leads_model->weekend_lead_assignation_auto();
 }
@@ -1942,5 +2277,95 @@ public function update_fcm_token()
     }
 }
 
+public function whatsaapAttachments_cron()
+{
+    whatsaapAttachments_cron();
+}
+
+public function not_reachable_notification()
+{
+    $this->load->library('Fcm_lib');
+$this->load->driver('cache', ['adapter' => 'file']);
+$cacheKey = 'not_reachable_notification_' . date('Y-m-d');
+if (date('H') < 14) {
+        return false;
+    }
+    
+    if ($this->cache->get($cacheKey)) {
+        return false;
+    }
+    
+    $notReachableData = not_reachable_notification();
+
+    
+if (!empty($notReachableData)) {
+
+    $bulkNotifications = [];
+    $logs=[];
+
+    // Today's date
+      $todayDate = date('d-m-Y');
+
+    foreach ($notReachableData as $nR) {
+        $logs[] = array("staff_id"=>$nR["staffid"],"type"=>"Not Reachable Leads","data"=>json_encode($nR,true),"created_at"=>date('Y-m-d H:i:s'));
+
+        // Get token from current record
+        $fcmToken = $nR['fcm_token'];
+
+        $body = $nR['staffname'] . " has " . $nR['leadCount'] .
+                " not reachable leads transferred to another counsellor on " . $todayDate . ".";
+
+        if (!empty($fcmToken)) {
+
+            $bulkNotifications[] = [
+                'token' => $fcmToken,
+                'notification' => [
+                    'title' => 'Not Reachable Lead Transfer',
+                    'body'  => $body
+                ]
+            ];
+        }
+    }
+
+
+    // Send all notifications once
+    if (!empty($bulkNotifications)) {
+       $data=  $this->fcm_lib->sendBulk_message($bulkNotifications);
+ 
+        if(!empty($logs))
+        {
+            $this->db->insert_batch(db_prefix()."fcm_notifications_log",$logs);
+        }
+    }
+    
+    
+    $this->cache->save($cacheKey, true, 86400);
+    return true;
+}
+}
+
+
+public function ai_update_status()
+{
+    $data = ai_update_status();
+    
+    echo json_encode($data);
+}
+
+public function update_reminder_data()
+{
+    update_reminder_data();
+}
+
+
+public function visitor_seminar_whatsapp_notification()
+{
+    visitor_seminar_whatsapp_notification();
+}
+
+public function whatsapp_message_send_visitor_logs()
+{
+    whatsapp_message_send_visitor_logs();
+}
 
 }

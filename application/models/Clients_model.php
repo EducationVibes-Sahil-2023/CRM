@@ -1870,7 +1870,7 @@ if(!empty($table))
 {
     
     
-     $query = $this->db->select('us.*, cv.name AS vendor_name, IF(us.country_name = a.primary_country AND us.university_name = a.primary_university, 1, 0) AS primary_university')
+     $query = $this->db->select('us.*, cv.name AS vendor_name, IF(us.country_name = a.primary_country AND us.university_name = a.primary_university, 1, 0) AS primary_university,university_priority')
             ->from(db_prefix() . 'client_university_shortlisting us')
             ->join(db_prefix() . 'vendor_study_abroad cv', 'cv.id = us.vendor_id', 'left')
             ->join(db_prefix() . 'admission_preferences a', 'us.client_id = a.userid', 'left')
@@ -1879,7 +1879,7 @@ if(!empty($table))
 else{
     
         // Fetch shortlisted universities with vendor details
-        $query = $this->db->select('us.*, cv.name AS vendor_name, IF(us.country_name = a.primary_country AND us.university_name = a.primary_university, 1, 0) AS primary_university')
+        $query = $this->db->select('us.*, cv.name AS vendor_name, IF(us.country_name = a.primary_country AND us.university_name = a.primary_university, 1, 0) AS primary_university,university_priority')
             ->from(db_prefix() . 'client_university_shortlisting us')
             ->join(db_prefix() . 'profile_creater_vendor cv', 'cv.id = us.vendor_id', 'left')
             ->join(db_prefix() . 'admission_preferences a', 'us.client_id = a.userid', 'left')
@@ -2168,42 +2168,95 @@ else{
     //     return  $this->db->get()->result_array();
     // }
 
-    public function entrance_exams($id)
-    {
-        $clients_exam = db_prefix() . "clients_exam";
-        $exam_batch = db_prefix() . "exam_batch";
-        $university_exams = db_prefix() . "university_exams";
-        $exam_status = db_prefix() . "clients_exam_status";
+    // public function entrance_exams($id)
+    // {
+    //     $clients_exam = db_prefix() . "clients_exam";
+    //     $exam_batch = db_prefix() . "exam_batch";
+    //     $university_exams = db_prefix() . "university_exams";
+    //     $exam_status = db_prefix() . "clients_exam_status";
 
-        $this->db->select([
-            "$clients_exam.*",
-            "$university_exams.name AS exam_name",
-            "$exam_batch.name AS batch_name",
-            "$exam_batch.university_name",
-            "$exam_status.status AS status",
-            "$clients_exam.m_university_name"
-        ]);
+    //     $this->db->select([
+    //         "$clients_exam.*",
+    //         "$university_exams.name AS exam_name",
+    //         "$exam_batch.name AS batch_name",
+    //         "$exam_batch.university_name",
+    //         "$exam_status.status AS status",
+    //         "$clients_exam.m_university_name"
+    //     ]);
 
-        $this->db->from($clients_exam);
-        $this->db->join("$exam_batch", "$exam_batch.id = $clients_exam.batch_id", "left");
-        $this->db->join("$university_exams", "$university_exams.id = $clients_exam.exam_id", "left");
+    //     $this->db->from($clients_exam);
+    //     $this->db->join("$exam_batch", "$exam_batch.id = $clients_exam.batch_id", "left");
+    //     $this->db->join("$university_exams", "$university_exams.id = $clients_exam.exam_id", "left");
 
-        // NOTE: Removed exam_date from join for better reliability unless necessary
-        $this->db->join(
-            "$exam_status",
-            "$exam_status.exam_id = $clients_exam.exam_id 
-         AND $exam_status.client_id = $clients_exam.client_id
-         AND $exam_status.exam_date = $clients_exam.exam_date",
-            "left"
-        );
+    //     // NOTE: Removed exam_date from join for better reliability unless necessary
+    //     $this->db->join(
+    //         "$exam_status",
+    //         "$exam_status.exam_id = $clients_exam.exam_id 
+    //      AND $exam_status.client_id = $clients_exam.client_id
+    //      AND $exam_status.exam_date = $clients_exam.exam_date",
+    //         "left"
+    //     );
 
-        $this->db->where("$clients_exam.client_id", $id);
-        $this->db->group_by("$clients_exam.id");
+    //     $this->db->where("$clients_exam.client_id", $id);
+    //     $this->db->group_by("$clients_exam.id");
 
-        return $this->db->get()->result_array();
-    }
+    //     return $this->db->get()->result_array();
+    // }
 
+public function entrance_exams($id)
+{
+    $clients_exam           = db_prefix() . "clients_exam";
+    $exam_batch             = db_prefix() . "exam_batch";
+    $university_exams       = db_prefix() . "university_exams";
+    $exam_status            = db_prefix() . "clients_exam_status";
+    $university_shortlist   = db_prefix() . "client_university_shortlisting";
 
+    $this->db->select([
+        "$clients_exam.*",
+        "$university_exams.name AS exam_name",
+        "$exam_batch.name AS batch_name",
+        "$exam_batch.university_name",
+        "$exam_status.status AS status",
+        "$clients_exam.m_university_name"
+    ]);
+
+    $this->db->from($clients_exam);
+
+    $this->db->join(
+        $exam_batch,
+        "$exam_batch.id = $clients_exam.batch_id",
+        "left"
+    );
+
+    $this->db->join(
+        $university_shortlist,
+        "$university_shortlist.client_id = $clients_exam.client_id
+        AND $university_shortlist.university_name COLLATE utf8mb4_general_ci =
+            $clients_exam.m_university_name COLLATE utf8mb4_general_ci
+        AND $university_shortlist.status = 1",
+        "inner",
+        false
+    );
+
+    $this->db->join(
+        $university_exams,
+        "$university_exams.id = $clients_exam.exam_id",
+        "left"
+    );
+
+    $this->db->join(
+        $exam_status,
+        "$exam_status.exam_id = $clients_exam.exam_id
+        AND $exam_status.client_id = $clients_exam.client_id
+        AND $exam_status.exam_date = $clients_exam.exam_date",
+        "left"
+    );
+
+    $this->db->where("$clients_exam.client_id", $id);
+    $this->db->group_by("$clients_exam.id");
+
+    return $this->db->get()->result_array();
+}
     public function get_university_data($university = [])
     {
         $this->s_db->cache_off();
@@ -2740,6 +2793,24 @@ else{
    return  $this->db->get()->row();
 
 
+}
+
+public function get_priority_university($priority)
+{
+    $sql = "SELECT jt.university university_name
+            FROM tbladmission_preferences,
+            JSON_TABLE(
+                university_priority,
+                '$[*]' COLUMNS (
+                    priority VARCHAR(10) PATH '$.priority',
+                    university VARCHAR(255) PATH '$.university'
+                )
+            ) AS jt
+            WHERE jt.priority = ?";
+
+    $query = $this->db->query($sql, array($priority));
+
+    return $query->result_array();
 }
 
 }

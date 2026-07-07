@@ -33,13 +33,16 @@ class Leads_model extends App_Model
 
     {
 
-        $this->db->select('*,' . db_prefix() . 'leads.name, ' . db_prefix() . 'leads.id,' . db_prefix() . 'leads_status.name as status_name,' . db_prefix() . 'leads_sources.name as source_name,' . db_prefix() . 'leads_type.name as type_name');
+        $this->db->select('*,' . db_prefix() . 'leads.name, ' . db_prefix() . 'leads.id,' . db_prefix() . 'leads_status.name as status_name,' . db_prefix() . 'leads_sources.name as source_name,' . db_prefix() . 'leads_type.name as type_name,' . db_prefix() . 'sub_lead_status.name as sub_status_name');
 
         $this->db->join(db_prefix() . 'leads_status', db_prefix() . 'leads_status.id=' . db_prefix() . 'leads.status', 'left');
 
         $this->db->join(db_prefix() . 'leads_sources', db_prefix() . 'leads_sources.id=' . db_prefix() . 'leads.source', 'left');
 
         $this->db->join(db_prefix() . 'leads_type', db_prefix() . 'leads_type.id=' . db_prefix() . 'leads.type', 'left');
+      
+        $this->db->join(db_prefix() . 'sub_lead_status', db_prefix() . 'sub_lead_status.id=' . db_prefix() . 'leads.sub_status', 'left');
+  
 
         $this->db->where($where);
 
@@ -2822,7 +2825,7 @@ if(!empty($where))
     ) AS last_lead 
     ON st.staffid = last_lead.assigned ";
 
-        $sql .= " where 1=1 ";
+        $sql .= " where 1=1  and st.is_counsoller=1 ";
         if (!empty($state_name)) {
             $sql .= " AND LOWER(TRIM(s.name)) = '" . strtolower(trim($state_name)) . "' ";
         }
@@ -2864,8 +2867,8 @@ if(!empty($where))
                 // Sunday or Holiday → check last login date
                 $sql .= " AND DATE(st.last_login) = (
                     SELECT MAX(DATE(last_login))
-                    FROM tblstaff
-                    WHERE DATE(last_login) < '$today'
+                    FROM tbluser_auto_login
+                    WHERE DATE(last_login) <= '$today'
                  ) ";
             } else {
 
@@ -2878,10 +2881,16 @@ if(!empty($where))
                     // $yesterday = date('Y-m-d', strtotime('-1 day'));
                      $yesterday = $this->getLastWorkingDay($today, $holidays);
 
-                    $sql .= " AND (
-                        DATE(st.last_login) IN ('$today','$yesterday')
-                        OR DATE(st.last_activity) IN ('$today','$yesterday')
-                     ) ";
+                    // $sql .= " AND (
+                    //     DATE(st.last_login) IN ('$today','$yesterday')
+                    //     OR DATE(st.last_activity) IN ('$today','$yesterday')
+                    //  ) ";
+                     
+                     
+                     $sql .= " AND (
+    DATE(st.last_login) BETWEEN '$yesterday' AND '$today'
+    OR DATE(st.last_activity) BETWEEN '$yesterday' AND '$today'
+) ";
                 }
             }
         }
@@ -2912,7 +2921,7 @@ public function holiday_list()
         }
         $sql .= " ) ";
         $sql .= " LEFT JOIN " . db_prefix() . "facebook_name f ON (FIND_IN_SET(f.id,st.facebook_lead_name) ) ";
-        $sql .= " where 1=1 ";
+        $sql .= " where 1=1 and st.is_counsoller=1 ";
         if (!empty($city_name)) {
             $sql .= " AND LOWER(TRIM(s.name)) = '" . strtolower(trim($city_name)) . "' ";
         }
@@ -2949,10 +2958,10 @@ public function holiday_list()
 
             if ($dayOfWeek == 0 || $isHoliday) {
                 // Sunday or Holiday → check last login date
-                $sql .= " AND DATE(st.last_login) = (
-                    SELECT MAX(DATE(st.last_login))
-                    FROM tblstaff
-                    WHERE DATE(st.last_login) < '$today'
+                 $sql .= " AND DATE(st.last_login) = (
+                    SELECT MAX(DATE(last_login))
+                    FROM tbluser_auto_login
+                    WHERE DATE(last_login) <= '$today'
                  ) ";
             } else {
 
@@ -2964,11 +2973,16 @@ public function holiday_list()
                     // Before 10 AM → check today OR yesterday
                     // $yesterday = date('Y-m-d', strtotime('-1 day'));
                      $yesterday = $this->getLastWorkingDay($today, $holidays);
+                     
+                                        $sql .= " AND (
+    DATE(st.last_login) BETWEEN '$yesterday' AND '$today'
+    OR DATE(st.last_activity) BETWEEN '$yesterday' AND '$today'
+) ";
 
-                    $sql .= " AND (
-                        DATE(st.last_login) IN ('$today','$yesterday')
-                        OR DATE(st.last_activity) IN ('$today','$yesterday')
-                     ) ";
+                    // $sql .= " AND (
+                    //     DATE(st.last_login) IN ('$today','$yesterday')
+                    //     OR DATE(st.last_activity) IN ('$today','$yesterday')
+                    //  ) ";
                 }
             }
         }
@@ -3487,6 +3501,10 @@ public function holiday_list()
  public function check_lead_auto_transfer_lead()
 {
  
+//  ini_set('display_errors', 1);
+// ini_set('display_startup_errors', 1);
+// error_reporting(E_ALL);
+
     $this->load->library('merge_fields/App_merge_fields');
     $this->load->library('app_object_cache');
     $this->load->library('mails/App_mail_template');
@@ -3498,22 +3516,6 @@ public function holiday_list()
     
 
     try {
-
-        $cache_key = 'auto_transfer_leads_cache';
-
-        // Load cache driver
-        $this->load->driver('cache', ['adapter' => 'file']);
-
-        // Check cache (60 seconds)
-        if ($cached = $this->cache->get($cache_key)) {
-            // return $this->output
-            //     ->set_content_type('application/json')
-            //     ->set_output(json_encode([
-            //         "status" => true,
-            //         "message" => "Loaded from cache",
-            //         "data" => $cached
-            //     ]));
-        }
 
         $now = date('Y-m-d H:i:s');
 
@@ -3535,6 +3537,7 @@ public function holiday_list()
             l.status,
             l.from_form_id,
             l.type,
+            l.source,
                l.state,
                l.city,
                st.office_location_region,
@@ -3544,6 +3547,7 @@ public function holiday_list()
             t.name as type_name,
             st.phonenumber as staff_contact,
             st.fcm_token as fcm_token,
+            stt.staffid as leader_staffid,
             stt.phonenumber as team_leader_contact,
             stt.fcm_token as leader_fcm_token,
             CONCAT(st.firstname," ",st.lastname) as assigned_name,
@@ -3551,8 +3555,6 @@ public function holiday_list()
            
             TIMESTAMPDIFF(MINUTE, l.dateassigned, "'.$now.'") AS diff_minutes
         ', false);
-
-//  FROM_UNIXTIME(c.call_start + 19800) AS call_time,
         $this->db->from('tblleads l');
 
         $this->db->join('tblstaff st', 'st.staffid = l.assigned', 'left');
@@ -3564,19 +3566,6 @@ public function holiday_list()
             false
         );
 
-        // $this->db->join(
-        //     '(SELECT contact, staffid, MAX(call_start) AS call_start 
-        //       FROM tblcalls_activity_logs 
-        //       GROUP BY contact, staffid) c',
-        //     'c.staffid = l.assigned 
-        //      AND c.contact IN (
-        //         COALESCE(NULLIF(l.phonenumber,""), NULL),
-        //         COALESCE(NULLIF(l.alternative_phonenumber,""), NULL)
-        //      )',
-        //     'left',
-        //     false
-        // );
-
         $this->db->join('tblleads_status s', 's.id = l.status');
         $this->db->join('tblleads_sources src', 'src.id = l.source');
         $this->db->join('tblleads_type t', 't.id = l.type');
@@ -3584,45 +3573,61 @@ public function holiday_list()
         $this->db->where('l.update_count', 0);
         $this->db->where('l.call_duration', 0);
 
-        // $this->db->where('(l.lastupdate_date = "0000-00-00" OR l.lastupdate_date >= l.dateassigned)', NULL, FALSE);
-        // $this->db->where('c.call_start IS NULL', NULL, FALSE);
-
-        $this->db->where("TIMESTAMPDIFF(MINUTE, l.dateassigned, '$now') >= 90", NULL, FALSE);
+        $this->db->where("TIMESTAMPDIFF(MINUTE, l.dateassigned, '$now') >= 120", NULL, FALSE);
 
         $this->db->where('l.status', 2);
         // $this->db->where('l.auto_transfer_status!=', 2);
          $this->db->where('l.from_form_id!=', 0);
           $this->db->where('l.mass_assigned_status', 0);
-           $this->db->where('l.assigned', 170);
-           $this->db->where('l.id', 431037);
+           $this->db->where('st.daily_fresh_status=', 1);
+           $this->db->where('st.non_daily_status!=', 1);
+           
+           
+          
+            // $this->db->where('l.id', 502375);
+          
+          
       
       
+     $this->db->where_not_in('st.staffid', array(141,221,337,344,359,1,306,307,308));
+    //   $this->db->where('st.department', 3);
+    //   $this->db->where('st.office_location', 1);
 
-        // $this->db->where_in('l.id', [447809 ,447874]);
-
-        $this->db->where('DATE(l.dateassigned) >=', START_AUTO_LEAD_TRANSFER_DATE);
+        $this->db->where('DATE(l.dateassigned) >=', START_AUTO_LEAD_TRANSFER_DATE_FRESH);
 
         $this->db->order_by('l.dateassigned', 'DESC');
 
         $query = $this->db->get();
+        
         $result = $query->result_array();
+    //   $result = $query->result();
+        
         // echo $this->db->last_query();
+      
+        
+        if(empty($result))
+        {
+            return false;
+        }
 
         $filtered = [];
         $bulkNotifications = [];
         $leader_bulkNotifications=[];
  
-
+$notifiedUsers=[];
         foreach ($result as $res) {
 
-            $seconds = calculate_business_seconds(
+             $seconds = calculate_business_seconds(
                 $res['dateassigned'],
                 date('Y-m-d H:i:s')
             );
+            
+          
 
             $res['diff_minutes'] = $seconds;
+            $notified=[];
 
-          if ($seconds >= 7200 && $res['auto_transfer_status']== 2) {
+          if ($seconds >= 10800 && $res['auto_transfer_status']== 2) {
 
         $transferData = [];
         $staffId = 1; // default staff
@@ -3771,6 +3776,23 @@ public function holiday_list()
 
             $this->db->where('id', $res['id']);
             $update = $this->db->update(db_prefix() . 'leads', $transferData);
+            
+            
+    $insert_Data_Logs = [
+        "leadid"=>$res["id"],
+        "phonenumber"=>$res["phonenumber"],
+        "name"=>$res["name"]??'unknow',
+        "old_status"=>$res['status'],
+        "new_status"=> 2,
+        "old_assignation"=>$res['assigned'],
+        "new_assignation"=>$staffId??1,
+        "old_assignation_date"=>$res['dateassigned'],
+        "new_assignation_date"=>date('Y-m-d H:i:s'),
+        "update_count"=>0,
+        "created_at"=>date('Y-m-d H:i:s')
+        ];
+
+  $this->db->insert(db_prefix().'fresh_leads_transfer_logs', $insert_Data_Logs);
 
             if (!$update) {
                 log_message('error', 'Lead update failed for ID: ' . $res['id']);
@@ -3781,7 +3803,7 @@ public function holiday_list()
 
     continue;
 }
-            else if ($seconds >= 6300 ) {
+            else if ($seconds >= 9000 ) {
 
                 $res['warning'] = 2;
 
@@ -3790,7 +3812,7 @@ public function holiday_list()
                     $res['channel_type'] = 11;
                         $bulkNotifications[] = [
                 'token' => $res['fcm_token'],
-                'notification' => array("body"=>"{$res['name']} ({$res['phonenumber']}) from {$res['source_name']} has not been contacted for 01 Hour 45 minutes. Please call within the next 15 minutes to avoid reassignment.","title"=>"⚠️ Lead Not Contacted",
+                'notification' => array("body"=>"{$res['name']} ({$res['phonenumber']}) from {$res['source_name']} has not been contacted for 02 Hour 30 minutes. Please call within the next 30 minutes to avoid reassignment.","title"=>"⚠️ Fresh Lead Not Contacted",
                 "data"=>array("type"=>"CALL","url" => "tel:{$res['phonenumber']}")
                 )
                 ];
@@ -3806,16 +3828,61 @@ public function holiday_list()
                     
                     //leader_fcm_token update
                          $bulkNotifications[] = [
-                'token' => $res['fcm_token'],
+                'token' => $res['leader_fcm_token'],
                 'notification' => [
-    "title" => "⚠️ Lead Not Contacted",
-    "body"  => "Dear {$res['team_leader']}, the lead {$res['assigned_name']} - {$res['name']} ({$res['phonenumber']}) from {$res['source_name']} has not been contacted for 1 hour 45 minutes. Please review and take the necessary action."
-    // "data" => ["type" => "CALL", "url" => "tel:{$res['phonenumber']}"]
+    "title" => "⚠️ Fresh Lead Not Contacted",
+    "body"  => "Dear {$res['team_leader']}, the lead {$res['assigned_name']} - {$res['name']} ({$res['phonenumber']}) from {$res['source_name']} has not been contacted for 02 Hour 30 minutes. Please review and take the necessary action.",
+    "data" => ["type" => "CALL", "url" => "tel:{$res['phonenumber']}"]
 ]
                 ];
+                
+                
+                    $notified = add_notification([
+                    'description'     => "fresh_lead_not_connected_notification",
+                    'touserid'        => $res["assigned"],
+                    'fromcompany'     => 1,
+                    'fromuserid'      => null,
+                    'link'            => '#leadid=' . $res["id"],
+                    'additional_data' => serialize([
+                    $res['name'],
+                    $res['phonenumber'],
+                    $res['source_name'],
+                    '02 Hour 30 minutes',
+                    '30 minutes'
+                    ]),
+
+                ]);
+                if ($notified) {
+
+                    array_push($notifiedUsers, $res['assigned']);
+                }
+                
+                    $notified = add_notification([
+                    'description'     => "fresh_lead_not_connected_notification_team_lead",
+                    'touserid'        => $res["leader_staffid"],
+                    'fromcompany'     => 1,
+                    'fromuserid'      => null,
+                    'link'            => '#leadid=' . $res["id"],
+                    'additional_data' => serialize([
+                    $res['team_leader'],
+                    $res['assigned_name'],
+                    $res['name'],
+                    $res['phonenumber'],
+                    '02 Hour 30 minutes',
+                    '30 minutes'
+                    
+                    
+                    ]),
+                    
+                    ]);
+                    if ($notified) {
+
+                    array_push($notifiedUsers, $res['leader_staffid']);
+                }
+                
                 }
 
-            } elseif ($seconds >= 5400   ) {
+            } elseif ($seconds >= 7600   ) {
 
                 $res['warning'] = 1;
                 // $res['channel_type'] = 9;
@@ -3825,18 +3892,48 @@ public function holiday_list()
                 $filtered[] = $res;
                 $bulkNotifications[] = [
                 'token' => $res['fcm_token'],
-                'notification' => array("body"=>"{$res['name']} ({$res['phonenumber']}) from {$res['source_name']} has not been contacted for 1 Hour 30 minutes. Please call within the next 30 minutes to avoid reassignment.","title"=>"⚠️ Lead Not Contacted",
+                'notification' => array("body"=>"{$res['name']} ({$res['phonenumber']}) from {$res['source_name']} has not been contacted for 2 Hour. Please call within the next 1 hour to avoid reassignment.","title"=>"⚠️ Fresh Lead Not Contacted",
                 "data"=>array("type"=>"CALL","url" => "tel:{$res['phonenumber']}")
                 )
                 ];
                 
+                    $notified = add_notification([
+                    'description'     => "fresh_lead_not_connected_notification",
+                    'touserid'        => $res["assigned"],
+                    'fromcompany'     => 1,
+                    'fromuserid'      => null,
+                    'link'            => '#leadid=' . $res["id"],
+                    'additional_data' => serialize([
+                    $res['name'],
+                    $res['phonenumber'],
+                    $res['source_name'],
+                    '02 Hour',
+                    '01 Hour'
+                    ]),
+                    
+                    ]);
+                    if ($notified) {
+
+                    array_push($notifiedUsers, $res['assigned']);
+                }
+                
                 }
             }
+            
+               
         }
-       
+    
        if(!empty($bulkNotifications)){
       $this->fcm_lib->sendBulk_message($bulkNotifications);
        }
+       
+      if($notifiedUsers){
+      pusher_trigger_notification($notifiedUsers);
+      }
+         
+      
+
+             
 
 
 
@@ -3891,7 +3988,7 @@ public function holiday_list()
     ) AS last_lead 
     ON st.staffid = last_lead.assigned ";
 
-        $sql .= " where 1=1 ";
+        $sql .= " where 1=1  and st.is_counsoller=1 ";
        
         if (!empty($lead_type)) {
             $sql .= " and st.lead_type = '" . trim($lead_type) . "' ";
@@ -3922,10 +4019,10 @@ public function holiday_list()
 
             if ($dayOfWeek == 0 || $isHoliday) {
                 // Sunday or Holiday → check last login date
-                $sql .= " AND DATE(st.last_login) = (
+                 $sql .= " AND DATE(st.last_login) = (
                     SELECT MAX(DATE(last_login))
-                    FROM tblstaff
-                    WHERE DATE(last_login) < '$today'
+                    FROM tbluser_auto_login
+                    WHERE DATE(last_login) <= '$today'
                  ) ";
             } else {
 
@@ -3938,10 +4035,14 @@ public function holiday_list()
                     // $yesterday = date('Y-m-d', strtotime('-1 day'));
                      $yesterday = $this->getLastWorkingDay($today, $holidays);
 
-                    $sql .= " AND (
-                        DATE(st.last_login) IN ('$today','$yesterday')
-                        OR DATE(st.last_activity) IN ('$today','$yesterday')
-                     ) ";
+                   $sql .= " AND (
+    DATE(st.last_login) BETWEEN '$yesterday' AND '$today'
+    OR DATE(st.last_activity) BETWEEN '$yesterday' AND '$today'
+) ";
+                    // $sql .= " AND (
+                    //     DATE(st.last_login) IN ('$today','$yesterday')
+                    //     OR DATE(st.last_activity) IN ('$today','$yesterday')
+                    //  ) ";
                 }
             }
         }
@@ -3957,7 +4058,7 @@ public function holiday_list()
         return $this->db->query($sql)->result_array();
     }
     
-    function transferLeadAssignation_distribution($lead_type,$staff_not,$locationRegion='',$leadRegion='')
+    function transferLeadAssignation_distribution($lead_type,$staff_not,$locationRegion='',$leadRegion='',$whereCondition="")
     {
         
        
@@ -3975,6 +4076,8 @@ LEFT JOIN (
 ) AS last_lead 
 ON st.staffid = last_lead.assigned";
 
+
+
 if (!empty($leadRegion)) {
     $sql .= " JOIN (
         SELECT distribution_regions, non_staff_ids, lead_type
@@ -3986,7 +4089,7 @@ if (!empty($leadRegion)) {
        AND (dis.lead_type IS NULL OR dis.lead_type = st.lead_type)";
 }
 
-$sql .= " WHERE st.active = 1 and st.admin != 1 ";
+$sql .= " WHERE st.active = 1 and st.admin != 1 and st.is_counsoller=1 ";
 
 if (!empty($leadRegion)) {
 }
@@ -4003,6 +4106,13 @@ else
         }
     
 }
+
+
+if(!empty($whereCondition))
+{
+    $sql .=" AND ".$whereCondition." ";
+}
+
 
 // Optional filters
 if (!empty($staff_not)) {
@@ -4021,19 +4131,24 @@ if (ACTIVE_STAFF_ONLY == 1) {
 
     if ($dayOfWeek == 0 || $isHoliday) {
         $sql .= " AND DATE(st.last_login) = (
-            SELECT MAX(DATE(last_login))
-            FROM " . db_prefix() . "staff
-            WHERE DATE(last_login) < '$today'
-        ) ";
+                    SELECT MAX(DATE(last_login))
+                    FROM tbluser_auto_login
+                    WHERE DATE(last_login) <= '$today'
+                 ) ";
     } else {
         if ($currentTime >= '12:00') {
             $sql .= " AND (DATE(st.last_login) = '$today' OR DATE(st.last_activity) = '$today') ";
         } else {
             $yesterday = $this->getLastWorkingDay($today, $holidays);
-            $sql .= " AND (
-                DATE(st.last_login) IN ('$today','$yesterday')
-                OR DATE(st.last_activity) IN ('$today','$yesterday')
-            ) ";
+            
+                               $sql .= " AND (
+    DATE(st.last_login) BETWEEN '$yesterday' AND '$today'
+    OR DATE(st.last_activity) BETWEEN '$yesterday' AND '$today'
+) ";
+            // $sql .= " AND (
+            //     DATE(st.last_login) IN ('$today','$yesterday')
+            //     OR DATE(st.last_activity) IN ('$today','$yesterday')
+            // ) ";
         }
     }
 }
@@ -4052,7 +4167,7 @@ if (empty($facebook_lead)) {
         return $this->db->query($sql)->result_array();
     
     }
-function autoTransferLeads($leadData, $leadconvertStatus = 2)
+function autoTransferLeads($leadData, $leadconvertStatus = 2,$where='')
 {
     
 //     ini_set('display_errors', 1);
@@ -4247,11 +4362,11 @@ function autoTransferLeads($leadData, $leadconvertStatus = 2)
     
      $check_form->responsible = 1;
     //  echo "okkkk";
-  $assign_staff_id =   $this->transferLeadAssignation_distribution($leadData['type'],$leadData['assigned']??'',$leadData['office_location_region']??'',$leadData['office_state_region']??'');
+  $assign_staff_id =   $this->transferLeadAssignation_distribution($leadData['type'],$leadData['assigned']??'',$leadData['office_location_region']??'',$leadData['office_state_region']??'',$where);
   
      if(empty($assign_staff_id[0]["staffid"]))
   {
-      $assign_staff_id =   $this->transferLeadAssignation_distribution($leadData['type'],$leadData['assigned']??'',$leadData['office_location_region']??'');
+      $assign_staff_id =   $this->transferLeadAssignation_distribution($leadData['type'],$leadData['assigned']??'',$leadData['office_location_region']??'','',$where);
   }
 
 //   if(empty($assign_staff_id[0]["staffid"]))
@@ -4342,7 +4457,7 @@ function autoTransferLeads($leadData, $leadconvertStatus = 2)
 }
 
 // Not Reachable Leads
-public function check_lead_auto_assignation_lead()
+public function check_lead_auto_assignation_lead($freshStatus = 0)
 {
 
 
@@ -4352,6 +4467,12 @@ public function check_lead_auto_assignation_lead()
     
  $date = date('Y-m-d');
 
+$checkDays = NOT_REACHABLE_DAYS_CRON;
+
+if($freshStatus==1)
+{
+  $checkDays = FRESH_DAYS_CRON;  
+}
 
 $holidays = holiday_list();
 $ignoreDates = [];
@@ -4391,15 +4512,22 @@ if(!empty($ignoreDates))
     $sqlAdditional = " AND date(l.dateassigned) Not In ($ignoreDates) ";
 }
 
-      $workingDays = 0;
-$offset = 0;
 
-while ($workingDays < 4) {
 
-    $day  = date('w', strtotime($date)); // 0 = Sunday
 
+$workingDays = 0;
+$offset = 0; // start from yesterday
+
+while ($workingDays < $checkDays) {
+
+    $date = date('Y-m-d', strtotime("-$offset day"));
+
+
+    $day = date('w', strtotime($date)); // 0 = Sunday
+
+
+    // Skip Sunday and holidays
     if ($day != 0 && !in_array($date, $holidays)) {
-        // ✅ valid working day
         $workingDays++;
     }
 
@@ -4409,90 +4537,192 @@ while ($workingDays < 4) {
 
 
 
+//   $sql = "SELECT 
+//   l.id, 
+//   l.name, 
+//   l.phonenumber, 
+//   l.alternative_phonenumber, 
+//   l.email, 
+//   l.dateadded, 
+//   l.lastcontact, 
+//   l.dateassigned, 
+//   l.lastupdate_date, 
+//   IFNULL(c.call_update_count, 0) AS update_count,
+//   l.call_duration, 
+//   l.auto_transfer_status, 
+//   l.assigned, 
+//   l.website, 
+//   l.status, 
+//   l.from_form_id, 
+//   l.type, 
+//   l.state, 
+//   l.city, 
+//   1 as trnasfer_type,
+//   s.name AS status_name, 
+//   src.name AS source_name, 
+//   t.name AS type_name, 
+//   l.transfer_count,
+//   st.phonenumber AS staff_contact, 
+//   st.office_state_region,
+//   st.office_location_region,
+//   CONCAT(st.firstname, ' ', st.lastname) AS assigned_name, 
+//   FROM_UNIXTIME(c.call_start + 19800) AS call_time, 
+//   TIMESTAMPDIFF(MINUTE, l.dateassigned, NOW()) AS diff_minutes,
+//   IFNULL(c.call_update_count, 0) AS call_update_count,
+//   date(DATE_SUB(NOW(), INTERVAL $offset DAY) )
+
+// FROM tblleads l
+
+// LEFT JOIN tblstaff st 
+//   ON st.staffid = l.assigned 
 
 
-   $sql = "SELECT 
-  l.id, 
-  l.name, 
-  l.phonenumber, 
-  l.alternative_phonenumber, 
-  l.email, 
-  l.dateadded, 
-  l.lastcontact, 
-  l.dateassigned, 
-  l.lastupdate_date, 
-  IFNULL(c.call_update_count, 0) AS update_count,
-  l.call_duration, 
-  l.auto_transfer_status, 
-  l.assigned, 
-  l.website, 
-  l.status, 
-  l.from_form_id, 
-  l.type, 
-  l.state, 
-  l.city, 
-  1 as trnasfer_type,
-  s.name AS status_name, 
-  src.name AS source_name, 
-  t.name AS type_name, 
-  l.transfer_count,
-  st.phonenumber AS staff_contact, 
-  st.office_state_region,
-  st.office_location_region,
-  CONCAT(st.firstname, ' ', st.lastname) AS assigned_name, 
-  FROM_UNIXTIME(c.call_start + 19800) AS call_time, 
-  TIMESTAMPDIFF(MINUTE, l.dateassigned, NOW()) AS diff_minutes,
-  IFNULL(c.call_update_count, 0) AS call_update_count,
-  date(DATE_SUB(NOW(), INTERVAL $offset DAY) )
+// LEFT JOIN (
+//     SELECT 
+//         contact, 
+//         staffid,
+//         MAX(call_start) AS call_start,
+//         COUNT(*) AS call_update_count
+//     FROM tblcalls_activity_logs
+//     GROUP BY contact, staffid
+// ) c 
+//   ON c.staffid = l.assigned 
+//   AND (
+//         c.contact = l.phonenumber 
+//         OR c.contact = l.alternative_phonenumber
+//       )
 
-FROM tblleads l
+// JOIN tblleads_status s 
+//   ON s.id = l.status 
 
-LEFT JOIN tblstaff st 
-  ON st.staffid = l.assigned 
+// JOIN tblleads_sources src 
+//   ON src.id = l.source 
 
+// JOIN tblleads_type t 
+//   ON t.id = l.type 
 
-LEFT JOIN (
-    SELECT 
-        contact, 
-        staffid,
-        MAX(call_start) AS call_start,
-        COUNT(*) AS call_update_count
-    FROM tblcalls_activity_logs
-    GROUP BY contact, staffid
-) c 
-  ON c.staffid = l.assigned 
-  AND (
-        c.contact = l.phonenumber 
-        OR c.contact = l.alternative_phonenumber
-      )
+// WHERE 
+// 1=1
+//   AND l.status IN (20)
+//   AND IFNULL(c.call_update_count, 0) < 5
+//   AND l.from_form_id != 0
+//   AND l.type IN (1,2)
+//   AND l.mass_assigned_status!=1
+//   AND l.dateadded >= '".START_AUTO_LEAD_TRANSFER_DATE."'
+//   AND st.not_transfer_lead_status !=1
+//   AND date(l.dateassigned) < date(DATE_SUB(NOW(), INTERVAL $offset DAY)) ".$sqlAdditional."
+//   AND l.transfer_count < 3
 
-JOIN tblleads_status s 
-  ON s.id = l.status 
-
-JOIN tblleads_sources src 
-  ON src.id = l.source 
-
-JOIN tblleads_type t 
-  ON t.id = l.type 
-
-WHERE 
-1=1
-   AND l.status IN (20)
-   AND IFNULL(c.call_update_count, 0) < 5
-   AND l.from_form_id != 0
-   AND l.type IN (1,2)
-   AND l.mass_assigned_status!=1
-   AND l.dateadded >= '".START_AUTO_LEAD_TRANSFER_DATE."'
-   AND st.not_transfer_lead_status !=1
-   AND date(l.dateassigned) < date(DATE_SUB(NOW(), INTERVAL $offset DAY)) ".$sqlAdditional."
-   AND l.transfer_count < 3
-
-  ORDER BY l.id limit 50 "; 
+//   ORDER BY l.id limit 50 "; 
 
 
+$sqll = "";
 
+if (!empty($freshStatus) && (int)$freshStatus === 1) {
+
+    $sqlAdditional .= " AND l.type = 2 AND l.status = 2 ";
+    $sqll .= " AND IFNULL(c.call_update_count, 0) > 0 
+               AND l.sub_status NOT IN (22) and st.non_fresh_status!=1 ";
+
+} else {
+
+    $sqlAdditional .= " AND l.status = 20 
+                        AND l.sub_status NOT IN (22,25) and st.non_reachable_status!=1 ";
+}
+
+$sql = "
+WITH lead_data AS (
+    SELECT
+        l.id, l.name, l.phonenumber, l.alternative_phonenumber, l.email,
+        l.dateadded, l.lastcontact, l.dateassigned, l.lastupdate_date,
+        l.call_duration, l.auto_transfer_status, l.assigned, l.website,
+        l.status, l.from_form_id, l.type, l.state, l.city, l.source,
+        l.transfer_count
+    FROM tblleads l
+    INNER JOIN tblstaff st
+            ON st.staffid = l.assigned
+           AND st.not_transfer_lead_status <> 1
+    WHERE 
+    
+       l.type                  IN (1, 2)
+      AND l.from_form_id          <> 0
+      AND l.mass_assigned_status  <> 1
+      AND l.transfer_count        <  3
+      AND date(l.dateadded)             >= '" . START_AUTO_LEAD_TRANSFER_DATE . "'
+      AND date(l.dateassigned)          <  DATE_SUB(CURDATE(), INTERVAL {$offset} DAY)
+      " . $sqlAdditional . "
+),
+pairs AS (
+    SELECT id AS lead_id, assigned AS staffid, phonenumber AS contact
+    FROM lead_data
+    WHERE phonenumber IS NOT NULL AND phonenumber <> ''
+    UNION
+    SELECT id AS lead_id, assigned AS staffid, alternative_phonenumber AS contact
+    FROM lead_data
+    WHERE alternative_phonenumber IS NOT NULL AND alternative_phonenumber <> ''
+),
+call_data AS (
+    SELECT
+        p.lead_id,
+        MAX(cal.call_start) AS call_start,
+        COUNT(*)            AS call_update_count
+    FROM pairs p
+    INNER JOIN tblcalls_activity_logs cal
+            ON cal.staffid = p.staffid
+           AND cal.contact = p.contact
+    GROUP BY p.lead_id
+)
+SELECT
+    l.id,
+    l.name,
+    l.phonenumber,
+    l.alternative_phonenumber,
+    l.email,
+    l.dateadded,
+    l.lastcontact,
+    l.dateassigned,
+    l.lastupdate_date,
+    IFNULL(c.call_update_count, 0)                AS update_count,
+    l.call_duration,
+    l.auto_transfer_status,
+    l.assigned,
+    l.website,
+    l.status,
+    l.from_form_id,
+    l.type,
+    l.state,
+    l.city,
+    1                                             AS trnasfer_type,
+    s.name                                        AS status_name,
+    src.name                                      AS source_name,
+    t.name                                        AS type_name,
+    l.transfer_count,
+    st.phonenumber                                AS staff_contact,
+    st.office_state_region,
+    st.office_location_region,
+    CONCAT(st.firstname, ' ', st.lastname)        AS assigned_name,
+    FROM_UNIXTIME(c.call_start + 19800)           AS call_time,
+    TIMESTAMPDIFF(MINUTE, l.dateassigned, NOW())  AS diff_minutes,
+    IFNULL(c.call_update_count, 0)                AS call_update_count,
+    DATE(DATE_SUB(NOW(), INTERVAL {$offset} DAY)) AS cutoff_date
+FROM lead_data l
+INNER JOIN tblstaff st
+        ON st.staffid = l.assigned
+       AND st.not_transfer_lead_status <> 1
+INNER JOIN tblleads_status  s   ON s.id   = l.status
+INNER JOIN tblleads_sources src ON src.id = l.source
+INNER JOIN tblleads_type    t   ON t.id   = l.type
+LEFT JOIN call_data c ON c.lead_id = l.id
+WHERE IFNULL(c.call_update_count, 0) < 5 ".$sqll."
+ORDER BY l.id
+LIMIT 50
+";
+
+// echo $sql;
+// die;
 // ✅ Execute query
 $query = $this->db->query($sql);
+
 $result = $query->result_array();
 
 
@@ -4512,15 +4742,19 @@ $result = $query->result_array();
 //     print_r($this->autoTransferLeads($leadData));
 // }
 
+$whereCon = "not_reachable_status=1";
+if($freshStatus == 1)
+{
+    $whereCon = "fresh_status=1";
+}
 
 if (empty($result)) {
     echo json_encode(['status' => true]);
     die;
 }
-
     foreach ($result as $leadData)
 {
-    $this->autoTransferLeads($leadData);
+    $this->autoTransferLeads($leadData,2,$whereCon);
 }
 
 
@@ -5086,6 +5320,10 @@ function leads_transfers_summary($data)
         if (!empty($_POST['view_update_count'])) {
             $db->where_in('l.update_count', $_POST['view_update_count']);
         }
+        
+         if (!empty($_POST['c_status'])) {
+            $db->where_in('lead.status', $_POST['c_status']);
+        }
 
         if (!empty($_POST['date_range'])) {
             $dates = explode(' to ', $_POST['date_range']);
@@ -5155,6 +5393,152 @@ function leads_transfers_summary($data)
     // =========================
     $this->db->select("so.name AS source_name, COUNT(l.id) as total");
     $this->db->from('tblleads_transfer_logs l');
+    $this->db->join('tblleads lead', 'lead.id = l.leadid');
+    $this->db->join('tblleads_sources so', 'so.id = lead.source', 'left');
+
+    // ✅ IMPORTANT: join staff here also (FIX)
+    if ($_POST['leadType'] == "Lead Assignation") {
+        $this->db->join('tblstaff s', 's.staffid = l.new_assignation', 'left');
+    } else {
+        $this->db->join('tblstaff s', 's.staffid = l.old_assignation', 'left');
+    }
+
+    $applyFilters($this->db);
+
+    $this->db->group_by('lead.source');
+    $this->db->order_by('total', 'DESC');
+    $this->db->limit(5);
+
+    $topSources = $this->db->get()->result_array();
+
+    // =========================
+    // ✅ FINAL RESPONSE
+    // =========================
+    return [
+        'leads_summary' => $staffSummary,
+        'top_lead'      => $topLeads,
+        'top_sources'   => $topSources
+    ];
+}
+
+function leads_transfers_summary_fresh($data)
+{
+    $get_staff_user_id = get_staff_user_id();
+    $idsarr = [];
+
+    // =========================
+    // 👤 ROLE FILTER
+    // =========================
+    if (empty($_POST['view_assigned'])) {
+
+        $role = $this->db->where('staffid', $get_staff_user_id)
+                         ->get(db_prefix() . 'staff')
+                         ->row()->role;
+
+        if ($role == 3) {
+            $teamids = $this->db->query('CALL GetReportingPersons(?)', [$get_staff_user_id])->result_array();
+
+            $this->db->close();
+            $this->db->initialize();
+
+            $idsarr = array_column($teamids, 'staffid');
+        }
+    }
+
+// if(is_admin())
+// {
+//     print_r($_POST);
+//     die;
+// }
+    // =========================
+    // 🔁 COMMON FILTER FUNCTION
+    // =========================
+    $applyFilters = function($db) use ($idsarr, $get_staff_user_id) {
+
+        if (!empty($_POST['view_status_fresh'])) {
+            $db->where_in('l.old_status', $_POST['view_status_fresh']);
+        }
+
+        if (!empty($_POST['view_sources_fresh'])) {
+            $db->where_in('lead.source', $_POST['view_sources_fresh']);
+        }
+
+        if (!empty($_POST['view_update_count_fresh'])) {
+            $db->where_in('l.update_count', $_POST['view_update_count_fresh']);
+        }
+        
+         if (!empty($_POST['c_status_fresh'])) {
+            $db->where_in('lead.status', $_POST['c_status_fresh']);
+        }
+
+        if (!empty($_POST['date_range_fresh'])) {
+            $dates = explode(' to ', $_POST['date_range_fresh']);
+            if (count($dates) === 2) {
+                $db->where('DATE(l.created_at) >=', trim($dates[0]));
+                $db->where('DATE(l.created_at) <=', trim($dates[1]));
+            }
+        }
+
+        if (!empty($_POST['view_assigned_fresh'])) {
+            $db->where_in('l.old_assignation', $_POST['view_assigned_fresh']);
+        } else {
+            if (!is_admin()) {
+                if (!empty($idsarr)) {
+                    $db->where_in('l.old_assignation', array_merge($idsarr, [$get_staff_user_id]));
+                } else {
+                    $db->where('l.old_assignation', $get_staff_user_id);
+                }
+            }
+        }
+
+        // ✅ Department filter (safe now because join exists)
+        if (!empty($_POST['department_fresh'])) {
+            $db->where_in('s.department', $_POST['department_fresh']);
+        }
+    };
+    
+ 
+
+    // =========================
+    // 📊 STAFF SUMMARY
+    // =========================
+    if ($_POST['leadType'] == "Lead Assignation") {
+
+        $this->db->select("CONCAT(s.firstname,' ',s.lastname) AS staff_name, COUNT(l.id) AS counts");
+        $this->db->from('tblfresh_leads_transfer_logs l');
+        $this->db->join('tblstaff s', 's.staffid = l.new_assignation', 'left');
+
+    } else {
+
+        $this->db->select("CONCAT(s.firstname,' ',s.lastname) AS staff_name, COUNT(l.id) AS counts");
+        $this->db->from('tblfresh_leads_transfer_logs l');
+        $this->db->join('tblstaff s', 's.staffid = l.old_assignation', 'left');
+    }
+
+    $this->db->join('tblleads lead', 'lead.id = l.leadid');
+
+    $applyFilters($this->db);
+
+    if ($_POST['leadType'] == "Lead Assignation") {
+        $this->db->group_by('l.new_assignation');
+    } else {
+        $this->db->group_by('l.old_assignation');
+    }
+
+    $this->db->order_by('counts', 'DESC');
+
+    $staffSummary = $this->db->get()->result_array();
+
+    // =========================
+    // 🥇 TOP LEADS
+    // =========================
+    $topLeads = array_slice($staffSummary, 0, 5);
+
+    // =========================
+    // 📊 TOP SOURCES
+    // =========================
+    $this->db->select("so.name AS source_name, COUNT(l.id) as total");
+    $this->db->from('tblfresh_leads_transfer_logs l');
     $this->db->join('tblleads lead', 'lead.id = l.leadid');
     $this->db->join('tblleads_sources so', 'so.id = lead.source', 'left');
 
@@ -5466,6 +5850,8 @@ function lead_sub_status()
 
     return $query->result_array();
 }
+
+
 
 
 }

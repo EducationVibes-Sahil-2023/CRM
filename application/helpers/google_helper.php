@@ -809,17 +809,17 @@ function syncExcel_new($id = "")
 //     die;
 // }
 
-function syncExcel_neww($id = "")
+function syncExcel_neww($id = "",$currentId="",$sheetStatus="")
 {
-    
-   
+
 
     $CI = &get_instance();
 
-    $CI->db->query("SET SESSION group_concat_max_len = 10000000000");
+   $CI->db->query("SET SESSION group_concat_max_len = 100000");
+    // $CI->db->query("SET SESSION group_concat_max_len = 10000000000");
 
     // Fetch sheet config(s)
-    $CI->db->select("id, spreadsheetId, fromDate, toDate, autoSync, acadmic_year, sheet_name, sql_condition, column_ids, orignal_documents_status, excel_type,apostile_documents_status,group_by")
+    $CI->db->select("id, spreadsheetId, fromDate, toDate, autoSync, acadmic_year, sheet_name, sql_condition, column_ids, orignal_documents_status, excel_type,apostile_documents_status,group_by,application_doc")
         ->from(db_prefix() . "excel_data_update")
         ->where("autoSync", 1);
 
@@ -827,7 +827,23 @@ function syncExcel_neww($id = "")
         $CI->db->where("spreadsheetId", $id);
     }
 
+ if (!empty($currentId)) {
+        $CI->db->where("id", $currentId);
+        
+    }
+    
     $sheetData = $CI->db->order_by("id", "asc")->get()->result_array();
+    
+    if(!empty($sheetStatus) && $sheetStatus == 1)
+    {
+   
+        header('Content-Type: application/json');
+        echo json_encode($sheetData, JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES);
+        exit;
+        
+    }
+  
+  
 
     if (empty($sheetData)) {
         return [];
@@ -894,6 +910,7 @@ function syncExcel_neww($id = "")
         $orignal_documents_status = $sheet['orignal_documents_status'] ?? null;
         $apostile_documents_status = $sheet['apostile_documents_status'] ?? null;
         $sql_conditions           = $sheet['sql_condition'] ?? null;
+        $application_doc = $sheet['application_doc'] ?? null;
         $group_by_sql = $sheet['group_by'] ?? null;
         // Parse column IDs
         $column_ids_raw = $sheet['column_ids'] ?? '';
@@ -959,6 +976,8 @@ function syncExcel_neww($id = "")
     END AS `{$safe_column_name}`";
                 }
             }
+            
+     
 
             // Invitation letter
             $extra_columns[] = "Invitation_letter";
@@ -1032,6 +1051,123 @@ function syncExcel_neww($id = "")
 ) doc_status ON doc_status.userid = c.userid ";
             }
         }
+        
+       if (!empty($application_doc) && $application_doc == 1)
+{
+    $upload_document_application = get_documents(
+        2,
+        [],
+        0,
+        "",
+        [db_prefix() . 'document_upload_type.application_doc' => '1']
+    );
+ 
+
+    if (!empty($upload_document_application)) {
+        $queryPart=[];
+        foreach ($upload_document_application as $app_doc) {
+
+            $docId = (int) $app_doc['id'];
+
+            // safer column alias
+            $safe_column_name = preg_replace('/[^a-zA-Z0-9_]/', '_', $app_doc["name"]);
+
+            $extra_columns[] = $safe_column_name;
+
+            // $queryPart[] = "
+            //     CASE 
+            //         WHEN JSON_UNQUOTE(JSON_EXTRACT(CAST(cd.data AS CHAR), '$.\"$docId\".approval_status')) = '1' THEN 'Approved'
+            //         WHEN JSON_UNQUOTE(JSON_EXTRACT(CAST(cd.data AS CHAR), '$.\"$docId\".approval_status')) = '2' THEN 'Rejected'
+            //         ELSE 'Pending'
+            //     END AS `$safe_column_name`
+            // ";
+            
+//          $queryPart[] = "
+// CASE 
+//     WHEN cd.data REGEXP CONCAT('\"id\":', $docId, '[^}]*\"approval_status\":\"1\"')
+//     THEN 'Approved'
+//     WHEN cd.data REGEXP CONCAT('\"id\":', $docId, '[^}]*\"approval_status\":\"2\"')
+//     THEN 'Rejected'
+//     ELSE 'Pending'
+// END AS `$safe_column_name`
+// ";
+
+// id present in an object at all (either the doc exists or it doesn't)
+$idExists = '"id"[[:space:]]*:[[:space:]]*"?' . $docId . '"?[[:space:]]*[,}]';
+
+// id + a specific approval_status in the SAME object (either field order)
+$idStatus = function ($value) use ($docId) {
+    $value = (int) $value;
+
+    $id = '"id"[[:space:]]*:[[:space:]]*"?' . $docId . '"?[[:space:]]*[,}]';
+    $st = '"approval_status"[[:space:]]*:[[:space:]]*"?' . $value . '"?[[:space:]]*[,}]';
+
+    return '('
+        . $id . '[^}]*' . $st
+        . '|'
+        . $st . '[^}]*' . $id
+        . ')';
+};
+
+$queryPart[] = "
+    CASE
+        WHEN cd.data REGEXP '" . $idStatus(1) . "' THEN 'Approved'
+        WHEN cd.data REGEXP '" . $idStatus(2) . "' THEN 'Rejected'
+        WHEN cd.data REGEXP '" . $idExists . "' THEN 'Submitted'
+        ELSE 'Pending'
+    END AS `$safe_column_name`
+";
+
+// $docId = preg_quote((string)$docId, '/');
+
+// $idExists = '"id"[[:space:]]*:[[:space:]]*"?' . $docId . '"?';
+
+// $idApproved =
+//     '(?:"id"[[:space:]]*:[[:space:]]*"?' . $docId . '"?[^}]*"approval_status"[[:space:]]*:[[:space:]]*"?1"?'
+//     . '|'
+//     . '"approval_status"[[:space:]]*:[[:space:]]*"?1"?[^}]*"id"[[:space:]]*:[[:space:]]*"?' . $docId . '"?)';
+
+// $idRejected =
+//     '(?:"id"[[:space:]]*:[[:space:]]*"?' . $docId . '"?[^}]*"approval_status"[[:space:]]*:[[:space:]]*"?2"?'
+//     . '|'
+//     . '"approval_status"[[:space:]]*:[[:space:]]*"?2"?[^}]*"id"[[:space:]]*:[[:space:]]*"?' . $docId . '"?)';
+
+// $queryPart[] = "
+// CASE
+//     WHEN cd.data IS NULL THEN 'Pending'
+//     WHEN cd.data REGEXP '$idApproved' THEN 'Approved'
+//     WHEN cd.data REGEXP '$idRejected' THEN 'Rejected'
+//     WHEN cd.data REGEXP '$idExists' THEN 'Submitted'
+//     ELSE 'Pending'
+// END AS `$safe_column_name`
+// ";
+        }
+        
+//       $column_name = preg_replace('/[^a-zA-Z0-9_]/', '_', 'Admission letter');
+
+// $extra_columns[] = $column_name;
+
+// $queryPart[] = "
+// IF(
+//     u.application_file = '',
+//     'Pending',
+//     'Submitted'
+// ) AS `$column_name`
+// ";
+        
+        
+       
+        
+    }
+
+    if (!empty($queryPart)) {
+                 $selectColumnName .= ', ' . implode(",\n", $queryPart);
+                 
+           
+         
+            }
+}
+
         // else{
         //         if (!empty($apostile_documents_status) && (int) $apostile_documents_status === 1) {
         //             $apostille_documents = get_orignal_document_list(0, 0, 1);
@@ -1107,9 +1243,14 @@ function syncExcel_neww($id = "")
             $first_semester  = $start . "-09";
             $second_semester = $end . "-02";
 
-
-            $condition_sql .= " AND (p.session_intake = " . $CI->db->escape($first_semester) .
-                " OR p.session_intake = " . $CI->db->escape($second_semester) . ")";
+            $condition_sql .= " AND ( p.session_intake IN (" . $CI->db->escape($first_semester) .",". $CI->db->escape($second_semester) . "))";
+            
+    //               $condition_sql .=" AND (
+    //     TRIM(SUBSTRING_INDEX(p.acadmic_year, '-', 1)) = '" . $start . "'
+    //     OR p.acadmic_year IS NULL
+    //     OR p.acadmic_year = ''
+    // ) ";
+    
         }
         if (!empty($sql_conditions)) {
             $condition_sql .= " {$sql_conditions}";
@@ -1117,56 +1258,301 @@ function syncExcel_neww($id = "")
 
         $group_by = "";
         $apostile_query = "";
-        if (!empty($group_by_sql)) {
-            $group_by = "," . $group_by_sql;
+        // if (!empty($group_by_sql)) {
+        //     $group_by = $group_by_sql;
 
-            $apostile_query = " JOIN (
-                    SELECT 
-                    aps.id,
-                        aps.userid,
-                        apostille_cost AS Total_cost,
-                        courier_date AS courier_date,
-                        payment_date AS payment_date,
-                        apostille_received AS apostille_received,
-                        vendor_id AS vendor_id,
-                        doc_id AS doc_id,
-                        tod.short_name doc_name,
-                        if(by_vendor=1,'Yes','No') by_vendor,
-                        CASE 
-                            WHEN aps.id is NULL  THEN 'Pending'
-                            WHEN received_status = 0 THEN 'Sent'
-                            WHEN received_status = 1 THEN 'Received'
-                            ELSE 'Pending'
-                        END AS apostille_status,
-                        aps.currency_text as currency_text
-                    FROM " . db_prefix() . "client_apostille_data aps
-                    join " . db_prefix() . "orignal_documents  tod ON aps.doc_id = tod.id
-                ) AS apostille_summary ON apostille_summary.userid = c.userid  ";
-        } else {
-            $apostile_query = " LEFT JOIN (
-                    SELECT 
-                        userid,
-                        SUM(apostille_cost) AS Total_cost,
-                        MAX(courier_date) AS courier_date,
-                        MAX(payment_date) AS payment_date,
-                        MAX(apostille_received) AS apostille_received,
-                        GROUP_CONCAT(vendor_id) AS vendor_id,
-                        GROUP_CONCAT(doc_id) AS doc_id,
-                        if(by_vendor=1,'Yes','No') by_vendor,
-                        CASE 
-                            WHEN COUNT(*) = 0 THEN 'Pending'
-                            WHEN SUM(received_status = 0) > 0 THEN 'Sent'
-                            WHEN SUM(received_status = 1) = COUNT(*) THEN 'Received'
-                            ELSE 'Pending'
-                        END AS apostille_status
-                    FROM " . db_prefix() . "client_apostille_data
-                    GROUP BY userid
-                ) AS apostille_summary ON apostille_summary.userid = c.userid ";
-        }
+        //     $apostile_query = " JOIN (
+        //             SELECT 
+        //             aps.id,
+        //                 aps.userid,
+        //                 apostille_cost AS Total_cost,
+        //                 courier_date AS courier_date,
+        //                 payment_date AS payment_date,
+        //                 apostille_received AS apostille_received,
+        //                 vendor_id AS vendor_id,
+        //                 doc_id AS doc_id,
+        //                 tod.short_name doc_name,
+        //                 if(by_vendor=1,'Yes','No') by_vendor,
+        //                 CASE 
+        //                     WHEN aps.id is NULL  THEN 'Pending'
+        //                     WHEN received_status = 0 THEN 'Sent'
+        //                     WHEN received_status = 1 THEN 'Received'
+        //                     ELSE 'Pending'
+        //                 END AS apostille_status,
+        //                 aps.currency_text as currency_text
+        //             FROM " . db_prefix() . "client_apostille_data aps
+        //             join " . db_prefix() . "orignal_documents  tod ON aps.doc_id = tod.id
+        //         ) AS apostille_summary ON apostille_summary.userid = c.userid  ";
+        // } else {
+        //     $apostile_query = " LEFT JOIN (
+        //             SELECT 
+        //                 userid,
+        //                 SUM(apostille_cost) AS Total_cost,
+        //                 MAX(courier_date) AS courier_date,
+        //                 MAX(payment_date) AS payment_date,
+        //                 MAX(apostille_received) AS apostille_received,
+        //                 GROUP_CONCAT(vendor_id) AS vendor_id,
+        //                 GROUP_CONCAT(doc_id) AS doc_id,
+        //                 if(by_vendor=1,'Yes','No') by_vendor,
+        //                 CASE 
+        //                     WHEN COUNT(*) = 0 THEN 'Pending'
+        //                     WHEN SUM(received_status = 0) > 0 THEN 'Sent'
+        //                     WHEN SUM(received_status = 1) = COUNT(*) THEN 'Received'
+        //                     ELSE 'Pending'
+        //                 END AS apostille_status
+        //             FROM " . db_prefix() . "client_apostille_data
+        //             GROUP BY userid
+        //         ) AS apostille_summary ON apostille_summary.userid = c.userid ";
+        // }
+        
+        
+        if ($group_by_sql) {
+$group_by = $group_by_sql;
+    $apostile_query = " JOIN (
+        SELECT 
+            aps.id,
+            aps.userid,
+            (
+                aps.apostille_cost * CASE
+                    WHEN aps.exchange_rate = 0 OR aps.exchange_rate IS NULL THEN 1
+                    ELSE aps.exchange_rate
+                END
+            ) AS Total_cost,
+            aps.courier_date AS courier_date,
+            aps.payment_date AS payment_date,
+            aps.apostille_received AS apostille_received,
+            aps.vendor_id AS vendor_id,
+            aps.doc_id AS doc_id,
+            tod.short_name AS doc_name,
+            IF(aps.by_vendor = 1, 'Yes', 'No') AS by_vendor,
+            CASE
+                WHEN aps.id IS NULL THEN 'Pending'
+                WHEN aps.received_status = 0 THEN 'Sent'
+                WHEN aps.received_status = 1 THEN 'Received'
+                ELSE 'Pending'
+            END AS apostille_status,
+            aps.currency_text AS currency_text
+        FROM " . db_prefix() . "client_apostille_data aps
+        JOIN " . db_prefix() . "orignal_documents tod
+            ON aps.doc_id = tod.id
+    ) AS apostille_summary
+    ON apostille_summary.userid = c.userid";
+
+} else {
+
+    $apostile_query = " LEFT JOIN (
+        SELECT
+            userid,
+            SUM(
+                apostille_cost * CASE
+                    WHEN exchange_rate = 0 OR exchange_rate IS NULL THEN 1
+                    ELSE exchange_rate
+                END
+            ) AS Total_cost,
+            MAX(courier_date) AS courier_date,
+            MAX(payment_date) AS payment_date,
+            MAX(apostille_received) AS apostille_received,
+            GROUP_CONCAT(vendor_id) AS vendor_id,
+            GROUP_CONCAT(doc_id) AS doc_id,
+            IF(MAX(by_vendor) = 1, 'Yes', 'No') AS by_vendor,
+            CASE
+                WHEN COUNT(*) = 0 THEN 'Pending'
+                WHEN SUM(received_status = 0) > 0 THEN 'Sent'
+                WHEN SUM(received_status = 1) = COUNT(*) THEN 'Received'
+                ELSE 'Pending'
+            END AS apostille_status
+        FROM " . db_prefix() . "client_apostille_data
+        GROUP BY userid
+    ) AS apostille_summary
+    ON apostille_summary.userid = c.userid";
+}
+
         // Main SQL
 
         // LEFT JOIN " . db_prefix() . "admission_preferences p ON p.userid = c.userid and p.primary_university = u.university_name
-        $sql = "SELECT {$selectColumnName}
+//         $sql = "SELECT {$selectColumnName}
+//                 FROM " . db_prefix() . "clients c
+//                 LEFT JOIN " . db_prefix() . "basic_details b ON c.userid = b.userid
+//                 LEFT JOIN " . db_prefix() . "ev_partner evp ON evp.id = c.agent_id
+//                 LEFT JOIN " . db_prefix() . "applicant_status s ON c.active = s.id
+//                 LEFT JOIN " . db_prefix() . "leads l ON l.id = c.leadid
+//                 LEFT JOIN " . db_prefix() . "staff st ON l.assigned = st.staffid
+//                 LEFT JOIN " . db_prefix() . "applicant_stages tt ON tt.id = c.applicant_stage
+//                 LEFT JOIN " . db_prefix() . "application_sub_category_mbbs ts ON ts.id = c.applicant_sub_status
+               
+                
+//                 LEFT JOIN tbladmission_preferences p 
+//                 ON p.userid = c.userid
+//                  LEFT JOIN " . db_prefix() . "client_university_shortlisting u ON u.client_id = c.userid AND u.status = 1 
+//               AND (
+//         (u.university_name IS NOT NULL AND p.primary_university = u.university_name)
+//         OR (u.university_name IS NULL)
+//   )
+
+//                 LEFT JOIN " . db_prefix() . "university_partner u_p ON u_p.id = u.partner
+//                 LEFT JOIN " . db_prefix() . "applicant_fees_details fd ON fd.client_id = c.userid
+//                 LEFT JOIN " . db_prefix() . "applicant_fees f ON f.id = fd.fees_id
+//                 LEFT JOIN " . db_prefix() . "orignal_document_status o ON o.id = c.orignal_document_status
+//                 LEFT JOIN " . db_prefix() . "orignal_documents_received dr ON dr.userid = c.userid
+//                 LEFT JOIN " . db_prefix() . "office_location dl ON dl.id = dr.location_id
+//                 LEFT JOIN " . db_prefix() . "orignal_documents od ON od.id = dr.doc_id
+//                 LEFT JOIN " . db_prefix() . "client_passport_details pd ON pd.client_id = c.userid
+//                 LEFT JOIN " . db_prefix() . "passport_stages ps ON ps.id = pd.passport_status
+//                 LEFT JOIN " . db_prefix() . "academic_details ad ON ad.userid = c.userid
+// LEFT JOIN (
+//     SELECT 
+//         vd_latest.*,
+//         vd_sum.total_visa_cost,
+//         vv.name AS vendor_name,
+//         pm.name AS payment_mode_name
+//     FROM " . db_prefix() . "visa_details vd_latest
+
+//     /* Total visa cost per user */
+//     INNER JOIN (
+//         SELECT 
+//             userid,
+//             SUM(cost) AS total_visa_cost
+//         FROM " . db_prefix() . "visa_details
+//         GROUP BY userid
+//     ) vd_sum 
+//         ON vd_latest.userid = vd_sum.userid
+
+//     /* Latest visa record per user */
+//     INNER JOIN (
+//         SELECT 
+//             userid,
+//             MAX(id) AS latest_id
+//         FROM " . db_prefix() . "visa_details
+//         GROUP BY userid
+//     ) vd_max 
+//         ON vd_latest.userid = vd_max.userid
+//       AND vd_latest.id = vd_max.latest_id
+
+//     /* Extra joins */
+//     LEFT JOIN " . db_prefix() . "vendor_list vv 
+//         ON vv.id = vd_latest.vendor_id
+
+//     LEFT JOIN " . db_prefix() . "payment_mode pm 
+//         ON pm.id = vd_latest.payment_mode
+// ) vd 
+// ON vd.userid = c.userid
+
+
+
+
+//                 LEFT JOIN " . db_prefix() . "client_documents cd ON cd.client_id = c.userid
+//                 LEFT JOIN " . db_prefix() . "document_upload_type dt ON dt.lead_type = 2 AND dt.orignal_status = 1
+//                 LEFT JOIN " . db_prefix() . "currencies cu ON cu.id = c.scholarship_currency
+//                 LEFT JOIN " . db_prefix() . "currencies ctf ON ctf.id = u.fees_payment_currency_id
+          
+//           LEFT JOIN (
+//     SELECT td_latest.*,
+//           td_sum.total_ticket_cost
+//     FROM " . db_prefix() . "ticket_data td_latest
+//     INNER JOIN (
+//         SELECT client_id, SUM(IF(ticket_status != 6, ticket_cost, -ticket_cost)) AS total_ticket_cost
+//         FROM " . db_prefix() . "ticket_data
+//         GROUP BY client_id
+//     ) td_sum ON td_latest.client_id = td_sum.client_id
+//     INNER JOIN (
+//         SELECT client_id, MAX(id) AS latest_id
+//         FROM " . db_prefix() . "ticket_data where ticket_status !=6
+//         GROUP BY client_id
+//     ) td_max ON td_latest.client_id = td_max.client_id 
+//             AND td_latest.id = td_max.latest_id
+// ) td ON td.client_id = c.userid
+
+
+
+//                 LEFT JOIN " . db_prefix() . "vendor_list vl ON vl.id = td.vendor_id
+//                 LEFT JOIN " . db_prefix() . "departure_location fl ON fl.id = td.departure_location
+//                 LEFT JOIN " . db_prefix() . "ticket_batch tb ON tb.id = td.old_batch_id
+//                 LEFT JOIN " . db_prefix() . "pcc_status pcc ON pcc.id = c.pcc_status
+                
+//               {$apostile_query}  {$apostileSub}
+//                 WHERE 1=1 {$condition_sql}
+//                 GROUP BY c.userid {$group_by}   Order by c.userid";
+
+
+
+//     $sql = "SELECT {$selectColumnName}
+//                 FROM " . db_prefix() . "clients c
+//                 LEFT JOIN " . db_prefix() . "basic_details b ON c.userid = b.userid
+//                 LEFT JOIN " . db_prefix() . "ev_partner evp ON evp.id = c.agent_id
+//                 LEFT JOIN " . db_prefix() . "applicant_status s ON c.active = s.id
+//                 LEFT JOIN " . db_prefix() . "leads l ON l.id = c.leadid
+//                 LEFT JOIN " . db_prefix() . "staff st ON l.assigned = st.staffid
+//                 LEFT JOIN " . db_prefix() . "applicant_stages tt ON tt.id = c.applicant_stage
+//                 LEFT JOIN " . db_prefix() . "application_sub_category_mbbs ts ON ts.id = c.applicant_sub_status
+               
+                
+//                 LEFT JOIN tbladmission_preferences p 
+//                 ON p.userid = c.userid
+//                  LEFT JOIN " . db_prefix() . "client_university_shortlisting u ON u.client_id = c.userid AND u.status = 1 
+//               AND (
+//         (u.university_name IS NOT NULL AND p.primary_university = u.university_name)
+//         OR (u.university_name IS NULL)
+//   )
+
+//                 LEFT JOIN " . db_prefix() . "university_partner u_p ON u_p.id = u.partner
+//                 LEFT JOIN " . db_prefix() . "applicant_fees_details fd ON fd.client_id = c.userid
+//                 LEFT JOIN " . db_prefix() . "applicant_fees f ON f.id = fd.fees_id
+//                 LEFT JOIN " . db_prefix() . "orignal_document_status o ON o.id = c.orignal_document_status
+//                 LEFT JOIN " . db_prefix() . "orignal_documents_received dr ON dr.userid = c.userid
+//                 LEFT JOIN " . db_prefix() . "office_location dl ON dl.id = dr.location_id
+//                 LEFT JOIN " . db_prefix() . "orignal_documents od ON od.id = dr.doc_id
+//                 LEFT JOIN " . db_prefix() . "client_passport_details pd ON pd.client_id = c.userid
+//                 LEFT JOIN " . db_prefix() . "passport_stages ps ON ps.id = pd.passport_status
+//                 LEFT JOIN " . db_prefix() . "academic_details ad ON ad.userid = c.userid
+//                 LEFT JOIN " . db_prefix() . "neet_status ns ON ns.id = ad.neet_status 
+
+
+//  LEFT JOIN (
+//     SELECT 
+//       userid, 
+//       SUM(cost) AS total_visa_cost, 
+//       MAX(id) AS latest_id 
+//     FROM 
+//       tblvisa_details 
+//     GROUP BY 
+//       userid
+//   ) vd_sum ON vd_sum.userid = c.userid 
+  
+//   LEFT JOIN tblvisa_details vd_latest ON vd_latest.id = vd_sum.latest_id 
+//   LEFT JOIN (
+//     SELECT 
+//       client_id, 
+//       SUM(
+//         IF(
+//           ticket_status != 6, ticket_cost, - ticket_cost
+//         )
+//       ) AS total_ticket_cost, 
+//       MAX(
+//         CASE WHEN ticket_status != 6 THEN id END
+//       ) AS latest_id 
+//     FROM 
+//       tblticket_data 
+//     GROUP BY 
+//       client_id
+//   ) td_sum ON td_sum.client_id = c.userid 
+//   LEFT JOIN tblticket_data td ON td.id = td_sum.latest_id
+
+//                 LEFT JOIN " . db_prefix() . "client_documents cd ON cd.client_id = c.userid
+//                 LEFT JOIN " . db_prefix() . "document_upload_type dt ON dt.lead_type = 2 AND dt.orignal_status = 1
+//                 LEFT JOIN " . db_prefix() . "currencies cu ON cu.id = c.scholarship_currency
+//                 LEFT JOIN " . db_prefix() . "currencies ctf ON ctf.id = u.fees_payment_currency_id
+//                 LEFT JOIN " . db_prefix() . "vendor_list vl ON vl.id = td.vendor_id
+//                 LEFT JOIN " . db_prefix() . "departure_location fl ON fl.id = td.departure_location
+//                 LEFT JOIN " . db_prefix() . "ticket_batch tb ON tb.id = td.old_batch_id
+//                 LEFT JOIN " . db_prefix() . "pcc_status pcc ON pcc.id = c.pcc_status
+                
+//               {$apostile_query}  {$apostileSub}
+//                 WHERE 1=1 {$condition_sql}
+//               GROUP BY " . ($group_by ?: "c.userid") ;
+
+
+
+$sql = "SELECT {$selectColumnName}
                 FROM " . db_prefix() . "clients c
                 LEFT JOIN " . db_prefix() . "basic_details b ON c.userid = b.userid
                 LEFT JOIN " . db_prefix() . "ev_partner evp ON evp.id = c.agent_id
@@ -1175,16 +1561,16 @@ function syncExcel_neww($id = "")
                 LEFT JOIN " . db_prefix() . "staff st ON l.assigned = st.staffid
                 LEFT JOIN " . db_prefix() . "applicant_stages tt ON tt.id = c.applicant_stage
                 LEFT JOIN " . db_prefix() . "application_sub_category_mbbs ts ON ts.id = c.applicant_sub_status
-               
-                
-                LEFT JOIN tbladmission_preferences p 
-                ON p.userid = c.userid
-                 LEFT JOIN " . db_prefix() . "client_university_shortlisting u ON u.client_id = c.userid AND u.status = 1 
-              AND (
-        (u.university_name IS NOT NULL AND p.primary_university = u.university_name)
-        OR (u.university_name IS NULL)
-   )
 
+                LEFT JOIN " . db_prefix() . "admission_preferences p
+                    ON p.userid = c.userid
+                LEFT JOIN " . db_prefix() . "client_university_shortlisting u
+                    ON u.client_id = c.userid
+                   AND u.status = 1
+                   AND (
+                        (u.university_name IS NOT NULL AND p.primary_university = u.university_name)
+                     OR (u.university_name IS NULL)
+                   )
                 LEFT JOIN " . db_prefix() . "university_partner u_p ON u_p.id = u.partner
                 LEFT JOIN " . db_prefix() . "applicant_fees_details fd ON fd.client_id = c.userid
                 LEFT JOIN " . db_prefix() . "applicant_fees f ON f.id = fd.fees_id
@@ -1195,80 +1581,81 @@ function syncExcel_neww($id = "")
                 LEFT JOIN " . db_prefix() . "client_passport_details pd ON pd.client_id = c.userid
                 LEFT JOIN " . db_prefix() . "passport_stages ps ON ps.id = pd.passport_status
                 LEFT JOIN " . db_prefix() . "academic_details ad ON ad.userid = c.userid
-LEFT JOIN (
-    SELECT 
-        vd_latest.*,
-        vd_sum.total_visa_cost,
-        vv.name AS vendor_name,
-        pm.name AS payment_mode_name
-    FROM " . db_prefix() . "visa_details vd_latest
+                LEFT JOIN " . db_prefix() . "neet_status ns ON ns.id = ad.neet_status
 
-    /* Total visa cost per user */
-    INNER JOIN (
-        SELECT 
-            userid,
-            SUM(cost) AS total_visa_cost
-        FROM " . db_prefix() . "visa_details
-        GROUP BY userid
-    ) vd_sum 
-        ON vd_latest.userid = vd_sum.userid
+                /* ---------- Visa: latest record + total + vendor + payment_mode ---------- */
+                LEFT JOIN (
+                    SELECT
+                        v.*,
+                        v_sum.total_visa_cost,
+                        vv.name AS vendor_name,
+                        pm.name AS payment_mode_name
+                    FROM " . db_prefix() . "visa_details v
+                    INNER JOIN (
+                        SELECT
+                            userid,
+                            
+                            SUM(
+        cost * CASE
+            WHEN exchange_rate = 0 THEN 1
+            ELSE exchange_rate
+        END
+    ) AS total_visa_cost,
+                            MAX(id)   AS latest_id
+                        FROM " . db_prefix() . "visa_details
+                        GROUP BY userid
+                    ) v_sum
+                        ON v_sum.userid = v.userid
+                       AND v.id        = v_sum.latest_id
+                    LEFT JOIN " . db_prefix() . "vendor_list vv
+                        ON vv.id = v.vendor_id
+                    LEFT JOIN " . db_prefix() . "payment_mode pm
+                        ON pm.id = v.payment_mode
+                ) vd ON vd.userid = c.userid
 
-    /* Latest visa record per user */
-    INNER JOIN (
-        SELECT 
-            userid,
-            MAX(id) AS latest_id
-        FROM " . db_prefix() . "visa_details
-        GROUP BY userid
-    ) vd_max 
-        ON vd_latest.userid = vd_max.userid
-       AND vd_latest.id = vd_max.latest_id
-
-    /* Extra joins */
-    LEFT JOIN " . db_prefix() . "vendor_list vv 
-        ON vv.id = vd_latest.vendor_id
-
-    LEFT JOIN " . db_prefix() . "payment_mode pm 
-        ON pm.id = vd_latest.payment_mode
-) vd 
-ON vd.userid = c.userid
-
-
-
+                /* ---------- Tickets: latest non-cancelled + total ---------- */
+                LEFT JOIN (
+                    SELECT
+                        t.*,
+                        t_sum.total_ticket_cost
+                    FROM " . db_prefix() . "ticket_data t
+                    INNER JOIN (
+                        SELECT
+                            client_id,
+                            SUM(IF(ticket_status <> 6, ticket_cost, -ticket_cost)) AS total_ticket_cost,
+                            MAX(CASE WHEN ticket_status <> 6 THEN id END)          AS latest_id
+                        FROM " . db_prefix() . "ticket_data
+                        GROUP BY client_id
+                    ) t_sum
+                        ON t_sum.client_id = t.client_id
+                       AND t.id            = t_sum.latest_id
+                ) td ON td.client_id = c.userid
 
                 LEFT JOIN " . db_prefix() . "client_documents cd ON cd.client_id = c.userid
-                LEFT JOIN " . db_prefix() . "document_upload_type dt ON dt.lead_type = 2 AND dt.orignal_status = 1
-                LEFT JOIN " . db_prefix() . "currencies cu ON cu.id = c.scholarship_currency
+                LEFT JOIN " . db_prefix() . "document_upload_type dt
+                    ON dt.lead_type = 2 AND dt.orignal_status = 1
+                LEFT JOIN " . db_prefix() . "currencies cu  ON cu.id  = c.scholarship_currency
                 LEFT JOIN " . db_prefix() . "currencies ctf ON ctf.id = u.fees_payment_currency_id
-          
-          LEFT JOIN (
-    SELECT td_latest.*,
-           td_sum.total_ticket_cost
-    FROM " . db_prefix() . "ticket_data td_latest
-    INNER JOIN (
-        SELECT client_id, SUM(IF(ticket_status != 6, ticket_cost, -ticket_cost)) AS total_ticket_cost
-        FROM " . db_prefix() . "ticket_data
-        GROUP BY client_id
-    ) td_sum ON td_latest.client_id = td_sum.client_id
-    INNER JOIN (
-        SELECT client_id, MAX(id) AS latest_id
-        FROM " . db_prefix() . "ticket_data where ticket_status !=6
-        GROUP BY client_id
-    ) td_max ON td_latest.client_id = td_max.client_id 
-            AND td_latest.id = td_max.latest_id
-) td ON td.client_id = c.userid
-
-
-
-                LEFT JOIN " . db_prefix() . "vendor_list vl ON vl.id = td.vendor_id
+                LEFT JOIN " . db_prefix() . "vendor_list vl       ON vl.id = td.vendor_id
                 LEFT JOIN " . db_prefix() . "departure_location fl ON fl.id = td.departure_location
-                LEFT JOIN " . db_prefix() . "ticket_batch tb ON tb.id = td.old_batch_id
-                LEFT JOIN " . db_prefix() . "pcc_status pcc ON pcc.id = c.pcc_status
-                
-               {$apostile_query}  {$apostileSub}
-                WHERE 1=1 {$condition_sql}
-                GROUP BY c.userid {$group_by}   Order by c.userid";
+                LEFT JOIN " . db_prefix() . "ticket_batch tb       ON tb.id = td.old_batch_id
+                LEFT JOIN " . db_prefix() . "pcc_status pcc        ON pcc.id = c.pcc_status
 
+                {$apostile_query} {$apostileSub}
+                WHERE 1=1 {$condition_sql}
+                GROUP BY " . ($group_by ?: "c.userid");
+                
+               $offset = isset($_REQUEST['offset']) ? (int) $_REQUEST['offset'] : 0;
+$limit  = isset($_REQUEST['limit'])  ? (int) $_REQUEST['limit']  : 0;
+
+if ($limit > 0) {
+    if ($offset < 0) $offset = 0;
+    $sql .= " LIMIT " . $offset . ", " . $limit . " ";
+}
+                
+                // Order by c.userid
+
+// SUM(cost) AS total_visa_cost,
 
         //  if (!empty($apostile_documents_status) && (int) $apostile_documents_status === 1) {
         //      echo $sql; die;
@@ -1276,10 +1663,11 @@ ON vd.userid = c.userid
         // if (!empty($orignal_documents_status) && (int) $orignal_documents_status === 1) {
         //  echo $sql; die;
         //         }
-        // if($currentId == 4)
+        // if(!empty($_REQUEST['debug']) && $_REQUEST['debug'] == 1 && $currentId ==26)
         // {
         //  echo $sql; die;
         // }
+        // echo $sql; die;
         $arrayData = $CI->db->query($sql)->result_array();
 
         // Get column names
@@ -1407,13 +1795,12 @@ function fly_excel_sync($id = "")
             // safer split (handles spaces correctly)
             list($start, $end) = array_map('trim', explode(" - ", $acadmic_year));
 
-            // build semester codes
-            $first_semester  = $start . "-09";
+             $first_semester  = $start . "-09";
             $second_semester = $end . "-02";
 
-
-            $condition_sql .= " AND (p.session_intake = " . $CI->db->escape($first_semester) .
-                " OR p.session_intake = " . $CI->db->escape($second_semester) . ")";
+            $condition_sql .= " AND ( p.session_intake IN (" . $CI->db->escape($first_semester) .",". $CI->db->escape($second_semester) . ") )";
+                
+                //   $condition_sql .= " AND p.session_intake IN (" . $CI->db->escape($first_semester) .",". $CI->db->escape($second_semester) . ")";
         }
         $condition_sql = "";
         $condition_sql .= " AND ((l.type = 2 OR l.type IS NULL) OR c.client_type = 2)  and c.userid IS NOT NULL ";
@@ -1582,13 +1969,16 @@ function visa_excel_sync($id = "")
             // safer split (handles spaces correctly)
             list($start, $end) = array_map('trim', explode(" - ", $acadmic_year));
 
-            // build semester codes
-            $first_semester  = $start . "-09";
+           $first_semester  = $start . "-09";
             $second_semester = $end . "-02";
 
+            $condition_sql .= " AND ( p.session_intake IN (" . $CI->db->escape($first_semester) .",". $CI->db->escape($second_semester) . ") )";
 
-            $condition_sql .= " AND (p.session_intake = " . $CI->db->escape($first_semester) .
-                " OR p.session_intake = " . $CI->db->escape($second_semester) . ")";
+
+            // $condition_sql .= " AND (p.session_intake = " . $CI->db->escape($first_semester) .
+            //     " OR p.session_intake = " . $CI->db->escape($second_semester) . ")";
+            
+            //   $condition_sql .= " AND p.session_intake IN (" . $CI->db->escape($first_semester) .",". $CI->db->escape($second_semester) . ") ";
         }
         $condition_sql = "";
         $condition_sql .= " AND ((l.type = 2 OR l.type IS NULL) OR c.client_type = 2)  and c.userid IS NOT NULL ";
@@ -1611,6 +2001,7 @@ LEFT JOIN " . db_prefix() . "passport_stages ps ON ps.id = pd.passport_status
  LEFT JOIN " . db_prefix() . "payment_mode pm ON pm.id = vd.payment_mode
 LEFT JOIN " . db_prefix() . "visa_status vs ON vs.id = vd.status
 LEFT JOIN " . db_prefix() . "vendor_list vl ON vl.id = vd.vendor_id
+LEFT JOIN " . db_prefix() . "currencies ctf ON ctf.id = vd.currency_type
 
 WHERE 1=1 {$condition_sql}
 GROUP BY c.userid,vd.id";
@@ -1733,12 +2124,16 @@ function sa_excel_sync($id = "")
             list($start, $end) = array_map('trim', explode(" - ", $acadmic_year));
 
             // build semester codes
-            $first_semester  = $start . "-09";
+             $first_semester  = $start . "-09";
             $second_semester = $end . "-02";
 
+            $condition_sql .= " AND ( " . db_prefix() . "admission_preferences.session_intake IN (" . $CI->db->escape($first_semester) .",". $CI->db->escape($second_semester) . ") )";
 
-            $condition_sql .= " AND (" . db_prefix() . "admission_preferences.session_intake = " . $CI->db->escape($first_semester) .
-                " OR " . db_prefix() . "admission_preferences.session_intake = " . $CI->db->escape($second_semester) . ")";
+
+            // $condition_sql .= " AND (" . db_prefix() . "admission_preferences.session_intake = " . $CI->db->escape($first_semester) .
+            //     " OR " . db_prefix() . "admission_preferences.session_intake = " . $CI->db->escape($second_semester) . ")";
+                
+                //   $condition_sql .= " AND admission_preferences.session_intake IN (" . $CI->db->escape($first_semester) .",". $CI->db->escape($second_semester) . ")";
         }
         // if (!empty($sql_conditions)) {
         //     $condition_sql .= " {$sql_conditions}";
@@ -1790,6 +2185,10 @@ GROUP BY " . db_prefix() . "clients.userid";
         //  echo $sql; die;
         //  }
 
+  if(!empty($_REQUEST['debug']) && $_REQUEST['debug'] == 1)
+        {
+         echo $sql; die;
+        }
 
         $sql = preg_replace('/\s+/', ' ', trim($sql));
         $query = $CI->db->query($sql);
@@ -1993,6 +2392,11 @@ function ma_quotations()
     $CI = &get_instance();
     $CI->db->query("SET SESSION group_concat_max_len = 10000000000");
     $acadmic_year = "2025 - 2026";
+    
+    if(!empty($_GET['year']))
+    {
+       $acadmic_year = $_GET['year'];
+    }
 
     if (!empty($acadmic_year)) {
 
@@ -2011,8 +2415,12 @@ function ma_quotations()
         $second_semester = $end . "-02";
 
 
-        $condition_sql .= " AND (p.session_intake = " . $CI->db->escape($first_semester) .
-            " OR p.session_intake = " . $CI->db->escape($second_semester) . ")";
+       $condition_sql .= " AND ( p.session_intake IN (" . $CI->db->escape($first_semester) .",". $CI->db->escape($second_semester) . ") )";
+       
+        // $condition_sql .= " AND (p.session_intake = " . $CI->db->escape($first_semester) .
+        //     " OR p.session_intake = " . $CI->db->escape($second_semester) . ")";
+            
+            //  $condition_sql .= " AND p.session_intake IN (" . $CI->db->escape($first_semester) .",". $CI->db->escape($second_semester) . ") ";
     }
     $columns = [
         "Applicant Name",
@@ -2394,7 +2802,7 @@ function payment_quotations($id = '')
     $dataArray = [];
 
     foreach ($sheetData as $sheet) {
-
+ 
 
         $currentId                = $sheet['id'] ?? null;
         $fromDate                 = $sheet['fromDate'] ?? null;
@@ -2438,9 +2846,9 @@ function payment_quotations($id = '')
             $condition_sql .= " AND (c.datecreated BETWEEN " . $CI->db->escape($fromDate) . " AND " . $CI->db->escape($toDate) . ")";
         }
         if (!empty($acadmic_year)) {
-            // $condition_sql .= " AND (p.acadmic_year = " . $CI->db->escape($acadmic_year) . ")";
+            $condition_sql .= " AND (p.acadmic_year = " . $CI->db->escape($acadmic_year) . ")";
         }
-        $condition_sql = "";
+        // $condition_sql = "";
         $condition_sql .= " AND ((l.type = 2 OR l.type IS NULL) OR c.client_type = 2)  and c.userid IS NOT NULL ";
 
         $sql = "
@@ -2782,7 +3190,7 @@ WHERE ho.status = 1";
 }
 
 
-function ex_visa_data()
+function ex_visa_data($id)
 {
     
 
@@ -2795,11 +3203,14 @@ function ex_visa_data()
         ->from(db_prefix() . "excel_data_update")
         ->where("excel_type", 7)
         ->where("autoSync", 1)
+         ->where("spreadsheetId", $id)
+        
         ->order_by("id", "asc")
         ->get()
         ->result_array();
 
     $dataArray = [];
+
 
     foreach ($sheetData as $sheet) {
         $currentId     = $sheet['id'] ?? null;
@@ -2833,8 +3244,10 @@ function ex_visa_data()
         // Build conditions
         $condition_sql = "";
         if (!empty($fromDate) && !empty($toDate)) {
-            $condition_sql .= " AND (vd.created_at BETWEEN " . $CI->db->escape($fromDate) . " AND " . $CI->db->escape($toDate) . ")";
+            $condition_sql .= " AND (vd.payment_date BETWEEN " . $CI->db->escape($fromDate) . " AND " . $CI->db->escape($toDate) . ")";
         }
+
+   
         $sql = "
     SELECT 
         {$selectColumnName}
@@ -2891,7 +3304,7 @@ function ex_visa_data()
 }
 
 
-function ex_ticket_data()
+function ex_ticket_data($id)
 {
     
 
@@ -2904,6 +3317,7 @@ function ex_ticket_data()
         ->from(db_prefix() . "excel_data_update")
         ->where("excel_type", 8)
         ->where("autoSync", 1)
+        ->where("spreadsheetId",$id)
         ->order_by("id", "asc")
         ->get()
         ->result_array();
@@ -2942,7 +3356,7 @@ function ex_ticket_data()
         // Build conditions
         $condition_sql = "";
         if (!empty($fromDate) && !empty($toDate)) {
-            $condition_sql .= " AND (vd.created_at BETWEEN " . $CI->db->escape($fromDate) . " AND " . $CI->db->escape($toDate) . ")";
+            $condition_sql .= " AND (vd.payment_date BETWEEN " . $CI->db->escape($fromDate) . " AND " . $CI->db->escape($toDate) . ")";
         }
         $sql = "
     SELECT 

@@ -2,8 +2,8 @@
 
 defined('BASEPATH') or exit('No direct script access allowed');
 $this->ci->load->model('leads_model');
-
-$user_lead_type = get_user_lead_type(get_staff_user_id());
+// $user_lead_type = get_user_lead_type(get_staff_user_id());
+$user_lead_type = get_staff_user_department_lead_type(get_staff_user_id());
 if (!empty($user_lead_type->lead_type)) {
     $user_lead_type = $user_lead_type->lead_type;
 } else {
@@ -95,19 +95,23 @@ if (!empty($tblma_applicant_tracker)) {
                 if ($value["column_name"] == "original_documents_georgia") {
                     $orignal_documents = array_merge($orignal_documents, get_orignal_document_list(0, 1));
                 }
-                if ($value["column_name"] == "apostille_documents") {
+                    if ($value["column_name"] == "apostille_documents") {
                     $orignal_documents = array_merge($orignal_documents, get_orignal_document_list(0, 0, 1));
-                     $apostille_visa_apostile_documents = get_orignal_document_list(0, 0, 0, 0, 0, 0, 1,["status"=>0]);
-                     
-                     if (!is_array($orignal_documents)) {
-   $orignal_documents = [];
-}
-if (!is_array($apostille_visa_apostile_documents)) {
-   $apostille_visa_apostile_documents = [];
-}
-
-$orignal_documents = array_merge($orignal_documents, $apostille_visa_apostile_documents);
-                }
+                    $apostille_visa_apostile_documents = get_orignal_document_list(0, 0, 0, 0, 0, 0, 1,["status"=>0]);
+                    
+                    if (!is_array($orignal_documents)) {
+                    $orignal_documents = [];
+                    }
+                    if (!is_array($apostille_visa_apostile_documents)) {
+                    $apostille_visa_apostile_documents = [];
+                    }
+                    
+                    $orignal_documents = array_merge($orignal_documents, $apostille_visa_apostile_documents);
+                    // echo count($orignal_documents);
+                    // // print_r($orignal_documents);
+                    // die;
+                
+                    }
                 if ($value["column_name"] == "orignal_document_visa_rest") {
                     $orignal_documents = array_merge($orignal_documents, get_orignal_document_list(0, 0, 0, '', 1));
                 }
@@ -442,11 +446,98 @@ if ($this->ci->input->post('university')) {
 }
 
 
+// if ($this->ci->input->post('university_secondary')) {
+//     $universities = $this->ci->input->post('university_secondary');
+//     if (is_array($universities)) {
+//         $escaped_universities = array_map([$this->ci->db, 'escape'], $universities);
+//         array_push($where, 'AND ' . db_prefix() . 'admission_preferences.primary_university not IN (' . implode(',', $escaped_universities) . ')');
+//     }
+// }
+
+
 if ($this->ci->input->post('university_secondary')) {
+
     $universities = $this->ci->input->post('university_secondary');
+
     if (is_array($universities)) {
-        $escaped_universities = array_map([$this->ci->db, 'escape'], $universities);
-        array_push($where, 'AND ' . db_prefix() . 'admission_preferences.primary_university not IN (' . implode(',', $escaped_universities) . ')');
+
+        $escaped_universities = array_map(
+            [$this->ci->db, 'escape'],
+            $universities
+        );
+
+      $where[] = "AND (
+
+    " . db_prefix() . "admission_preferences.primary_university 
+    NOT IN (" . implode(',', $escaped_universities) . ")
+
+    OR
+
+    (
+        " . db_prefix() . "admission_preferences.university_priority IS NOT NULL
+
+        AND JSON_UNQUOTE(
+            JSON_EXTRACT(
+                " . db_prefix() . "admission_preferences.university_priority,
+                REPLACE(
+                    JSON_UNQUOTE(
+                        JSON_SEARCH(
+                            " . db_prefix() . "admission_preferences.university_priority,
+                            'one',
+                            '2',
+                            NULL,
+                            '$[*].priority'
+                        )
+                    ),
+                    '.priority',
+                    '.university'
+                )
+            )
+        ) IN (" . implode(',', $escaped_universities) . ")
+    )
+
+)";
+    }
+}
+
+// if ($this->ci->input->post('university_third')) {
+//     $universities = $this->ci->input->post('university_third');
+//     if (is_array($universities)) {
+//         $escaped_universities = array_map([$this->ci->db, 'escape'], $universities);
+//         array_push($where, 'AND ' . db_prefix() . 'admission_preferences.university_priority not IN (' . implode(',', $escaped_universities) . ')');
+//     }
+// }
+
+
+if ($this->ci->input->post('university_third')) {
+
+    $universities = $this->ci->input->post('university_third');
+
+    if (is_array($universities)) {
+
+        $escaped_universities = array_map(
+            [$this->ci->db, 'escape'],
+            $universities
+        );
+
+        $where[] = "AND JSON_UNQUOTE(
+            JSON_EXTRACT(
+                " . db_prefix() . "admission_preferences.university_priority,
+                REPLACE(
+                    JSON_UNQUOTE(
+                        JSON_SEARCH(
+                            " . db_prefix() . "admission_preferences.university_priority,
+                            'one',
+                            '3',
+                            NULL,
+                            '$[*].priority'
+                        )
+                    ),
+                    '.priority',
+                    '.university'
+                )
+            )
+        ) IN (" . implode(',', $escaped_universities) . ")";
     }
 }
 
@@ -648,6 +739,42 @@ if ($this->ci->input->post('session_intake')) {
     );
 }
 
+
+if ($this->ci->input->post('acadmic_year')) {
+    $acadmic_year = $this->ci->input->post('acadmic_year');
+
+
+// $first_semester  = $acadmic_year . "-09";
+//             $second_semester = ($acadmic_year+1) . "-02";
+
+//              array_push(
+//     $where, " AND " . db_prefix() . "admission_preferences.session_intake IN (" . $CI->db->escape($first_semester) .",". $CI->db->escape($second_semester) . ")" );
+            
+//   array_push(
+//     $where,
+//     "AND (
+//         TRIM(SUBSTRING_INDEX(" . db_prefix() . "admission_preferences.acadmic_year, '-', 1)) = '" . $this->ci->db->escape_str($acadmic_year) . "'
+//         OR " . db_prefix() . "admission_preferences.acadmic_year IS NULL
+//         OR " . db_prefix() . "admission_preferences.acadmic_year = ''
+//     )"
+// );
+
+
+// if(is_admin())
+// {
+    $first_semester  = $acadmic_year . "-09";
+            $second_semester = ((int)$acadmic_year+1) . "-02";
+
+             array_push(
+    $where, " AND (" . db_prefix() . "admission_preferences.session_intake IN ('" . $first_semester ."','". $second_semester. "') or " . db_prefix() . "admission_preferences.session_intake IS NULL)" );
+    
+    // echo " AND " . db_prefix() . "admission_preferences.session_intake IN ('" . $first_semester ."','". $second_semester. "')" ;
+    // die;
+// }
+}
+
+
+
 if ($this->ci->input->post('last_to_date')) {
     $from_date = $this->ci->input->post('last_from_date');
     $to_date = $this->ci->input->post('last_to_date');
@@ -713,6 +840,8 @@ $additional_array = [
     db_prefix() . 'clients.userid as userid',
     db_prefix() . 'clients.active as status_id',
     db_prefix() . 'applicant_status.color as color',
+    db_prefix() . 'admission_preferences.university_priority as university_priority'
+    
 ];
 
 
@@ -862,7 +991,36 @@ else
 
     if (!empty($aRow["secondary_university"])) {
         $primary_university = trim($aRow["primary_university_select"]);
-        $secondary_university = json_decode($aRow["secondary_university"], true); // Decode JSON as an associative array
+        // $secondary_university = json_decode($aRow["secondary_university"], true); // Decode JSON as an associative array
+
+        // $filtered_universities = [];
+
+        // foreach ($secondary_university as $universities) {
+        //     // Remove primary university and merge the remaining universities into the final array
+        //     $filtered_universities = array_merge($filtered_universities, array_diff(array_map('trim', explode(",", $universities)), [$primary_university]));
+        // }
+
+        // $aRow["secondary_university"] = implode(",", $filtered_universities);
+        
+        $primary_university = trim($aRow["primary_university_select"]);
+$filtered_universities = [];
+
+// if(is_admin())
+// {
+//     echo "<pre>";
+//     print_r($aRow);
+//     die;
+// }
+// If priority_university exists, use it
+
+
+
+if (empty($aRow["university_priority"])) {
+
+
+    $priority_university = json_decode($aRow["secondary_university"], true);
+
+  $secondary_university = json_decode($aRow["secondary_university"], true); // Decode JSON as an associative array
 
         $filtered_universities = [];
 
@@ -872,6 +1030,46 @@ else
         }
 
         $aRow["secondary_university"] = implode(",", $filtered_universities);
+
+
+//   $filtered_universities[] =  $aRow['secondary_university'];
+
+} 
+// Else use secondary_university
+elseif (!empty($aRow["secondary_university"])) {
+
+    $secondary_university = json_decode(
+        $aRow["secondary_university"],
+        true
+    );
+
+    // If JSON decode fails, treat as string
+    if (json_last_error() !== JSON_ERROR_NONE) {
+        $secondary_university = $aRow["secondary_university"];
+    }
+
+    // Convert single string to array
+    if (!is_array($secondary_university)) {
+        $secondary_university = [$secondary_university];
+    }
+
+    foreach ($secondary_university as $universities) {
+
+        $universities = is_array($universities)
+            ? $universities
+            : explode(',', $universities);
+
+        $filtered_universities = array_merge(
+            $filtered_universities,
+            array_diff(
+                array_map('trim', $universities),
+                [$primary_university]
+            )
+        );
+    }
+}
+
+$aRow["secondary_university"] = implode(",", $filtered_universities);
     }
 
 

@@ -196,7 +196,7 @@ if(is_admin())
                     "ticket_status"      => isset($client_exam_data["ticket_status"])?$client_exam_data["ticket_status"]:2,
                     "country_name"       => $get_primary_university[$client_id]["primary_country"] ?? '',
                     "university_name"    => $get_primary_university[$client_id]["primary_university"] ?? '',
-                    // "old_batch_id"    => $client_exam_data["old_batch_id"] ?? ''
+                    "airline"    => $client_exam_data["airline"] ?? ''
 
                 ];
                 if (!empty($client_exam_data["ticket_file"])) {
@@ -210,6 +210,7 @@ if(is_admin())
                 if (!empty($client_exam_data["old_batch_id"])) {
                     $data["old_batch_id"] = $client_exam_data["old_batch_id"];
                 }
+                 
       
 
 

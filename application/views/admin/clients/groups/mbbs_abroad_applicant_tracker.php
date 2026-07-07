@@ -673,7 +673,10 @@ if (empty($staff_list[get_staff_user_id()]["post_sales"]) && !is_admin()) {
 }
 ?>
 <div class="row">
+   
     <div id="msform" class="col-md-12 ">
+        
+        
         <!-- <form id="msform" onsubmit="return false;"> -->
         <ul id="progressbar" class="d-flex justify-content-center">
             <?php
@@ -685,11 +688,22 @@ if (empty($staff_list[get_staff_user_id()]["post_sales"]) && !is_admin()) {
             }
             ?>
         </ul>
+          <?php 
+           
+           if(!empty($client->fees_error) && $client->fees_error==1 ) { ?>
+        <div class="alert alert-warning d-flex align-items-start warning-message-fees" role="alert">
+        <div>
+        <strong> <i class="fa fa-exclamation-triangle"></i> &nbsp; Attention!</strong><br>
+        Your applicant fee and scholarship details have been cleared because the Primary Country or University was changed. Please review and complete the fee and scholarship details again before proceeding.
+        </div>
+        </div>
+         <?php } ?>
         <?php
 
 
         if ($client_infomation->active == 4 || $client_infomation->active == 2) {
         ?>
+        
             <?php if ($client_infomation->active == 4) { ?>
                 <section>
                     <fieldset id="refund_stage">
@@ -741,6 +755,9 @@ if (empty($staff_list[get_staff_user_id()]["post_sales"]) && !is_admin()) {
         <?php
         } else {
         ?>
+
+
+
 
             <section style="display:<?= (empty($staff_list[get_staff_user_id()]["post_sales"]) && !is_admin()) ? 'none' : 'block' ?>">
                 <?php
@@ -1227,12 +1244,17 @@ if (empty($staff_list[get_staff_user_id()]["post_sales"]) && !is_admin()) {
                                         ?>
 
                                             <div class="legalization-item card shadow-sm p-3 mb-3">
-                                                <h4 class="university-name"><?= htmlspecialchars($leg["university_name"], ENT_QUOTES, 'UTF-8') ?> <span class="pull-right h6 fw-bold">Fees Deposite Proof Uploaded : <?= !empty($file_url_payment) ? "Yes" : "No" ?> &nbsp; <?php if ((!empty($leg["leg_applied_date"]) && $leg["leg_applied_date"] != "0000-00-00" && $client_infomation->client_type == 1 && $admissionpreferences->session_intake >= SESSION_INTAKE && !empty($staff_list[get_staff_user_id()]["post_sales"])) || is_admin()) { ?>
-
-                                                            <?= getLastEmailWhatsappDate("email", LEGALIZATION_TEMPLATE_ID, $client_id) ?>
-                                                            <button type="button" class="btn btn-primary btn-xs" onclick="email_send(<?= $client_id ?>,5)"><i class="fa fa-envelope hide-client-type"></i> </button>
-
-                                                        <?php } ?></span>
+                                                <h4 class="university-name"><?= htmlspecialchars($leg["university_name"], ENT_QUOTES, 'UTF-8') ?> 
+                                                
+                                                <span class="pull-right h6 fw-bold">Fees Deposite Proof Uploaded : <?= !empty($file_url_payment) ? "Yes" : "No" ?> &nbsp; 
+                                                <?php if ((!empty($leg["leg_applied_date"]) && $leg["leg_applied_date"] != "0000-00-00" && $client_infomation->client_type == 1 && $admissionpreferences->session_intake >= SESSION_INTAKE && (!empty($staff_list[get_staff_user_id()]["post_sales"]) || is_admin())) ) {
+                                                if($leg['country_name'] == 'Georgia' ){
+                                                ?>
+                                                <?= getLastEmailWhatsappDate("email", LEGALIZATION_TEMPLATE_ID, $client_id) ?>
+                                                <button type="button" class="btn btn-primary btn-xs" onclick="email_send(<?= $client_id ?>,5)"><i class="fa fa-envelope hide-client-type"></i> </button>
+                                                <?php } 
+                                                } ?>
+                                                </span>
 
                                                 </h4>
                                                 <br>
@@ -1415,9 +1437,11 @@ if (empty($staff_list[get_staff_user_id()]["post_sales"]) && !is_admin()) {
                                                             <button type="button" class="btn btn-primary btn-xs hide" onclick="whatsapp_message_send(<?= !empty($client_id) ? $client_id : '' ?>, 4,'','<?= htmlspecialchars($university) ?>')"><i class="fa fa-whatsapp hide-client-type"></i> </button>
 
                                                             <button type="button" class="btn btn-primary btn-xs hide" onclick="email_send(<?= !empty($client_id) ? $client_id : '' ?>, 3,<?= $leg['invitation_letter'] ?>)"><i class="fa fa-envelope hide-client-type"></i></button>
-
+<?php if($leg['country_name'] == 'Georgia'){ ?>
                                                             <?= getLastEmailWhatsappDate("email", BANK_STATEMENT_TEMPLATE_ID, $client_id) ?>
                                                             <button type="button" class="btn btn-primary btn-xs" onclick="email_send(<?= $client_id ?>,6)"><i class="fa fa-envelope hide-client-type"></i> </button>
+                                                            
+                                                            <?php } ?>
 
                                                         <?php } ?>
                                                     </span>
@@ -1590,7 +1614,7 @@ if (empty($staff_list[get_staff_user_id()]["post_sales"]) && !is_admin()) {
                                                         </div>
 
                                                         <?php if (strtolower($admissionpreferences->primary_country) == "georgia") { ?>
-                                                            <div class="col-md-4">
+                                                            <div class="col-md-4 hide">
                                                                 <label>Visa Application Form <small class='text-danger'>*</small></label>
                                                                 <?php
                                                                 $re = !empty($file_url_application_form) ? 'false' : 'true';
@@ -1641,6 +1665,59 @@ echo render_input(
                                                             </div>
 
                                                         <?php } ?>
+                                                        
+                                                     <?php
+$is_required = ($client_infomation->client_type == 1 && $admissionpreferences->session_intake >= SESSION_INTAKE );
+
+$username_attrs = [
+    'placeholder' => 'Username',
+    'autocomplete' => 'off',
+];
+
+if ($is_required) {
+    $username_attrs['required-check'] = 'required-check';
+    $username_attrs['required'] = 'required';
+}
+?>
+
+<div class="col-md-4">
+    <label>
+        Visa Credentials
+        <?php if ($is_required) { ?>
+            <small class="text-danger">*</small>
+        <?php } ?>
+    </label>
+
+    <?php echo render_input(
+        'visa_username_' . $visa_id,
+        '',
+        $visa['visa_username'] ?? '',
+        'text',
+        $username_attrs
+    ); ?>
+
+    <div class="input-group">
+        <input
+            type="password"
+            name="visa_password_<?php echo $visa_id; ?>"
+            id="visa_password_<?php echo $visa_id; ?>"
+            value="<?php echo $visa['visa_password'] ?? ''; ?>"
+            class="form-control"
+            placeholder="Password"
+            autocomplete="new-password"
+            <?php echo $is_required ? 'required' : ''; ?>
+        >
+
+        <span
+            class="input-group-addon"
+            onclick="togglePassword('<?php echo $visa_id; ?>')"
+            style="cursor:pointer;"
+        >
+            <i class="fa fa-eye" id="eye_<?php echo $visa_id; ?>"></i>
+        </span>
+    </div>
+</div>
+                                                        
                                                     </div>
                                                     <div class="d-flex visa-receving-details">
                                                         <div class="col-md-4">
@@ -1873,9 +1950,8 @@ echo render_input(
                         } ?>
 
                         <?php if ((is_admin() || !empty($staff_list[get_staff_user_id()]["post_sales"])) && !empty($track['save']) && $track['id'] == 2) { ?>
-                            <div class="col-lg-5 pull-right">
+                            <div class="col-lg-5 pull-right hide">
                                 <div class="form-group">
-                                    <!-- <label for="primary_university">Primary University<small class="text-danger">*</small></label> -->
                                     <select class="form-control selectpicker" required-check name="primary_university" id="primary_university" required>
                                         <option value="">Select University</option>
                                         <?php
@@ -1883,7 +1959,7 @@ echo render_input(
 
                                         if (!empty($university_p)) {
                                             foreach ($university_p as $key => $country) {
-                                                $universities = array_filter(explode(",", $country)); // Remove empty values
+                                                $universities = array_filter(explode(",", $country)); 
                                                 foreach ($universities as $uni) { ?>
                                                     <option data-country="<?= $key ?>" <?= ($admissionpreferences->primary_university == $uni) ? 'selected' : '' ?> value="<?= htmlspecialchars($uni) ?>"><?= htmlspecialchars($uni) ?></option>
                                         <?php }
@@ -1950,6 +2026,23 @@ echo render_input(
     var client_id = <?= !empty($client_id) ? $client_id : '' ?>;
     var complete_application = " <?= !empty($client->sc_100) && $client->sc_100 == 1 ? 1 : 0 ?>";
     var is_admin = <?= is_admin() ? 1 : 0 ?>;
+   
+   
+   function togglePassword(id) {
+    var passwordField = document.getElementById('visa_password_' + id);
+    var eyeIcon = document.getElementById('eye_' + id);
+
+    if (passwordField.type === 'password') {
+        passwordField.type = 'text';
+        eyeIcon.classList.remove('fa-eye');
+        eyeIcon.classList.add('fa-eye-slash');
+    } else {
+        passwordField.type = 'password';
+        eyeIcon.classList.remove('fa-eye-slash');
+        eyeIcon.classList.add('fa-eye');
+    }
+}
+
     if (complete_application == 1) {
         setTimeout(function() {
 
@@ -2011,8 +2104,44 @@ echo render_input(
     // let client_type = <?= (int)$client_infomation->client_type ?>;
     let lastEmailDateHtml_leg = `<?php echo addslashes(getLastEmailWhatsappDate("email", LEGALIZATION_TEMPLATE_ID, $client_id)) ?>`;
     let lastEmailDateHtml_invitation = `<?php echo addslashes(getLastEmailWhatsappDate("email", BANK_STATEMENT_TEMPLATE_ID, $client_id)) ?>`;
+function chechShortListing(){
+if ($("#progressbar li.active").index() == 1) {
+
+    let totalOptions =
+        $(".add_university_div_block select:first option").length - 1;
+
+    // create university divs first
+    for (let i = 1; i < totalOptions; i++) {
+        add_university_div(1);
+    }
+
+    // wait for DOM render
+    setTimeout(function () {
+
+        $(".add_university_div_block select").each(function (index) {
+
+            // skip first placeholder option
+            let optionIndex = index + 1;
+
+            let $options = $(this).find("option");
+
+            if ($options.eq(optionIndex).length) {
+
+                $(this).val(
+                    $options.eq(optionIndex).val()
+                );
+
+                $(this).selectpicker('refresh');
+            }
+        });
+
+    }, 300);
+}
+}
 
 
+
+// if(activeDiv == "")
 
     notes_url = "<?= base_url() ?>admin/clients/get_application_notes/<?= $client_id ?>";
     activity_url = "<?= base_url() ?>admin/clients/get_application_activity/<?= $client_id ?>";
@@ -2612,6 +2741,9 @@ echo render_input(
 
 
                 if (same_step == 1) {
+                    if (id == 5 ){
+                     createLegalization(response.university_shortlisting, id);
+                    }
                     return false;
                 }
                 if (response.pass_stage !== undefined) {
@@ -2916,6 +3048,7 @@ echo render_input(
         let legalizationContainer = $(".legalization_div"); // Target container
 
         legalizationContainer.html('');
+        console.log(legalizationData);
         if (legalizationData.length > 0) {
 
 
@@ -2924,13 +3057,40 @@ echo render_input(
                 let mand = "";
                 let mand_re = "";
                 let base_url = "<?= base_url() ?>";
-                let email_button = "";
-                if ((leg.leg_payment_date != '0000-00-00' && leg.leg_payment_date != '') && client_type == 1) {
-                    email_button = `<span class="pull-right"> <button type="button" class="btn btn-primary btn-xs hide" onclick="whatsapp_message_send(${client_id}, 4,'','${leg.id}')"><i class="fa fa-whatsapp hide-client-type"></i></button> <button type="button" class="btn btn-primary btn-xs hide" onclick="email_send(${client_id}, 3,${leg.id})"><i class="fa fa-envelope hide-client-type"></i></button>
-                                    ${lastEmailDateHtml_leg}
-                    <button type="button" class="btn btn-primary btn-xs" onclick="email_send(${client_id},6)"><i class="fa fa-envelope hide-client-type"></i></button>
-                                                        </span>`;
-                }
+                let email_button = `
+                <span class="pull-right h6 fw-bold">
+                Fees Deposite Proof Uploaded : 
+                ${leg.fees_deposite_slip != '' ? 'Yes' : 'No'}
+                `;
+
+if (
+    (leg.leg_applied_date != '0000-00-00' &&
+        leg.leg_applied_date != '') &&
+    client_type == 1 &&
+    leg.country_name == 'Georgia'
+) {
+    email_button += `
+        <button type="button" class="btn btn-primary btn-xs hide" 
+            onclick="whatsapp_message_send(${client_id}, 4,'','${leg.id}')">
+            <i class="fa fa-whatsapp hide-client-type"></i>
+        </button>
+
+        <button type="button" class="btn btn-primary btn-xs hide" 
+            onclick="email_send(${client_id}, 3, ${leg.id})">
+            <i class="fa fa-envelope hide-client-type"></i>
+        </button>
+
+        ${lastEmailDateHtml_leg}
+
+        <button type="button" class="btn btn-primary btn-xs" 
+            onclick="email_send(${client_id}, 5)">
+            <i class="fa fa-envelope hide-client-type"></i>
+        </button>
+    `;
+}
+
+email_button += `</span>`;
+
 
                 if (leg.primary_university == 1) {
                     mand = '<small class="text-danger">*</small>';
@@ -3159,7 +3319,10 @@ echo render_input(
                     }
                 }
                 let email_button = ``;
-                if (invitation_letter != '' && client_type == 1) {
+                console.log(invitation_letter);
+                console.log(client_type);
+                console.log(leg.country_name);
+                if (invitation_letter != '' && client_type == 1 && leg.country_name == 'Georgia') {
                     email_button = `<div class="pull-right"><button type="button" class="btn btn-primary btn-xs hide" onclick="whatsapp_message_send(${client_id}, 4,'','${leg.id}')"><i class="fa fa-whatsapp hide-client-type"></i></button> <button type="button" class="btn btn-primary btn-xs hide" onclick="email_send(${client_id}, 3,${leg.id})"><i class="fa fa-envelope hide-client-type"></i></button> ${lastEmailDateHtml_invitation}<button type="button" class="btn btn-primary btn-xs" onclick="email_send(${client_id},6)"><i class="fa fa-envelope hide-client-type"></i> </button>
                                                         </div>`;
                 }
@@ -3253,8 +3416,8 @@ echo render_input(
 
                 $(".university_div_application").each(function() {
                     let id = $(this).find("input[name='id']").val();
-                    let university = $(this).find(`select[name='university_${id}']`).val();
-                    let country = $(this).find(`select[name='country_${id}']`).val();
+                    let university = $(this).find(`[name='university_${id}']`).val();
+                    let country = $(this).find(`[name='country_${id}']`).val();
                     let admission_partner = $(this).find(`select[name='partner_${id}']`).val();
                     let admission_date = $(this).find(`input[name='date_${id}']`).val();
                     let addmission_letter_url = $(this).find(`input[name='admission_letter_path_${id}']`).val();
@@ -3306,8 +3469,16 @@ echo render_input(
 
 
     // add university 
-    async function add_university_div() {
-        let response = await is_validate_university();
+    async function add_university_div(errorStatus=0) {
+   let response = false;
+
+if (errorStatus == 0) {
+    console.log("error");
+    response = await is_validate_university();
+} else {
+    response = true;
+}
+console.log(response);
         if (response) {
             let html = `<div class="col-md-12 university_div university_div_  bg-warning">
                                 <div class="col-md-2">
@@ -3719,6 +3890,13 @@ echo render_input(
                 // Validate if ID exists
                 if (id.trim()) {
                     let entry = {
+                         university_name:$(this).find(".university-name")
+    .contents()
+    .filter(function() {
+        return this.nodeType === 3; // text node only
+    })
+    .text()
+    .trim(),
                         id: id.trim(),
                         date_of_payment: date_of_payment.trim(),
                         payment_amount: payment_amount,
@@ -3759,6 +3937,13 @@ echo render_input(
                 // Validate if ID exists
                 if (id.trim()) {
                     let entry = {
+                        university_name:$(this).find(".university-name")
+    .contents()
+    .filter(function() {
+        return this.nodeType === 3; // text node only
+    })
+    .text()
+    .trim(),
                         id: id.trim(),
                         receiving_date: receiving_date.trim(),
                         entry_date: entry_date.trim()
@@ -3784,8 +3969,24 @@ echo render_input(
     const visa_vendors = <?= json_encode($visa_vendors, true) ?>;
     const courier_type = <?= json_encode($courier_type, true) ?>;
     const payment_mode = <?= json_encode($payment_mode, true) ?>;
+    
+    <?php
+$isMandatory = false;
+
+if (
+    !empty($admissionpreferences) &&
+    !empty($admissionpreferences->session_intake) &&
+    strtotime($admissionpreferences->session_intake) >= strtotime(SESSION_INTAKE)
+) {
+    $isMandatory = true;
+}
+?>
+
 
     function set_visa_section(visa_data = [], create = 0, tracker_id = "") {
+        
+           let university_name = "<?= addslashes($admissionpreferences->primary_university) ?>";
+        let primary_country = "<?= strtolower(addslashes($admissionpreferences->primary_country)) ?>";
         let container = document.getElementById('visa-details');
         if (create === 0) {
             container.innerHTML = ''; // Clear existing content
@@ -3809,7 +4010,9 @@ echo render_input(
 
 
         const renderVisaBlock = (visa = {}, index = 1) => {
+          
             let media_view = '';
+              let tracking_receipt_view = '';
             let requried = 'required-check="true" required="true"';
             let visa_id = visa.id ?? Math.floor(Math.random() * (999 - 0 + 1)) + 0; // Default to empty string if visa.id is undefined or null
             // console.log(visa_id);
@@ -3817,14 +4020,27 @@ echo render_input(
             if (visa.file && visa.file !== "") {
                 media_view = `
                 <div class='margin-top'>
-                    <i class="fa fa-eye btn btn-xs btn-primary" onclick="show_media_files('${visa.file}');"></i>&nbsp;
-                    <i class="fa fa-download btn btn-xs btn-primary" onclick="download_media_files('${visa.file}', '_blank');"></i>`;
+                    <i class="fa fa-eye btn btn-xs btn-primary" onclick="show_media_files('${base_url+visa.file}');"></i>&nbsp;
+                    <i class="fa fa-download btn btn-xs btn-primary" onclick="download_media_files('${base_url+visa.file}', '_blank');"></i>`;
 
                 if (delete_document_status) {
                     media_view += `<button class="btn-xs btn btn-danger" onclick="delete_documents(6,${tracker_id},${visa.id})"><i class="fa fa-trash"></i></button>`;
                 }
 
                 media_view += `</div>`;
+            }
+            
+                  if (visa.tracking_receipt && visa.tracking_receipt !== "") {
+                tracking_receipt_view = `
+                <div class='margin-top'>
+                    <i class="fa fa-eye btn btn-xs btn-primary" onclick="show_media_files('${base_url+visa.tracking_receipt}');"></i>&nbsp;
+                    <i class="fa fa-download btn btn-xs btn-primary" onclick="download_media_files('${base_url+visa.tracking_receipt}', '_blank');"></i>`;
+
+                if (delete_document_status) {
+                    tracking_receipt_view += `<button class="btn-xs btn btn-danger" onclick="delete_documents(6,${tracker_id},${visa.id},'tracking_receipt')"><i class="fa fa-trash"></i></button>`;
+                }
+
+                tracking_receipt_view += `</div>`;
             }
             let delete_ = ``;
             if ((index > 0 && visa.id != "") || (index == 0 && <?= is_admin() ? 1 : 0 ?> == 1)) {
@@ -3834,6 +4050,74 @@ echo render_input(
         </div>`;
                 }
             }
+            console.log(primary_country);
+            let isGeotgia ='';
+          if (primary_country == 'georgia') {
+              console.log("okkkk");
+
+    let visaRequired = client_type == 1 ? 'required' : '';
+
+isGeotgia = `
+    <div class="col-md-4">
+            <label>
+                Stamp Visa
+                ${client_type == 1 ? '<small class="text-danger">*</small>' : ''}
+            </label>
+
+            <input
+                type="file"
+                data-file="${visa.tracking_receipt ?? ''}"
+                id="visa_tracking_receipt_${visa_id}"
+                name="visa_tracking_receipt_${visa_id}"
+                class="form-control"
+                ${!tracking_receipt_view && client_type == 1 ? 'required' : ''}
+            />
+
+            ${tracking_receipt_view}
+    </div>
+
+    <div class="col-md-4">
+        <label>
+            Visa Credentials
+            ${client_type == 1 && <?= $isMandatory ? 'true' : 'false' ?> ? '<small class="text-danger">*</small>' : ''}
+        </label>
+
+        <input
+            type="text"
+            name="visa_username_${visa_id}"
+            id="visa_username_${visa_id}"
+            value="${visa.visa_username ?? ''}"
+            class="form-control"
+            placeholder="Username"
+            autocomplete="off"
+            ${visaRequired}
+        >
+
+        <div class="input-group mtop10">
+            <input
+                type="password"
+                name="visa_password_${visa_id}"
+                id="visa_password_${visa_id}"
+                value="${visa.visa_password ?? ''}"
+                class="form-control"
+                placeholder="Password"
+                autocomplete="new-password"
+                ${visaRequired}
+            >
+
+            <span
+                class="input-group-addon"
+                onclick="togglePassword('${visa_id}')"
+                style="cursor:pointer;"
+            >
+                <i class="fa fa-eye" id="eye_${visa_id}"></i>
+            </span>
+        </div>
+    </div>
+`;
+
+  
+}
             return `
         <div class="col-md-12 visa_div_application  ${visa.status == 4 ? 'visa-rejected-div' : ''}"  >
         ${delete_}
@@ -3895,6 +4179,26 @@ echo render_input(
                     </div>
                 </div>
             </div>
+            
+           <div class="d-flex visa-apply-details">
+    <div class="col-md-4">
+        <div class="form-group">
+            <label>Apply Date <small class="text-danger">*</small></label>
+            <input
+                type="date"
+                id="visa_apply_date_${visa_id}"
+                name="visa_apply_date_${visa_id}"
+                value="${visa.apply_date ?? ''}"
+                class="form-control"
+                required
+            />
+        </div>
+        
+    </div>
+    ${isGeotgia}
+  
+                
+</div>
 
             <div class="d-flex visa-receving-details">
                 <div class="col-md-4">
@@ -4230,4 +4534,12 @@ echo render_input(
             alert_float("danger", "Server error occurred. Please try again.");
         }
     });
+    
+    <?php if(empty($university_shortlisting)) 
+{
+    ?>
+    chechShortListing();
+    <?php
+    
+    }?>
 </script>

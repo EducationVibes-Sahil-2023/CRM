@@ -3,7 +3,8 @@
 defined('BASEPATH') or exit('No direct script access allowed');
 $this->ci->load->model('leads_model');
 
-$user_lead_type = get_user_lead_type(get_staff_user_id());
+// $user_lead_type = get_user_lead_type(get_staff_user_id());
+$user_lead_type = get_staff_user_department_lead_type(get_staff_user_id());
 if (!empty($user_lead_type->lead_type)) {
     $user_lead_type = $user_lead_type->lead_type;
 } else {

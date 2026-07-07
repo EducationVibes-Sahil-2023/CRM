@@ -11,6 +11,9 @@ $neet_status = get_neet_status();
 $board_dropdown = get_board_dropdown();
 $staff_list              = $this->leads_model->get_staff_list();
 $staff_list = array_column($staff_list, null, "staffid");
+
+$scholarshipsData = scholarshipsData($admissionpreferences->primary_university??'');
+
 if (!empty($board_dropdown)) {
     array_unshift($board_dropdown, array("id" => "", "name" => "Select Board"));
 }
@@ -23,10 +26,10 @@ foreach ($documents_type as $documents) {
     $profile_section[$documents["profile_stages"]][] = $documents;
 }
 
-array_push($documents_type, array("id" => "application", "disabled" => 1, "disabledd" => 1, "stage" => "", "name" => "Admission Letter", "file_type" => ".pdf,image/*"));
-array_push($documents_type, array("id" => "University_Payment_Slip", "disabled" => 1, "disabledd" => 1, "stage" => "", "name" => "University Payment Slip", "file_type" => ".pdf,image/*"));
-array_push($documents_type, array("id" => "invitation", "disabled" => 1, "disabledd" => 1, "stage" => "Visa", "name" => "Invitation Letter", "file_type" => ".pdf,image/*"));
-array_push($documents_type, array("id" => "visa", "disabled" => 1, "disabledd" => 1, "stage" => "", "name" => "Visa", "file_type" => ".pdf,image/*"));
+// array_push($documents_type, array("id" => "application", "disabled" => 1, "disabledd" => 1, "stage" => "", "name" => "Admission Letter", "file_type" => ".pdf,image/*"));
+// array_push($documents_type, array("id" => "University_Payment_Slip", "disabled" => 1, "disabledd" => 1, "stage" => "", "name" => "University Payment Slip", "file_type" => ".pdf,image/*"));
+// array_push($documents_type, array("id" => "invitation", "disabled" => 1, "disabledd" => 1, "stage" => "Visa", "name" => "Invitation Letter", "file_type" => ".pdf,image/*"));
+// array_push($documents_type, array("id" => "visa", "disabled" => 1, "disabledd" => 1, "stage" => "", "name" => "Visa", "file_type" => ".pdf,image/*"));
 
 
 $visasectionDetails = $this->db
@@ -85,15 +88,211 @@ if (is_admin() ||  !empty($staff_list[get_staff_user_id()]["post_sales"])) {
 //     $admin_status = 1;
 // }
 
+
 $last_index = array_key_last($visa_details);
-$applicant_documents =  get_clients_documents($client_id);
+$applicant_documents =  !empty($client_id)?get_clients_documents($client_id):[];
 if (!empty($applicant_documents[0]["data"])) {
     $applicant_documents = json_decode($applicant_documents[0]["data"], true);
+    
+    // if(is_admin())
+    // {
+    //     print_r($visa_details);
+    // }
+    
+    foreach ($visa_details as $k=>$visaD)
+    {
+        if(!empty($visa_details[$k]['file'])){
+        array_push($documents_type, array("id" => "visa_".$k, "disabled" => 1, "disabledd" => 1, "stage" => "", "name" => "Visa ".($k+1), "file_type" => ".pdf,image/*"));
+        array_push($applicant_documents, array("id" => "visa_".$k, "document_file" => !empty($visa_details[$k]['file']) ? $visa_details[$k]['file'] : '')); 
+        }
+    }
 
-    array_push($applicant_documents, array("id" => "application", "document_file" => !empty($university_shortlisting[0]['application_file']) ? $university_shortlisting[0]['application_file'] : ''));
-    array_push($applicant_documents, array("id" => "invitation", "document_file" => !empty($university_shortlisting[0]['invitation_letter']) ? $university_shortlisting[0]['invitation_letter'] : ''));
-    array_push($applicant_documents, array("id" => "visa", "document_file" => !empty($visa_details[$last_index]['file']) ? $visa_details[$last_index]['file'] : ''));
-    array_push($applicant_documents, array("id" => "University_Payment_Slip", "document_file" => !empty($university_shortlisting[0]['university_fees_payment_slip']) ? $university_shortlisting[0]['university_fees_payment_slip'] : ''));
+
+
+// foreach ($university_shortlisting as $shortlistingD) {
+
+//     $universityStatus = "Secondary";
+
+//     if ($shortlistingD['primary_university'] == 1) {
+//         $universityStatus = "Primary";
+//     }
+
+//     // Admission Letter
+    
+
+// if(!empty($shortlistingD['application_file'])){
+//     $applicationId = "application_" . $universityStatus . '_' . $shortlistingD['id'];
+//     array_push($documents_type, array(
+//         "id"         => $applicationId,
+//         "disabled"   => 1,
+//         "disabledd"  => 1,
+//         "stage"      => "",
+//         "name"       => "Admission Letter ($universityStatus)",
+//         "file_type"  => ".pdf,image/*"
+//     ));
+
+//     array_push($applicant_documents, array(
+//         "id"            => $applicationId,
+//         "document_file" => !empty($shortlistingD['application_file'])
+//             ? $shortlistingD['application_file']
+//             : ''
+//     ));
+// }
+
+// if(!empty($shortlistingD['invitation_letter'])){
+//     // Invitation Letter
+//     $invitationId = "invitation_" . $universityStatus . '_' . $shortlistingD['id'];
+
+//     array_push($documents_type, array(
+//         "id"         => $invitationId,
+//         "disabled"   => 1,
+//         "disabledd"  => 1,
+//         "stage"      => "",
+//         "name"       => "Invitation Letter ($universityStatus)",
+//         "file_type"  => ".pdf,image/*"
+//     ));
+
+//     array_push($applicant_documents, array(
+//         "id"            => $invitationId,
+//         "document_file" => !empty($shortlistingD['invitation_letter'])
+//             ? $shortlistingD['invitation_letter']
+//             : ''
+//     ));
+    
+// }
+
+// if(!empty($shortlistingD['university_fees_payment_slip'])){
+//     // University Payment Slip
+//     $paymentId = "University_Payment_Slip_" . $universityStatus . '_' . $shortlistingD['id'];
+
+//     array_push($documents_type, array(
+//         "id"         => $paymentId,
+//         "disabled"   => 1,
+//         "disabledd"  => 1,
+//         "stage"      => "",
+//         "name"       => "University Payment Slip ($universityStatus)",
+//         "file_type"  => ".pdf,image/*"
+//     ));
+
+//     array_push($applicant_documents, array(
+//         "id"            => $paymentId,
+//         "document_file" => !empty($shortlistingD['university_fees_payment_slip'])
+//             ? $shortlistingD['university_fees_payment_slip']
+//             : ''
+//     ));
+// }
+// }
+
+   
+   $priorityLabels = [
+    1  => 'Primary',
+    2  => 'Secondary',
+    3  => 'Third',
+    4  => 'Fourth',
+    5  => 'Fifth',
+    6  => 'Sixth',
+    7  => 'Seventh',
+    8  => 'Eighth',
+    9  => 'Ninth',
+    10 => 'Tenth'
+];
+
+foreach ($university_shortlisting as $shortlistingD) {
+
+    // Default (old logic)
+    $universityStatus = ($shortlistingD['primary_university'] == 1)
+        ? 'Primary'
+        : 'Secondary';
+
+    // New logic using university_priority JSON
+    if (!empty($shortlistingD['university_priority'])) {
+
+        $universityPriority = json_decode($shortlistingD['university_priority'], true);
+
+        if (is_array($universityPriority)) {
+
+            foreach ($universityPriority as $priorityData) {
+
+                if (
+                    !empty($priorityData['university']) &&
+                    !empty($shortlistingD['university_name']) &&
+                    trim($priorityData['university']) === trim($shortlistingD['university_name'])
+                ) {
+                    $priority = (int)$priorityData['priority'];
+
+                    if (isset($priorityLabels[$priority])) {
+                        $universityStatus = $priorityLabels[$priority];
+                    }
+
+                    break;
+                }
+            }
+        }
+    }
+
+
+
+    // Admission Letter
+    if (!empty($shortlistingD['application_file'])) {
+
+        $applicationId = "application_" . $universityStatus . '_' . $shortlistingD['id'];
+
+        $documents_type[] = [
+            "id"        => $applicationId,
+            "disabled"  => 1,
+            "disabledd" => 1,
+            "stage"     => "",
+            "name"      => "Admission Letter ($universityStatus)",
+            "file_type" => ".pdf,image/*"
+        ];
+
+        $applicant_documents[] = [
+            "id"            => $applicationId,
+            "document_file" => $shortlistingD['application_file']
+        ];
+    }
+
+    // Invitation Letter
+    if (!empty($shortlistingD['invitation_letter'])) {
+
+        $invitationId = "invitation_" . $universityStatus . '_' . $shortlistingD['id'];
+
+        $documents_type[] = [
+            "id"        => $invitationId,
+            "disabled"  => 1,
+            "disabledd" => 1,
+            "stage"     => "",
+            "name"      => "Invitation Letter ($universityStatus)",
+            "file_type" => ".pdf,image/*"
+        ];
+
+        $applicant_documents[] = [
+            "id"            => $invitationId,
+            "document_file" => $shortlistingD['invitation_letter']
+        ];
+    }
+
+    // University Payment Slip
+    if (!empty($shortlistingD['university_fees_payment_slip'])) {
+
+        $paymentId = "University_Payment_Slip_" . $universityStatus . '_' . $shortlistingD['id'];
+
+        $documents_type[] = [
+            "id"        => $paymentId,
+            "disabled"  => 1,
+            "disabledd" => 1,
+            "stage"     => "",
+            "name"      => "University Payment Slip ($universityStatus)",
+            "file_type" => ".pdf,image/*"
+        ];
+
+        $applicant_documents[] = [
+            "id"            => $paymentId,
+            "document_file" => $shortlistingD['university_fees_payment_slip']
+        ];
+    }
+}
+
 
     if (!empty($applicant_documents)) {
         $applicant_documents = array_column($applicant_documents, null, "id");
@@ -149,6 +348,7 @@ $neetResultStatus[]["name"] = "Awaited";
 $neetResultStatus[]["name"] = "Declared";
 $neetResultStatus[]["name"] = "Fail";
 $neetResultStatus[]["name"] = "Not Appeared";
+$neetResultStatus[]["name"] = "Without Neet";
 array_unshift($neetResultStatus, array(""));
 
 ?>
@@ -311,6 +511,15 @@ if ($lead_type_status == 2) {
     #applicant_fees .bootstrap-select>.dropdown-toggle {
         /* border: 0px !important; */
     }
+    
+    .readonlyy
+    {
+            background-color: #eef1f6;
+    border-color: #d1dbe5;
+    color: #8babcc;
+    cursor: not-allowed;
+    pointer-events: auto;
+    }
 </style>
 
 <h4 class="customer-profile-group-heading"><?php echo _l('client_add_edit_profile'); ?>
@@ -330,26 +539,26 @@ if ($lead_type_status == 2) {
             <div class="scroller arrow-right"><i class="fa fa-angle-right"></i></div>
             <div class="horizontal-tabs">
                 <ul class="nav nav-tabs profile-tabs row customer-profile-tabs nav-tabs-horizontal" role="tablist">
-                    <li role="presentation" section="Basic Information" class="active">
+                    <li role="presentation" type="7" section="Basic Information" class="active">
                         <a href="#student_details" class="active" aria-controls="student_details" role="tab" data-toggle="tab">Student Details</a>
                     </li>
-                    <li role="presentation" section="Passport Information">
+                    <li role="presentation" type="8" section="Passport Information">
                         <a href="#passport" aria-controls="passport" role="tab" data-toggle="tab">Passport</a>
                     </li>
-                    <li role="presentation" section="Admission Preferences">
+                    <li role="presentation" type="6" section="Admission Preferences">
                         <a href="#admission_preferences" aria-controls="admission_preferences" role="tab" data-toggle="tab">Admission Preferences</a>
                     </li>
-                    <li role="presentation" section="Academic Details">
+                    <li role="presentation" type="9" section="Academic Details">
                         <a href="#academic_details" aria-controls="academic_details" role="tab" data-toggle="tab">Academic Details</a>
                     </li>
-                    <li role="presentation" section="document">
+                    <li role="presentation" type="5" section="document">
                         <a href="#documents" aria-controls="documents" role="tab" data-toggle="tab">Documents</a>
                     </li>
-                    <li role="presentation" section="Welcome message">
+                    <li role="presentation" type="2" section="Welcome message">
                         <a href="#welcome_message" aria-controls="welcome_message" role="tab" data-toggle="tab">Welcome Message</a>
                     </li>
-                    <li role="presentation" section="Fees data updated">
-                        <a href="#fees_details" aria-controls="fees_details" role="tab" data-toggle="tab">Fees Details</a>
+                    <li role="presentation" type="1" section="Fees data updated" >
+                        <a href="#fees_details" aria-controls="fees_details"  role="tab" data-toggle="tab">Fees Details</a>
                     </li>
                     <?php hooks()->do_action('after_customer_billing_and_shipping_tab', isset($client) ? $client : false); ?>
                     <?php if (isset($client)) { ?>
@@ -369,7 +578,20 @@ if ($lead_type_status == 2) {
                     <?php } ?>
                 </ul>
             </div>
+           
+           <?php 
+           
+           if(!empty($client->fees_error) && $client->fees_error==1 ) { ?>
+        <div class="alert alert-warning d-flex align-items-start warning-message-fees" role="alert">
+        <div>
+        <strong> <i class="fa fa-exclamation-triangle"></i> &nbsp; Attention!</strong><br>
+        Your applicant fee and scholarship details have been cleared because the Primary Country or University was changed. Please review and complete the fee and scholarship details again before proceeding.
         </div>
+        </div>
+         <?php } ?>
+        
+        </div>
+
         <div class="tab-content mtop15">
             <div role="tabpanel" class="tab-pane student-data-div active" id="student_details">
                 <div class="row">
@@ -417,17 +639,141 @@ if ($lead_type_status == 2) {
                                         </div>
 
 
+
                                         <div class="col-lg-3">
-                                            <div class="form-group">
-                                                <label for="exampleInputPassword1">Gender <small class="text-danger">*</small></label>
-                                                <select class="form-control" name="gender" id="gender" required required-check>
-                                                    <option value="">Select</option>
-                                                    <option <?php echo ($basicdetails->gender == 'Male') ? 'selected' : ''; ?>>Male</option>
-                                                    <option <?php echo ($basicdetails->gender == 'Female') ? 'selected' : ''; ?>>Female</option>
-                                                    <option <?php echo ($basicdetails->gender == 'Other') ? 'selected' : ''; ?>>Other</option>
-                                                </select>
-                                            </div>
-                                        </div>
+    <div class="form-group">
+        <label>Gender <small class="text-danger">*</small></label>
+
+        <?php
+        $gender_list = [
+            ['id' => 'Male', 'name' => 'Male'],
+            ['id' => 'Female', 'name' => 'Female'],
+            ['id' => 'Other', 'name' => 'Other'],
+        ];
+
+        array_unshift($gender_list, [
+            'id' => '',
+            'name' => 'Select Gender'
+        ]);
+
+        $selected_gender = !empty($basicdetails->gender)
+            ? [$basicdetails->gender]
+            : [];
+
+        echo render_select(
+            'gender',
+            $gender_list,
+            ['id', 'name'],
+            '',
+            $selected_gender,
+            [
+                'required' => 'required',
+                'required-check' => 'required-check'
+            ],
+            [],
+            '',
+            '',
+            '',
+            'gender'
+        );
+        ?>
+    </div>
+</div>
+                                        
+                                          <div class="col-lg-3">
+   <div class="form-group">
+    
+    <label>Loan Required <?php
+        $isRequired = empty($client->datecreated)
+            || strtotime($client->datecreated) >= strtotime('2026-05-01');
+
+        if ($isRequired) {
+            echo '<small class="text-danger">*</small>';
+        }
+    ?></label>
+
+    <?php
+    $loan_required_list = [
+        ['id' => '1', 'name' => 'Yes'],
+        ['id' => '2', 'name' => 'No'],
+    ];
+
+    array_unshift($loan_required_list, [
+        'id' => '',
+        'name' => 'Select Loan Required'
+    ]);
+
+    $selected_loan_required = !empty($client->loan_required)
+        ? [$client->loan_required]
+        : [];
+
+    $attributes = [
+        'onchange' => 'toggleLoanType()'
+    ];
+
+    if ($isRequired) {
+        $attributes['required'] = 'required';
+        $attributes['required-check'] = 'required-check';
+    }
+
+    echo render_select(
+        'loan_required',
+        $loan_required_list,
+        ['id', 'name'],
+        '',
+        $selected_loan_required,
+        $attributes,
+        [],
+        '',
+        '',
+        '',
+        'loan_required'
+    );
+    ?>
+</div>
+</div>
+                                        
+                       <div class="col-lg-3 loan_type_div <?=!empty($client->loan_required) && $client->loan_required==1?'':'hide'?>">
+    <div class="form-group">
+        <label>Loan Type <small class="text-danger">*</small></label>
+
+        <?php
+        $loan_type_list = [
+            ['id' => '3', 'name' => 'Not Required'],
+            ['id' => '1', 'name' => 'EV'],
+            ['id' => '2', 'name' => 'Outside'],
+        ];
+
+        array_unshift($loan_type_list, [
+            'id' => '',
+            'name' => 'Select Loan Type'
+        ]);
+
+        $selected_loan_type = !empty($client->loan_type)
+            ? [$client->loan_type]
+            : [];
+
+        echo render_select(
+            'loan_type',
+            $loan_type_list,
+            ['id', 'name'],
+            '',
+            $selected_loan_type,
+            [
+                // 'required' => 'required',
+                // 'required-check' => 'required-check'
+            ],
+            [],
+            '',
+            '',
+            '',
+            'loan_type'
+        );
+        ?>
+    </div>
+</div>
+</div>
+<div class="row">
                                         <div class="col-lg-3">
                                             <div class="form-group">
                                                 <label for="exampleInputPassword1">Category <small class="text-danger">*</small></label>
@@ -508,7 +854,11 @@ if ($lead_type_status == 2) {
                                             $required_attr = $is_mandatory ? "required required-check" : '';
                                             $file_url = !empty($applicant_documents[$doc_id]["document_file"]) ? $applicant_documents[$doc_id]["document_file"] : '';
                                             $required_attr = !empty($file_url) ? "" : $required_attr;
-
+// if(is_admin())
+// {
+//     echo "<pre>";
+//     print_r($university_shortlisting);
+// }
                                         ?>
                                             <div class="col-lg-3 media-files">
                                                 <div class="form-group">
@@ -557,6 +907,8 @@ if ($lead_type_status == 2) {
                             <h4>Passport Informations</h4>
                             <?php
                             $show_passport_details = 0;
+                            	$show_arn =0;
+                            		$show_fields = [];
                             ?>
                             <hr>
                             <form id="passport-form" class="form-disabled" onsubmit=" return false;">
@@ -572,9 +924,11 @@ if ($lead_type_status == 2) {
                                                     if ($p["id"] == $passport_info->passport_status) {
                                                         $selected = "selected";
                                                         $show_passport_details = $p['show_status'];
+                                                        	$show_arn =$p['arn'];
+                                                        	$show_fields = !empty($p['show_field'])?explode(",",$p["show_field"]):[];
                                                     }
                                                 ?>
-                                                    <option value="<?= $p["id"] ?>" data-passport_number_status="<?= $p['show_status'] ?>" <?= $selected ?>><?= $p["name"] ?></option>
+                                                   <option value="<?= $p["id"] ?>"  data-passport_showing_data="<?=$p['show_field']??''?>" data-passport_number_status="<?= $p['show_status'] ?>"  data-passport_arn_status="<?= $p['arn'] ?>" <?= $selected ?>><?= $p["name"] ?></option>
                                                 <?php
 
                                                 }
@@ -582,7 +936,31 @@ if ($lead_type_status == 2) {
                                             </select>
                                         </div>
                                     </div>
-                                    <div class="col-lg-3 passport-div-status <?= !empty($show_passport_details && $show_passport_details == 1) ? '' : 'hide' ?>">
+                                    
+                                    
+                                    
+                                          <div class="col-md-3  passport-div-status passport-arn-status <?=(in_array("new_passport_arn", $show_fields) )? '' : 'hide' ?>">
+
+                                            <div class="form-group">
+                                                <label for="new_passport_arn">Passport ARN <small
+                                                        class="text-danger">*</small></label>
+                                                <input class="form-control passport-info text-uppercase" type="text"
+                                                    placeholder="Enter Passport ARN" name="new_passport_arn" id="new_passport_arn"
+                                                    pattern="^[A-Z0-9-]{15,20}$"
+                                                    title="Passport ARN must be 15 to 20 characters, using uppercase letters (A-Z), numbers (0-9), and hyphens (-) only."
+                                                    maxlength="20" onkeyup="isValidARN()"
+                                                    value="<?= isset($passport_info) ? htmlspecialchars($passport_info->new_passport_arn) : '' ?>">
+
+
+                                            </div>
+                                        </div>
+                                         <div class="col-lg-3 passport-div-status <?= (in_array("appointment_date", $show_fields)) ? '' : 'hide' ?>">
+                                        <div class="form-group">
+                                            <label for="appointment_date">Appointment Date <small class="text-danger">*</small></label>
+                                            <input class="form-control passport-info" type="Date" class="form-group" placeholder="Enter Appointment Date" name="appointment_date" value="<?= (isset($passport_info) ? $passport_info->appointment_date : '') ?>" required-check>
+                                        </div>
+                                    </div>
+                                    <div class="col-lg-3 passport-div-status <?= (in_array("passport_number", $show_fields))  ? '' : 'hide' ?>">
                                         <div class="form-group">
                                             <label for="passport_number">Passport Number <small class="text-danger">*</small></label>
                                             <input class="form-control passport-info"
@@ -599,7 +977,7 @@ if ($lead_type_status == 2) {
                                         </div>
                                     </div>
 
-                                    <div class="col-lg-3 passport-div-status <?= !empty($show_passport_details && $show_passport_details == 1) ? '' : 'hide' ?>">
+                                    <div class="col-lg-3 passport-div-status <?= (in_array("issue_date", $show_fields)) ? '' : 'hide' ?>">
                                         <div class="form-group">
                                             <label for="issue_date">Issue Date <small class="text-danger">*</small></label>
                                             <input class="form-control passport-info" type="Date" class="form-group" placeholder="Enter Passport Number" name="issue_date" value="<?= (isset($passport_info) ? $passport_info->issue_date : '') ?>" required-check>
@@ -607,7 +985,7 @@ if ($lead_type_status == 2) {
                                     </div>
 
 
-                                    <div class="col-lg-3 passport-div-status <?= !empty($show_passport_details && $show_passport_details == 1) ? '' : 'hide' ?>">
+                                    <div class="col-lg-3 passport-div-status <?= (in_array("exp_date", $show_fields))  ? '' : 'hide' ?>">
                                         <div class="form-group">
                                             <label for="exp_date">Expiry Date <small class="text-danger">*</small></label>
                                             <input class="form-control passport-info" type="Date" class="form-group" placeholder="Enter Passport Number" name="exp_date" value="<?= (isset($passport_info) ? $passport_info->exp_date : '') ?>" required-check>
@@ -712,13 +1090,13 @@ if ($lead_type_status == 2) {
                                     }
                                     ?>
                                 </div>
-                                <div class="row col-md-12">
+                                <div class="row col-md-12 hide">
 
                                     <div class="col-md-12">
                                         <div class="form-check">
                                             <input class="form-check-input" type="checkbox" onclick="apply_new_passport()" name="new_passport_status" id="new_passport" value="1" <?= !empty($passport_info->new_passport_status && $passport_info->new_passport_status == 1) ? 'checked' : '' ?>>
                                             <label class="form-check-label" for="new_passport">
-                                                I have applied for a new passport
+                                               I have applied for passport renewal
                                             </label>
                                         </div>
                                     </div>
@@ -839,7 +1217,7 @@ if ($lead_type_status == 2) {
                                         <div class="col-lg-4">
                                             <div class="form-group">
                                                 <label for="session_intake">Session Intake <small class="text-danger">*</small></label>
-                                                <input type="month" class="form-control" required-check id="session_intake" name="session_intake"
+                                                <input type="month" class="form-control" required required-check id="session_intake" name="session_intake"
                                                     value="<?= !empty($admissionpreferences->session_intake) ? date('Y-m', strtotime($admissionpreferences->session_intake)) : '' ?>"
                                                     placeholder="Select Month and Year">
                                             </div>
@@ -889,8 +1267,8 @@ if ($lead_type_status == 2) {
                                             </div>
                                         </div>
 
-                                        <?php if (is_admin() || !empty($staff_list[get_staff_user_id()]["post_sales"])) { ?>
-                                            <div class="col-lg-4">
+                                        
+                                            <div class="col-lg-4 <?=(is_admin() || !empty($staff_list[get_staff_user_id()]["post_sales"]))?'':'hide'?>">
                                                 <div class="form-group">
                                                     <label for="primary_university">Primary University<small class="text-danger">*</small></label>
                                                     <select class="form-control selectpicker" required-check name="primary_university" onchange="select_primary_university(this)" id="primary_university" required>
@@ -917,12 +1295,18 @@ if ($lead_type_status == 2) {
                                                     <input type="text" class="form-control" id="primary_country" name="primary_country" value="<?= $admissionpreferences->primary_country ?>">
                                                 </div>
                                             </div>
-                                        <?php } ?>
 
                                     </div>
                                     <div class="universities row">
 
                                     </div>
+                                
+                                     <h4>University Preferences</h4>
+                            <hr>
+                                    <div id="universityPrefrences">
+                                        
+                                    </div>
+                                  
                                 </div>
                                 <div class="row btn-save-fun margin-top">
                                     <div class="col-md-12 text-right  btn-save-fun margin-top">
@@ -948,7 +1332,7 @@ if ($lead_type_status == 2) {
                                 <div class="row accadmic-education-div">
                                     <h4> 10<sup>th</sup> Academic Details </h4>
                                     <hr>
-                                    <div class="col-lg-4 border2 border1">
+                                    <div class="col-lg-4 border2 border1 hide">
                                         <div class="c1">
                                             <p>Board </p>
                                         </div>
@@ -959,7 +1343,7 @@ if ($lead_type_status == 2) {
                                             echo render_select('tenth_board', $board_dropdown, array('id', 'name'), "", $selected, [], [], "", "", "", "tenth_board"); ?>
                                         </div>
                                     </div>
-                                    <div class="col-lg-3 border2 border1">
+                                    <div class="col-lg-3 border2 border1 hide">
                                         <div class="c1">
                                             <p>Year of Passing </p>
                                         </div>
@@ -970,7 +1354,7 @@ if ($lead_type_status == 2) {
                                             echo render_select('tenth_passing_year', $years_array, array('year', 'year'), "", $selected, [], [], "", "", "", "tenth_passing_year"); ?>
                                         </div>
                                     </div>
-                                    <div class="col-lg-3 border2 border1">
+                                    <div class="col-lg-3 border2 border1 hide">
                                         <div class="c1">
                                             <p>Marking Scheme </p>
                                         </div>
@@ -981,7 +1365,7 @@ if ($lead_type_status == 2) {
                                             echo render_select('tenth_marking_scheme', $markingSchemes, array('name', 'name'), "", $selected, [], [], "", "", "", "tenth_marking_scheme"); ?>
                                         </div>
                                     </div>
-                                    <div class="col-lg-2 border2 border1">
+                                    <div class="col-lg-2 border2 border1 hide">
                                         <div class="c1">
                                             <p>Percentage / CGPA </p>
                                         </div>
@@ -1057,7 +1441,7 @@ if ($lead_type_status == 2) {
                                         </div>
                                         <div class="col-lg-3 border2 border1">
                                             <div class="c1">
-                                                <p>School Adress</p>
+                                                <p>School Address</p>
                                             </div>
                                             <div class="c2">
                                                 <textarea class="form-control" placeholder="School Address" name="school_address" id="school_address"><?= $academicdetails->school_address; ?></textarea>
@@ -1233,7 +1617,7 @@ if ($lead_type_status == 2) {
 
                                     </div>
 
-                                    <div class="col-lg-3 border2 border1 hide_ " style="display: <?= ($academicdetails->entrance_result_status == 'Awaited' || $academicdetails->entrance_result_status == 'Not Appeared' || $academicdetails->entrance_result_status == 'Fail') ? 'none' : '' ?>">
+                                    <div class="col-lg-3 border2 border1 hide_ " style="display: <?= ($academicdetails->entrance_result_status == 'Awaited' || $academicdetails->entrance_result_status == 'Not Appeared' || $academicdetails->entrance_result_status == 'Fail' || $academicdetails->entrance_result_status == 'Without Neet') ? 'none' : '' ?>">
                                         <div class="c1">
                                             <p>Registration Number <?= $text_danger_mbbs ?></p>
                                         </div>
@@ -1243,7 +1627,7 @@ if ($lead_type_status == 2) {
                                         </div>
 
                                     </div>
-                                    <div class="col-lg-3 border2 border1 hide_" style="display: <?= ($academicdetails->entrance_result_status == 'Awaited' || $academicdetails->entrance_result_status == 'Not Appeared' || $academicdetails->entrance_result_status == 'Fail') ? 'none' : '' ?>">
+                                    <div class="col-lg-3 border2 border1 hide_" style="display: <?= ($academicdetails->entrance_result_status == 'Awaited' || $academicdetails->entrance_result_status == 'Not Appeared' || $academicdetails->entrance_result_status == 'Fail' || $academicdetails->entrance_result_status == 'Without Neet') ? 'none' : '' ?>">
                                         <div class="c1">
                                             <p>Year <?= $text_danger_mbbs ?></p>
                                         </div>
@@ -1261,7 +1645,7 @@ if ($lead_type_status == 2) {
 
                                     </div>
 
-                                    <div class="col-lg-3 border2 border1 hide_ " style="display: <?= ($academicdetails->entrance_result_status == 'Awaited' || $academicdetails->entrance_result_status == 'Not Appeared' || $academicdetails->entrance_result_status == 'Fail') ? 'none' : '' ?>">
+                                    <div class="col-lg-3 border2 border1 hide_ " style="display: <?= ($academicdetails->entrance_result_status == 'Awaited' || $academicdetails->entrance_result_status == 'Not Appeared' || $academicdetails->entrance_result_status == 'Fail' || $academicdetails->entrance_result_status == 'Without Neet') ? 'none' : '' ?>">
                                         <div class="c1">
                                             <p>Marks <?= $text_danger_mbbs ?></p>
                                         </div>
@@ -1288,7 +1672,7 @@ if ($lead_type_status == 2) {
 
                                     </div>
 
-                                    <div class="col-lg-3 border2 border1 hide_" style="display: <?= ($academicdetails->entrance_result_status == 'Awaited' || $academicdetails->entrance_result_status == 'Not Appeared' || $academicdetails->entrance_result_status == 'Fail') ? 'none' : '' ?>">
+                                    <div class="col-lg-3 border2 border1 hide_" style="display: <?= ($academicdetails->entrance_result_status == 'Awaited' || $academicdetails->entrance_result_status == 'Not Appeared' || $academicdetails->entrance_result_status == 'Fail' || $academicdetails->entrance_result_status == 'Without Neet') ? 'none' : '' ?>">
                                         <div class="c1">
                                             <p>Neet Status <?= $text_danger_mbbs ?></p>
                                         </div>
@@ -1336,7 +1720,7 @@ if ($lead_type_status == 2) {
                                         $required_attr = !empty($file_url) ? "" : $required_attr;
                                     ?>
 
-                                        <div class="col-lg-3 border2 border1 media-files hide_ " style="display: <?= ($academicdetails->entrance_result_status == 'Awaited' || $academicdetails->entrance_result_status == 'Not Appeared' || $academicdetails->entrance_result_status == 'Fail') ? 'none' : '' ?>">
+                                        <div class="col-lg-3 border2 border1 media-files hide_ " style="display: <?= ($academicdetails->entrance_result_status == 'Awaited' || $academicdetails->entrance_result_status == 'Not Appeared' || $academicdetails->entrance_result_status == 'Fail' || $academicdetails->entrance_result_status == 'Without Neet') ? 'none' : '' ?>">
                                             <div class="form-group">
                                                 <label for="exampleInputMobileNumber"><?= $s_stage["name"] ?> <?= $mandatry_text  . "  (" . $s_stage["file_type"] . ")" ?> <?php if (!empty($info)) : ?>
                                                         &nbsp;<i class="fa fa-info-circle" title="<?= htmlspecialchars($info, ENT_QUOTES, 'UTF-8') ?>"></i>
@@ -1416,6 +1800,7 @@ if ($lead_type_status == 2) {
                                             $index = 1;
                                             foreach ($documents_type as $key => $doc_files) :
 
+                                                $whatsapp_message_status = $doc_files["whatsapp_message"]??0;
                                                 $doc_type = $doc_files["name"] ?? '';
                                                 $doc_id = $doc_files["id"] ?? '';
                                                 $info = $doc_files["info"] ?? '';
@@ -1446,12 +1831,21 @@ if ($lead_type_status == 2) {
                                                         <input type="hidden" name="doc_type[]" value="<?= htmlspecialchars($doc_id, ENT_QUOTES, 'UTF-8') ?>">
                                                         <input type="hidden" name="doc_name[]" value="<?= htmlspecialchars($doc_type, ENT_QUOTES, 'UTF-8') ?>">
                                                         <input type="hidden" name="doc_url[]" value="<?= htmlspecialchars($file_url, ENT_QUOTES, 'UTF-8') ?>">
+                                                        
+                                                         <input type="hidden" name="doc_whatsaapStatus[]" value="<?= htmlspecialchars($whatsapp_message_status, ENT_QUOTES, 'UTF-8') ?>">
+                                                        
+                                                        
 
 
                                                         <?= htmlspecialchars($doc_type, ENT_QUOTES, 'UTF-8') . ' ' . $mandatry_text  . "  (" . $doc_files["file_type"] . ")" ?>
+                                                        <?=!empty($doc_files['whatsapp_message'])?" <i class='fa fa-whatsapp'></i>":''?>
                                                         <?php if (!empty($info)) : ?>
                                                             &nbsp;<i class="fa fa-info-circle" title="<?= htmlspecialchars($info, ENT_QUOTES, 'UTF-8') ?>"></i>
-                                                        <?php endif; ?>
+                                                        <?php endif; ?> 
+                                         
+                                                        <?php if(!empty($doc_files['sample_preview'])) { ?>
+                                                         <i class="fa fa-eye  btn btn-xs btn-primary" onclick="show_media_files('<?= $doc_files['sample_preview'] ?>');"></i>
+                                                         <?php } ?>
                                                     </td>
                                                     <td>
                                                         <?= $doc_files["stage"] ?>
@@ -1475,22 +1869,39 @@ if ($lead_type_status == 2) {
                                                     </td>
                                                     <td>
 
-                                                        <?php if (is_admin() || !empty($staff_list[get_staff_user_id()]["post_sales"])) {
-                                                        ?>
-                                                            <input type="file" onchange="updateDate(this,<?= $doc_files['upload_date'] ?>)" name="files[<?= $doc_id ?>]" value="<?= $file_url ?>" class="form-control <?= (!empty($doc_files['disabledd']) && $doc_files['disabledd'] == 1) ||
-                                                                                                                                                                                                                            (!is_admin() && !empty($upload_assign) && !in_array(get_staff_user_id(), $upload_assign))
-                                                                                                                                                                                                                            ? 'disabledd'
-                                                                                                                                                                                                                            : ''; ?>" accept="<?= htmlspecialchars($accept, ENT_QUOTES, 'UTF-8') ?>" <?= $required_attr ?>>
-                                                        <?php
-                                                        } else {
-                                                        ?>
-                                                            <input type="file" onchange="updateDate(this,<?= $doc_files['upload_date'] ?>)" <?= !empty($doc_files["disabled"] == 1) ? 'disabled' : '' ?> name="files[<?= $doc_id ?>]" value="<?= $file_url ?>" class="form-control  <?= (!empty($doc_files['disabledd']) && $doc_files['disabledd'] == 1) ||
-                                                                                                                                                                                                                                                                                        (!is_admin() && !empty($upload_assign) && !in_array(get_staff_user_id(), $upload_assign))
-                                                                                                                                                                                                                                                                                        ? 'disabledd'
-                                                                                                                                                                                                                                                                                        : ''; ?>" accept="<?= htmlspecialchars($accept, ENT_QUOTES, 'UTF-8') ?>" <?= $required_attr ?>>
-                                                        <?php
-                                                        }
-                                                        ?>
+                                                        
+                                                        
+                                                        
+                                                                                                               <?php
+// ---- Precompute state (readable, single source of truth) ----
+$is_privileged   = is_admin() || !empty($staff_list[get_staff_user_id()]["post_sales"]);
+$is_doc_disabled = !empty($doc_files['disabled']) && $doc_files['disabled'] == 1;
+$is_approved     = ($status === "Approved");
+ 
+// Staff is NOT in the allowed uploader list
+$not_assigned = !is_admin()
+    && !empty($upload_assign)
+    && !in_array(get_staff_user_id(), $upload_assign);
+ 
+if ($is_privileged) {
+    // Privileged users: never hard-disabled; only soft "disabledd" class
+    $disabled_attr = '';
+    $disabled_cls  = ($is_doc_disabled && $not_assigned) ? 'disabledd' : '';
+} else {
+    // Non-privileged users
+    $disabled_attr = ($is_doc_disabled || $is_approved) ? 'disabled' : '';
+    $disabled_cls  = ($is_doc_disabled || (!$not_assigned && $is_approved)) ? 'disabledd' : '';
+}
+?>
+<input
+    type="file"
+    name="files[<?= $doc_id ?>]"
+    value="<?= $file_url ?>"
+    class="form-control <?= $disabled_cls ?>"
+    onchange="updateDate(this, <?= $doc_files['upload_date'] ?>)"
+    accept="<?= htmlspecialchars($accept, ENT_QUOTES, 'UTF-8') ?>"
+    <?= $disabled_attr ?>
+    <?= $required_attr ?>>
 
 
                                                     </td>
@@ -1579,8 +1990,9 @@ if ($lead_type_status == 2) {
 
                                     <div class="col-lg-2">
                                         <div class="form-group">
+                                            
                                             <label for="exampleInputMiddleName">Quotation <small class="text-danger">*</small></label>
-                                            <input <?= !empty($client->quotation) ? '' : $text_danger_mbbs_required ?> class="form-control" type="file" accept=".pdf, image/*" name="quotation" value="" <?= !empty($final_sumbit) ? 'disabled-form-welcome' : '' ?>>
+                                            <input <?= !empty($final_sumbit) ? 'disabled' : '' ?>  <?= !empty($client->quotation) ? '' : $text_danger_mbbs_required ?> class="form-control <?= !empty($final_sumbit) ? 'disabled-form-welcome' : '' ?>" type="file" accept=".pdf, image/*" name="quotation" value="" >
                                             <?php
                                             if (!empty($client->quotation)) {
                                             ?>
@@ -1597,7 +2009,7 @@ if ($lead_type_status == 2) {
                                     <div class="col-lg-2">
                                         <div class="form-group">
                                             <label for="exampleInputMiddleName">Fees Structure <small class="text-danger">*</small></label>
-                                            <input <?= !empty($client->fees_structure) ? '' : $text_danger_mbbs_required ?> class="form-control" type="file" accept=".pdf, image/*" name="fees_structure" value="" <?= !empty($final_sumbit) ? 'disabled-form-welcome' : '' ?>>
+                                            <input  <?= !empty($final_sumbit) ? 'disabled' : '' ?>  <?= !empty($client->fees_structure) ? '' : $text_danger_mbbs_required ?> class="form-control <?= !empty($final_sumbit) ? 'disabled-form-welcome' : '' ?>" type="file" accept=".pdf, image/*" name="fees_structure" value="" >
                                             <?php
                                             if (!empty($client->fees_structure)) {
                                             ?>
@@ -1661,10 +2073,11 @@ if ($lead_type_status == 2) {
                                 <hr>
 
                                 <?php
+                                
+                               
                                 $get_clients_fees = get_clients_fees((isset($lead_type_status) ? $lead_type_status : ''), $client_id);
                                 $get_currencies = get_currencies();
                                 $get_currencies = array_column($get_currencies, null, 'id');
-
 
 
 
@@ -1683,12 +2096,14 @@ if ($lead_type_status == 2) {
                                                 // Set the required attribute based on the "mandatry" field
                                                 $required = !empty($fees["mandatry"]) ? "required" : "false";
                                                 $mandatry = !empty($fees["mandatry"]) ? "<small class='text-danger'>*</small>" : "";
-                                                $disabled = (strtolower($admissionpreferences->primary_country) == 'georgia') && $id == 6 ? 'disabled' : '';
+                                                // $disabled = (strtolower($admissionpreferences->primary_country) == 'georgia') && $id == 6 ? 'disabled' : '';
+                                                
+                                                $disabled = "";
 
 
                                             ?>
                                                 <div class="col-lg-4 col-md-4 col-6 fees-block-<?= $id ?>">
-                                                    <label><?= $fees['name'] ?> <?= $mandatry ?><span class="fees_label_<?= $id ?>"></span></label><br>
+                                                    <label for="<?= $field_name ?>" ><?= $fees['name'] ?> <?= $mandatry ?><span class="fees_label_<?= $id ?>"></span></label><br>
                                                     <div class="input-group mb-2 mr-sm-2 mb-sm-0 col-3 form-group">
                                                         <input type="hidden" value="<?= $field_name ?>" name="applicant_fees[]">
                                                         <input type="hidden" value="<?= $fees['id'] ?>" name="<?= $field_name ?>_id">
@@ -1701,7 +2116,7 @@ if ($lead_type_status == 2) {
                                                             if (!empty($fees["currency_id"]) && !empty($get_currencies[$fees["currency_id"]]["symbol"])) {
                                                                 $symbol = $get_currencies[$fees["currency_id"]]["symbol"];
                                                             } elseif (empty($fees["currency_id"])) {
-                                                                $symbol = $get_currencies[$fees["default_currency"]]["symbol"];
+                                                                 $symbol = $get_currencies[$fees["default_currency"]]["symbol"]??$get_currencies[1]["symbol"];
                                                             }
                                                             ?>
 
@@ -1709,11 +2124,12 @@ if ($lead_type_status == 2) {
 
 
                                                         </div>
-                                                        <input <?= $disabled ?> type="text" name="<?= $field_name ?>" <?= $required ?> class="form-control currency-amount fees_<?= $fees['id'] ?>" placeholder="0.00" id="<?= $field_name ?>" value="<?= $fees["amount"] ?>" size="8" onkeypress="return acceptText(this,'number')">
+                                                        <input <?= $disabled ?> type="text" name="<?= $field_name ?>" <?= $required ?> class="form-control currency-amount fees_<?= $fees['id'] ?>  <?= $field_name ?>" placeholder="0.00" id="<?= $field_name ?>" value="<?= $fees["amount"] ?>" size="8" onkeypress="return acceptText(this,'number')">
                                                         <div class="input-group-addon currency-addon">
 
-                                                            <select <?= $disabled ?> name="<?= $field_name ?>_currency_type" id="<?= $field_name ?>" class="currency-selector <?= $disabled ?> currency-selector-<?= $id ?>" onchange="updateSymbol(<?= $id ?>)">
+                                                            <select <?= $disabled ?> name="<?= $field_name ?>_currency_type" id="<?= $field_name ?>" class="currency-selector <?= $disabled ?> currency-selector-<?= $id ?>  <?= $field_name ?>" onchange="updateSymbol(<?= $id ?>)">
                                                                 <?php foreach ($get_currencies as $c) {
+                                                                    if($fees["default_currency"] == $c["id"] ){
                                                                 ?>
                                                                     <option
                                                                         data-symbol="<?= $c['symbol'] ?>"
@@ -1730,6 +2146,18 @@ if ($lead_type_status == 2) {
 
 
                                                                 <?php
+                                                                
+                                                                    }
+                                                                    
+                                                              if (empty($fees["default_currency"])) { ?>
+    <option
+        data-symbol="<?= $c['symbol'] ?>"
+        value="<?= $c['id'] ?>"
+        data-placeholder="0.00"
+        <?= (!empty($fees['currency_id']) && $fees['currency_id'] == $c['id']) || ($c['id'] == 1 && empty($fees['currency_id'])) ? 'selected' : '' ?>>
+        <?= $c['name'] ?>
+    </option>
+<?php } 
                                                                 }
                                                                 ?>
 
@@ -1778,7 +2206,7 @@ if ($lead_type_status == 2) {
 
                                     <div class="row scholarship-case <?= !empty($client->scholarship_status) && $client->scholarship_status == 1 ? '' : 'hide' ?> margin-top">
                                         <div class="col-md-4 fees-block-scholarship">
-                                            <label>Scholarship Amount</label>
+                                            <label>Scholarship Amount <small class='text-danger'>*</small></label>
                                             <div class="input-group mb-2 mr-sm-2 mb-sm-0 col-3 form-group">
 
                                                 <div class="input-group-addon currency-symbol-scholarship">
@@ -1797,7 +2225,7 @@ if ($lead_type_status == 2) {
 
                                                 </div>
 
-                                                <input type="text" name="scholarship_amount" <?= $required ?> class="form-control scholarship_amount" placeholder="0.00" id="scholarship_amount" value="<?= $client->scholarship_amount ?>" size="8">
+                                                <input type="text" name="scholarship_amount" required class="form-control scholarship_amount" placeholder="0.00" id="scholarship_amount" value="<?= $client->scholarship_amount ?>" size="8">
 
                                                 <div class="input-group-addon currency-addon">
                                                     <select name="scholarship_currency_type" id="scholarship_currency_type" class="currency-selector currency-selector-scholarship" onchange="updateSymbol('scholarship')">
@@ -1824,9 +2252,37 @@ if ($lead_type_status == 2) {
                                             </div>
                                         </div>
 
-                                        <div class="col-lg-8">
-                                            <label for="scholarship_reason">Scholarship Reason</label>
-                                            <textarea name="scholarship_reason" id="scholarship_reason" class="form-control" rows="3" <?= !empty($final_sumbit) ? 'disabled' : '' ?>><?= !empty($client->scholarship_reason) ? $client->scholarship_reason : '' ?></textarea>
+<div class="col-lg-8">
+    <label for="scholarship_reason_id">
+        Scholarship Justification <small class="text-danger">*</small>
+    </label>
+
+    <select
+        name="scholarship_reason_id"
+        id="scholarship_reason_id"
+        class="form-control selectpicker"
+        data-live-search="true"
+        required 
+        <?= !empty($final_sumbit) ? 'disabled' : '' ?>>
+
+        <option value="">Select Scholarship Justification</option>
+
+        <?php 
+        if(!empty($scholarshipsData)){
+        foreach ($scholarshipsData as $scholarship) { print_r($scholarship); ?>
+            <option
+                value="<?= $scholarship['id']; ?>"
+                <?= (!empty($client->scholarship_reason_id) && $client->scholarship_reason_id == $scholarship['id']) ? 'selected' : ''; ?>>
+                <?= $scholarship['text'] ?>
+            </option>
+        <?php } } ?>
+
+    </select>
+</div>
+
+                                        <div class="col-lg-8 hide">
+                                            <label for="scholarship_reason">Scholarship Justification <small class='text-danger'>*</small></label>
+                                            <textarea name="scholarship_reason" required id="scholarship_reason" class="form-control" rows="3" <?= !empty($final_sumbit) ? 'disabled' : '' ?>><?= !empty($client->scholarship_reason) ? $client->scholarship_reason : '' ?></textarea>
                                         </div>
                                     </div>
                                 </div>
@@ -1985,15 +2441,25 @@ if ($lead_type_status == 2) {
 </div>
 
 <script>
+    var isCounsollor = <?= (!is_admin() && empty($staff_list[get_staff_user_id()]['post_sales'])) ? 1 : 0 ?>;
     var activity_url = "<?= base_url() ?>admin/clients/activity_logs/<?= $client_id ?>";
+var university_priority_array = <?= json_encode(
+    !empty($admissionpreferences->university_priority) &&
+    $admissionpreferences->university_priority !== 'null'
+        ? json_decode($admissionpreferences->university_priority, true)
+        : []
+); ?>;
 
     function handleActivityChange() {
+        checkFeesDisable();
         console.log("start activity");
 
         var selectedType = 4;
 
         // Safely get the active section
         var section = $(".profile-tabs li.active").attr("section") || "";
+        var type = $(".profile-tabs li.active").attr("type") || "";
+
 
         console.log("section:", section);
 
@@ -2004,10 +2470,23 @@ if ($lead_type_status == 2) {
         }
 
         reloadActivity_list(activity_url, {
-            type: selectedType,
+            type: type,
             section: section
         });
     }
+    
+       function toggleLoanType() {
+
+        if ($("#loan_required").val() == '1') {
+    $(".loan_type_div").removeClass('hide');
+    $(".loan_type_div select, .loan_type_div input").prop("required", true);
+
+} else {
+    $(".loan_type_div").addClass('hide');
+    $(".loan_type_div select, .loan_type_div input").prop("required", false);
+}
+    }
+
 
     // Updated reloadActivity_list with POST
     function reloadActivity_list(url, postData = {}) {
@@ -2119,6 +2598,8 @@ if ($lead_type_status == 2) {
             return null; // Invalid number
         }
     }
+
+
 
 
     function show_country_dropdown(select_segment) {
@@ -2336,10 +2817,6 @@ if ($lead_type_status == 2) {
 
 
 
-    $('#sample_collect_modal').modal({
-        backdrop: 'static',
-        keyboard: false
-    });
 
     function checkCollectionDate() {
         var selectedDate = $('#sample_collect_date').val();
@@ -2351,4 +2828,230 @@ if ($lead_type_status == 2) {
         $('#sample_collect_modal').modal('hide');
         // You can also perform additional actions here, such as sending the selected date to the server
     }
+    
+    let canEditRussiaPackage = <?= (get_staff_user_id() == 89 || is_admin() || !empty($staff_list[get_staff_user_id()]["post_sales"])) ? 'true' : 'false' ?>;
+    
+   var getClientsFees = <?= json_encode($get_clients_fees, JSON_UNESCAPED_UNICODE) ?>;
+
+    
+function checkFeesDisable()
+{
+    
+      if(final_sumbit && !canEditRussiaPackage)
+      {
+          $(".currency-selector").prop('disabled', false).selectpicker('refresh');
+          return false;
+      }
+    if(canEditRussiaPackage){
+        return false;
+        }
+
+  
+    
+    let country = ($("#primary_country").val() || "").toLowerCase();
+    
+    getClientsFees.forEach(function (fee) {
+
+    // "One time Charge" -> "one_time_charge"
+    let feeName = fee.name
+        .toLowerCase()
+        .replace(/[^a-z0-9]+/g, "_")
+        .replace(/^_|_$/g, "");
+
+    let disabledCountries = [];
+    let infoData = {};
+
+    // Disabled countries
+    if (fee.disabled_country) {
+        try {
+            disabledCountries = JSON.parse(fee.disabled_country)
+                .map(c => c.toLowerCase());
+        } catch (e) {
+            disabledCountries = [];
+        }
+    }
+
+    // Info JSON
+    if (fee.info) {
+        try {
+            infoData = JSON.parse(fee.info);
+        } catch (e) {
+            infoData = {};
+        }
+    }
+
+    // Enable by default
+    $('.' + feeName).prop('disabled', false).selectpicker('refresh');
+    
+
+    // Disable if country matches (case-insensitive)
+    if (disabledCountries.includes(country)) {
+        $('.' + feeName).prop('disabled', true).selectpicker('refresh');;
+    }
+
+    // Find country key ignoring case
+    let countryKey = Object.keys(infoData).find(
+        key => key.toLowerCase() === country
+    );
+
+    if (countryKey) {
+        console.log(infoData[countryKey]);
+
+        // Loop through all fields for that country
+        Object.keys(infoData[countryKey]).forEach(function (key) {
+            console.log(key);                    // e.g. university_package
+            console.log(infoData[countryKey][key]); // Description
+
+            // Example: add/update tooltip
+            $('label[for="' + key + '"] .package-info').remove();
+
+            $('label[for="' + key + '"]').append(
+                ' <i class="package-info info-details-icon fa fa-info-circle" title="' +
+                infoData[countryKey][key] +
+                '"></i>'
+            );
+        });
+    }
+
+});
+
+$(".selectpicker").selectpicker("refresh");
+
+    
+//      let country = ($("#primary_country").val() || "").toLowerCase();
+//     let university = ($("#primary_university").val() || "").toLowerCase();
+
+//     let allowedUniversities = [
+//         "smolensk state medical university",
+//         "izhevsk state medical academy"
+//     ];
+    
+
+//     getClientsFees.forEach(function (fee) { 
+
+//         // Convert "One time Charge" -> "one_time_charge"
+//         let feeName = fee.name.toLowerCase().replace(/\s+/g, "_");
+
+//         // Convert JSON string to array
+//       let disabledCountries = [];
+// if (fee.disabled_country) {
+//     disabledCountries = JSON.parse(fee.disabled_country).map(c => c.toLowerCase());
+// }
+
+// if (disabledCountries.includes(country.toLowerCase())) {
+
+//     $('.' + feeName).prop('disabled', true).selectpicker("refresh");;
+// } else
+// {
+//      $('.' + feeName).prop('disabled', false).selectpicker("refresh");;
+// }
+        
+      
+           
+//     });
+
+//  $(".selectpicker").selectpicker("refresh");
+    
+
+    // $(".info-details-icon").remove();
+
+
+    // if(canEditRussiaPackage)
+    // {
+    //       if (country === "georgia")
+    // {
+    //     $('label[for="medical_insurance"]')
+    //         .append(
+    //             ' <i class="medical-info info-details-icon fa fa-info-circle" title="Medical Insurance package includes Medical Insurance, TRC and Ministry charges"></i>'
+    //         ); 
+    // }
+    // if (
+    //     ["uzbekistan", "kazakhstan", "kyrgyzstan"].includes(country)
+    // ) {
+    //      $('label[for="university_package"]')
+    //         .append(
+    //             ' <i class="package-info info-details-icon fa fa-info-circle" title="Complete package with Tution fee, Hostel, One Time Charge, Documentation and Visa Extension"></i>'
+    //         );
+    // }
+    //     return false;
+    // }
+  
+
+   
+    
+
+    // // Reset all fields first
+    // $("#university_package,#one_time_charge,#medical_insurance,#ev_hostel,#ev_mess")
+    //     .prop("disabled", false);
+
+    // // Russia
+    // if (
+    //     country === "russia" &&
+    //     !allowedUniversities.includes(university)
+    // ) {
+    //     $("#university_package")
+    //         .prop("disabled", true)
+    //         .selectpicker("refresh");
+            
+            
+    //          $('label[for="medical_insurance"]')
+    //         .append(
+    //             ' <i class="otc-info info-details-icon fa fa-info-circle" title="Medical Insurance includes --  Medical Test and visa Extension"></i>'
+    //         );
+            
+    // }
+
+    // // Georgia
+    // if (country === "georgia") {
+
+    //     $("#university_package,#ev_mess")
+    //         .prop("disabled", true)
+    //         .selectpicker("refresh");
+
+    //     $('label[for="medical_insurance"]')
+    //         .append(
+    //             ' <i class="medical-info info-details-icon fa fa-info-circle" title="Medical Insurance package includes Medical Insurance, TRC and Ministry charges"></i>'
+    //         );
+    // }
+
+    // // Uzbekistan / Kazakhstan / Kyrgyzstan
+    // if (
+    //     ["uzbekistan", "kazakhstan", "kyrgyzstan","bangladesh"].includes(country)
+    // ) {
+    //     $("#one_time_charge,#medical_insurance,#ev_hostel")
+    //         .prop("disabled", true)
+    //         .selectpicker("refresh");
+
+    //     $('label[for="university_package"]')
+    //         .append(
+    //             ' <i class="package-info info-details-icon fa fa-info-circle" title="Complete package with Tution fee, Hostel, One Time Charge, Documentation and Visa Extension"></i>'
+    //         );
+    // }
+
+    // // Smolensk & Izhevsk - OTC disabled
+    // if (allowedUniversities.includes(university)) {
+
+    //     $("#one_time_charge")
+    //         .prop("disabled", true)
+    //         .selectpicker("refresh");
+            
+    //         $("#medical_insurance")
+    //         .prop("disabled", true);
+            
+    //         $("#ev_hostel")
+    //         .prop("disabled", true);
+
+    //     // $('label[for="one_time_charge"]')
+    //     //     .append(
+    //     //         ' <i class="otc-info info-details-icon fa fa-info-circle" title="OTC Disabled"></i>'
+    //     //     );
+    // }
+
+    // $(".selectpicker").selectpicker("refresh");
+}
+
+
+  
+    
+ 
 </script>

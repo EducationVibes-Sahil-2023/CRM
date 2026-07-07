@@ -318,4 +318,10 @@ class Hostel_model extends App_Model
         $result = $query->result_array();
         return $result;
     }
+    
+    function universitiesHostel($segment_id)
+{
+    
+    return $this->s_db->query("SELECT co.name,c.country_name,u.university_name,c.id country_id,u.id university_id FROM course co left join countries c ON (co.id = c.segment_id) left join universities u on (u.country_id = c.id ) where co.id = {$segment_id}  ")->result_array();
+}
 }

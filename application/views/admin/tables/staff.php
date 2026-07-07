@@ -19,6 +19,7 @@ $aColumns = [
     db_prefix() . 'staff_department.name as department_name',
      db_prefix() . 'staff_location_region.name as office_region_name',
       db_prefix() . 'staff_state_region.name as lead_region_name',
+      'is_counsoller',
     db_prefix() . 'roles.name as role_name',
     'last_login',
     'active',
@@ -270,7 +271,8 @@ $alternative_phonenumber .= '</div>';
         $row[] = $alternative_phonenumber;
          $row[] = $department;
          $row[] = $officeRegion;
-         $row[] = $leadRegion;
+          $row[] = $officeRegion;
+         $row[] = !empty($aRow['is_counsoller'])?'Yes':'No';
           $row[] = $aRow['role_name'];
            $row[] = $lastLogin;
     $row[] = $active;

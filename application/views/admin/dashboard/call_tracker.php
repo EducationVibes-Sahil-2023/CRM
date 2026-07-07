@@ -65,7 +65,7 @@ $this->load->helper('leads');
   .topnav {
     background: var(--surface);
     border-bottom: 0.5px solid var(--border);
-    padding: 0 24px;
+    padding: 0 10px;
     height: 100px;
     display: flex;
     align-items: center;
@@ -245,9 +245,14 @@ $this->load->helper('leads');
       width: 170px;
   }
   
+  tr.Defaulters
+  {
+      background: #ffc1001f;
+  }
+  
 
 </style>
-    <title>Pulse | Sales Call Intelligence</title>
+    <title>Call Tracker</title>
 <div id="wrapper">
 <div class="screen-options-area"></div>
 <div class="content">
@@ -315,9 +320,9 @@ $this->load->helper('leads');
                                     echo '</div>';
                                     ?>
                                     
-                                    <?php if(is_admin() || $role== 3){  ?>
+                                    <?php if(is_admin() || $role== 3 || get_staff_user_id() == IVR_AUTO_ASIGNATION ){  ?>
                                            <?php
-                                           if(is_admin()){
+                                           if(is_admin() || get_staff_user_id() == IVR_AUTO_ASIGNATION){
                                         echo '<div class="filter-div">';
                                     echo ' <label>Department</label>';
                                     echo render_select('staff_department[]', $staff_department, array('id', 'name'), '', [], array('data-width' => '100%', 'data-none-selected-text' => _l('Department'), 'multiple' => true, 'data-actions-box' => true), array(), 'no-mbot', '', false, 'staff_department');
@@ -446,7 +451,9 @@ $this->load->helper('leads');
   <!-- TREND + ATTEMPTS vs CONNECTS -->
   <div class="row">
     <div class="card">
-      <div class="card-title">7-day avg call duration trend</div>
+      <div class="card-title">7-day avg call duration trend <i class="fa fa-info-circle fa-lg"  data-toggle="tooltip"
+   data-placement="top"
+   title="Shows the average call duration over the last 7 days, calculated using unique leads only. Multiple calls for the same lead are counted once." ></i></div>
       <div class="ch-wrap" style="height:250px !important"><canvas id="trendChart"></canvas></div>
     </div>
     <div class="card">
@@ -459,8 +466,8 @@ $this->load->helper('leads');
 
 
   <!-- FULL REP TABLE -->
-<div class="card">
-  <div class="card-title">Full rep performance table — today</div>
+<div class="card row">
+  <div class="card-title">Full rep performance table — today <button class="btn btn-warning btn-sm pull-right" onclick="DefaultersCheck()">Defaulters</button></div>
   <div style="overflow-x:auto">
     <table class="rep-table" id="repTable">
       
@@ -728,6 +735,7 @@ show_loader();
                 responseData = JSON.parse(responseData.result);
             }
 
+console.log(responseData);
             hide_loader();
 
             let CallData = responseData.total_range;
@@ -844,9 +852,13 @@ function appendRepTableData (tableId, reps = []) {
                 <th>#</th>
                 <th>Staff Name</th>
                 <th>Total Calls</th>
+                <th>Unique Calls</th>
                 <th>Connected</th>
                 <th>Talk Time</th>
                 <th>Avg Duration</th>
+                <th>Fresh Calls</th>
+                <th>Fresh Connected</th>
+                <th>Fresh Talk Time</th>
                 <th>Connect %</th>
             </tr>
         </thead>
@@ -858,7 +870,7 @@ function appendRepTableData (tableId, reps = []) {
     if (!reps || reps.length === 0) {
         tbody.innerHTML = `
             <tr>
-                <td colspan="7" style="text-align:center;padding:20px;">
+                <td colspan="11" style="text-align:center;padding:20px;">
                     No data found
                 </td>
             </tr>
@@ -877,8 +889,13 @@ function appendRepTableData (tableId, reps = []) {
         const [bg, fg] = avatarColors[i % avatarColors.length];
 
         const totalCalls = Number(r.total_calls) || 0;
+        const UniqueCalls = Number(r.unique_calls) || 0;
         const answered = Number(r.answered_calls) || 0;
         const talk = Number(r.call_duration) || 0;
+        
+        const freshtotalCalls = Number(r.fresh_leads) || 0;
+         const fresh_answered = Number(r.fresh_answered) || 0;
+        const fresh_duration = Number(r.fresh_duration) || 0;
 
         // ✅ CALCULATIONS
         const avgDur = totalCalls ? Math.round(talk / totalCalls) : 0;
@@ -895,9 +912,14 @@ function appendRepTableData (tableId, reps = []) {
             : connectPct >= 55
             ? `background:${AMBER_LT};color:#633806`
             : `background:${CORAL_LT};color:#791F1F`;
+            
+let defaulterStatus =
+  r.call_duration < 5400 && r.total_calls < 150
+    ? 'Defaulters'
+    : '';
 
         rowsHTML += `
-        <tr>
+        <tr class="${defaulterStatus}">
             <td style="color:var(--text3);font-weight:600">${i + 1}</td>
 
             <td>
@@ -910,9 +932,14 @@ function appendRepTableData (tableId, reps = []) {
             </td>
 
             <td style="font-weight:600">${totalCalls}</td>
+            <td style="font-weight:600">${UniqueCalls}</td>
             <td>${answered}</td>
             <td>${formatTime(Math.floor(talk))}s</td>
             <td>${avgStr}</td>
+            
+             <td style="font-weight:600">${freshtotalCalls}</td>
+            <td>${fresh_answered}</td>
+            <td>${formatTime(Math.floor(fresh_duration))}s</td>
 
             <td>
                 <span class="pill" style="${conColor}">
@@ -1047,14 +1074,16 @@ function createAvgChart(canvasId, data, color = BLUE) {
                     var x = element.x;
                     var y = element.y;
 
-                    if (dataset.label === 'Leads') {
-                        // ── Lead count: inside bar (centered) ──
-                        ctx2.textAlign = 'center';
-                        ctx2.textBaseline = 'bottom';
-                        ctx2.font = 'bold 11px -apple-system, BlinkMacSystemFont, sans-serif';
-                        ctx2.fillStyle = 'rgba(55,138,221,0.75)';
-                        ctx2.fillText(val, x, y - 4);
-                    }
+if (dataset.label === 'Leads') {
+    // ── Lead count: bottom inside bar ──
+    ctx2.textAlign = 'center';
+    ctx2.textBaseline = 'bottom';
+    ctx2.font = 'bold 11px -apple-system, BlinkMacSystemFont, sans-serif';
+    ctx2.fillStyle = '#000'; // ✅ black color
+
+    const bottomY = element.base; // 🔥 bottom of bar (important)
+    ctx2.fillText(val, x, bottomY - 2); // small padding
+}
 
                     if (dataset.label === 'Duration') {
                         // ── Duration time: above line point ──
@@ -1265,8 +1294,8 @@ function setCallInformations(CallData = {}, yesterdayCallData = {}) {
         let num = parseFloat(val);
         return isNaN(num) ? 0 : num;
     }
-console.log(CallData);
-console.log(yesterdayCallData);
+// console.log(CallData);
+// console.log(yesterdayCallData);
     // ================= TODAY =================
     let callCount = Math.max(0, toNumber(CallData.callCount));
     let totalCalls = Math.max(0, toNumber(CallData.total_leads));
@@ -1289,12 +1318,12 @@ console.log(yesterdayCallData);
         ? Math.floor(y_totalDuration / y_answeredCalls) 
         : 0;
 
-    let answeredPercentage = totalCalls > 0 
-        ? Math.round((answeredCalls / totalCalls) * 100) 
+    let answeredPercentage = callCount > 0 
+        ? Math.round((answeredCalls / callCount) * 100) 
         : 0;
 
-    let y_answeredPercentage = y_totalCalls > 0 
-        ? Math.round((y_answeredCalls / y_totalCalls) * 100) 
+    let y_answeredPercentage = y_callCount > 0 
+        ? Math.round((y_answeredCalls / y_callCount) * 100) 
         : 0;
         
         
@@ -1318,17 +1347,17 @@ console.log(yesterdayCallData);
 
     // ================= UI =================
 
-    $(".total-calls-c").text(callCount.toLocaleString());
-    $(".total-calls").text(totalCalls.toLocaleString());
-    $(".total-calls-avg").text(formatTime(avgDuration));
-    $(".total-calls-connect").text(answeredPercentage + "%");
-    $(".total-calls-duration").text(formatTime(totalDuration));
+  $(".total-calls-c").text(callCount.toLocaleString());
+$(".total-calls").text(totalCalls.toLocaleString());
+$(".total-calls-avg").text(formatTime(avgDuration));
+$(".total-calls-connect").text(`${answeredPercentage}% (${answeredCalls})`);
+$(".total-calls-duration").text(formatTime(totalDuration));
 
-    $(".y-total-calls-c").text(`vs ${y_callCount.toLocaleString()} yesterday`);
-    $(".y-total-calls").text(`vs ${y_totalCalls.toLocaleString()} yesterday`);
-    $(".y-total-calls-avg").text(`vs ${formatTime(y_avgDuration)} yesterday`);
-    $(".y-total-calls-connect").text(`vs ${y_answeredPercentage}% yesterday`);
-    $(".y-total-calls-duration").text(`vs ${formatTime(y_totalDuration)} yesterday`);
+$(".y-total-calls-c").text(`vs ${y_callCount.toLocaleString()} yesterday`);
+$(".y-total-calls").text(`vs ${y_totalCalls.toLocaleString()} yesterday`);
+$(".y-total-calls-avg").text(`vs ${formatTime(y_avgDuration)} yesterday`);
+$(".y-total-calls-connect").text(`vs ${y_answeredPercentage}% (${y_answeredCalls}) yesterday`);
+$(".y-total-calls-duration").text(`vs ${formatTime(y_totalDuration)} yesterday`);
 
     function applyTrend(selector, trend) {
         $(selector)
@@ -1791,7 +1820,7 @@ function formatHM(seconds) {
 
 function makeBars(id, items, color, rankPalette, type = "leads") {
 
-console.log(items);
+// console.log(items);
     const el = document.getElementById(id);
     el.innerHTML = "";
 
@@ -1832,7 +1861,7 @@ console.log(items);
        const displayValue = type === "duration"
     ? formatHM(value)
     : type === "connected"
-        ? value.toFixed(1) + "%"
+        ? Math.round(value) + "%"
         : value;
 
         el.innerHTML += `
@@ -1980,6 +2009,10 @@ const totalConnects = connects.reduce((a, b) => a + b, 0);
     });
 
     return charts[canvasId];
+}
+
+function DefaultersCheck() {
+    $("#repTable tr:not(.Defaulters)").toggle();
 }
 
 </script>

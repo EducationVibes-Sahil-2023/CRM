@@ -19,7 +19,7 @@ $orignal_document_visa_georgia = get_orignal_document_list(0, 0, 0, "", 0, 1);
 $apostille_documents = get_orignal_document_list(0, 0, 1);
 $translation_documents = get_orignal_document_list(0, 0, 0, 0, 0, 0, 0, ["translation_status" => "1"]);
 
-$apostille_visa_apostile_documents = get_orignal_document_list(0, 0, 0, 0, 0, 0, 1);
+$apostille_visa_apostile_documents = get_orignal_document_list(0, 0, 0, 0, 0, 0, 1,["status"=>0]);
 $get_currencies = get_currencies();
 $get_currencies = array_column($get_currencies, null, 'id');
 // Ensure both are arrays before merging
@@ -87,6 +87,16 @@ $client_type = [
    ["id" => "2", "name" => "EVP"],
 
 ];
+
+$sessionArray = [];
+
+$startYear = 2023;
+$endYear = date('Y') + 2;
+
+for ($year = $startYear; $year <= $endYear; $year++) {
+    $sessionArray[] = array("id"=>$year,"name"=>$year);
+}
+
 // array_unshift($ev_partner, array());
 
 
@@ -408,6 +418,16 @@ $client_type = [
                                  echo '</div>';
                                  ?>
                               </div>
+                          
+                               <div class="col-md-2  margin-top leads-filter-column">
+                                 <?php
+                                 echo '<div id="leads-filter-source">';
+                                 echo render_select('acadmic_year', $sessionArray, array('id','name'), '', '2026', array('data-width' => '100%', 'data-none-selected-text' => "Acadmic Year"), array(), 'no-mbot', '', false, "acadmic_year");
+                                 echo '</div>';
+                                 ?>
+                              </div>
+                        
+                              
 
                               <div class="col-md-2  margin-top leads-filter-column filter-hide-default filter-secondary-university hide">
                                  <?php
@@ -416,6 +436,15 @@ $client_type = [
                                  echo '</div>';
                                  ?>
                               </div>
+                          
+                              <div class="col-md-2  margin-top leads-filter-column filter-hide-default filter-secondary-university hide">
+                                 <?php
+                                 echo '<div id="leads-filter-source">';
+                                 echo render_select('university_third[]', $university_priority_3, array('university_name', 'university_name'), '', '', array('data-width' => '100%', 'data-none-selected-text' => "Third University", 'multiple' => true, 'data-actions-box' => true), array(), 'no-mbot', '', false, "secondary_university");
+                                 echo '</div>';
+                                 ?>
+                              </div>
+                            
 
                               <div class="col-md-2  margin-top leads-filter-column">
                                  <?php
@@ -759,6 +788,21 @@ $client_type = [
                         <label>Payment Date</label>
                         <?php echo render_input('apostille_payment_date', '', '', 'date'); ?>
                      </div>
+                     
+                           <div class="col-md-4">
+                        <label>Payment Mode</label>
+                        <?php
+                        array_unshift($payment_mode, array());
+                        echo render_select('apostile_payment_mode', $payment_mode, ['id', 'name'], '', [], [
+                           'data-width' => '100%',
+                           'data-none-selected-text' => 'Payment Mode',
+                           'data-actions-box' => true,
+                        ], [], 'no-mbot', '', false, 'apostile_payment_mode'); ?>
+                     </div>
+                     <div class="col-md-4">
+                        <label>Exchange Rate</label>
+                        <?php echo render_input('apostile_exchange_rate', '', '', 'number',["required-check" => "required-check"]); ?>
+                     </div>
                      <div class="clearfix"></div>
                      <div class="doc-cost-section">
 
@@ -824,6 +868,21 @@ $client_type = [
                         <label>Payment Date</label>
                         <?php echo render_input('translation_payment_date', '', '', 'date'); ?>
                      </div>
+                     
+                          <div class="col-md-4">
+                        <label>Payment Mode</label>
+                        <?php
+                        array_unshift($payment_mode, array());
+                        echo render_select('translation_payment_mode', $payment_mode, ['id', 'name'], '', [], [
+                           'data-width' => '100%',
+                           'data-none-selected-text' => 'Payment Mode',
+                           'data-actions-box' => true,
+                        ], [], 'no-mbot', '', false, 'translation_payment_mode'); ?>
+                     </div>
+                      <div class="col-md-4">
+                        <label>Exchange Rate</label>
+                        <?php echo render_input('translation_exchange_rate', '', '', 'number',["required-check" => "required-check"]); ?>
+                     </div>
                      <div class="clearfix"></div>
                      <div class="doc-cost-section">
 
@@ -884,6 +943,11 @@ $client_type = [
                            'data-none-selected-text' => 'Payment Mode',
                            'data-actions-box' => true,
                         ], [], 'no-mbot', '', false, 'visa_payment_mode'); ?>
+                     </div>
+                     
+                      <div class="col-md-4">
+                        <label>Exchange Rate</label>
+                        <?php echo render_input('visa_exchange_rate', '', '', 'number',["required-check" => "required-check"]); ?>
                      </div>
 
                      <div class="clearfix"></div>
@@ -1399,12 +1463,14 @@ init_tail();
          'fly_vendors_filter': "[name='fly_vendors_filter[]']",
          'fly_date': "[name='fly_date']",
          'university_secondary': "[name='university_secondary[]']",
+         'university_third': "[name='university_third[]']",
          'neet_status': "[name='neet_status[]']",
          'pcc_stages': "[name='pcc_stages[]']",
          'office_location_orignal_documents': "[name='office_location_orignal_documents[]']",
          'courier_date': "[name='courier_date']",
          'apostille_received': "[name='apostille_received']",
          'visa_courier_date': "[name='visa_courier_date']",
+         'acadmic_year': "[name='acadmic_year']",
 
       });
 

@@ -25,9 +25,19 @@ $aColumns = [
     db_prefix() . 'leads.type as lead_type',
     db_prefix() . 'leads_status .name as status_name',
     db_prefix() . 'leads_sources .name as source_name',
-    db_prefix() . 'leads.website as website',
-    "Date(" . db_prefix() . 'leads.dateadded) as created_at',
-    // "Date(last_note.date_contacted) as updated_at",
+    db_prefix() . 'visitor_request.whatsapp_notify as whatsapp_notify',
+    db_prefix() . 'visitor_request.whatsapp_status as whatsapp_status'
+    
+    
+    ];
+    
+    if(is_admin())
+    {
+        $aColumns = array_merge($aColumns,[db_prefix() . 'leads.website as website',db_prefix() . 'leads.utm_campaign_name as utm_campaign_name',db_prefix() . 'leads.utm_ads_set_name as utm_ads_set_name',db_prefix() . 'leads.utm_ads_name as utm_ads_name',db_prefix() . 'leads.utm_term as utm_term']);
+    }
+
+$aColumns = array_merge($aColumns,["Date(" . db_prefix() . 'leads.dateadded) as created_at',
+
     "GREATEST(
     IFNULL(DATE(last_note.dateadded), ''),
     IFNULL(DATE(" . db_prefix() . "leads.lastupdate_date), '')
@@ -37,12 +47,8 @@ $aColumns = [
     db_prefix() . 'visitor_request.status as status_id',
     db_prefix() . 'visitor_status.color as color',
     db_prefix() . 'visitor_request.updated_by as updated_by',
-    db_prefix() . 'visitor_request.id as id',
-
-
-
-
-];
+    db_prefix() . 'visitor_request.id as id'
+]);
 
 
 $sIndexColumn = 'id';
@@ -235,7 +241,7 @@ foreach ($rResult as $aRow) {
 
 
     $outputStatus = '<span class="inline-block text-' . $aRow['color'] . ' lead-status-' . $aRow['status_id'] . ' label label-' . (empty($aRow['color']) ? 'default' : '') . '" style="color:' . $aRow['color'] . ';border:1px solid black; background:white;">' . $aRow['status'];
-    if (is_admin()) {
+    if (is_admin() || has_permission('visit_leads', '', 'modify')) {
         $outputStatus .= '<div class="dropdown inline-block mleft5 table-export-exclude">';
         $outputStatus .= '<a href="#" style="font-size:14px;vertical-align:middle;" class="dropdown-toggle text-dark" id="tableLeadsStatus-' . $aRow['id'] . '" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">';
         $outputStatus .= '<span data-toggle="tooltip" title="' . _l('ticket_single_change_status') . '"><i class="fa fa-caret-down" aria-hidden="true"></i></span>';
@@ -255,9 +261,22 @@ foreach ($rResult as $aRow) {
     }
     $outputStatus .= '</span>';
     $row[] = $outputStatus;
+    $whatsApp_notification="";
+
+   if (!empty($aRow['whatsapp_notify']) && in_array($aRow['whatsapp_status'], [4,1])) {
+
+    $whatsApp_notification = '&nbsp; <i class="fa fa-whatsapp text-success"
+        data-toggle="tooltip"
+        data-placement="top"
+        title="Last WhatsApp notification sent on ' . _dt($aRow['whatsapp_notify']) . '">
+    </i>';
+
+} else {
+    $whatsApp_notification = '';
+}
     // $row[] = date('j F Y, h:i A <\b\r> l', strtotime($aRow["date_of_visit"]));
     $row[] = date('j F Y', strtotime($aRow["date_of_visit"]));
-    $row[] = $aRow["student_name"] . "<br>" . $edit_btn;
+    $row[] = $aRow["student_name"] .$whatsApp_notification. "<br>" . $edit_btn;
     $row[] = $aRow["phonenumber"];
     $row[] = $aRow["update_count"];
     $call_duration = 0;
@@ -269,7 +288,13 @@ foreach ($rResult as $aRow) {
     $row[] = !empty($lead_data[$aRow["lead_type"]]["name"]) ? $lead_data[$aRow["lead_type"]]["name"] : '';
     $row[] = !empty($aRow["status_name"]) ? $aRow["status_name"] : '';
     $row[] = !empty($aRow["source_name"]) ? $aRow["source_name"] : '';
+    if(is_admin()){
     $row[] = !empty($aRow["website"]) ? $aRow["website"] : '';
+    $row[] = !empty($aRow["utm_campaign_name"]) ? $aRow["utm_campaign_name"] : '';
+    $row[] = !empty($aRow["utm_ads_set_name"]) ? $aRow["utm_ads_set_name"] : '';
+    $row[] = !empty($aRow["utm_ads_name"]) ? $aRow["utm_ads_name"] : '';
+    $row[] = !empty($aRow["utm_term"]) ? $aRow["utm_term"] : '';
+    }
     $row[] = !empty($aRow["created_at"]) ? $aRow["created_at"] : '';
     $row[] = !empty($aRow["updated_at"]) ? $aRow["updated_at"] : '';
     $row[] = !empty($aRow["lastcontact_date"]) ? $aRow["lastcontact_date"] : '';

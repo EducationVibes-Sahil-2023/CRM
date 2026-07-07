@@ -77,6 +77,13 @@ function get_available_staff_permissions($data = [])
                 'create' => _l('permission_create'),
             ]
         ],
+        
+         'announcements' => [
+            'name'         => "Announcements",
+            'capabilities' => [
+                'create' => _l('permission_create'),
+            ]
+        ],
         'external_ticket' => [
             'name'         => "External Ticket",
             'capabilities' => $allPermissionsArray,
@@ -147,6 +154,7 @@ function get_available_staff_permissions($data = [])
             'capabilities' => [
                 'view_department' => "Department View (Global)",
                 'view' => " View (Global)",
+                'modify'=>"Update",
                 'delete' => _l('permission_delete'),
             ],
         ],
