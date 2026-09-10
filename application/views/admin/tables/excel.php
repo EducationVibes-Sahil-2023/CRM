@@ -10,6 +10,10 @@ $aColumns = [
         WHEN 4 THEN 'Flight'
         WHEN 5 THEN 'Visa'
         WHEN 6 THEN 'Ma Quotation'
+         WHEN 7 THEN 'Ex Visa Data'
+          WHEN 8 THEN 'Ex Ticket Data'
+           WHEN 9 THEN 'Visitor Logs'
+           WHEN 10 THEN 'External Apostile Data'
         ELSE 'Unknown'
      END as excel_type",
     'id',

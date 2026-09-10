@@ -17,6 +17,7 @@ $customFieldValues = [];
 $is_admin = is_admin();
 $statuses              = $this->ci->leads_model->get_status();
 $statuses = array_column($statuses, null, "id");
+$callAssignation = !empty($_POST['reporting_persons'])?$_POST['reporting_persons']:'l.assigned';
 
 $type              = $this->ci->leads_model->get_type();
 $type = array_column($type, null, "id");
@@ -169,9 +170,13 @@ $select = [
 END AS followup_status",
     "COALESCE(COUNT(DISTINCT calls.id), 0) AS update_count"];
     
-    if(is_admin())
+    if(is_admin() || $role == 3)
     {
-        $select =array_merge($select,["l.update_count AS total_count"]);
+       $select = [
+    ...$select,
+    "l.update_count AS total_count",
+    "IFNULL(l.call_duration, 0) AS total_call_duration",
+];
     }
    
  $select =array_merge($select,[ 
@@ -224,10 +229,10 @@ if ($is_admin) {
    
 }
 
-     if(is_admin()  || $role==3)
-{
+//      if(is_admin()  || $role==3)
+// {
      $select[]= "l.reference_name as reference_name";
-}
+// }
   
   
   
@@ -280,8 +285,8 @@ $finalSelect = [
    "Final.id as id",
     "Final.followup_status as followup_status",
     "COALESCE(SUM(Final.update_count), 0) as update_count"];
-    if(is_admin()){
- $finalSelect[] ="Final.total_count";
+    if(is_admin() || $role == 3){
+ $finalSelect[] ="Final.total_count,Final.total_call_duration";
  }  
 $finalSelect=array_merge($finalSelect,["IFNULL(SUM(Final.call_duration), 0) as call_duration",
     "Final.lastconnect_date as lastconnect_date",
@@ -311,10 +316,10 @@ if ($is_admin) {
     $finalSelect[]= "Final.website as website";
    
 }
-   if(is_admin() || $role==3)
-{
+//   if(is_admin() || $role==3)
+// {
      $finalSelect[]= "Final.reference_name as reference_name";
-}
+// }
   
   $finalSelect[]= "Final.source as source";
   
@@ -357,7 +362,7 @@ $externalLimit= "";
 
 
 
-if (!empty($this->ci->input->post('up_to_date'))) {
+if (!empty($this->ci->input->post('up_to_date')) && empty($this->ci->input->post('connected_from_date'))) {
     $up_to_date = $this->ci->input->post('up_to_date');
     $up_from_date   = $this->ci->input->post('up_from_date');
 
@@ -462,6 +467,72 @@ if ($this->ci->input->post('followup_to_date')) {
     $followup_to_date   = $this->ci->input->post('followup_to_date');
     $where[] = " AND DATE(r.date) BETWEEN '{$this->ci->db->escape_str($followup_from_date)}' AND '{$this->ci->db->escape_str($followup_to_date)}' ";
 }
+
+
+// $ghostAssigned = !empty($_POST['reporting_persons'])?" AND c2.staffid = " . $callAssignation:'';
+
+$ghostAssigned = " AND c2.staffid = l.assigned ";
+
+if (!empty($this->ci->input->post('ghostStatus')) && $this->ci->input->post('ghostStatus')==1) {
+    $ghostCount = $this->ci->input->post('ghostCount')??5;
+    array_push($where, " AND  l.update_count > ".$ghostCount."  AND NOT EXISTS (
+    SELECT 1 FROM (
+     SELECT call_status
+FROM (
+    SELECT c2.call_status, c2.call_start
+    FROM tblcalls_activity_logs c2
+    WHERE c2.contact = l.phonenumber $ghostAssigned
+      AND CHAR_LENGTH(l.phonenumber) = 10
+
+    UNION ALL
+
+    SELECT c2.call_status, c2.call_start
+    FROM tblcalls_activity_logs c2
+    WHERE c2.contact = l.alternative_phonenumber $ghostAssigned 
+      AND CHAR_LENGTH(l.alternative_phonenumber) = 10
+) t
+ORDER BY call_start DESC
+LIMIT ".$ghostCount."
+    ) last5
+    WHERE last5.call_status = 'Answered'
+) ");
+
+}
+
+// if(is_admin()){
+
+    $hours    = trim($this->ci->input->post('callDurationHour') ?? '');
+    $minutes  = trim($this->ci->input->post('callDurationMinute') ?? '');
+    $operator = $this->ci->input->post('callDurationOperator') ?? '<=';
+
+    // Validate operator
+    $allowedOperators = ['<', '<=', '>', '>=', '='];
+    if (!in_array($operator, $allowedOperators, true)) {
+        $operator = '<=';
+    }
+
+    // Validate hours and minutes
+    $hours = (is_numeric($hours) && $hours >= 0) ? (int)$hours : 0;
+    $minutes = (is_numeric($minutes) && $minutes >= 0 && $minutes <= 59) ? (int)$minutes : 0;
+
+    // Apply filter only if user entered a duration
+    if ($hours > 0 || $minutes > 0) {
+        $callDuration = ($hours * 3600) + ($minutes * 60);
+
+        $where[] = " AND l.call_duration {$operator} {$callDuration}";
+    }
+    
+// }
+
+
+if(!empty($this->ci->input->post('connected_from_date')))
+{
+     $from_date = $this->ci->input->post('connected_from_date');
+    $to_date   = $this->ci->input->post('connected_to_date');
+    $where[]   = " AND calls.call_status='Answered' AND DATE(calls.adjusted_call_start) BETWEEN '{$this->ci->db->escape_str($from_date)}' AND '{$this->ci->db->escape_str($to_date)}' ";
+    
+}
+
 
 if ($this->ci->input->post('last_update_date') || $this->ci->input->post('last_contact_date')) {
 
@@ -668,7 +739,7 @@ if (!empty(trim($_POST["search"]["value"]))) {
 SELECT  $final_select_query FROM ( 
    ( SELECT ".$select_query." FROM tblleads l LEFT JOIN tblcalls_activity_logs calls
     ON l.alternative_phonenumber = calls.contact 
-    AND l.assigned = calls.staffid 
+    AND ({$callAssignation} = calls.staffid)
 LEFT JOIN tblstaff s ON s.staffid = l.assigned 
 LEFT JOIN tblstaff_department d ON d.id = s.department
 LEFT JOIN tblclients clients ON clients.userid = l.id 
@@ -683,7 +754,7 @@ WHERE l.lost = 0 AND l.junk = 0  and l.status = 33 $where_condition GROUP BY l.i
    
    ( SELECT ".$select_query." FROM tblleads l LEFT JOIN tblcalls_activity_logs calls
     ON l.phonenumber = calls.contact 
-    AND l.assigned = calls.staffid
+    AND ({$callAssignation} = calls.staffid)
 LEFT JOIN tblstaff s ON s.staffid = l.assigned 
 LEFT JOIN tblstaff_department d ON d.id = s.department
 LEFT JOIN tblclients clients ON clients.userid = l.id 
@@ -694,11 +765,7 @@ LEFT JOIN tblreminders r ON l.id = r.rel_id AND r.rel_type = 'lead'
 LEFT JOIN tblsub_lead_status ss ON ss.id = l.sub_status
 WHERE l.lost = 0 AND l.junk = 0 and l.status = 33 $where_condition GROUP BY l.id  $having_ $externalLimit ) )  as Final GROUP BY Final.id  $having $order_by LIMIT $startLength,$endLength ";
 
-// if(is_admin())
-// {
-//      echo $sql;
-//      die;
-// }
+
   
     $Result = $this->ci->db->query($sql)->result_array();
     
@@ -727,7 +794,7 @@ if((count($Result) < $_POST['length'] )) {
 SELECT $final_select_query FROM ( 
    ( SELECT ".$select_query." FROM tblleads l LEFT JOIN tblcalls_activity_logs calls
     ON l.alternative_phonenumber = calls.contact 
-    AND l.assigned = calls.staffid 
+    AND ({$callAssignation} = calls.staffid )
 LEFT JOIN tblstaff s ON s.staffid = l.assigned 
 LEFT JOIN tblstaff_department d ON d.id = s.department
 LEFT JOIN tblclients clients ON clients.userid = l.id 
@@ -742,7 +809,7 @@ WHERE l.lost = 0 AND l.junk = 0 and l.status!=33 $where_condition GROUP BY l.id 
    
    ( SELECT ".$select_query." FROM tblleads l LEFT JOIN tblcalls_activity_logs calls
     ON l.phonenumber = calls.contact 
-    AND l.assigned = calls.staffid 
+    AND ({$callAssignation} = calls.staffid )
 LEFT JOIN tblstaff s ON s.staffid = l.assigned 
 LEFT JOIN tblstaff_department d ON d.id = s.department
 LEFT JOIN tblclients clients ON clients.userid = l.id 
@@ -893,9 +960,17 @@ if (!empty($followupStatus) && strpos($followupStatus, ' - ') !== false) {
 
     $row[]    = $updatecount;
     
-    if(is_admin()){
+    if(is_admin() || $role == 3){
      $totalCount = !empty($aRow['total_count']) ? $aRow['total_count'] : 0;
     $row[]    = $totalCount;
+    
+     $total_call_duration = 0;
+    $row[] = !empty($aRow['total_call_duration'])
+        ? convertToHMS(
+            $aRow['total_call_duration'],
+            1
+        )
+        : convertToHMS($total_call_duration, 1);
     }
     $call_duration = 0;
     $last_call_update = "";
@@ -1077,9 +1152,9 @@ $minDateFormatted = $minDate ? date('Y-m-d H:i:s', $minDate) : null;
         $row[] = $aRow['website'];
     }
 
-    if ($is_admin || $role == 3) {
+    // if ($is_admin || $role == 3) {
         $row[] = $aRow['reference_name'];
-    }
+    // }
 
     $row[] = $aRow['source_name'];
     if ($role != 1) {

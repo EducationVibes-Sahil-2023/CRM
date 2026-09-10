@@ -1780,180 +1780,344 @@ public function transfer_whatsapp_notification()
 //     }
 // }
 
+// public function tbl_call_sync()
+// {
+//     $staff_data_ = $this->Api_Model->getdata(db_prefix() . "staff", array("staffid" => $this->staffId));
+
+//     try {
+//         // Allow only POST request
+//         if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
+//             return $this->output
+//                 ->set_status_header(405)
+//                 ->set_content_type('application/json')
+//                 ->set_output(json_encode([
+//                     'status'  => false,
+//                     'message' => 'Invalid request method. Only POST allowed.'
+//                 ]));
+//         }
+
+//         // Get POST data
+//         $form_data = $this->input->post();
+
+//         // Convert to JSON
+//         $data = json_encode($form_data);
+
+//         // ✅ API config (pulled from staff record; adjust keys to your schema)
+//         $endpoint = CALLING_URL??'';
+//         $apiKey   = CALLING_KEY??'';
+
+//         if (!empty($form_data["type"]) && $form_data["type"] == 2 && !empty($form_data["formData"])) {
+//             $tbl = db_prefix() . "calls_activity_logs";
+//             $form_data_array_temp = [];
+//             $form_data_array_api  = [];
+
+//             // ✅ Get SIMs from root level
+//             $sim1_main = !empty($form_data["sim1"]) ? $form_data["sim1"] : '';
+//             $sim2_main = !empty($form_data["sim2"]) ? $form_data["sim2"] : '';
+
+//             foreach ($form_data["formData"] as $form_d) {
+//                 $type = 2;
+
+//                 $simnumber   = !empty($form_d["simnumber"]) ? $form_d["simnumber"] : '';
+//                 $simStatus   = !empty($form_d["simStatus"]) ? $form_d["simStatus"] : '';
+//                 $callingSim  = !empty($form_d["callingSim"]) ? $form_d["callingSim"] : '';
+
+//                 // ✅ Safe call assignee
+//                 $callassignee = !empty($staff_data_["data"][0]["phonenumber"])
+//                     ? $staff_data_["data"][0]["phonenumber"]
+//                     : (!empty($form_d["callassignee"]) ? $form_d["callassignee"] : '');
+
+//                 // ✅ Normalize numbers
+//                 $phonenumber = !empty($form_d["phonenumber"])
+//                     ? substr(preg_replace('/\D/', '', $form_d["phonenumber"]), -10)
+//                     : '';
+//                 $callassignee = !empty($callassignee)
+//                     ? substr(preg_replace('/\D/', '', $callassignee), -10)
+//                     : '';
+
+//                 // ✅ Other fields
+//                 $call_status   = !empty($form_d["form-cf-13"]) ? $form_d["form-cf-13"] : 'Not Found';
+//                 $calls_type    = !empty($form_d["calls_type"]) ? $form_d["calls_type"] : '';
+//                 $call_duration = !empty($form_d["call_duration"]) ? $form_d["call_duration"] : 0;
+
+//                 // ✅ Time conversion (unix timestamps)
+//                 $call_start = !empty($form_d["startdate_time"]) ? strtotime($form_d["startdate_time"]) : null;
+//                 $call_end   = !empty($form_d["enddate_time"])   ? strtotime($form_d["enddate_time"])   : null;
+
+//                 // ❌ Skip invalid records
+//                 if (empty($phonenumber)) {
+//                     continue;
+//                 }
+
+//                 // ✅ Build array for local DB
+//                 $form_data_array_temp[] = [
+//                     "staffid"       => !empty($this->staffId) ? (int)$this->staffId : 0,
+//                     "staff_contact" => $callassignee,
+//                     "contact"       => $phonenumber,
+//                     "call_status"   => $call_status,
+//                     "calls_source"  => $type,
+//                     "calls_type"    => $calls_type,
+//                     "duration"      => $call_duration,
+//                     "call_start"    => $call_start,
+//                     "call_end"      => $call_end,
+//                     "datetime"      => date('Y-m-d H:i:s'),
+//                     "sim1"          => $sim1_main,
+//                     "sim2"          => $sim2_main,
+//                     "simnumber"     => $simnumber,
+//                     "simstatus"     => $simStatus
+//                 ];
+
+//                 // ✅ Build array for external API
+//                 // NOTE: $call_start/$call_end are already unix timestamps here,
+//                 // so format them with date() directly (do NOT strtotime() again).
+//                 $form_data_array_api[] = [
+//                     'contact'       => $phonenumber ?: '',
+//                     'staff_contact' => $callassignee ?: '',
+//                     'type'          => (($calls_type ?: 0) == 1) ? 'incoming' : 'outgoing',
+//                     'source'        => 'phone',
+//                     'status'        => strtoupper($call_status ?: ''),
+//                     'duration'      => (int)($call_duration ?: 0),
+//                     'call_start'    => !empty($call_start) ? date('Y-m-d H:i:s', $call_start) : '',
+//                     'call_end'      => !empty($call_end)   ? date('Y-m-d H:i:s', $call_end)   : '',
+//                     'sim1'          => $sim1_main ?: '',
+//                     'sim2'          => $sim2_main ?: '',
+//                     'calling_sim'   => strtolower($callingSim ?: ''),
+//                     'sim_status'    => strtolower($simStatus ?: ''),
+//                     'calling_date'  => !empty($call_start) ? date('Y-m-d', $call_start) : '',
+//                 ];
+//             }
+
+//             // ✅ Insert data into local DB
+//             if (!empty($form_data_array_temp)) {
+//                 $this->load->model('Leads_model');
+//                 $response = $this->Api_Model->update_call_data_bulk_temp_new($form_data_array_temp);
+
+//                 // ✅ Push each record to the external API (only if enabled for this staff)
+//                 if (!empty($form_data_array_api)
+//                     && !empty($staff_data_["data"][0]['apiCallStatus'])
+//                     && $staff_data_["data"][0]['apiCallStatus'] == 1
+//                     && !empty($endpoint)) {
+//                     foreach ($form_data_array_api as $call) {
+//                         try {
+//                             sendCallData($endpoint, $apiKey, $call);
+//                         } catch (Exception $apiEx) {
+//                             // Don't fail the whole sync if one push fails
+//                             log_message('error', 'sendCallData failed: ' . $apiEx->getMessage());
+//                         }
+//                     }
+//                 }
+
+//                 if ($response['status']) {
+//                     return $this->output
+//                         ->set_status_header(200)
+//                         ->set_content_type('application/json')
+//                         ->set_output(json_encode($response));
+//                 } else {
+//                     return $this->output
+//                         ->set_status_header(400)
+//                         ->set_content_type('application/json')
+//                         ->set_output(json_encode($response));
+//                 }
+//             } else {
+//                 return $this->output
+//                     ->set_status_header(404)
+//                     ->set_content_type('application/json')
+//                     ->set_output(json_encode([
+//                         'status'  => false,
+//                         'message' => 'No valid call data found'
+//                     ]));
+//             }
+//         } else {
+//             return $this->output
+//                 ->set_status_header(400)
+//                 ->set_content_type('application/json')
+//                 ->set_output(json_encode([
+//                     'status'  => false,
+//                     'message' => 'Invalid Data'
+//                 ]));
+//         }
+//     } catch (Exception $e) {
+//         log_message('error', 'Call Sync API Error: ' . $e->getMessage());
+//         return $this->output
+//             ->set_status_header(500)
+//             ->set_content_type('application/json')
+//             ->set_output(json_encode([
+//                 'status'  => false,
+//                 'message' => 'Server error',
+//                 'error'   => $e->getMessage()
+//             ]));
+//     }
+// }
+
+
+private function json_response(int $code, bool $status, string $message, array $data = [])
+{
+    $payload = ['status' => $status==true?1:0, 'code' => $code, 'message' => $message];
+    if (!empty($data)) {
+        $payload['data'] = $data;
+    }
+    return $this->output
+        ->set_status_header($code)
+        ->set_content_type('application/json')
+        ->set_output(json_encode($payload));
+}
+ 
 public function tbl_call_sync()
 {
-    $staff_data_ = $this->Api_Model->getdata(db_prefix() . "staff", array("staffid" => $this->staffId));
-
+    // return $this->json_response(400, false, 'Missing or empty "formData". Expected an array of call records.');
     try {
-        // Allow only POST request
+        // ---- 405: only POST ----
         if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
-            return $this->output
-                ->set_status_header(405)
-                ->set_content_type('application/json')
-                ->set_output(json_encode([
-                    'status'  => false,
-                    'message' => 'Invalid request method. Only POST allowed.'
-                ]));
+            return $this->json_response(405, false, 'Invalid request method. Only POST is allowed.');
         }
-
-        // Get POST data
-        $form_data = $this->input->post();
-
-        // Convert to JSON
-        $data = json_encode($form_data);
-
-        // ✅ API config (pulled from staff record; adjust keys to your schema)
-        $endpoint = CALLING_URL??'';
-        $apiKey   = CALLING_KEY??'';
-
-        if (!empty($form_data["type"]) && $form_data["type"] == 2 && !empty($form_data["formData"])) {
-            $tbl = db_prefix() . "calls_activity_logs";
-            $form_data_array_temp = [];
-            $form_data_array_api  = [];
-
-            // ✅ Get SIMs from root level
-            $sim1_main = !empty($form_data["sim1"]) ? $form_data["sim1"] : '';
-            $sim2_main = !empty($form_data["sim2"]) ? $form_data["sim2"] : '';
-
-            foreach ($form_data["formData"] as $form_d) {
-                $type = 2;
-
-                $simnumber   = !empty($form_d["simnumber"]) ? $form_d["simnumber"] : '';
-                $simStatus   = !empty($form_d["simStatus"]) ? $form_d["simStatus"] : '';
-                $callingSim  = !empty($form_d["callingSim"]) ? $form_d["callingSim"] : '';
-
-                // ✅ Safe call assignee
-                $callassignee = !empty($staff_data_["data"][0]["phonenumber"])
-                    ? $staff_data_["data"][0]["phonenumber"]
-                    : (!empty($form_d["callassignee"]) ? $form_d["callassignee"] : '');
-
-                // ✅ Normalize numbers
-                $phonenumber = !empty($form_d["phonenumber"])
-                    ? substr(preg_replace('/\D/', '', $form_d["phonenumber"]), -10)
-                    : '';
-                $callassignee = !empty($callassignee)
-                    ? substr(preg_replace('/\D/', '', $callassignee), -10)
-                    : '';
-
-                // ✅ Other fields
-                $call_status   = !empty($form_d["form-cf-13"]) ? $form_d["form-cf-13"] : 'Not Found';
-                $calls_type    = !empty($form_d["calls_type"]) ? $form_d["calls_type"] : '';
-                $call_duration = !empty($form_d["call_duration"]) ? $form_d["call_duration"] : 0;
-
-                // ✅ Time conversion (unix timestamps)
-                $call_start = !empty($form_d["startdate_time"]) ? strtotime($form_d["startdate_time"]) : null;
-                $call_end   = !empty($form_d["enddate_time"])   ? strtotime($form_d["enddate_time"])   : null;
-
-                // ❌ Skip invalid records
-                if (empty($phonenumber)) {
-                    continue;
-                }
-
-                // ✅ Build array for local DB
-                $form_data_array_temp[] = [
-                    "staffid"       => !empty($this->staffId) ? (int)$this->staffId : 0,
-                    "staff_contact" => $callassignee,
-                    "contact"       => $phonenumber,
-                    "call_status"   => $call_status,
-                    "calls_source"  => $type,
-                    "calls_type"    => $calls_type,
-                    "duration"      => $call_duration,
-                    "call_start"    => $call_start,
-                    "call_end"      => $call_end,
-                    "datetime"      => date('Y-m-d H:i:s'),
-                    "sim1"          => $sim1_main,
-                    "sim2"          => $sim2_main,
-                    "simnumber"     => $simnumber,
-                    "simstatus"     => $simStatus
-                ];
-
-                // ✅ Build array for external API
-                // NOTE: $call_start/$call_end are already unix timestamps here,
-                // so format them with date() directly (do NOT strtotime() again).
-                $form_data_array_api[] = [
-                    'contact'       => $phonenumber ?: '',
-                    'staff_contact' => $callassignee ?: '',
-                    'type'          => (($calls_type ?: 0) == 1) ? 'incoming' : 'outgoing',
-                    'source'        => 'phone',
-                    'status'        => strtoupper($call_status ?: ''),
-                    'duration'      => (int)($call_duration ?: 0),
-                    'call_start'    => !empty($call_start) ? date('Y-m-d H:i:s', $call_start) : '',
-                    'call_end'      => !empty($call_end)   ? date('Y-m-d H:i:s', $call_end)   : '',
-                    'sim1'          => $sim1_main ?: '',
-                    'sim2'          => $sim2_main ?: '',
-                    'calling_sim'   => strtolower($callingSim ?: ''),
-                    'sim_status'    => strtolower($simStatus ?: ''),
-                    'calling_date'  => !empty($call_start) ? date('Y-m-d', $call_start) : '',
-                ];
-            }
-
-            // ✅ Insert data into local DB
-            if (!empty($form_data_array_temp)) {
-                $this->load->model('Leads_model');
-                $response = $this->Api_Model->update_call_data_bulk_temp_new($form_data_array_temp);
-
-                // ✅ Push each record to the external API (only if enabled for this staff)
-                if (!empty($form_data_array_api)
-                    && !empty($staff_data_["data"][0]['apiCallStatus'])
-                    && $staff_data_["data"][0]['apiCallStatus'] == 1
-                    && !empty($endpoint)) {
-                    foreach ($form_data_array_api as $call) {
-                        try {
-                            sendCallData($endpoint, $apiKey, $call);
-                        } catch (Exception $apiEx) {
-                            // Don't fail the whole sync if one push fails
-                            log_message('error', 'sendCallData failed: ' . $apiEx->getMessage());
-                        }
-                    }
-                }
-
-                if ($response['status']) {
-                    return $this->output
-                        ->set_status_header(200)
-                        ->set_content_type('application/json')
-                        ->set_output(json_encode($response));
-                } else {
-                    return $this->output
-                        ->set_status_header(400)
-                        ->set_content_type('application/json')
-                        ->set_output(json_encode($response));
-                }
-            } else {
-                return $this->output
-                    ->set_status_header(404)
-                    ->set_content_type('application/json')
-                    ->set_output(json_encode([
-                        'status'  => false,
-                        'message' => 'No valid call data found'
-                    ]));
-            }
-        } else {
-            return $this->output
-                ->set_status_header(400)
-                ->set_content_type('application/json')
-                ->set_output(json_encode([
-                    'status'  => false,
-                    'message' => 'Invalid Data'
-                ]));
+ 
+        $staff_data_ = $this->Api_Model->getdata(db_prefix() . 'staff', ['staffid' => $this->staffId]);
+        $form_data   = $this->input->post();
+ 
+        // ---- 400: malformed payload, say exactly WHAT is wrong ----
+        if (empty($form_data['type']) || $form_data['type'] != 2) {
+            return $this->json_response(400, false, 'Invalid or missing "type". Expected type=2 (call sync).');
         }
-    } catch (Exception $e) {
-        log_message('error', 'Call Sync API Error: ' . $e->getMessage());
-        return $this->output
-            ->set_status_header(500)
-            ->set_content_type('application/json')
-            ->set_output(json_encode([
-                'status'  => false,
-                'message' => 'Server error',
-                'error'   => $e->getMessage()
-            ]));
+        if (empty($form_data['formData']) || !is_array($form_data['formData'])) {
+            return $this->json_response(400, false, 'Missing or empty "formData". Expected an array of call records.');
+        }
+ 
+        $endpoint  = defined('CALLING_URL') ? CALLING_URL : '';
+        $apiKey    = $staff_data_['data'][0]['call_api_key']?$staff_data_['data'][0]['call_api_key'] : '';
+        $sim1_main = !empty($form_data['sim1']) ? $form_data['sim1'] : '';
+        $sim2_main = !empty($form_data['sim2']) ? $form_data['sim2'] : '';
+ 
+        $form_data_array_temp = [];
+        $form_data_array_api  = [];
+        $skipped              = 0;
+ 
+        foreach ($form_data['formData'] as $form_d) {
+            $simnumber  = !empty($form_d['simnumber'])  ? $form_d['simnumber']  : '';
+            $simStatus  = !empty($form_d['simStatus'])  ? $form_d['simStatus']  : '';
+            $callingSim = !empty($form_d['callingSim']) ? $form_d['callingSim'] : '';
+ 
+            $callassignee = !empty($staff_data_['data'][0]['phonenumber'])
+                ? $staff_data_['data'][0]['phonenumber']
+                : (!empty($form_d['callassignee']) ? $form_d['callassignee'] : '');
+ 
+            $phonenumber = !empty($form_d['phonenumber'])
+                ? substr(preg_replace('/\D/', '', $form_d['phonenumber']), -10)
+                : '';
+            $callassignee = !empty($callassignee)
+                ? substr(preg_replace('/\D/', '', $callassignee), -10)
+                : '';
+ 
+            // Skip records without a usable phone number — but COUNT them,
+            // so the caller can see how many were dropped and why.
+            if (empty($phonenumber)) {
+                $skipped++;
+                continue;
+            }
+ 
+            $call_status   = !empty($form_d['form-cf-13'])    ? $form_d['form-cf-13']            : 'Not Found';
+            $calls_type    = !empty($form_d['calls_type'])    ? $form_d['calls_type']            : '';
+            $call_duration = !empty($form_d['call_duration']) ? $form_d['call_duration']         : 0;
+            $call_start    = !empty($form_d['startdate_time']) ? strtotime($form_d['startdate_time']) : null;
+            $call_end      = !empty($form_d['enddate_time'])   ? strtotime($form_d['enddate_time'])   : null;
+ 
+            $form_data_array_temp[] = [
+                'staffid'       => !empty($this->staffId) ? (int) $this->staffId : 0,
+                'staff_contact' => $callassignee,
+                'contact'       => $phonenumber,
+                'call_status'   => $call_status,
+                'calls_source'  => 2,
+                'calls_type'    => $calls_type,
+                'duration'      => $call_duration,
+                'call_start'    => $call_start,
+                'call_end'      => $call_end,
+                'datetime'      => date('Y-m-d H:i:s'),
+                'sim1'          => $sim1_main,
+                'sim2'          => $sim2_main,
+                'simnumber'     => $simnumber,
+                'simstatus'     => $simStatus,
+            ];
+ 
+            $form_data_array_api[] = [
+                'contact'       => $phonenumber,
+                'staff_contact' => $callassignee ?: '',
+                'type'          => (($calls_type ?: 0) == 1) ? 'incoming' : 'outgoing',
+                'source'        => 'phone',
+                'status'        => strtoupper($call_status ?: ''),
+                'duration'      => (int) ($call_duration ?: 0),
+                'call_start'    => !empty($call_start) ? date('Y-m-d H:i:s', $call_start) : '',
+                'call_end'      => !empty($call_end)   ? date('Y-m-d H:i:s', $call_end)   : '',
+                'sim1'          => $sim1_main ?: '',
+                'sim2'          => $sim2_main ?: '',
+                'calling_sim'   => strtolower($callingSim ?: ''),
+                'sim_status'    => strtolower($simStatus ?: ''),
+                'calling_date'  => !empty($call_start) ? date('Y-m-d', $call_start) : '',
+            ];
+        }
+ 
+        // ---- 422: payload was valid JSON but contained nothing usable ----
+        if (empty($form_data_array_temp)) {
+            return $this->json_response(422, false,
+                'No valid call records found: all ' . $skipped . ' record(s) were missing a phone number.',
+                ['received' => count($form_data['formData']), 'skipped' => $skipped]
+            );
+        }
+ 
+        // ---- Insert into local DB ----
+        $this->load->model('Leads_model');
+        $response = $this->Api_Model->update_call_data_bulk_temp_new($form_data_array_temp);
+ 
+        if (empty($response['status'])) {
+            // DB layer failed — that is a SERVER problem, so 500 (not 400).
+            log_message('error', 'tbl_call_sync DB insert failed: ' . json_encode($response));
+            return $this->json_response(500, false,
+                !empty($response['message']) ? $response['message'] : 'Database insert failed.',
+                ['attempted' => count($form_data_array_temp)]
+            );
+        }
+ 
+        // ---- Push to external API (best effort; never fails the sync) ----
+        $api_pushed = 0;
+        $api_failed = 0;
+        if (!empty($staff_data_['data'][0]['apiCallStatus'])
+            && $staff_data_['data'][0]['apiCallStatus'] == 1
+            && !empty($endpoint) && $apiKey!='') {
+            foreach ($form_data_array_api as $call) {
+                try {
+                    sendCallData($endpoint, $apiKey, $call);
+                    $api_pushed++;
+                } catch (Exception $apiEx) {
+                    $api_failed++;
+                    log_message('error', 'sendCallData failed for ' . $call['contact'] . ': ' . $apiEx->getMessage());
+                }
+            }
+        }
+ 
+        // ---- 200: success, with real counts the app can display ----
+        return $this->json_response(200, true,
+            'Call sync completed: ' . count($form_data_array_temp) . ' record(s) saved'
+            . ($skipped ? ', ' . $skipped . ' skipped (no phone number)' : '')
+            . ($api_failed ? ', ' . $api_failed . ' external push(es) failed' : '') . '.',
+            [
+                'saved'      => count($form_data_array_temp),
+                'skipped'    => $skipped,
+                'api_pushed' => $api_pushed,
+                'api_failed' => $api_failed,
+            ]
+        );
+ 
+    } catch (Throwable $e) {   // Throwable also catches TypeError/Error, not just Exception
+        log_message('error', 'Call Sync API Error: ' . $e->getMessage() . ' @ ' . $e->getFile() . ':' . $e->getLine());
+        return $this->json_response(500, false, 'Internal server error. The incident has been logged.',
+            (ENVIRONMENT === 'development') ? ['error' => $e->getMessage()] : []
+        );
     }
 }
 
 public function google_qualified_leads()
 {
-    ini_set('display_errors', 1);
-    ini_set('display_startup_errors', 1);
-    error_reporting(E_ALL);
+    // ini_set('display_errors', 1);
+    // ini_set('display_startup_errors', 1);
+    // error_reporting(E_ALL);
 
     // Allow only POST
     if ($this->input->server('REQUEST_METHOD') !== 'POST') {
@@ -2054,9 +2218,9 @@ public function weekend_lead_assignation()
 public function check_lead_auto_assignation_lead()
 {
     
-  ini_set('display_errors', 1);
-ini_set('display_startup_errors', 1);
-error_reporting(E_ALL);
+//   ini_set('display_errors', 1);
+// ini_set('display_startup_errors', 1);
+// error_reporting(E_ALL);
 
     $currentTime = date('H:i');
     $currentDay  = date('l'); // Sunday, Monday, etc.php
@@ -2106,9 +2270,9 @@ error_reporting(E_ALL);
 
 public function weekend_lead_assignation_auto()
 {
-    ini_set('display_errors', 1);
-ini_set('display_startup_errors', 1);
-error_reporting(E_ALL);
+//     ini_set('display_errors', 1);
+// ini_set('display_startup_errors', 1);
+// error_reporting(E_ALL);
 
 $this->load->library('Fcm_lib');
 $this->load->driver('cache', ['adapter' => 'file']);
@@ -2366,6 +2530,560 @@ public function visitor_seminar_whatsapp_notification()
 public function whatsapp_message_send_visitor_logs()
 {
     whatsapp_message_send_visitor_logs();
+}
+
+public function email_autoTrigger_leg()
+{
+     $this->load->library('merge_fields/App_merge_fields');
+    $this->load->library('app_object_cache');
+    $this->load->library('mails/App_mail_template');
+    
+    //   ini_set('display_errors', '1');
+    //         ini_set('display_startup_errors', '1');
+    //         error_reporting(E_ALL);
+    // Document types that trigger the legalization mail (lead_type = 2)
+    $checkDoc_type = $this->db
+        ->select('id, name')
+        ->where('leg_mail', 1)
+        ->where('lead_type', 2)
+        ->get(db_prefix() . 'document_upload_type')
+        ->result_array();
+        
+         if (empty($checkDoc_type)) {
+        log_message('info', 'email_autoTrigger_leg: no leg_mail document types configured.');
+        return;
+    }
+    
+    
+
+        
+    $type = 5;
+    $email_templates = [
+        1 => 'Applicant_documentation_notification',
+        2 => 'Applicant_entrance_exam',
+        3 => 'Applicant_invitation_notification',
+        4 => 'Applicant_visa_notification',
+        5 => 'Applicant_legalization_notification',
+        6 => 'Applicant_bank_statement_notification',
+    ];
+
+    if (!isset($email_templates[$type])) {
+        log_message('error', "email_autoTrigger_leg: unknown template type {$type}");
+        return false;
+    }
+    $template = $email_templates[$type];
+    $table    = db_prefix() . 'client_university_shortlisting';
+
+    // $pendingEmails = $this->db
+    //     ->select('client_id, university_name, university_id, updated_by, created_by')
+    //     ->from($table)
+    //     ->where('leg_mail_date <=', date('Y-m-d H:i:s'))
+    //     ->where('leg_mail_status', 3)
+    //     ->where('LOWER(country_name)', 'georgia')
+    //     ->get()
+    //     ->result_array();
+    
+    $pendingEmails = $this->db
+    ->select('
+        s.client_id,
+        s.university_name,
+        s.university_id,
+        s.updated_by,
+        s.created_by
+    ')
+    ->from($table . ' s')
+    ->join('tblclients c', 'c.userid = s.client_id', 'inner')
+    ->where('s.leg_mail_date <=', date('Y-m-d H:i:s'))
+    ->where('s.leg_mail_status', 3)
+    ->where('LOWER(s.country_name)', 'georgia')
+    ->where('s.status', 1)
+     ->group_start()
+        ->where('c.client_type', 1)
+        ->or_group_start()
+            ->where('c.client_type', 2)
+            ->where('c.partner_type', 2)
+        ->group_end()
+    ->group_end()
+    ->get()
+    ->result_array();
+
+    if (empty($pendingEmails)) {
+        log_message('info', 'email_autoTrigger_leg: no pending emails.');
+        return true;
+    }
+
+    $sent = 0;
+    $failed = 0;
+    $skipped = 0;
+
+    foreach ($pendingEmails as $row) {
+   $client_id     = (int) $row['client_id'];
+        $university_id  = (int) $row['university_id'];
+        $university_name = trim((string) ($row['university_name'] ?? ''));
+        $staff_id = !empty($row['updated_by']) ? (int) $row['updated_by'] : (int) $row['created_by'];
+        
+             // Uploaded docs JSON for the client
+    $clientUpload_Docs = $this->db
+        ->select('data')
+        ->where('client_id', $row['client_id']) // TODO: replace hardcoded id with a real variable
+        ->get(db_prefix() . 'client_documents')
+        ->row();
+        
+
+   $decoded = (!empty($clientUpload_Docs->data)) ? json_decode($clientUpload_Docs->data, true) : [];
+$uploadedData = is_array($decoded) ? array_column($decoded, null, 'id') : [];
+      
+        
+$allReceived = true;
+$missing     = [];
+foreach ($checkDoc_type as $docType) {
+    if (empty($uploadedData[$docType['id']])) {
+        $allReceived = false;
+        $missing[]   = $docType['name'];
+    }
+}
+
+if($allReceived)
+{
+     $this->db->where('client_id', $client_id)
+                     ->where('leg_mail_status', 3)
+                     ->update($table, [
+                         'leg_mail_status'    => 1
+                     ]);
+    return true;
+}
+       
+
+        try {
+            if ($client_id <= 0 || $university_name ='') {
+                throw new Exception("invalid client_id/university_id ({$client_id}/{$university_id})");
+            }
+
+            $client = $this->clients_model->getBasicDetails($client_id);
+            
+         
+            if (empty($client) || empty($client->email)) {
+                // No valid recipient — skip without flipping status to "failed".
+                $skipped++;
+                log_message('error', "email_autoTrigger_leg: no email for client {$client_id}, skipped.");
+                continue;
+            }
+            if (filter_var($client->email, FILTER_VALIDATE_EMAIL) === false) {
+                throw new Exception("invalid email '{$client->email}' for client {$client_id}");
+            }
+
+            $email_sent = send_mail_template(
+                $template,
+                $client->email,
+                $client_id,
+                $staff_id,
+                "",
+                $university_id,
+                $university_name
+            );
+        
+
+            $newStatus = 3;
+            $this->db->where('client_id', $client_id)
+                     ->where('leg_mail_status', 3) // only touch the row we picked up
+                     ->update($table, [
+                         'leg_mail_status'    => $newStatus,
+                         'leg_mail_date' =>  date('Y-m-d H:i:s', strtotime('+' . LEG_MAIL_DAY . ' days'))
+                     ]);
+
+            if ($email_sent) {
+                $sent++;
+            } else {
+                $failed++;
+                log_message('error', "email_autoTrigger_leg: send failed for client {$client_id}, university {$university_id}.");
+            }
+        } catch (Exception $e) {
+            $failed++;
+            log_message('error', 'email_autoTrigger_leg row error: ' . $e->getMessage());
+
+            // Mark as failed so it isn't retried forever in the same broken state.
+            $this->db->where('client_id', $client_id)
+                     ->where('leg_mail_status', 3)
+                     ->update($table, [
+                         'leg_mail_status'    => 2
+                     ]);
+        }
+    }
+
+    log_message('info', "email_autoTrigger_leg done: sent={$sent}, failed={$failed}, skipped={$skipped}.");
+    return true;
+}
+
+
+public function email_autoTrigger_inv()
+{
+     $this->load->library('merge_fields/App_merge_fields');
+    $this->load->library('app_object_cache');
+    $this->load->library('mails/App_mail_template');
+    
+    //   ini_set('display_errors', '1');
+    //         ini_set('display_startup_errors', '1');
+    //         error_reporting(E_ALL);
+    // Document types that trigger the invalization mail (lead_type = 2)
+    $checkDoc_type = $this->db
+        ->select('id, name')
+        ->where('inv_mail', 1)
+        ->where('lead_type', 2)
+        ->get(db_prefix() . 'document_upload_type')
+        ->result_array();
+        
+         if (empty($checkDoc_type)) {
+        log_message('info', 'email_autoTrigger_inv: no inv_mail document types configured.');
+        return;
+    }
+    
+    
+
+        
+    $type = 6;
+    $email_templates = [
+        1 => 'Applicant_documentation_notification',
+        2 => 'Applicant_entrance_exam',
+        3 => 'Applicant_invitation_notification',
+        4 => 'Applicant_visa_notification',
+        5 => 'Applicant_legalization_notification',
+        6 => 'Applicant_bank_statement_notification',
+    ];
+
+    if (!isset($email_templates[$type])) {
+        log_message('error', "email_autoTrigger_inv: unknown template type {$type}");
+        return false;
+    }
+    $template = $email_templates[$type];
+    $table    = db_prefix() . 'client_university_shortlisting';
+
+    // $pendingEmails = $this->db
+    //     ->select('client_id, university_name, university_id, updated_by, created_by,country_name')
+    //     ->from($table)
+    //     ->where('inv_mail_date <=', date('Y-m-d H:i:s'))
+    //     ->where('inv_mail_status', 3)
+    //     ->where('LOWER(country_name)', 'georgia')
+    //     ->get()
+    //     ->result_array();
+
+
+$pendingEmails = $this->db
+    ->select('
+        s.client_id,
+        s.university_name,
+        s.university_id,
+        s.updated_by,
+        s.created_by,
+        s.country_name
+    ')
+    ->from($table . ' s')
+    ->join('tblclients c', 'c.userid = s.client_id', 'inner')
+    ->where('s.inv_mail_date <=', date('Y-m-d H:i:s'))
+    ->where('s.inv_mail_status', 3)
+    ->where('LOWER(s.country_name)', 'georgia')
+    ->where('s.status', 1)
+    ->group_start()
+        ->where('c.client_type', 1)
+        ->or_group_start()
+            ->where('c.client_type', 2)
+            ->where('c.partner_type', 2)
+        ->group_end()
+    ->group_end()
+    ->get()
+    ->result_array();
+    
+   if (empty($pendingEmails)) {
+        log_message('info', 'email_autoTrigger_inv: no pending emails.');
+        return true;
+    }
+
+
+    $sent = 0;
+    $failed = 0;
+    $skipped = 0;
+
+    foreach ($pendingEmails as $row) {
+   $client_id     = (int) $row['client_id'];
+        $university_id  = (int) $row['university_id'];
+        $university_name = trim((string) ($row['university_name'] ?? ''));
+        $staff_id = !empty($row['updated_by']) ? (int) $row['updated_by'] : (int) $row['created_by'];
+        
+             // Uploaded docs JSON for the client
+    $clientUpload_Docs = $this->db
+        ->select('data')
+        ->where('client_id', $row['client_id']) // TODO: replace hardcoded id with a real variable
+        ->get(db_prefix() . 'client_documents')
+        ->row();
+        
+
+   $decoded = (!empty($clientUpload_Docs->data)) ? json_decode($clientUpload_Docs->data, true) : [];
+$uploadedData = is_array($decoded) ? array_column($decoded, null, 'id') : [];
+      
+        
+$allReceived = true;
+$missing     = [];
+foreach ($checkDoc_type as $docType) {
+    if (empty($uploadedData[$docType['id']])) {
+        $allReceived = false;
+        $missing[]   = $docType['name'];
+    }
+}
+
+
+if($allReceived)
+{
+     $this->db->where('client_id', $client_id)
+                     ->where('inv_mail_status', 3)
+                     ->update($table, [
+                         'inv_mail_status'    => 1
+                     ]);
+    return true;
+}
+       
+
+        try {
+            if ($client_id <= 0 || $university_name ='') {
+                throw new Exception("invalid client_id/university_id ({$client_id}/{$university_id})");
+            }
+
+            $client = $this->clients_model->getBasicDetails($client_id);
+            
+         
+            if (empty($client) || empty($client->email)) {
+                // No valid recipient — skip without flipping status to "failed".
+                $skipped++;
+                log_message('error', "email_autoTrigger_inv: no email for client {$client_id}, skipped.");
+                continue;
+            }
+            if (filter_var($client->email, FILTER_VALIDATE_EMAIL) === false) {
+                throw new Exception("invalid email '{$client->email}' for client {$client_id}");
+            }
+
+            $email_sent = send_mail_template(
+                $template,
+                $client->email,
+                $client_id,
+                $staff_id,
+                "",
+                $university_id,
+                $university_name
+            );
+        
+
+            $newStatus = 3;
+            $this->db->where('client_id', $client_id)
+                     ->where('inv_mail_status', 3) // only touch the row we picked up
+                     ->update($table, [
+                         'inv_mail_status'    => $newStatus,
+                         'inv_mail_date' =>  date('Y-m-d H:i:s', strtotime('+' . LEG_MAIL_DAY . ' days'))
+                     ]);
+
+            if ($email_sent) {
+                $sent++;
+            } else {
+                $failed++;
+                log_message('error', "email_autoTrigger_inv: send failed for client {$client_id}, university {$university_id}.");
+            }
+        } catch (Exception $e) {
+            $failed++;
+            log_message('error', 'email_autoTrigger_inv row error: ' . $e->getMessage());
+
+            // Mark as failed so it isn't retried forever in the same broken state.
+            $this->db->where('client_id', $client_id)
+                     ->where('inv_mail_status', 3)
+                     ->update($table, [
+                         'inv_mail_status'    => 2
+                     ]);
+        }
+    }
+
+    log_message('info', "email_autoTrigger_inv done: sent={$sent}, failed={$failed}, skipped={$skipped}.");
+    return true;
+}
+
+public function applicant_create()
+{
+    header('Content-Type: application/json');
+
+    try {
+
+        $name  = trim($this->input->post('name', true));
+        $phone = trim($this->input->post('phonenumber', true));
+        $email = trim($this->input->post('email', true));
+
+        $errors = [];
+
+        // -----------------------------
+        // Validation
+        // -----------------------------
+        if ($name === '') {
+            $errors['name'] = 'Name is required.';
+        } elseif (strlen($name) < 2) {
+            $errors['name'] = 'Name must be at least 2 characters.';
+        }
+
+        if ($phone === '') {
+            $errors['phonenumber'] = 'Phone number is required.';
+        } elseif (!preg_match('/^[0-9]{10,15}$/', $phone)) {
+            $errors['phonenumber'] = 'Phone number must contain 10 to 15 digits.';
+        }
+
+        if ($email !== '' && !filter_var($email, FILTER_VALIDATE_EMAIL)) {
+            $errors['email'] = 'Please enter a valid email address.';
+        }
+
+        if (!empty($errors)) {
+
+            http_response_code(422);
+
+            echo json_encode([
+                'status'  => false,
+                'code'    => 'VALIDATION_ERROR',
+                'message' => 'Validation failed.',
+                'errors'  => $errors
+            ]);
+            return;
+        }
+
+        // -----------------------------
+        // Duplicate Phone Check
+        // -----------------------------
+        $existingPhone = $this->db
+            ->select('userid')
+            ->where('mobile', $phone)
+            ->limit(1)
+            ->get(db_prefix() . 'basic_details')
+            ->row();
+
+
+        if ($existingPhone) {
+
+            http_response_code(409);
+
+            echo json_encode([
+                'status'  => false,
+                'code'    => 'DUPLICATE_PHONE',
+                'message' => 'An applicant with this phone number already exists.',
+                'errors'  => [
+                    'phonenumber' => 'This phone number is already registered.'
+                ],
+                'client_id' => $existingPhone->userid
+            ]);
+            return;
+        }
+
+        // -----------------------------
+        // Duplicate Email Check (Optional)
+        // -----------------------------
+        if (!empty($email)) {
+
+            $existingEmail = $this->db
+                ->select('userid')
+                ->where('email', $email)
+                ->limit(1)
+                ->get(db_prefix() . 'basic_details')
+                ->row();
+
+            if ($existingEmail) {
+
+                http_response_code(409);
+
+                echo json_encode([
+                    'status'  => false,
+                    'code'    => 'DUPLICATE_EMAIL',
+                    'message' => 'An applicant with this email address already exists.',
+                    'errors'  => [
+                        'email' => 'This email address is already registered.'
+                    ],
+                    'client_id' => $existingEmail->userid
+                ]);
+                return;
+            }
+        }
+
+        // -----------------------------
+        // Start Transaction
+        // -----------------------------
+        $this->db->trans_begin();
+
+        $client_data = [
+            "active"               => 1,
+            "datecreated"          => date('Y-m-d H:i:s'),
+            "addedfrom"            => 1,
+            "applicant_status"     => 0,
+            "applicant_stage"      => 1,
+            "applicant_sub_status" => 1,
+            "tracker_id"           => 0,
+            "client_type"          => 2,
+            "phonenumber"          => $phone
+        ];
+
+        $this->db->insert(db_prefix() . 'clients', $client_data);
+
+        if ($this->db->affected_rows() <= 0) {
+            throw new Exception('Unable to create applicant.');
+        }
+
+        $client_id = $this->db->insert_id();
+
+        $parts = preg_split('/\s+/', $name);
+
+        $first_name = array_shift($parts);
+        $last_name  = implode(' ', $parts);
+
+        $basic_details = [
+            "created_at" => date('Y-m-d H:i:s'),
+            "userid"     => $client_id,
+            "first_name" => $first_name,
+            "last_name"  => $last_name,
+            "email"      => $email,
+            "mobile"     => $phone
+        ];
+
+        $this->db->insert(db_prefix() . 'basic_details', $basic_details);
+
+        applicant_last_update($client_id);
+
+        $this->db->insert(db_prefix() . 'application_activity_log', [
+            "description" => "Basic Information Updated by - New CRM",
+            "date"        => date('Y-m-d H:i:s'),
+            "staffid"     => 1,
+            "client_id"   => $client_id
+        ]);
+
+        if ($this->db->trans_status() === FALSE) {
+
+            $this->db->trans_rollback();
+
+            throw new Exception('Unable to save applicant details.');
+        }
+
+        $this->db->trans_commit();
+
+        http_response_code(201);
+
+        echo json_encode([
+            'status'    => true,
+            'code'      => 'SUCCESS',
+            'message'   => 'Applicant created successfully.',
+            'client_id' => $client_id
+        ]);
+    } catch (Throwable $e) {
+
+        if ($this->db->trans_status() !== FALSE) {
+            $this->db->trans_rollback();
+        }
+
+        log_message('error', 'Applicant API Error: ' . $e->getMessage());
+
+        http_response_code(500);
+
+        echo json_encode([
+            'status'  => false,
+            'code'    => 'INTERNAL_SERVER_ERROR',
+            'message' => 'Something went wrong while processing your request. Please try again later.'
+        ]);
+    }
 }
 
 }

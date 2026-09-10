@@ -1107,10 +1107,12 @@ function data_tables_init($aColumns, $sIndexColumn, $sTable, $join = [], $where 
     $sLimit
     ";
 
-// if(is_admin() || get_staff_user_id() == 243){
+// if(is_admin())
+// {
 //     echo $sQuery;
 //     die;
 // }
+
     $rResult = $CI->db->query($sQuery)->result_array();
 
     $rResult = hooks()->apply_filters('datatables_sql_query_results', $rResult, [

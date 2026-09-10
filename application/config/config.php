@@ -596,7 +596,7 @@ $config['csrf_exclude_uris'] = array_merge($config['csrf_exclude_uris'], array('
 $config['csrf_exclude_uris'] = array_merge($config['csrf_exclude_uris'], array('external/check_lead_auto_assignation_lead'));
 $config['csrf_exclude_uris'] = array_merge($config['csrf_exclude_uris'], array('external/weekend_lead_assignation'));
 $config['csrf_exclude_uris'] = array_merge($config['csrf_exclude_uris'], array('external/weekend_lead_assignation_auto'));
-
+$config['csrf_exclude_uris'] = array_merge($config['csrf_exclude_uris'], array('cron/convert-to-applicant'));
 
 $config['log_threshold'] = 0; // Logs error messages and debug information
 $db['default']['save_queries'] = false;

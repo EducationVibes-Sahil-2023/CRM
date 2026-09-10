@@ -176,7 +176,14 @@ if (!function_exists('get_data_excel')) {
                 // Apply to CodeIgniter query builder (this works the same as BETWEEN)
                 // $CI->db->where("c.datecreated BETWEEN '{$fromDate}' AND '{$toDate}'", null, false);
                 // Prepare raw SQL condition for manual query usage
-                $condition_sql .= " AND (p.acadmic_year = '{$acadmic_year}')";
+                // $condition_sql .= " AND (p.acadmic_year = '{$acadmic_year}')";
+                 list($start, $end) = array_map('trim', explode(" - ", $acadmic_year));
+
+            // build semester codes
+            $first_semester  = $start . "-09";
+            $second_semester = $end . "-02";
+
+            $condition_sql .= " AND ( p.session_intake IN (" . $CI->db->escape($first_semester) .",". $CI->db->escape($second_semester) . "))";
             }
 
             if (!empty($sql_conditions)) {
@@ -276,7 +283,15 @@ function syncExcel($id = "")
         }
 
         if (!empty($acadmic_year)) {
-            $condition_sql .= " AND (p.acadmic_year = '{$acadmic_year}')";
+            // $condition_sql .= " AND (p.acadmic_year = '{$acadmic_year}')";
+            
+             list($start, $end) = array_map('trim', explode(" - ", $acadmic_year));
+
+            // build semester codes
+            $first_semester  = $start . "-09";
+            $second_semester = $end . "-02";
+
+            $condition_sql .= " AND ( p.session_intake IN (" . $CI->db->escape($first_semester) .",". $CI->db->escape($second_semester) . "))";
         }
 
         if (!empty($sql_conditions)) {
@@ -495,7 +510,15 @@ function syncExcel_new($id = "")
         }
 
         if (!empty($acadmic_year)) {
-            $condition_sql .= " AND (p.acadmic_year = '{$acadmic_year}')";
+            // $condition_sql .= " AND (p.acadmic_year = '{$acadmic_year}')";
+            
+             list($start, $end) = array_map('trim', explode(" - ", $acadmic_year));
+
+            // build semester codes
+            $first_semester  = $start . "-09";
+            $second_semester = $end . "-02";
+
+            $condition_sql .= " AND ( p.session_intake IN (" . $CI->db->escape($first_semester) .",". $CI->db->escape($second_semester) . "))";
         }
 
         if (!empty($sql_conditions)) {
@@ -809,17 +832,53 @@ function syncExcel_new($id = "")
 //     die;
 // }
 
+
+function splitSqlColumns($string)
+{
+    $columns = [];
+    $current = '';
+    $depth = 0;
+    $length = strlen($string);
+
+    for ($i = 0; $i < $length; $i++) {
+        $char = $string[$i];
+
+        if ($char === '(') {
+            $depth++;
+        } elseif ($char === ')') {
+            $depth--;
+        }
+
+        if ($char === ',' && $depth === 0) {
+            $columns[] = trim($current);
+            $current = '';
+        } else {
+            $current .= $char;
+        }
+    }
+
+    if (trim($current) !== '') {
+        $columns[] = trim($current);
+    }
+
+    return $columns;
+}
+
 function syncExcel_neww($id = "",$currentId="",$sheetStatus="")
 {
 
 
+//           ini_set('display_errors', 1);
+// ini_set('display_startup_errors', 1);
+// error_reporting(E_ALL);
+// 
     $CI = &get_instance();
 
-   $CI->db->query("SET SESSION group_concat_max_len = 100000");
-    // $CI->db->query("SET SESSION group_concat_max_len = 10000000000");
+//   $CI->db->query("SET SESSION group_concat_max_len = 100000");
+    $CI->db->query("SET SESSION group_concat_max_len = 10000000000");
 
     // Fetch sheet config(s)
-    $CI->db->select("id, spreadsheetId, fromDate, toDate, autoSync, acadmic_year, sheet_name, sql_condition, column_ids, orignal_documents_status, excel_type,apostile_documents_status,group_by,application_doc")
+    $CI->db->select("id, spreadsheetId, fromDate, toDate, autoSync, acadmic_year, sheet_name, sql_condition, column_ids, orignal_documents_status, excel_type,apostile_documents_status,group_by,application_doc,ignore_join,org,ap,upd,vap")
         ->from(db_prefix() . "excel_data_update")
         ->where("autoSync", 1);
 
@@ -843,6 +902,10 @@ function syncExcel_neww($id = "",$currentId="",$sheetStatus="")
         
     }
   
+  if (!empty($currentId) && $currentId == 40) {
+        syncExcel_neww_($id,$currentId,$sheetStatus);
+        
+    }
   
 
     if (empty($sheetData)) {
@@ -896,10 +959,23 @@ function syncExcel_neww($id = "",$currentId="",$sheetStatus="")
             // die;
         }
 
+   if ((int) $sheet['excel_type'] === 9) {
+
+            $dataArray[] = visitor_logs_data($id);
+            continue;
+            // die;
+        }
+        
+          if ((int) $sheet['excel_type'] === 10) {
+
+            $dataArray[] = external_apostile_data($id);
+            continue;
+            // die;
+        }
         if ((int) $sheet['excel_type'] !== 1) {
             continue;
         }
-
+$selectSequence =[];
 
         $currentId                = $sheet['id'] ?? null;
         $fromDate                 = $sheet['fromDate'] ?? null;
@@ -912,6 +988,7 @@ function syncExcel_neww($id = "",$currentId="",$sheetStatus="")
         $sql_conditions           = $sheet['sql_condition'] ?? null;
         $application_doc = $sheet['application_doc'] ?? null;
         $group_by_sql = $sheet['group_by'] ?? null;
+        $ignore_join = $sheet["ignore_join"]??0;
         // Parse column IDs
         $column_ids_raw = $sheet['column_ids'] ?? '';
         $column_ids = (is_string($column_ids_raw) && trim($column_ids_raw) !== '')
@@ -941,7 +1018,10 @@ function syncExcel_neww($id = "",$currentId="",$sheetStatus="")
 
         // Handle original documents extra columns
         if (!empty($orignal_documents_status) && (int) $orignal_documents_status === 1) {
-            $orignal_documents = get_orignal_document_list(0, 0, 0, 0, 0, 0, 0, ["excel_show " => 1]);
+           
+
+
+     $orignal_documents = get_orignal_document_list(0, 0, 0, 0, 0, 0, 0, ["excel_show " => 1]);
             $upload_document   = get_documents(2, [], 0, "", [db_prefix() . 'document_upload_type.orignal_status' => '1']);
 
             $queryPart = [];
@@ -949,16 +1029,23 @@ function syncExcel_neww($id = "",$currentId="",$sheetStatus="")
             if (!empty($orignal_documents)) {
                 foreach ($orignal_documents as $document) {
                     $short_name        = trim($document['short_name']);
-                    $safe_column_name  = str_replace(" ", "_", $short_name);
+                    $safe_column_name  = 'org_'.preg_replace('/[^A-Za-z0-9]+/', '_', $short_name);
                     $extra_columns[]   = $safe_column_name;
-                    $queryPart[]       = "MAX(CASE WHEN od.short_name = " . $CI->db->escape($short_name) . " THEN 'YES' ELSE 'NO' END) AS `" . $safe_column_name . "`";
+                    $queryPart[] = "MAX(
+    CASE
+        WHEN od.short_name = " . $CI->db->escape($short_name) . "
+             AND (dr.location_id != 12 OR dr.location_id IS NULL)
+        THEN 'YES'
+        ELSE 'NO'
+    END
+) AS `" . $safe_column_name . "`";
                 }
             }
 
             if (!empty($upload_document)) {
                 foreach ($upload_document as $docu) {
                     $doc_id           = (int) $docu['id'];
-                    $safe_column_name = str_replace(" ", "_", $docu["name"]);
+                    $safe_column_name = 'upl_'.preg_replace('/[^A-Za-z0-9]+/', '_', $docu["name"]);
                     $extra_columns[]  = $safe_column_name;
                     $queryPart[] = "
     CASE 
@@ -1036,6 +1123,7 @@ function syncExcel_neww($id = "",$currentId="",$sheetStatus="")
                         $safe_column_name  =  str_replace(" ", "_", $short_name);
                     }
 
+$safe_column_name = preg_replace('/[^A-Za-z0-9]+/', '_', $safe_column_name);
                     $safe_column_name = str_replace(".", "", $safe_column_name);
                     $extra_columns[]   = $safe_column_name;
                     $queryPart[] = "IFNULL(doc_status." . $safe_column_name . ",'Pending') as {$safe_column_name} ";
@@ -1305,7 +1393,7 @@ $queryPart[] = "
         //         ) AS apostille_summary ON apostille_summary.userid = c.userid ";
         // }
         
-        
+        if($ignore_join==1){
         if ($group_by_sql) {
 $group_by = $group_by_sql;
     $apostile_query = " JOIN (
@@ -1318,6 +1406,8 @@ $group_by = $group_by_sql;
                     ELSE aps.exchange_rate
                 END
             ) AS Total_cost,
+            aps.exchange_rate,
+            aps.apostille_cost,
             aps.courier_date AS courier_date,
             aps.payment_date AS payment_date,
             aps.apostille_received AS apostille_received,
@@ -1337,6 +1427,41 @@ $group_by = $group_by_sql;
             ON aps.doc_id = tod.id
     ) AS apostille_summary
     ON apostille_summary.userid = c.userid";
+    
+    
+     if ($group_by_sql == "translation_summary.id") {
+     $apostile_query = " JOIN (
+        SELECT 
+            aps.id,
+            aps.userid,
+            (
+                aps.translation_cost * CASE
+                    WHEN aps.exchange_rate = 0 OR aps.exchange_rate IS NULL THEN 1
+                    ELSE aps.exchange_rate
+                END
+            ) AS Total_cost,
+               aps.exchange_rate,
+            aps.translation_cost,
+            aps.courier_date AS courier_date,
+            aps.payment_date AS payment_date,
+            aps.translation_received AS translation_received,
+            aps.vendor_id AS vendor_id,
+            aps.doc_id AS doc_id,
+            tod.short_name AS doc_name,
+            IF(aps.by_vendor = 1, 'Yes', 'No') AS by_vendor,
+            CASE
+                WHEN aps.id IS NULL THEN 'Pending'
+                WHEN aps.received_status = 0 THEN 'Sent'
+                WHEN aps.received_status = 1 THEN 'Received'
+                ELSE 'Pending'
+            END AS translation_status,
+            aps.currency_text AS currency_text
+        FROM " . db_prefix() . "client_translation_data aps
+        JOIN " . db_prefix() . "orignal_documents tod
+            ON aps.doc_id = tod.id
+    ) AS translation_summary
+    ON translation_summary.userid = c.userid";
+     }
 
 } else {
 
@@ -1348,7 +1473,9 @@ $group_by = $group_by_sql;
                     WHEN exchange_rate = 0 OR exchange_rate IS NULL THEN 1
                     ELSE exchange_rate
                 END
-            ) AS Total_cost,
+            ) AS total_cost,
+            aps.exchange_rate,
+            aps.apostille_cost,
             MAX(courier_date) AS courier_date,
             MAX(payment_date) AS payment_date,
             MAX(apostille_received) AS apostille_received,
@@ -1365,6 +1492,43 @@ $group_by = $group_by_sql;
         GROUP BY userid
     ) AS apostille_summary
     ON apostille_summary.userid = c.userid";
+    
+    
+     if ($group_by_sql == "translation_summary.id") {
+     $apostile_query = " LEFT JOIN (
+        SELECT 
+            aps.id,
+            aps.userid,
+            (
+                aps.translation_cost * CASE
+                    WHEN aps.exchange_rate = 0 OR aps.exchange_rate IS NULL THEN 1
+                    ELSE aps.exchange_rate
+                END
+            ) AS Total_cost,
+            aps.exchange_rate,
+            aps.translation_cost,
+            aps.courier_date AS courier_date,
+            aps.payment_date AS payment_date,
+            aps.translation_received AS translation_received,
+            aps.vendor_id AS vendor_id,
+            aps.doc_id AS doc_id,
+            tod.short_name AS doc_name,
+            IF(aps.by_vendor = 1, 'Yes', 'No') AS by_vendor,
+            CASE
+                WHEN aps.id IS NULL THEN 'Pending'
+                WHEN aps.received_status = 0 THEN 'Sent'
+                WHEN aps.received_status = 1 THEN 'Received'
+                ELSE 'Pending'
+            END AS translation_status,
+            aps.currency_text AS currency_text
+        FROM " . db_prefix() . "client_translation_data aps
+        JOIN " . db_prefix() . "orignal_documents tod
+            ON aps.doc_id = tod.id
+    ) AS translation_summary
+    ON translation_summary.userid = c.userid";
+     }
+
+}
 }
 
         // Main SQL
@@ -1550,7 +1714,7 @@ $group_by = $group_by_sql;
 //                 WHERE 1=1 {$condition_sql}
 //               GROUP BY " . ($group_by ?: "c.userid") ;
 
-
+ 
 
 $sql = "SELECT {$selectColumnName}
                 FROM " . db_prefix() . "clients c
@@ -1559,6 +1723,7 @@ $sql = "SELECT {$selectColumnName}
                 LEFT JOIN " . db_prefix() . "applicant_status s ON c.active = s.id
                 LEFT JOIN " . db_prefix() . "leads l ON l.id = c.leadid
                 LEFT JOIN " . db_prefix() . "staff st ON l.assigned = st.staffid
+                LEFT JOIN " . db_prefix() . "staff rc ON c.referralCounsollor = rc.staffid
                 LEFT JOIN " . db_prefix() . "applicant_stages tt ON tt.id = c.applicant_stage
                 LEFT JOIN " . db_prefix() . "application_sub_category_mbbs ts ON ts.id = c.applicant_sub_status
 
@@ -1663,13 +1828,25 @@ if ($limit > 0) {
         // if (!empty($orignal_documents_status) && (int) $orignal_documents_status === 1) {
         //  echo $sql; die;
         //         }
-        // if(!empty($_REQUEST['debug']) && $_REQUEST['debug'] == 1 && $currentId ==26)
+        // if(!empty($_REQUEST['debug']) && $_REQUEST['debug'] == 1 && $currentId ==11)
         // {
         //  echo $sql; die;
         // }
-        // echo $sql; die;
+        
+        // if($currentId ==27)
+        // {
+        //  echo $sql; die;
+        // }
+        
+        
+       
         $arrayData = $CI->db->query($sql)->result_array();
-
+//  if($currentId ==36){
+//             // echo $currentId;
+//             // die;
+//       echo "<pre>";
+//         print_r($arrayData);
+//         }
         // Get column names
         $sheetColumnName = $CI->db->select("name")
             ->from(db_prefix() . "excel_column_update")
@@ -1710,8 +1887,430 @@ if ($limit > 0) {
 
         ];
     }
+    
+ 
 
     // Output JSON safely
+    header('Content-Type: application/json');
+    echo json_encode($dataArray, JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES);
+    exit;
+}
+
+
+
+function syncExcel_neww_($id = "", $currentId = "", $sheetStatus = "")
+{
+    
+    
+//           ini_set('display_errors', 1);
+// ini_set('display_startup_errors', 1);
+// error_reporting(E_ALL);
+
+    $CI = &get_instance();
+    $CI->db->query("SET SESSION group_concat_max_len = 1000000");
+
+    $CI->db->select("id, spreadsheetId, fromDate, toDate, autoSync, acadmic_year, sheet_name, sql_condition, column_ids,sequence, orignal_documents_status, excel_type, apostile_documents_status, group_by, application_doc, ignore_join, org, ap, upd, vap")
+        ->from(db_prefix() . "excel_data_update")
+        ->where("autoSync", 1);
+
+    if (!empty($id))        { $CI->db->where("spreadsheetId", $id); }
+    if (!empty($currentId)) { $CI->db->where("id", $currentId); }
+
+    $sheetData = $CI->db->order_by("id", "asc")->get()->result_array();
+
+    if (!empty($sheetStatus) && $sheetStatus == 1) {
+        header('Content-Type: application/json');
+        echo json_encode($sheetData, JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES);
+        exit;
+    }
+    if (empty($sheetData)) {
+        return [];
+    }
+
+    // JSON -> [column_id => sequence], sorted
+    $seqMap = static function ($json) {
+        $out = [];
+        if (empty($json)) { return $out; }
+        $rows = json_decode($json, true);
+        if (json_last_error() !== JSON_ERROR_NONE || !is_array($rows)) { return $out; }
+        foreach ($rows as $r) {
+            if (!isset($r['column_id'], $r['sequence'])) { continue; }
+            if (!is_numeric($r['column_id']) || !is_numeric($r['sequence'])) { continue; }
+            $out[(int) $r['column_id']] = (float) $r['sequence'];
+        }
+        asort($out, SORT_NUMERIC);
+        return $out;
+    };
+
+    // unique, SQL-safe alias
+    $alias = static function ($prefix, $name, array &$used) {
+        $a = rtrim($prefix . preg_replace('/[^A-Za-z0-9]+/', '_', (string) $name), '_');
+        if ($a === '' || $a === rtrim($prefix, '_')) { $a = rtrim($prefix, '_') . '_col'; }
+        $base = $a; $i = 2;
+        while (isset($used[$a])) { $a = $base . '_' . $i++; }
+        $used[$a] = true;
+        return $a;
+    };
+
+    $delegates = [
+        2 => 'leads_excel_sync', 3 => 'sa_excel_sync', 4 => 'fly_excel_sync',
+        5 => 'visa_excel_sync',  6 => 'payment_quotations', 7 => 'ex_visa_data',
+        8 => 'ex_ticket_data',   9 => 'visitor_logs_data', 10 => 'external_apostile_data',
+    ];
+
+    $dataArray = [];
+
+    foreach ($sheetData as $sheet) {
+
+        $type = (int) $sheet['excel_type'];
+
+        if (isset($delegates[$type])) {
+            if ($type === 2 || $type === 3) { $delegates[$type]($id); die; }
+            $dataArray[] = $delegates[$type]($id);
+            continue;
+        }
+        if ($type !== 1) { continue; }
+
+        $sheetId     = $sheet['id'] ?? null;
+        $sheet_name  = $sheet['sheet_name'] ?? null;
+        $groupBySql  = $sheet['group_by'] ?? null;
+        $ignoreJoin  = (int) ($sheet['ignore_join'] ?? 0);
+
+        $column_ids = array_values(array_unique(array_filter(
+            array_map('intval', explode(",", (string) ($sheet['column_ids'] ?? '')))
+        )));
+        if (empty($column_ids)) { continue; }
+
+        $items = [];                       // ['seq','ord','sql','label']
+        $used  = [];
+        $baseSeq = array_flip($column_ids);
+
+        /* ---------- base columns ---------- */
+        $baseRows = $CI->db->select('id, name, fetch_column_name')
+            ->from(db_prefix() . 'excel_column_update')
+              ->where_in("id", $column_ids)
+            ->order_by("FIELD(id, " . implode(',', $column_ids) . ")", "", false)
+            ->get()->result_array();
+// echo "<pre>";
+// print_r($sheetData);
+// die;
+     $seqModecolumns = $seqMap($sheet['sequence'] ?? null);
+
+foreach ($baseRows as $r) {
+    $expr = trim((string) ($r['fetch_column_name'] ?? ''));
+    if ($expr === '') {
+        continue;
+    }
+
+    $parts = array_values(
+        array_filter(
+            array_map('trim', splitSqlColumns($expr)),
+            'strlen'
+        )
+    );
+
+    foreach ($parts as $k => $part) {
+        $items[] = [
+            'seq'   => $seqModecolumns[(int) $r['id']] ?? PHP_INT_MAX,
+            'ord'   => $k,
+            'sql'   => $part,
+            'label' => count($parts) > 1
+                ? $r['name'] . ' ' . ($k + 1)
+                : $r['name'],
+        ];
+    }
+}
+        if (empty($items)) { continue; }
+
+        /* ---------- original + upload documents (org / upd) ---------- */
+        if ((int) ($sheet['orignal_documents_status'] ?? 0) === 1) {
+
+            $orgSeq = $seqMap($sheet['org'] ?? null);
+            $updSeq = $seqMap($sheet['upd'] ?? null);
+            $seqMode = !empty($orgSeq) || !empty($updSeq);
+
+            $orgDocs = $seqMode
+                ? (!empty($orgSeq) ? get_orignal_document_list(0,0,0,0,0,0,0, [], [], ['id' => array_keys($orgSeq)]) : [])
+                : get_orignal_document_list(0,0,0,0,0,0,0, ['excel_show' => 1]);
+
+            $updDocs = $seqMode
+                ? (!empty($updSeq) ? get_documents(2, [], 0, "", [], [db_prefix() . "document_upload_type.id", array_keys($updSeq)]) : [])
+                : get_documents(2, [], 0, "", [db_prefix() . 'document_upload_type.orignal_status' => '1']);
+
+            foreach ((array) $orgDocs as $d) {
+                $name = trim($d['short_name'] ?? '');
+                $did  = (int) ($d['id'] ?? 0);
+                if ($did <= 0 || $name === '') { continue; }
+                $a = $alias('org_', $name, $used);
+                $items[] = [
+                    'seq' => $orgSeq[$did] ?? PHP_INT_MAX, 'ord' => 0, 'label' => $a,
+                    'sql' => "MAX(CASE WHEN od.short_name = " . $CI->db->escape($name)
+                           . " AND (dr.location_id != 12 OR dr.location_id IS NULL) THEN 'YES' ELSE 'NO' END) AS `{$a}`",
+                ];
+            }
+
+            foreach ((array) $updDocs as $d) {
+                $name = trim($d['name'] ?? '');
+                $did  = (int) ($d['id'] ?? 0);
+                if ($did <= 0 || $name === '') { continue; }
+                $a = $alias('upl_', $name, $used);
+                $items[] = [
+                    'seq' => $updSeq[$did] ?? PHP_INT_MAX, 'ord' => 0, 'label' => $a,
+                    'sql' => "CASE
+                        WHEN JSON_EXTRACT(CAST(cd.data AS CHAR CHARACTER SET utf8), '$[*].id') IS NOT NULL
+                         AND JSON_CONTAINS(JSON_EXTRACT(CAST(cd.data AS CHAR CHARACTER SET utf8), '$[*].id'), JSON_QUOTE('{$did}')) THEN 'YES'
+                        WHEN JSON_EXTRACT(CAST(cd.data AS CHAR CHARACTER SET utf8), '$.\"{$did}\".id') IS NOT NULL THEN 'YES'
+                        ELSE 'NO' END AS `{$a}`",
+                ];
+            }
+
+            // $items[] = ['seq' => PHP_INT_MAX, 'ord' => 1, 'label' => 'Invitation_letter',
+            //     'sql' => "IF(u.invitation_letter IS NOT NULL AND u.invitation_letter != '', 'Yes', 'No') AS Invitation_letter"];
+            // $items[] = ['seq' => PHP_INT_MAX, 'ord' => 2, 'label' => 'Admission_letter',
+            //     'sql' => "IF(u.application_file IS NOT NULL AND u.application_file != '', 'Yes', 'No') AS Admission_letter"];
+        }
+
+        /* ---------- apostille + visa apostille (ap / vap) ---------- */
+        $apostileSub = "";
+        if ((int) ($sheet['apostile_documents_status'] ?? 0) === 1) {
+
+            $apostileSub = "LEFT JOIN (
+                SELECT ca.userid,
+                       GROUP_CONCAT(DISTINCT od.short_name) AS all_docs,
+                       GROUP_CONCAT(DISTINCT CASE WHEN ca.received_status = 1 THEN od.short_name END) AS received_docs,
+                       GROUP_CONCAT(DISTINCT CASE WHEN ca.by_vendor = 1 THEN od.short_name END) AS by_vendor_docs
+                FROM " . db_prefix() . "client_apostille_data ca
+                JOIN " . db_prefix() . "orignal_documents od ON od.id = ca.doc_id
+                GROUP BY ca.userid
+            ) doc_list ON doc_list.userid = c.userid ";
+
+            $apSeq  = $seqMap($sheet['ap']  ?? null);
+            $vapSeq = $seqMap($sheet['vap'] ?? null);
+            $seqMode = !empty($apSeq) || !empty($vapSeq);
+
+            $apDocs = $seqMode
+                ? (!empty($apSeq) ? get_orignal_document_list(0,0,1,0,0,0,0, [], [], ['id' => array_keys($apSeq)]) : [])
+                : get_orignal_document_list(0, 0, 1);
+
+            $vapDocs = $seqMode
+                ? (!empty($vapSeq) ? get_orignal_document_list(0,0,0,0,0,0,1, ["status" => 0], [], ['id' => array_keys($vapSeq)]) : [])
+                : get_orignal_document_list(0, 0, 0, 0, 0, 0, 1, ["status" => 0]);
+
+            // keep each doc paired with the sequence map it came from
+            $apostilleDocs = [];
+            foreach ((array) $apDocs  as $d) { $apostilleDocs[] = [$d, $apSeq];  }
+            foreach ((array) $vapDocs as $d) { $apostilleDocs[] = [$d, $vapSeq]; }
+
+            $subSelect = [];
+            foreach ($apostilleDocs as [$d, $map]) {
+                $name = trim($d['short_name'] ?? '');
+                $did  = (int) ($d['id'] ?? 0);
+                if ($did <= 0 || $name === '') { continue; }
+
+                $prefix = (!empty($d['apostile_status']) || !empty($d['visa_apostile'])) ? 'Ap_' : '';
+                $a = $alias($prefix, $name, $used);
+
+                $items[] = [
+                    'seq' => $map[$did] ?? PHP_INT_MAX, 'ord' => 3, 'label' => $a,
+                    'sql' => "IFNULL(doc_status.`{$a}`, 'Pending') AS `{$a}`",
+                ];
+                $subSelect[] = ", COALESCE(MAX(CASE WHEN doc_id = {$did} THEN "
+                             . "(CASE WHEN received_status = 1 THEN 'Received' ELSE 'Sent' END) END), 'Pending') AS `{$a}`";
+            }
+
+            if (!empty($subSelect)) {
+                $apostileSub .= " LEFT JOIN ( SELECT userid" . implode('', $subSelect)
+                              . " FROM " . db_prefix() . "client_apostille_data GROUP BY userid"
+                              . " ) doc_status ON doc_status.userid = c.userid ";
+            }
+        }
+
+        /* ---------- application documents ---------- */
+        if ((int) ($sheet['application_doc'] ?? 0) === 1) {
+            $appDocs = get_documents(2, [], 0, "", [db_prefix() . 'document_upload_type.application_doc' => '1']);
+
+            foreach ((array) $appDocs as $d) {
+                $did  = (int) ($d['id'] ?? 0);
+                $name = trim($d['name'] ?? '');
+                if ($did <= 0 || $name === '') { continue; }
+
+                $a = $alias('', $name, $used);
+
+                $idRe = '"id"[[:space:]]*:[[:space:]]*"?' . $did . '"?[[:space:]]*[,}]';
+                $pair = static function ($v) use ($did, $idRe) {
+                    $st = '"approval_status"[[:space:]]*:[[:space:]]*"?' . (int) $v . '"?[[:space:]]*[,}]';
+                    return '(' . $idRe . '[^}]*' . $st . '|' . $st . '[^}]*' . $idRe . ')';
+                };
+
+                $items[] = [
+                    'seq' => PHP_INT_MAX, 'ord' => 4, 'label' => $a,
+                    'sql' => "CASE
+                        WHEN cd.data REGEXP '" . $pair(1) . "' THEN 'Approved'
+                        WHEN cd.data REGEXP '" . $pair(2) . "' THEN 'Rejected'
+                        WHEN cd.data REGEXP '" . $idRe . "'   THEN 'Submitted'
+                        ELSE 'Pending' END AS `{$a}`",
+                ];
+            }
+        }
+
+        /* ---------- one sort: SELECT list and headers stay aligned ---------- */
+        usort($items, static function ($a, $b) {
+            return [$a['seq'], $a['ord']] <=> [$b['seq'], $b['ord']];
+        });
+
+//         echo "<pre>";
+// print_r($items);
+// die;
+
+        $selectColumnName = implode(",\n", array_column($items, 'sql'));
+        $columns          = array_column($items, 'label');
+
+        /* ---------- conditions ---------- */
+        $cond = "";
+        if (!empty($sheet['fromDate']) && !empty($sheet['toDate'])) {
+            $cond .= " AND (c.datecreated BETWEEN " . $CI->db->escape($sheet['fromDate'])
+                   . " AND " . $CI->db->escape($sheet['toDate']) . ")";
+        }
+        if (!empty($sheet['acadmic_year']) && strpos($sheet['acadmic_year'], '-') !== false) {
+            $yr = array_map('trim', explode("-", $sheet['acadmic_year']));
+            if (count($yr) >= 2) {
+                $cond .= " AND (p.session_intake IN (" . $CI->db->escape($yr[0] . "-09")
+                       . "," . $CI->db->escape($yr[1] . "-02") . "))";
+            }
+        }
+        if (!empty($sheet['sql_condition'])) {
+            $cond .= " " . $sheet['sql_condition'];
+        }
+
+        /* ---------- apostille / translation join ---------- */
+        $group_by = "";
+        $apostileJoin = "";
+
+        if ($ignoreJoin === 1) {
+            $isTrans = ($groupBySql === "translation_summary.id");
+            $tbl     = $isTrans ? "client_translation_data" : "client_apostille_data";
+            $costCol = $isTrans ? "translation_cost"        : "apostille_cost";
+            $recvCol = $isTrans ? "translation_received"    : "apostille_received";
+            $sumName = $isTrans ? "translation_summary"     : "apostille_summary";
+            $statCol = $isTrans ? "translation_status"      : "apostille_status";
+
+            if (!empty($groupBySql)) {
+                $group_by = $groupBySql;
+                $apostileJoin = " JOIN (
+                    SELECT aps.id, aps.userid,
+                           (aps.{$costCol} * CASE WHEN aps.exchange_rate = 0 OR aps.exchange_rate IS NULL THEN 1 ELSE aps.exchange_rate END) AS Total_cost,
+                           aps.exchange_rate, aps.{$costCol},
+                           aps.courier_date, aps.payment_date, aps.{$recvCol},
+                           aps.vendor_id, aps.doc_id, tod.short_name AS doc_name,
+                           IF(aps.by_vendor = 1, 'Yes', 'No') AS by_vendor,
+                           CASE WHEN aps.id IS NULL THEN 'Pending'
+                                WHEN aps.received_status = 0 THEN 'Sent'
+                                WHEN aps.received_status = 1 THEN 'Received'
+                                ELSE 'Pending' END AS {$statCol},
+                           aps.currency_text
+                    FROM " . db_prefix() . "{$tbl} aps
+                    JOIN " . db_prefix() . "orignal_documents tod ON aps.doc_id = tod.id
+                ) AS {$sumName} ON {$sumName}.userid = c.userid";
+            } else {
+                $apostileJoin = " LEFT JOIN (
+                    SELECT userid,
+                           SUM(apostille_cost * CASE WHEN exchange_rate = 0 OR exchange_rate IS NULL THEN 1 ELSE exchange_rate END) AS total_cost,
+                           MAX(exchange_rate)      AS exchange_rate,
+                           MAX(apostille_cost)     AS apostille_cost,
+                           MAX(courier_date)       AS courier_date,
+                           MAX(payment_date)       AS payment_date,
+                           MAX(apostille_received) AS apostille_received,
+                           GROUP_CONCAT(vendor_id) AS vendor_id,
+                           GROUP_CONCAT(doc_id)    AS doc_id,
+                           IF(MAX(by_vendor) = 1, 'Yes', 'No') AS by_vendor,
+                           CASE WHEN COUNT(*) = 0 THEN 'Pending'
+                                WHEN SUM(received_status = 0) > 0 THEN 'Sent'
+                                WHEN SUM(received_status = 1) = COUNT(*) THEN 'Received'
+                                ELSE 'Pending' END AS apostille_status
+                    FROM " . db_prefix() . "client_apostille_data
+                    GROUP BY userid
+                ) AS apostille_summary ON apostille_summary.userid = c.userid";
+            }
+        }
+
+        /* ---------- main query ---------- */
+        $sql = "SELECT {$selectColumnName}
+            FROM " . db_prefix() . "clients c
+            LEFT JOIN " . db_prefix() . "basic_details b ON c.userid = b.userid
+            LEFT JOIN " . db_prefix() . "ev_partner evp ON evp.id = c.agent_id
+            LEFT JOIN " . db_prefix() . "applicant_status s ON c.active = s.id
+            LEFT JOIN " . db_prefix() . "leads l ON l.id = c.leadid
+            LEFT JOIN " . db_prefix() . "staff st ON l.assigned = st.staffid
+            LEFT JOIN " . db_prefix() . "staff rc ON c.referralCounsollor = rc.staffid
+            LEFT JOIN " . db_prefix() . "applicant_stages tt ON tt.id = c.applicant_stage
+            LEFT JOIN " . db_prefix() . "application_sub_category_mbbs ts ON ts.id = c.applicant_sub_status
+            LEFT JOIN " . db_prefix() . "admission_preferences p ON p.userid = c.userid
+            LEFT JOIN " . db_prefix() . "client_university_shortlisting u
+                ON u.client_id = c.userid AND u.status = 1
+               AND ((u.university_name IS NOT NULL AND p.primary_university = u.university_name)
+                    OR (u.university_name IS NULL))
+            LEFT JOIN " . db_prefix() . "university_partner u_p ON u_p.id = u.partner
+            LEFT JOIN " . db_prefix() . "applicant_fees_details fd ON fd.client_id = c.userid
+            LEFT JOIN " . db_prefix() . "applicant_fees f ON f.id = fd.fees_id
+            LEFT JOIN " . db_prefix() . "orignal_document_status o ON o.id = c.orignal_document_status
+            LEFT JOIN " . db_prefix() . "orignal_documents_received dr ON dr.userid = c.userid
+            LEFT JOIN " . db_prefix() . "office_location dl ON dl.id = dr.location_id
+            LEFT JOIN " . db_prefix() . "orignal_documents od ON od.id = dr.doc_id
+            LEFT JOIN " . db_prefix() . "client_passport_details pd ON pd.client_id = c.userid
+            LEFT JOIN " . db_prefix() . "passport_stages ps ON ps.id = pd.passport_status
+            LEFT JOIN " . db_prefix() . "academic_details ad ON ad.userid = c.userid
+            LEFT JOIN " . db_prefix() . "neet_status ns ON ns.id = ad.neet_status
+            LEFT JOIN (
+                SELECT v.*, v_sum.total_visa_cost, vv.name AS vendor_name, pm.name AS payment_mode_name
+                FROM " . db_prefix() . "visa_details v
+                INNER JOIN (
+                    SELECT userid,
+                           SUM(cost * CASE WHEN exchange_rate = 0 THEN 1 ELSE exchange_rate END) AS total_visa_cost,
+                           MAX(id) AS latest_id
+                    FROM " . db_prefix() . "visa_details GROUP BY userid
+                ) v_sum ON v_sum.userid = v.userid AND v.id = v_sum.latest_id
+                LEFT JOIN " . db_prefix() . "vendor_list vv ON vv.id = v.vendor_id
+                LEFT JOIN " . db_prefix() . "payment_mode pm ON pm.id = v.payment_mode
+            ) vd ON vd.userid = c.userid
+            LEFT JOIN (
+                SELECT t.*, t_sum.total_ticket_cost
+                FROM " . db_prefix() . "ticket_data t
+                INNER JOIN (
+                    SELECT client_id,
+                           SUM(IF(ticket_status <> 6, ticket_cost, -ticket_cost)) AS total_ticket_cost,
+                           MAX(CASE WHEN ticket_status <> 6 THEN id END) AS latest_id
+                    FROM " . db_prefix() . "ticket_data GROUP BY client_id
+                ) t_sum ON t_sum.client_id = t.client_id AND t.id = t_sum.latest_id
+            ) td ON td.client_id = c.userid
+            LEFT JOIN " . db_prefix() . "client_documents cd ON cd.client_id = c.userid
+            LEFT JOIN " . db_prefix() . "document_upload_type dt ON dt.lead_type = 2 AND dt.orignal_status = 1
+            LEFT JOIN " . db_prefix() . "currencies cu  ON cu.id  = c.scholarship_currency
+            LEFT JOIN " . db_prefix() . "currencies ctf ON ctf.id = u.fees_payment_currency_id
+            LEFT JOIN " . db_prefix() . "vendor_list vl        ON vl.id  = td.vendor_id
+            LEFT JOIN " . db_prefix() . "departure_location fl ON fl.id  = td.departure_location
+            LEFT JOIN " . db_prefix() . "ticket_batch tb       ON tb.id  = td.old_batch_id
+            LEFT JOIN " . db_prefix() . "pcc_status pcc        ON pcc.id = c.pcc_status
+            {$apostileJoin} {$apostileSub}
+            WHERE 1=1 {$cond}
+            GROUP BY " . ($group_by ?: "c.userid");
+
+        $offset = isset($_REQUEST['offset']) ? max(0, (int) $_REQUEST['offset']) : 0;
+        $limit  = isset($_REQUEST['limit'])  ? (int) $_REQUEST['limit'] : 0;
+        if ($limit > 0) {
+            $sql .= " LIMIT {$offset}, {$limit}";
+        }
+// print_r($_REQUEST);
+// die;
+
+// print_r($offset);
+        $dataArray[] = [
+            "currentId"     => $sheetId,
+            "columnName"    => $columns,
+            "workSheetName" => $sheet_name,
+            "rowData"       => array_map('array_values', $CI->db->query($sql)->result_array()),
+        ];
+    }
+
     header('Content-Type: application/json');
     echo json_encode($dataArray, JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES);
     exit;
@@ -1827,7 +2426,7 @@ function fly_excel_sync($id = "")
         $sql = "SELECT {$selectColumnName}
 FROM " . db_prefix() . "clients c
 
-LEFT JOIN " . db_prefix() . "ticket_data td ON td.client_id = c.userid
+ JOIN " . db_prefix() . "ticket_data td ON td.client_id = c.userid
 LEFT JOIN " . db_prefix() . "ev_partner evp ON evp.id = c.agent_id
 LEFT JOIN " . db_prefix() . "applicant_status s ON c.active = s.id
  JOIN " . db_prefix() . "basic_details b ON b.userid = c.userid
@@ -1849,7 +2448,7 @@ LEFT JOIN " . db_prefix() . "vendor_list vl ON vl.id = td.vendor_id
 LEFT JOIN " . db_prefix() . "departure_location tdl ON tdl.id = td.departure_location
 LEFT JOIN " . db_prefix() . "payment_mode pm ON pm.id = td.payment_mode
 
-WHERE 1=1 {$condition_sql}
+WHERE 1=1 AND c.client_type in (1,2) {$condition_sql}
 GROUP BY c.userid,td.id ";
 
 
@@ -2846,14 +3445,22 @@ function payment_quotations($id = '')
             $condition_sql .= " AND (c.datecreated BETWEEN " . $CI->db->escape($fromDate) . " AND " . $CI->db->escape($toDate) . ")";
         }
         if (!empty($acadmic_year)) {
-            $condition_sql .= " AND (p.acadmic_year = " . $CI->db->escape($acadmic_year) . ")";
+            // $condition_sql .= " AND (p.acadmic_year = " . $CI->db->escape($acadmic_year) . ")";
+            
+             list($start, $end) = array_map('trim', explode(" - ", $acadmic_year));
+
+            // build semester codes
+            $first_semester  = $start . "-09";
+            $second_semester = $end . "-02";
+
+            $condition_sql .= " AND ( p.session_intake IN (" . $CI->db->escape($first_semester) .",". $CI->db->escape($second_semester) . "))";
         }
         // $condition_sql = "";
         $condition_sql .= " AND ((l.type = 2 OR l.type IS NULL) OR c.client_type = 2)  and c.userid IS NOT NULL ";
 
         $sql = "
         SELECT 
-        {$selectColumnName},pq.exchange_value,fess_infomation
+        {$selectColumnName},pq.exchange_value,fess_infomation,IF(c.air_ticket_include = 1, 'Yes', 'No') as air_ticket_include
         FROM `" . db_prefix() . "payment_quotations` pq 
         LEFT JOIN " . db_prefix() . "clients c ON pq.client_id = c.userid 
         LEFT JOIN " . db_prefix() . "leads l ON l.id = c.leadid
@@ -2869,6 +3476,7 @@ function payment_quotations($id = '')
         LEFT JOIN " . db_prefix() . "office_location lo ON lo.id = pq.location_id  
         LEFT JOIN " . db_prefix() . "client_passport_details pd ON pd.client_id = c.userid 
         LEFT JOIN " . db_prefix() . "passport_stages ps ON ps.id = pd.passport_status 
+        LEFT JOIN " . db_prefix() . "staff rc ON c.referralCounsollor = rc.staffid
         
                 LEFT JOIN  " . db_prefix() . "admission_preferences p 
                 ON p.userid = pq.client_id 
@@ -2904,6 +3512,7 @@ function payment_quotations($id = '')
         LEFT JOIN " . db_prefix() . "ticket_batch tb ON tb.id = td.batch_id
         WHERE 1=1 and pq.status > 0  {$condition_sql}
         GROUP BY pq.id ORDER BY pq.client_id
+        
         ";
 
 
@@ -3302,7 +3911,351 @@ function ex_visa_data($id)
     // echo json_encode($dataArray);
     // exit;
 }
+function external_apostile_data($id)
+{
+    $CI = &get_instance();
+ 
+    $CI->db->query("SET SESSION group_concat_max_len = 1000000000");
+ 
+    // Fetch sheet config(s)
+    $sheetData = $CI->db
+        ->select("id, spreadsheetId, fromDate, toDate, autoSync, sheet_name, sql_condition, column_ids")
+        ->from(db_prefix() . "excel_data_update")
+        ->where("excel_type", 10)
+        ->where("autoSync", 1)
+        ->where("spreadsheetId", $id)
+        ->order_by("id", "asc")
+        ->get()
+        ->result_array();
+ 
+    $dataArray = [];
+ 
+    foreach ($sheetData as $sheet) {
+ 
+        $currentId     = $sheet['id'] ?? null;
+        $fromDate      = $sheet['fromDate'] ?? null;
+        $toDate        = $sheet['toDate'] ?? null;
+        $spreadsheetId = $sheet['spreadsheetId'] ?? null;
+        $sheet_name    = $sheet['sheet_name'] ?? null;
+        $sqlCondition  = $sheet['sql_condition'] ?? '';
+ 
+        // Parse column IDs. intval + filter keeps this safe to interpolate below.
+        $column_ids_raw = $sheet['column_ids'] ?? '';
+        $column_ids = (is_string($column_ids_raw) && trim($column_ids_raw) !== '')
+            ? array_values(array_filter(array_map('intval', explode(",", $column_ids_raw))))
+            : [];
+ 
+        if (empty($column_ids)) {
+            continue; // skip if no columns configured
+        }
+ 
+        $orderColumns = implode(',', $column_ids);
+ 
+        // Fetch SELECT expressions in configured order.
+        // NOTE: ->row() is null when nothing matches, so guard it. Chaining
+        // ->row()->fetch_column_name is a fatal error on PHP 8 when the row is
+        // missing, and ?? does not save you - it only catches undefined, not null->prop.
+        $columnRow = $CI->db
+            ->select("GROUP_CONCAT(fetch_column_name ORDER BY FIELD(id, {$orderColumns}) SEPARATOR ', ') AS fetch_column_name", false)
+            ->from(db_prefix() . "excel_column_update")
+            ->where("fetch_column_name IS NOT NULL", null, false)
+            ->where("TRIM(fetch_column_name) <> ''", null, false)
+            ->where_in("id", $column_ids)
+            ->get()
+            ->row();
+ 
+        $selectColumnName = $columnRow ? ($columnRow->fetch_column_name ?? '') : '';
+ 
+        if (empty($selectColumnName)) {
+            continue;
+        }
+ 
+        // Header names, same order.
+        // Filtered identically to the SELECT list, so a row with a NULL or blank
+        // fetch_column_name cannot leave you with more headers than columns -
+        // which is what shifts every value one cell to the left in the sheet.
+        $sheetColumnName = $CI->db
+            ->select("name")
+            ->from(db_prefix() . "excel_column_update")
+            ->where("fetch_column_name IS NOT NULL", null, false)
+            ->where("TRIM(fetch_column_name) <> ''", null, false)
+            ->where_in("id", $column_ids)
+            ->order_by("FIELD(id, {$orderColumns})", "", false)
+            ->get()
+            ->result_array();
+ 
+        $columns = array_column($sheetColumnName, "name");
+ 
+        // Build conditions
+        $condition_sql = "";
+ 
+        if (!empty($fromDate) && !empty($toDate)) {
+            // Half-open range on the bare column instead of DATE(a.created_at).
+            // Wrapping the column in a function makes the index unusable and
+            // forces a full table scan on every sync.
+            $condition_sql .= " AND a.created_at >= " . $CI->db->escape($fromDate . " 00:00:00")
+                            . " AND a.created_at <  " . $CI->db->escape(date('Y-m-d', strtotime($toDate . ' +1 day')) . " 00:00:00");
+        }
+ 
+        if (!empty($sqlCondition) && trim($sqlCondition) !== '') {
+            $condition_sql .= " AND (" . $sqlCondition . ")";
+        }
+ 
+        $sql = "
+    SELECT
+        {$selectColumnName}
+    FROM `" . db_prefix() . "external_client_apostille_data` a
+    INNER JOIN `" . db_prefix() . "orignal_documents` d
+        ON a.doc_id = d.id
+    LEFT JOIN `" . db_prefix() . "vendor_list` v
+        ON a.vendor_id = v.id
+    LEFT JOIN `" . db_prefix() . "payment_mode` p
+        ON a.payment_mode = p.id
+    LEFT JOIN `" . db_prefix() . "staff` s
+        ON a.created_by = s.staffid
+    WHERE 1=1 {$condition_sql}
+    GROUP BY a.id
+    ORDER BY a.id DESC
+";
+ 
+        $query = $CI->db->query($sql);
+ 
+        if (!$query) {
+            log_message('error', 'external_apostile_data: query failed for sheet id ' . $currentId);
+            continue;
+        }
+ 
+        $arrayData = $query->result_array();
+ 
+        // Rows -> plain indexed arrays, nulls -> ""
+        $arrayDataValues = [];
+        foreach ($arrayData as $row) {
+            $valuesOnly = [];
+            foreach ($row as $v) {
+                $valuesOnly[] = ($v === null) ? '' : $v;
+            }
+            $arrayDataValues[] = $valuesOnly;
+        }
+ 
+        // Append - do NOT return here. `return $dataArray[] = [...]` inside the
+        // loop hands back only the FIRST sheet and silently drops the rest.
+        $dataArray = [
+            "columnName"    => $columns,
+            "workSheetName" => $sheet_name,
+            "rowData"       => $arrayDataValues
+        ];
+    }
+ 
+    // Always an array, never null - Apps Script accepts both a single object
+    // and an array of them, but null breaks the JSON parse.
+    return $dataArray??[];
+}
 
+function visitor_logs_data($id)
+{
+    $CI = &get_instance();
+
+    $CI->db->query("SET SESSION group_concat_max_len = 10000000000");
+
+    // Pagination
+    $limit  = (int)$CI->input->get('limit');
+    $offset = (int)$CI->input->get('offset');
+
+    if ($limit <= 0) {
+        $limit = 500;
+    }
+
+    if ($offset < 0) {
+        $offset = 0;
+    }
+
+    // Sheet Config
+    $sheetData = $CI->db
+        ->select("id, spreadsheetId, fromDate, toDate, autoSync, sheet_name, sql_condition, column_ids")
+        ->from(db_prefix() . "excel_data_update")
+        ->where("excel_type", 9)
+        ->where("autoSync", 1)
+        ->where("spreadsheetId", $id)
+        ->order_by("id", "ASC")
+        ->get()
+        ->result_array();
+
+    $response = [];
+
+    foreach ($sheetData as $sheet) {
+
+        $fromDate   = $sheet['fromDate'];
+        $toDate     = $sheet['toDate'];
+        $sheet_name = $sheet['sheet_name'];
+
+        $column_ids = !empty($sheet['column_ids'])
+            ? array_map('intval', explode(',', $sheet['column_ids']))
+            : [];
+
+        if (empty($column_ids)) {
+            continue;
+        }
+
+        $orderColumns = implode(",", $column_ids);
+
+        // Dynamic Select
+        $selectColumnName = $CI->db
+            ->select("GROUP_CONCAT(fetch_column_name ORDER BY FIELD(id,$orderColumns)) AS fetch_column_name", false)
+            ->from(db_prefix() . "excel_column_update")
+            ->where_in("id", $column_ids)
+            ->get()
+            ->row()
+            ->fetch_column_name ?? '';
+
+        if (empty($selectColumnName)) {
+            continue;
+        }
+
+        // Date Filter
+        $condition_sql = "";
+
+        if (!empty($fromDate) && !empty($toDate)) {
+            $condition_sql .= " AND DATE(v.date_of_visit) BETWEEN "
+                . $CI->db->escape($fromDate)
+                . " AND "
+                . $CI->db->escape($toDate);
+        }
+
+        // Total Records
+        $countSql = "
+            SELECT COUNT(DISTINCT v.id) total
+            FROM " . db_prefix() . "visitor_request v
+            LEFT JOIN " . db_prefix() . "leads l ON v.lead_id=l.id
+            WHERE 1=1 {$condition_sql}
+        ";
+
+        $totalRows = (int)$CI->db->query($countSql)->row()->total;
+
+        // Main Query
+        $sql = "
+            SELECT
+                {$selectColumnName}
+            FROM " . db_prefix() . "visitor_request v
+
+            LEFT JOIN " . db_prefix() . "leads l
+                ON v.lead_id=l.id
+
+            LEFT JOIN " . db_prefix() . "leads_type t
+                ON l.type=t.id
+
+            LEFT JOIN " . db_prefix() . "leads_status s
+                ON l.status=s.id
+
+            LEFT JOIN " . db_prefix() . "leads_sources so
+                ON l.source=so.id
+
+            LEFT JOIN " . db_prefix() . "visitor_type vt
+                ON v.visitor_type=vt.id
+
+            LEFT JOIN " . db_prefix() . "visitor_status vs
+                ON v.status=vs.id
+
+            LEFT JOIN " . db_prefix() . "staff ass
+                ON v.created_by=ass.staffid
+
+            LEFT JOIN " . db_prefix() . "staff att
+                ON v.assigned=att.staffid
+
+            LEFT JOIN " . db_prefix() . "cities_ ct
+                ON ct.id=v.location
+
+            WHERE 1=1
+            {$condition_sql}
+
+            GROUP BY v.id
+
+            ORDER BY v.id DESC
+
+            LIMIT {$limit}
+            OFFSET {$offset}
+        ";
+
+        $rows = $CI->db->query($sql)->result_array();
+
+        // Header Names
+        $sheetColumnName = $CI->db
+            ->select("name")
+            ->from(db_prefix() . "excel_column_update")
+            ->where_in("id", $column_ids)
+            ->order_by("FIELD(id,$orderColumns)", "", false)
+            ->get()
+            ->result_array();
+
+        $headers = array_column($sheetColumnName, "name");
+
+        // Clean NULL
+        $rowData = [];
+
+        foreach ($rows as $row) {
+
+            $tmp = [];
+
+            foreach ($row as $value) {
+
+                $tmp[] = $value === null ? "" : $value;
+
+            }
+
+            $rowData[] = $tmp;
+        }
+
+        $response[] = [
+
+            "columnName"    => $headers,
+
+            "workSheetName" => $sheet_name,
+
+            "rowData"       => $rowData,
+
+            "limit"         => $limit,
+
+            "offset"        => $offset,
+
+            "totalRows"     => $totalRows,
+
+            "hasMore"       => ($offset + count($rowData)) < $totalRows
+
+        ];
+    }
+
+    header('Content-Type: application/json');
+    echo json_encode($response, JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES);
+    exit;
+}
+
+function normalize_sheet_payload($data)
+{
+    $out = [];
+ 
+    $walk = function ($node) use (&$walk, &$out) {
+        if (!is_array($node)) {
+            return;
+        }
+        // A sheet object - take it, do not descend further
+        if (array_key_exists('columnName', $node)
+            || array_key_exists('workSheetName', $node)
+            || array_key_exists('rowData', $node)) {
+            $out[] = [
+                'columnName'    => isset($node['columnName'])    ? array_values((array) $node['columnName']) : [],
+                'workSheetName' => isset($node['workSheetName']) ? (string) $node['workSheetName']           : '',
+                'rowData'       => isset($node['rowData'])       ? array_values((array) $node['rowData'])    : [],
+            ];
+            return;
+        }
+        // A container - descend
+        foreach ($node as $child) {
+            $walk($child);
+        }
+    };
+ 
+    $walk($data);
+    return $out;
+}
 
 function ex_ticket_data($id)
 {

@@ -18,7 +18,7 @@ $orignal_document_visa_rest = get_orignal_document_list(0, 0, 0, "", 1);
 $orignal_document_visa_georgia = get_orignal_document_list(0, 0, 0, "", 0, 1);
 $apostille_documents = get_orignal_document_list(0, 0, 1);
 $translation_documents = get_orignal_document_list(0, 0, 0, 0, 0, 0, 0, ["translation_status" => "1"]);
-
+$all_orignal_document_list = get_orignal_document_list(0, 0, 0, 0, 0, 0, 0);
 $apostille_visa_apostile_documents = get_orignal_document_list(0, 0, 0, 0, 0, 0, 1,["status"=>0]);
 $get_currencies = get_currencies();
 $get_currencies = array_column($get_currencies, null, 'id');
@@ -72,10 +72,10 @@ $neet_status = get_neet_status();
 $neet_status_new = [];
 $neet_status_new[] = ["id" => "Awaited", "name" => "Awaited"];
 $neet_status_new[] = ["id" => "Declared", "name" => "Declared"];
-$neet_status_new[] = ["id" => "Fail", "name" => "Fail"];
-$neet_status_new[] = ["id" => "Not Appeared", "name" => "Not Appeared"];
+$neet_status_new[] = ["id" => "Without Neet", "name" => "Without Neet"];
+// $neet_status_new[] = ["id" => "Not Appeared", "name" => "Not Appeared"];
 
-$neet_status = array_merge($neet_status, $neet_status_new);
+// $neet_status = array_merge($neet_status, $neet_status_new);
 $yes_no_status = [
    ["id" => "", "name" => ""],
    ["id" => "Yes", "name" => "Yes"],
@@ -87,6 +87,15 @@ $client_type = [
    ["id" => "2", "name" => "EVP"],
 
 ];
+
+$VisaPriority = [];
+
+for ($i = 1; $i <= VISA_PRIORITY; $i++) {
+    $VisaPriority[] = [
+        "id"   => (string)$i,
+        "name" => "P$i"
+    ];
+}
 
 $sessionArray = [];
 
@@ -449,7 +458,15 @@ for ($year = $startYear; $year <= $endYear; $year++) {
                               <div class="col-md-2  margin-top leads-filter-column">
                                  <?php
                                  echo '<div id="leads-filter-neet">';
-                                 echo render_select('neet_status[]', $neet_status, array('id', 'name'), '', '', array('data-width' => '100%', 'data-none-selected-text' => "Neet Status", 'multiple' => true, 'data-actions-box' => true), array(), 'no-mbot', '', false, "neet_status");
+                                 echo render_select('neet_status[]', $neet_status_new, array('id', 'name'), '', '', array('data-width' => '100%', 'data-none-selected-text' => "Neet Status", 'multiple' => true, 'data-actions-box' => true), array(), 'no-mbot', '', false, "neet_status");
+                                 echo '</div>';
+                                 ?>
+                              </div>
+                              
+                                 <div class="col-md-2  margin-top leads-filter-column">
+                                 <?php
+                                 echo '<div id="leads-filter-neet">';
+                                 echo render_select('neet_status_[]', $neet_status, array('id', 'name'), '', '', array('data-width' => '100%', 'data-none-selected-text' => "Neet Sub Status", 'multiple' => true, 'data-actions-box' => true), array(), 'no-mbot', '', false, "neet_status_");
                                  echo '</div>';
                                  ?>
                               </div>
@@ -926,6 +943,10 @@ for ($year = $startYear; $year <= $endYear; $year++) {
                            'data-actions-box' => true,
                         ], [], 'no-mbot', '', false, 'visa_courier_type'); ?>
                      </div>
+                      <div class="col-md-4">
+                        <label>Apply Date</label>
+                        <?php echo render_input('visa_apply_date', '', '', 'date'); ?>
+                     </div>
                      <div class="col-md-4">
                         <label>Payment Date</label>
                         <?php echo render_input('visa_payment_date', '', '', 'date'); ?>
@@ -950,6 +971,18 @@ for ($year = $startYear; $year <= $endYear; $year++) {
                         <?php echo render_input('visa_exchange_rate', '', '', 'number',["required-check" => "required-check"]); ?>
                      </div>
 
+                    
+                    <div class="col-md-4">
+                        <label>Visa Priority<small class='text-danger'>*</small></label>
+                        <?php
+                        array_unshift($VisaPriority, array());
+                        echo render_select('visa_priority', $VisaPriority, ['id', 'name'], '', [$visa["visa_priority"]], [
+                           'data-width' => '100%',
+                           'data-none-selected-text' => 'Visa Priority',
+                           'data-actions-box' => true,
+                        ], [], 'no-mbot', '', false, 'visa_priority'); ?>
+                     </div>
+                     
                      <div class="clearfix"></div>
                      <!--<div class="doc-cost-section">-->
 
@@ -1069,6 +1102,11 @@ init_tail();
    var column_names = {};
    var fees_array = <?= !empty($fees_data) ? json_encode($fees_data, JSON_UNESCAPED_UNICODE) : '[]' ?>;
    var orignal_document_list = <?= !empty($orignal_document_list) ? json_encode($orignal_document_list, JSON_UNESCAPED_UNICODE) : '[]' ?>;
+   var all_orignal_document_list = <?= !empty($all_orignal_document_list)
+    ? json_encode(array_column($all_orignal_document_list, null, 'id'), JSON_UNESCAPED_UNICODE)
+    : '{}' ?>;
+   
+   
    var orignal_document_list_rest = <?= !empty($orignal_document_list_rest) ? json_encode($orignal_document_list_rest, JSON_UNESCAPED_UNICODE) : '[]' ?>;
    var orignal_document_list_georgia = <?= !empty($orignal_document_list_georgia) ? json_encode($orignal_document_list_georgia, JSON_UNESCAPED_UNICODE) : '[]' ?>;
    var orignal_document_visa_rest = <?= !empty($orignal_document_visa_rest) ? json_encode($orignal_document_visa_rest, JSON_UNESCAPED_UNICODE) : '[]' ?>;
@@ -1465,6 +1503,7 @@ init_tail();
          'university_secondary': "[name='university_secondary[]']",
          'university_third': "[name='university_third[]']",
          'neet_status': "[name='neet_status[]']",
+         'neet_status_': "[name='neet_status_[]']",
          'pcc_stages': "[name='pcc_stages[]']",
          'office_location_orignal_documents': "[name='office_location_orignal_documents[]']",
          'courier_date': "[name='courier_date']",
@@ -2153,7 +2192,7 @@ init_tail();
 
       // Re-add only the selected ones
       selected_documents.forEach(function(doc_id) {
-         let doc = apostille_documents_list[doc_id];
+         let doc = all_orignal_document_list[doc_id];
 
          $(".doc-cost-section").append(`
             <div class='col-md-4' id='cost-doc-div-${doc_id}'>

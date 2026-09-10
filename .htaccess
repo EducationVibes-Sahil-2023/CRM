@@ -1,35 +1,45 @@
 
-# RewriteOptions inherit
-# <IfModule mod_rewrite.c>
-# Options +FollowSymLinks
-# RewriteEngine On
 
-# RewriteCond %{REQUEST_URI} !^/public/ 
+<IfModule mod_rewrite.c>
 
-# RewriteCond %{REQUEST_FILENAME} !-d
-# RewriteCond %{REQUEST_FILENAME} !-f
+RedirectMatch 404 /\.git
+RedirectMatch 404 /\.env
+RedirectMatch 404 /composer\.json
+RedirectMatch 404 /package(-lock)?\.json
+RedirectMatch 404 \.(ini|log|conf|bak|backup|old|orig|sql|dump|tar|zip)$
 
-# RewriteRule ^(.*)$ /public/$1 
-# # RewriteRule ^ index.php [L]
-# RewriteRule ^(/)?$ public/index.php [L] 
-# </IfModule>
+    RewriteEngine On
+    RewriteBase /
 
-# RewriteEngine On
-#     RewriteCond %{REQUEST_URI} ^/system.*
-#     RewriteRule ^(.*)$ index.php?/$1 [L]
-#     RewriteCond %{REQUEST_FILENAME} !-f
-#     RewriteCond %{REQUEST_FILENAME} !-d
-#     RewriteRule ^(.+)$ index.php?/$1 [L]
+    # Preserve Authorization header for PHP / CodeIgniter
+    RewriteCond %{HTTP:Authorization} .
+    RewriteRule .* - [E=HTTP_AUTHORIZATION:%{HTTP:Authorization}]
 
-# php_value max_execution_time 300
+# Block access to Git repository
+# Block .git directory and everything inside it
+RedirectMatch 404 /\.git
 
-RewriteEngine on
+# Block .env files
+RedirectMatch 404 /\.env
 
-RewriteCond %{HTTPS} off
-RewriteRule (.*) https://%{HTTP_HOST}%{REQUEST_URI} [R=301,L]
-SetEnvIf Authorization "(.*)" HTTP_AUTHORIZATION=$1
+# Block other environment/config files
+RedirectMatch 404 /\.(env|ini|log|conf|config)$
 
-RewriteCond $1 !^(index\.php|resources|robots\.txt|public)
-RewriteCond %{REQUEST_FILENAME} !-f
-RewriteCond %{REQUEST_FILENAME} !-d
-RewriteRule ^(.*)$ index.php?/$1 [QSA,L]
+# Block Git and version-control files
+RedirectMatch 404 /\.(git|gitignore|gitattributes|gitmodules)
+
+# Block common backup/database/archive files
+RedirectMatch 404 \.(bak|backup|old|orig|save|swp|swo|sql|sql\.gz|dump|tar|tar\.gz|zip)$
+
+# Block common sensitive configuration files
+RedirectMatch 404 /(composer\.(json|lock)|package(-lock)?\.json|yarn\.lock|phpunit\.xml)$
+
+# Block server/config files
+RedirectMatch 404 /(Dockerfile|docker-compose\.ya?ml|Makefile)$
+
+    RewriteRule ^index\.php$ - [L]
+
+    RewriteCond %{REQUEST_FILENAME} !-f
+    RewriteCond %{REQUEST_FILENAME} !-d
+    RewriteRule . index.php [L]
+</IfModule>

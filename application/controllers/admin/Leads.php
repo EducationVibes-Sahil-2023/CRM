@@ -26,6 +26,9 @@ class Leads extends AdminController
     /* List all leads */
 public function test()
 {
+    
+    //  $data['reporting_persons'] =reporting_persons();
+    //  print_r($data['reporting_persons']);
 //     error_reporting(E_ALL);
 // ini_set('display_errors', 1);
 // ini_set('display_startup_errors', 1);
@@ -81,8 +84,9 @@ public function test()
 
 
 
-        if (!is_staff_member()) {
+    //   if (!is_staff_member() || in_array(get_staff_user_id(), [202, 133, 243, 187])) {
 
+if (!is_staff_member() || in_array(get_staff_user_id(), [133,243,202])) {
             access_denied('Leads');
         }
 
@@ -100,6 +104,7 @@ public function test()
         // }
 
 
+        $data['reporting_persons'] =reporting_persons();
 
         $data['staff'] = $this->staff_model->get('', ['active' => 1]);
 
@@ -3321,44 +3326,144 @@ $data['lead_sub_status'] = $this->leads_model->lead_sub_status();
 
 
 
-    public function validate_unique_field()
-    {
-        if ($this->input->post()) {
-            // Get input values
-            $lead_id = $this->input->post('lead_id');
-            $field   = $this->input->post('field');
-            $value   = $this->input->post($field);
+    // public function validate_unique_field()
+    // {
+    //     if ($this->input->post()) {
+    //         // Get input values
+    //         $lead_id = $this->input->post('lead_id');
+    //         $field   = $this->input->post('field');
+    //         $value   = $this->input->post($field);
 
-            // Check if field value is unchanged
-            if (!empty($lead_id)) {
-                $this->db->select($field);
-                $this->db->where('id', $lead_id);
-                $row = $this->db->get(db_prefix() . 'leads')->row();
+    //         // Check if field value is unchanged
+    //         if (!empty($lead_id)) {
+    //             $this->db->select($field);
+    //             $this->db->where('id', $lead_id);
+    //             $row = $this->db->get(db_prefix() . 'leads')->row();
 
-                if ($row && $row->{$field} == $value) {
-                    echo json_encode(true);
-                    die();
-                }
-            }
+    //             if ($row && $row->{$field} == $value) {
+    //                 echo json_encode(true);
+    //                 die();
+    //             }
+    //         }
 
-            // Check if the field is 'alternative_phonenumber' or 'phonenumber'
-            if (in_array($field, ['alternative_phonenumber', 'phonenumber'])) {
-                $this->db->where('phonenumber', $value);
-                $this->db->or_where('alternative_phonenumber', $value);
-                $exists = $this->db->count_all_results(db_prefix() . 'leads') > 0;
+    //         // Check if the field is 'alternative_phonenumber' or 'phonenumber'
+    //         if (in_array($field, ['alternative_phonenumber', 'phonenumber'])) {
+    //             $this->db->where('phonenumber', $value);
+    //             $this->db->or_where('alternative_phonenumber', $value);
+    //             $exists = $this->db->count_all_results(db_prefix() . 'leads') > 0;
 
-                echo json_encode(!$exists);
-                die();
-            }
+    //             echo json_encode(!$exists);
+    //             die();
+    //         }
 
-            // Default response for invalid field
-            echo json_encode(true);
-            die();
-        }
+    //         // Default response for invalid field
+    //         echo json_encode(true);
+    //         die();
+    //     }
+    // }
+
+// public function validate_unique_field()
+// {
+//     if ($this->input->post()) {
+
+//         $lead_id = $this->input->post('lead_id');
+//         $field   = $this->input->post('field');
+//         $value   = trim($this->input->post($field));
+
+//   if (in_array($field, ['phonenumber', 'alternative_phonenumber'])) {
+
+//             // Ignore current lead while checking duplicates
+//             if (!empty($lead_id)) {
+//                 $this->db->where('id !=', $lead_id);
+//             }
+
+//             $this->db->group_start();
+//             $this->db->where('phonenumber', $value);
+//             $this->db->or_where('alternative_phonenumber', $value);
+//             $this->db->group_end();
+
+//             $exists = $this->db->count_all_results(db_prefix() . 'leads') > 0;
+
+//             echo json_encode(!$exists);
+//             return;
+//         }
+        
+//         // If editing, and value hasn't changed, it's valid.
+//         if (!empty($lead_id)) {
+//             $row = $this->db->select($field)
+//                             ->where('id', $lead_id)
+//                             ->get(db_prefix() . 'leads')
+//                             ->row();
+
+//             if ($row && $row->$field == $value) {
+//                 echo json_encode(true);
+//                 return;
+//             }
+//         }
+
+      
+
+//         echo json_encode(true);
+//     }
+// }
+
+public function validate_unique_field()
+{
+    if (!$this->input->post()) {
+        return;
     }
 
+    $lead_id = $this->input->post('lead_id');
+    $field   = $this->input->post('field');
+    $value   = trim((string) $this->input->post($field));
 
+    // Whitelist the columns this endpoint may check (prevents arbitrary-column queries)
+    $allowed = ['phonenumber', 'alternative_phonenumber', 'email'];
+    if (!in_array($field, $allowed, true)) {
+        echo json_encode(true);
+        return;
+    }
 
+    // Empty value -> nothing to validate as a duplicate
+    if ($value === '') {
+        echo json_encode(true);
+        return;
+    }
+
+    $phoneFields = ['phonenumber', 'alternative_phonenumber'];
+
+    if (in_array($field, $phoneFields, true)) {
+        // 1) Primary and alternative must not be the same number (within this submission)
+        $otherField = $field === 'phonenumber' ? 'alternative_phonenumber' : 'phonenumber';
+        $otherValue = trim((string) $this->input->post($otherField));
+        if ($otherValue !== '' && $otherValue === $value) {
+            echo json_encode(false); // same as the other phone field
+            return;
+        }
+
+        // 2) Value must not exist in phonenumber OR alternative_phonenumber of any OTHER lead
+        if (!empty($lead_id)) {
+            $this->db->where('id !=', $lead_id);
+        }
+        $this->db->group_start()
+                 ->where('phonenumber', $value)
+                 ->or_where('alternative_phonenumber', $value)
+                 ->group_end();
+        $exists = $this->db->count_all_results(db_prefix() . 'leads') > 0;
+
+        echo json_encode(!$exists);
+        return;
+    }
+
+    // Non-phone fields (e.g. email) — real uniqueness check on that column
+    if (!empty($lead_id)) {
+        $this->db->where('id !=', $lead_id);
+    }
+    $this->db->where($field, $value);
+    $exists = $this->db->count_all_results(db_prefix() . 'leads') > 0;
+
+    echo json_encode(!$exists);
+}
     public function bulk_action()
 
     {
@@ -3410,7 +3515,7 @@ $data['lead_sub_status'] = $this->leads_model->lead_sub_status();
                 if ($has_permission_mass_assign) {
                     $lead_data = $this->leads_model->lead_data($ids);
                     if (!empty($lead_data)) {
-                        $keysToRemove = array('id', 'lastcontact', 'dateassigned', 'last_status_change', 'last_type_change', 'update_count', 'call_duration', 'lastconnect_date', 'lastupdate_date');
+                        $keysToRemove = array('id', 'lastcontact', 'dateassigned', 'last_status_change', 'last_type_change', 'update_count', 'call_duration', 'lastconnect_date', 'lastupdate_date','sub_status');
                         (!empty($this->input->post('delete_created')) && $this->input->post('delete_created') == 1) ?  array_push($keysToRemove, 'dateadded') : "";
                         $re_assign_array = [];
                         $data_array = [];
@@ -4393,7 +4498,9 @@ public function todayCalls()
     // if (!$data = $this->cache->get($cache_key)) {
 
         try {
-            $data = get_todayCalls();
+            $data =[];
+            $data['callInfo'] = get_todayCalls();
+            $data['visitorData'] = get_todayVisitorStatus();
 
             // Save cache for 120 seconds (2 min)
             // $this->cache->save($cache_key, $data, 120);

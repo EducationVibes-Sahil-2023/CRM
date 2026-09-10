@@ -101,6 +101,11 @@ if (!is_postSale() && !is_admin()) {
                                                     data-target="#customers_apostille"
                                                     onclick='updateApostileData(<?= $doc["id"] ?>, "<?= base64_encode(json_encode($doc)) ?>")'>
                                                     Edit
+                                                                  <?php
+if ((has_permission('customers', '', 'apostile_delete') || is_admin()) && !empty($doc['id'])) {
+  echo   ' | <a href="javascript:void(0)" onclick="delete_ap_doc(' . (int)$doc['id'] . ',' . (int)$doc['doc_id'] . ')" class="text-danger">' . _l('delete') . '</a>';
+}
+?>
                                                 </a>
                                             <?php endif; ?>
                                         </td>
@@ -340,6 +345,8 @@ echo is_numeric($cost)
         setTimeout(() => {
             $("#apostile_id").val(id);
             const apostileData = JSON.parse(atob(encodedDoc));
+            
+            console.log(apostileData);
 
             let {
                 doc_id,
@@ -522,4 +529,62 @@ echo is_numeric($cost)
                 .always(() => $(event.target).prop('disabled', false));
         }, 50);
     }
+    
+    
+    async function delete_ap_doc(id, doc_id, type='apostile') {
+        
+    var allowed = ["apostile", "translation", "ext_apostile", "ext_visa"];
+    if (allowed.indexOf(type) === -1) {
+        alert_float("danger", "Invalid document type.");
+        return;
+    }
+    
+const confirmed = await showConfirmation(
+    "Deleting this Apostille document will permanently remove the document and its related information.\n\nAre you sure you want to continue?"
+);
+
+if (!confirmed) {
+    hide_loader(); // if loader is already shown
+    return false;
+}
+
+// Continue with Apostille document deletion
+ 
+    let formData = new FormData();
+    if (id) {
+        formData.append("id", id);
+    }
+    if (doc_id) {
+        formData.append("doc_id", doc_id);
+    }
+    formData.append("type", type);
+    formData.append("client_id", "<?= $client_id ?>");
+    formData.append(
+        "<?= $this->security->get_csrf_token_name(); ?>",
+        "<?= $this->security->get_csrf_hash(); ?>"
+    );
+ 
+    show_loader();
+    $.ajax({
+        url: "<?= base_url('admin/clients/delete_ap_doc') ?>",
+        type: "POST",
+        data: formData,
+        contentType: false,
+        processData: false,
+        dataType: "json",
+        success: function (response) {
+            hide_loader();
+            if (response && response.resp_code === "RCS") {
+                alert_float("success", response.resp_desc);
+                location.reload();
+            } else {
+                alert_float("danger", (response && response.resp_desc) || "Request failed.");
+            }
+        },
+        error: function (xhr, status, error) {
+            hide_loader();
+            alert_float("danger", "Error deleting document.");
+        }
+    });
+}
 </script>

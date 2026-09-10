@@ -59,6 +59,8 @@ $academicYears = [
                                             <option value="6" <?php echo ($excelInfo->excel_type == "6") ? 'selected' : ''; ?>>Ma Quotation</option>
                                             <option value="7" <?php echo ($excelInfo->excel_type == "7") ? 'selected' : ''; ?>>Ex Visa Data</option>
                                             <option value="8" <?php echo ($excelInfo->excel_type == "8") ? 'selected' : ''; ?>>Ex Ticket Data</option>
+                                            <option value="9" <?php echo ($excelInfo->excel_type == "9") ? 'selected' : ''; ?>>Visitor Logs</option>
+                                            <option value="10" <?php echo ($excelInfo->excel_type == "10") ? 'selected' : ''; ?>>External Apostile Data</option>
                                         </select>
                                     </div>
 
@@ -68,7 +70,7 @@ $academicYears = [
                                             value="<?php echo htmlspecialchars($excelInfo->spreadsheetId); ?>" required>
                                     </div>
 
-                                    <div class="col-md-2 mb-3 form-group">
+                                    <div class="col-md-2 mb-3 form-group ">
                                         <label for="fromDate">From Date</label>
                                         <input type="text" class="form-control" name="fromDate" id="fromDate" placeholder="YYYY-MM-DD"
                                             value="<?php echo ($excelInfo->fromDate != "0000-00-00") ? $excelInfo->fromDate : ''; ?>">
@@ -240,6 +242,14 @@ $academicYears = [
             $(".ex-ticket-data").show();
             $(".excel-type-8").show();
         }
+        else if (type === "9" || type === 9) {
+            $(".visitor-data").show();
+            $(".excel-type-9").show();
+        }
+        else if (type === "10" || type === 10) {
+            $(".visitor-data").show();
+            $(".excel-type-10").show();
+        }
     }
 
 
@@ -378,6 +388,15 @@ $academicYears = [
             $(".ex-ticket-data").show();
             $(".excel-type-8").show();
         }
+        else if (type === "9" || type === 9) {
+            $(".visitor-data").show();
+            $(".excel-type-9").show();
+        }
+          else if (type === "10" || type === 10) {
+            $(".visitor-data").show();
+            $(".excel-type-10").show();
+        }
+
     });
 </script>
 </body>

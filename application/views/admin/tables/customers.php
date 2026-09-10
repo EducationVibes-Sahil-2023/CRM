@@ -34,7 +34,7 @@ $join = [
 ];
 
 // Ensure only status = 1 leads are shown
-$where[] = "AND {$sTable}.status = 1";
+$where[] = "AND {$sTable}.status = 1 and source!=1 ";
 
 // Leads NOT in clients (i.e. not converted)
 $where[] = "AND {$sTable}.id NOT IN (

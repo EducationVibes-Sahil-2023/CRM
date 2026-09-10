@@ -28,6 +28,7 @@ $reference_name = $this->db
 
    .noUi-horizontal {
       height: 10px !important;
+          width: 185px;
    }
 
    .border-right {
@@ -74,6 +75,19 @@ $reference_name = $this->db
 
    #filter-right-side .bootstrap-select .dropdown-menu {
       width: -webkit-fill-available !important;
+   }
+   .ghost-Count
+   {
+           width: 50px;
+    margin-left: 10px;
+    height: 30px;
+    display: inline-block;
+   }
+
+   li.d-flex-inline div
+   {
+       display: inline-block;
+       padding-right: 3px;
    }
 </style>
 <style>
@@ -264,7 +278,13 @@ $reference_name = $this->db
     letter-spacing: .5px;
     margin-bottom: 14px;
   }
+
+  }
   
+    input#ghostStatus
+  {
+      width: 20px !important;
+      height: 20px !important;
   }
 </style>
 <div id="wrapper">
@@ -289,9 +309,9 @@ $reference_name = $this->db
                      
                      <div class="row">
                         <div class="col-md-4">
-                           <a href="#" class="btn btn-default btn-with-tooltip" data-toggle="tooltip" data-title="<?php echo _l('leads_summary'); ?>" data-placement="bottom" onclick="slideToggle('.leads-overview');  summary(1); return false;"><i class="fa fa-bar-chart"></i></a>
+                           <a href="javascript:void(0);"class="btn btn-default btn-with-tooltip" data-toggle="tooltip" data-title="<?php echo _l('leads_summary'); ?>" data-placement="bottom" onclick="slideToggle('.leads-overview');  summary(1); return false;"><i class="fa fa-bar-chart"></i></a>
 
-                           <a href="#" class="btn btn-default btn-with-tooltip" data-toggle="tooltip" data-title="<?php echo "Show Update count and Call Duration"; ?>" data-placement="bottom" onclick="slideToggle('.leads-count-overview'); summary(2); return false; "><i class="fa fa-clock-o"></i></a>
+                           <a href="javascript:void(0);"  class="btn btn-default btn-with-tooltip" data-toggle="tooltip" data-title="<?php echo "Show Update count and Call Duration"; ?>" data-placement="bottom" onclick="slideToggle('.leads-count-overview'); summary(2); return false; "><i class="fa fa-clock-o"></i></a>
 
                            <!-- <a href="#" class="btn btn-default btn-with-tooltip" data-toggle="tooltip" data-title="<?php echo _l('sources_summary'); ?>" data-placement="bottom" onclick="slideToggle('.source-overview'); return false;"><i class="fa fa-bar-chart"></i></a> -->
                            <!-- <a href="<?php echo admin_url('leads/switch_kanban/' . $switch_kanban); ?>" class="btn btn-default mleft10 hidden-xs">
@@ -329,7 +349,14 @@ $reference_name = $this->db
         </div>
     </div>
 
-    <div class="col-md-3">
+     <div class="col-md-2">
+        <div class="card shadow-sm p-3">
+            <h6 style="color:#888;">Visit Completed</h6>
+            <h6 id="visitor-info" style="font-weight:bold;">--</h6>
+        </div>
+    </div>
+
+    <div class="col-md-1">
         <h6 style="color:#888;"></h6><br>
         <button class="btn btn-primary btn-lg" onclick="refreshData()"><i class="fa fa-refresh"></i>
         </button>
@@ -668,6 +695,17 @@ $reference_name = $this->db
                                        <input type="text" class="form-control datepicker" name="assign_to_date" id="assign_to_date" placeholder="To Assignation Date" autocomplete="off">
                                     </div>
                                  </div>
+                                 
+                                 <div class="col-md-2 leads-filter-   ">
+                                    <div class="form-group">
+                                       <input type="text" class="form-control datepicker" name="connected_from_date" id="connected_from_date" placeholder="From Connected Date" autocomplete="off">
+                                    </div>
+                                 </div>
+                                 <div class="col-md-2 leads-filter-   ">
+                                    <div class="form-group">
+                                       <input type="text" class="form-control datepicker" name="connected_to_date" id="connected_to_date" placeholder="To Connected Date" autocomplete="off">
+                                    </div>
+                                 </div>
 
                                  <!-- <div class="col-md-2 leads-filter-column">
                                     <div class="form-group">
@@ -880,12 +918,18 @@ $reference_name = $this->db
                                  'th_attrs' => array('class' => 'toggleable', 'id' => 'th-number')
                               );
                               
-                              if(is_admin())
+                              if(is_admin() || $role == 3)
                               {
                                     $_table_data[]=array(
                                  'name' => _l('Total Count'),
                                  'th_attrs' => array('class' => 'toggleable', 'id' => 'th-number')
                               );
+                              
+                                 $_table_data[]=array(
+                                 'name' => _l('Total Duration'),
+                                 'th_attrs' => array('class' => 'toggleable', 'id' => 'th-number')
+                              );
+
 
                               }
 
@@ -965,14 +1009,14 @@ $reference_name = $this->db
 
                               );
                            }
-                           if (is_admin() || $role == 3) {
+                        //   if (is_admin() || $role == 3) {
                               $_table_data[] = array(
                                  'name' => "Reference Name",
 
                                  'th_attrs' => array('class' => 'toggleable', 'id' => 'th-reference')
 
                               );
-                           }
+                        //   }
                            $_table_data[] = array(
                               'name' => _l('leads_source'),
                               'th_attrs' => array('class' => 'toggleable', 'id' => 'th-source')
@@ -1059,6 +1103,29 @@ $reference_name = $this->db
       <li>
          <h5><?php echo _l('filter_by'); ?></h2>
       </li>
+          <?php if (has_permission('leads', '', 'view')) { ?>
+         <li class="">
+            <div class="leads-filter-column">
+               <?php echo render_select(
+                  'reporting_persons',
+                  [],
+                  [],
+                  '',
+                  '',
+                  array(
+                     'data-width' => '100%',
+                     'data-none-selected-text' => "Reporting Persons",
+                  ),
+                  array(),
+                  '',
+                  '',
+                  false,
+                  'reporting_persons'
+               ); ?>
+            </div>
+         </li>
+      <?php } ?>
+      
       <?php if (has_permission('leads', '', 'view')) { ?>
          <li class="">
             <div class="leads-filter-column">
@@ -1245,15 +1312,20 @@ $reference_name = $this->db
                </div>
             </div>
          </li>
-
-      <li class="">
+<li class="">
+    <div class="checkbox">
+        <span><input type="checkbox" name="hide-show-date" onclick="$('.date-hide-show').toggleClass('hide')"><label>Date Filter</label></span>
+    </div>
+    
+</li>
+      <li class="date-hide-show hide">
          <div id="from_date_right" data-from="from_date" data-to="to_date" class="date-filter form-control">
             <i class="fa fa-calendar"></i>
             <span data-label="Created Date">Created Date</span>
             <i class="fa fa-chevron-down"></i>
          </div>
       </li>
-      <li class="">
+      <li class="date-hide-show hide">
          <div id="update_date_right" data-from="up_from_date" data-to="up_to_date" class="date-filter form-control">
             <i class="fa fa-calendar"></i>
             <span data-label="Update Date">Update Date</span>
@@ -1261,27 +1333,108 @@ $reference_name = $this->db
          </div>
       </li>
 
-      <li class="">
+      <li class="date-hide-show hide">
          <div id="follow_date_right" data-from="followup_from_date" data-to="followup_to_date" class="date-filter form-control">
             <i class="fa fa-calendar"></i>
             <span data-label="Follow-up Date">Follow-up Date</span>
             <i class="fa fa-chevron-down"></i>
          </div>
       </li>
-      <li class="">
+      <li class="date-hide-show hide">
          <div id="assign_date_right" data-from="assign_from_date" data-to="assign_to_date" class="date-filter form-control">
             <i class="fa fa-calendar"></i>
             <span data-label="Assignation Date">Assignation Date</span>
             <i class="fa fa-chevron-down"></i>
          </div>
       </li>
+      
+       <?php if(is_admin()){ ?>
+       <li class="date-hide-show hide">
+         <div id="connected_date_right" data-from="connected_from_date" data-to="connected_to_date" class="date-filter form-control">
+            <i class="fa fa-calendar"></i>
+            <span data-label="Connected Date">Connected Date</span>
+            <i class="fa fa-chevron-down"></i>
+         </div>
+         </li>
+         <?php } ?>
       <li class="">
          <input type="text" class="form-control datepicker set_disabled_date" name="last_contact_date" onchange="set_disabled_date(this.value)" id="last_contact_date" placeholder="Last Connected Date" autocomplete="off">
+        
+         
       </li>
       <li class="">
          <input type="text" class="form-control datepicker set_disabled_date" onchange="set_disabled_date(this.value)" name="last_update_date" id="last_update_date" placeholder="Last Updated Date" autocomplete="off">
       </li>
-    <li class="row">
+
+       <li class="">
+     <div class="leads-filter-column" style="">
+     <div class="checkbox" style="">
+         
+         <span> <input type="checkbox" onchange="ghostCountChange('ghostCount')" name="ghostStatus" value="0"
+                  class=""
+                  id="ghostStatus"> <label> Ghosted Leads</label> </span>
+        
+              <span> <input type="number" class="hide form-control ghost-Count" name="ghostCount" id="ghostCount" value="5">  </span>
+               </div>
+               </div>
+      </li>
+      
+         <li class="d-flex-inline">
+             <p><label>Duration Filter</label></p>
+            <div>
+            <select class="form-control" name="callDurationOperator" id="callDurationOperator">
+            <option value="<=">&le;</option>
+            <option value=">=">&ge;</option>
+            </select>
+            </div>
+            <div class="">
+            <input type="number"
+            class="form-control"
+            name="callDurationHour"
+            id="callDurationHour"
+            placeholder="Hours"
+            min="0"
+            max="23"
+            autocomplete="off">
+            </div>
+            <div class="">
+            <input type="number"
+            class="form-control"
+            name="callDurationMinute"
+            id="callDurationMinute"
+            placeholder="Minutes"
+            min="0"
+            max="59"
+            autocomplete="off">
+            </div>
+      </li>
+ 
+      
+ 
+
+      <li class="">
+         <div class="leads-filter-column" style="margin-bottom:20px;">
+            <div class="checkbox" style="margin-bottom: 10px;">
+
+               <input type="checkbox" name="show_update_counts" value="1"
+                  class="set_disabled_date disabled_checkbox"
+                  id="show_update_counts"
+                  onclick="show_update_count_range(this); set_disabled_date(this.checked ? 1 : '');">
+               <label> Update Count Range
+               </label>
+            </div>
+
+            <div id="rangeSlider" style="display: none;"></div>
+
+            <input type="hidden" id="update_count_min" name="update_count_min">
+            <input type="hidden" id="update_count_max" name="update_count_max">
+         </div>
+         <!-- <div class="form-group" style="margin-top: 10px; text-align: right;">
+                                       <button type="button" class="btn btn-primary" id="apply_filter">Apply Filter</button>
+                                       <button type="button" class="btn btn-default" onclick="window.location.reload();">Reset</button>
+                                    </div> -->
+      </li>
+   <li class="">
    <div class="leads-filter-column col-md-12 hide " style="margin-bottom:20px;">
       
       <label>Time Filter</label>
@@ -1328,29 +1481,6 @@ $reference_name = $this->db
    </div>
 </li>
       <li class="">
-         <div class="leads-filter-column col-md-12" style="margin-bottom:20px;">
-            <div class="checkbox" style="margin-bottom: 10px;">
-
-               <input type="checkbox" name="show_update_counts" value="1"
-                  class="set_disabled_date disabled_checkbox"
-                  id="show_update_counts"
-                  onclick="show_update_count_range(this); set_disabled_date(this.checked ? 1 : '');">
-               <label> Update Count Range
-               </label>
-            </div>
-
-            <div id="rangeSlider" style="display: none;"></div>
-
-            <input type="hidden" id="update_count_min" name="update_count_min">
-            <input type="hidden" id="update_count_max" name="update_count_max">
-         </div>
-         <!-- <div class="form-group" style="margin-top: 10px; text-align: right;">
-                                       <button type="button" class="btn btn-primary" id="apply_filter">Apply Filter</button>
-                                       <button type="button" class="btn btn-default" onclick="window.location.reload();">Reset</button>
-                                    </div> -->
-      </li>
-
-      <li class="">
          <div class="form-group" style="margin-top: 10px; text-align: right;">
             <button type="button" class="btn btn-primary" id="apply_filter">Apply Filter</button>
             <button type="button" class="btn btn-default" onclick="window.location.reload();">Reset</button>
@@ -1373,7 +1503,7 @@ $reference_name = $this->db
 
 
 const BLUE='#378ADD', BLUE_LT='#B5D4F4';
-const TEAL='#1D9E75', TEAL_LT='#E1F5EE';
+const EAL='#1D9E75', TEAL_LT='#E1F5EE';
 const AMBER='#BA7517', AMBER_LT='#FAEEDA';
 const CORAL='#D85A30', CORAL_LT='#FAECE7';
 const PURPLE='#7F77DD', PURPLE_LT='#EEEDFE';
@@ -1393,6 +1523,17 @@ var charts={};
 
 var lead_sub_status = <?= !empty($lead_sub_status) ? json_encode($lead_sub_status) : '[]' ?>;
 
+function ghostCountChange(id)
+{
+    if ($("#ghostStatus").length && $("#ghostStatus").is(":checked")) {
+        $("#ghostStatus").val(1);
+    }
+    else
+    {
+        $("#ghostStatus").val(0);
+    }
+    $("#"+id).toggleClass("hide");
+}
 function set_sub_status_leads()
 {
     if (!lead_sub_status || lead_sub_status.length === 0) {
@@ -1844,6 +1985,8 @@ function setCallGraph(rawData) {
          var up_from_date_call = document.getElementById("up_from_date_call").value;
          var up_to_date_call = document.getElementById("up_to_date_call").value;
          var last_contact_date = document.getElementById("last_contact_date").value;
+         var connected_from_date = document.getElementById("connected_from_date").value;
+         var connected_to_date = document.getElementById("connected_to_date").value;
          var last_update_date = document.getElementById("last_update_date").value;
          var time_condition = document.getElementById("time_condition").value;
          var time = document.getElementById("time_minutes").value;
@@ -2074,7 +2217,7 @@ function setCallGraph(rawData) {
       var followup_to_date = document.getElementById("followup_to_date").value;
       var assign_from_date = document.getElementById("assign_from_date").value;
       var assign_to_date = document.getElementById("assign_to_date").value;
-      var update_count_min, update_count_max = '';
+      var update_count_min,ghostStatus,ghostCount,callDurationOperator, callDuration,update_count_max = '';
       var up_from_date_call = document.getElementById("up_from_date_call").value;
       var up_to_date_call = document.getElementById("up_to_date_call").value;
       var last_contact_date = document.getElementById("last_contact_date").value;
@@ -2082,13 +2225,20 @@ function setCallGraph(rawData) {
       
       var time_condition = document.getElementById("time_condition").value;
       var time_minutes = document.getElementById("time_minutes").value;
+      var reporting_persons = '';
+      
+       var connected_from_date = document.getElementById("connected_from_date").value;
+      var connected_to_date = document.getElementById("connected_to_date").value;
+    //   callDuration = $("#callDuration").value()??'';
      var reference_name = document.getElementById("reference_name")
     ? Array.from(document.getElementById("reference_name").selectedOptions)
         .map(option => option.value)
     : [];
 
 
-    
+    if ($("#reporting_persons").length > 0) {
+        reporting_persons = document.getElementById("reporting_persons").value;
+    }
     
 
       if ($("#show_update_counts").is(":checked")) {
@@ -2096,7 +2246,22 @@ function setCallGraph(rawData) {
          update_count_max = document.getElementById("update_count_max").value;
       }
       
-      console.log("okkkkkkkkk");
+if ($("#ghostStatus").length && $("#ghostStatus").is(":checked")) {
+    ghostStatus = 1;
+    ghostCount = $("#ghostCount").val();
+}
+
+if ($("#callDurationHour").length && $("#callDurationMinute").length) {
+    const hours = parseInt($("#callDurationHour").val() || 0, 10);
+    const minutes = parseInt($("#callDurationMinute").val() || 0, 10);
+
+    callDuration = (hours * 3600) + (minutes * 60);
+}
+
+if ($("#callDurationOperator").length) {
+    callDurationOperator = $("#callDurationOperator").val() ?? '';
+}
+     
 
       if (xhr != null) {
          xhr.abort();
@@ -2129,7 +2294,14 @@ function setCallGraph(rawData) {
             time_condition: time_condition,
             time_minutes: time_minutes,
             reference_name:reference_name,
-            sub_status:view_sub_status_options
+            sub_status:view_sub_status_options,
+            ghostStatus:ghostStatus,
+            ghostCount:ghostCount,
+            callDuration:callDuration,
+            connected_from_date:connected_from_date,
+            connected_to_date:connected_from_date,
+            callDurationOperator:callDurationOperator,
+            reporting_persons:reporting_persons
          },
          dataType: "JSON",
          cache: false,
@@ -2255,29 +2427,29 @@ function formatTime(seconds, showSeconds = false) {
 
    $(function() {
 
-      function updateDateText(element, start, end) {
+    //   function updateDateText(element, start, end) {
 
-         let from = element.data("from");
-         let to = element.data("to");
+    //      let from = element.data("from");
+    //      let to = element.data("to");
 
-         if (start && end) {
+    //      if (start && end) {
 
-            $("#" + from).val(start.format("YYYY-MM-DD"));
-            $("#" + to).val(end.format("YYYY-MM-DD"));
+    //         $("#" + from).val(start.format("YYYY-MM-DD"));
+    //         $("#" + to).val(end.format("YYYY-MM-DD"));
 
-            element.find("span").html(
-               start.format("YYYY-MM-DD") + " - " + end.format("YYYY-MM-DD")
-            );
+    //         element.find("span").html(
+    //           start.format("YYYY-MM-DD") + " - " + end.format("YYYY-MM-DD")
+    //         );
 
-         } else {
+    //      } else {
 
-            $("#" + from).val('');
-            $("#" + to).val('');
+    //         $("#" + from).val('');
+    //         $("#" + to).val('');
 
-            let label_name = element.find("span").data('label') || "Select Date Range";
-            element.find("span").html(label_name);
-         }
-      }
+    //         let label_name = element.find("span").data('label') || "Select Date Range";
+    //         element.find("span").html(label_name);
+    //      }
+    //   }
 
 
       //  function initDatePicker(selector, extraRanges = {}) {
@@ -2334,154 +2506,107 @@ function formatTime(seconds, showSeconds = false) {
       // }
 
 
-      function initDatePicker(selector, extraRanges = {}) {
+   function initDatePicker(selector, extraRanges = {}, options = {}) {
+    const $el = $(selector);
 
-         const $el = $(selector);
+    const defaults = {
+        autoUpdateInput: false,
+        autoApply: false,
+        showDropdowns: true,
+        linkedCalendars: false,
+        alwaysShowCalendars: false,
+        startDate: moment(),
+        endDate: moment(),
+        minDate: moment("2022-01-01"),
+        maxDate: moment(),
+        opens: "left",
+        parentEl: "body",
+        locale: { cancelLabel: "Clear", format: "YYYY-MM-DD" }
+    };
 
-         $el.daterangepicker({
+    // caller options override defaults (e.g. maxDate for future pickers)
+    const config = Object.assign({}, defaults, options);
+    config.ranges = Object.assign({
+        "Today":       [moment(), moment()],
+        "Yesterday":   [moment().subtract(1, "days"), moment().subtract(1, "days")],
+        "Last 7 Days": [moment().subtract(6, "days"), moment()],
+        "Last 30 Days":[moment().subtract(29, "days"), moment()],
+        "This Month":  [moment().startOf("month"), moment().endOf("month")],
+        "Last Month":  [moment().subtract(1, "month").startOf("month"),
+                        moment().subtract(1, "month").endOf("month")],
+                        "Clear": [null, null]
+    }, extraRanges, options.ranges || {});
 
-            // autoUpdateInput: false,
-            // autoApply: true,
-            // showDropdowns: true,
-            // linkedCalendars: false,
-            // alwaysShowCalendars: true,
+    $el.daterangepicker(config);
 
-            autoUpdateInput: false,
-            autoApply: false,
-            showDropdowns: true, // Year & Month dropdown
-            linkedCalendars: false, // Both calendars independent
-            alwaysShowCalendars: false, // Show calendars only when opened
-            startDate: moment("2023-01-01"),
-            endDate: moment("2023-01-01"),
+    // SINGLE apply handler (handles Clear + reverse selection)
+    $el.on("apply.daterangepicker", function (ev, picker) {
+        if (picker.chosenLabel === "Clear") {
+            clearDateRange($el, picker);
+            return;
+        }
+        let start = picker.startDate, end = picker.endDate;
+        if (end.isBefore(start)) { const t = start; start = end; end = t; }
+        updateDateText($el, start, end);
+    });
 
-            minDate: moment("2023-01-01"), // 🔥 Start from Jan 1, 2023
-            maxDate: moment(),
+    // Cancel button (labelled "Clear")
+    $el.on("cancel.daterangepicker", function (ev, picker) {
+        clearDateRange($el, picker);
+    });
 
+    // Open on current month
+    $el.on("show.daterangepicker", function (ev, picker) {
+        picker.updateCalendars();
+    });
+}
 
-            opens: "left",
-            parentEl: "body",
+function clearDateRange($el, picker) {
+    const from = $el.data("from");
+    const to   = $el.data("to");
+    if (from) $("#" + from).val("");
+    if (to)   $("#" + to).val("");
+    if (picker) { picker.setStartDate(moment()); picker.setEndDate(moment()); }
+    const label = $el.find("span").data("label") || "Select Date Range";
+    $el.find("span").html(label);
+}
 
-            locale: {
-               cancelLabel: "Clear",
-               format: "YYYY-MM-DD"
-            },
-
-            ranges: Object.assign({
-
-               "Today": [moment(), moment()],
-
-               "Yesterday": [
-                  moment().subtract(1, "days"),
-                  moment().subtract(1, "days")
-               ],
-
-               "Last 7 Days": [
-                  moment().subtract(6, "days"),
-                  moment()
-               ],
-
-               "Last 30 Days": [
-                  moment().subtract(29, "days"),
-                  moment()
-               ],
-
-               "This Month": [
-                  moment().startOf("month"),
-                  moment().endOf("month")
-               ],
-
-               "Last Month": [
-                  moment().subtract(1, "month").startOf("month"),
-                  moment().subtract(1, "month").endOf("month")
-               ],
-               "Clear": [null, null], // 👈 add this first
-            }, extraRanges)
-
-         });
-
-
-
-         // APPLY EVENT
-         $el.on("apply.daterangepicker", function(ev, picker) {
-
-            let start = picker.startDate;
-            let end = picker.endDate;
-
-            // 🔥 Allow reverse selection (fix main issue)
-            if (end.isBefore(start)) {
-               let temp = start;
-               start = end;
-               end = temp;
-            }
-
-            updateDateText($el, start, end);
-         });
-
-         // CANCEL EVENT
-         $el.on("cancel.daterangepicker", function() {
-
-            const from = $el.data("from");
-            const to = $el.data("to");
-
-            if (from) $("#" + from).val("");
-            if (to) $("#" + to).val("");
-
-            const defaultLabel =
-               $el.find("span").data("label") || "Select Date Range";
-
-            $el.find("span").html(defaultLabel);
-         });
-
-         $el.on('show.daterangepicker', function(ev, picker) {
-
-            // When opening picker, show current month & year
-            picker.leftCalendar.month = moment();
-            picker.rightCalendar.month = moment();
-
-            picker.updateCalendars();
-
-         });
-         $el.on("apply.daterangepicker", function(ev, picker) {
-
-            const label = picker.chosenLabel;
-
-            if (label === "Clear") {
-
-               const from = $el.data("from");
-               const to = $el.data("to");
-
-               if (from) $("#" + from).val('');
-               if (to) $("#" + to).val('');
-
-               // Reset internal dates
-               picker.setStartDate(moment());
-               picker.setEndDate(moment());
-
-               // Reset UI text
-               $el.find("span").html("Select Date Range");
-
-               return;
-            }
-
-            updateDateText($el, picker.startDate, picker.endDate);
-
-         });
-
-      }
-
+function updateDateText(element, start, end) {
+    const from = element.data("from");
+    const to   = element.data("to");
+    if (start && end) {
+        $("#" + from).val(start.format("YYYY-MM-DD"));
+        $("#" + to).val(end.format("YYYY-MM-DD"));
+        element.find("span").html(start.format("YYYY-MM-DD") + " - " + end.format("YYYY-MM-DD"));
+    } else {
+        $("#" + from).val("");
+        $("#" + to).val("");
+        element.find("span").html(element.find("span").data("label") || "Select Date Range");
+    }
+}
 
       // Initialize all inputs
       initDatePicker("#from_date_right");
       initDatePicker("#update_date_right");
       initDatePicker("#assign_date_right");
+      initDatePicker("#connected_date_right");
 
       // With extra ranges
-      initDatePicker("#follow_date_right", {
-         "Tomorrow": [moment().add(1, 'days'), moment().add(1, 'days')],
-         "Next 7 Days": [moment(), moment().add(6, 'days')],
-         "Next 15 Days": [moment(), moment().add(14, 'days')]
-      });
+    //   initDatePicker("#follow_date_right", {
+    //      "Tomorrow": [moment().add(1, 'days'), moment().add(1, 'days')],
+    //      "Next 7 Days": [moment(), moment().add(6, 'days')],
+    //      "Next 15 Days": [moment(), moment().add(14, 'days')]
+    //   });
 
+
+  initDatePicker("#follow_date_right", {
+    "Tomorrow":     [moment().add(1, "days"), moment().add(1, "days")],
+    "Next 7 Days":  [moment(), moment().add(6, "days")],
+    "Next 15 Days": [moment(), moment().add(14, "days")],
+    "Next 30 Days": [moment(), moment().add(29, "days")]
+}, {
+    maxDate: moment().add(1, "year")   // allow future dates for visits
+});
    });
 
    function right_filter(className) {
@@ -2919,19 +3044,35 @@ function refreshData() {
             $("#no_of_calls").text("...");
             $("#no_of_duration").text("...");
             $("#last_call_sync").text("Loading...");
+             $("#visitor-info").text("Loading...");
+            
         },
 
         success: function (res) {
             if (res.status) {
-                console.log(res);
-
-                $("#no_of_calls").text(res.data.total_calls ||'0');
-                $("#no_of_duration").text(res.data.duration_hms || '00:00:00');
+                
+let callInfo = res.data.callInfo??[];
+let visitorInfo =res.data.visitorData??[];
+                $("#no_of_calls").text(callInfo.total_calls ||'0');
+                $("#no_of_duration").text(callInfo.duration_hms || '00:00:00');
          $("#last_call_sync").text(
-    res.data.last_call_time 
-        ? formatDateTime(res.data.last_call_time) 
+    callInfo.last_call_time 
+        ? formatDateTime(callInfo.last_call_time) 
         : 'Not Sync'
 );
+
+
+let vHtml = '';
+
+if (visitorInfo) {
+    const visitors = Array.isArray(visitorInfo) ? visitorInfo : [visitorInfo];
+
+    visitors.forEach(vInfo => {
+        vHtml += `${vInfo.typeName || ''} - ${vInfo.count ?? 0}<br>`;
+    });
+}
+
+$("#visitor-info").html(vHtml);
 
              
 
@@ -2961,6 +3102,62 @@ function formatDateTime(dateString) {
 
     return date.toLocaleString('en-IN', options);
 }
+let reporting_persons_dropdown = <?= json_encode($reporting_persons ?? []); ?>;
+
+let staffList = <?= json_encode(
+    array_column($staff ?? [], 'reporting_person', 'staffid')
+); ?>;
+
+function setReportingPersion(staffIds) {
+    var $select = $("#reporting_persons");
+    // Clear existing options
+    $select.empty();
+
+    // Default placeholder option
+    $select.append('<option value="">Select Reporting Person</option>');
+
+    // Convert single value to array
+    if (!Array.isArray(staffIds)) {
+        staffIds = staffIds ? [staffIds] : [];
+    }
+    // If none or multiple selected, keep dropdown empty (placeholder only)
+    if (staffIds.length !== 1) {
+        $select.selectpicker('refresh');
+        return;
+    }
+    var selectedStaffId = staffIds[0];
+    var reportingPersonId = staffList[selectedStaffId];
+    // No reporting person
+    if (!reportingPersonId) {
+        $select.selectpicker('refresh');
+        return;
+    }
+    // Find reporting person
+    var reportingPerson = reporting_persons_dropdown.find(function(item) {
+        return String(item.staff_id) === String(reportingPersonId);
+    });
+    if (!reportingPerson) {
+        $select.selectpicker('refresh');
+        return;
+    }
+    // Add option
+    $select.append(
+        '<option value="' + reportingPerson.staff_id + '">' +
+        reportingPerson.staff_name +
+        '</option>'
+    );
+    // Select it
+    // $select.val(String(reportingPerson.staff_id));
+    // Refresh bootstrap-select
+    $select.selectpicker('refresh');
+    $select.selectpicker('render');
+}
+
+function change_staff() {
+    let selectedStaffIds = $("#view_assigned").val();
+
+    setReportingPersion(selectedStaffIds);
+}
 
 $(document).ready(function () {
     // Run immediately on page load
@@ -2970,6 +3167,10 @@ $(document).ready(function () {
     setInterval(function () {
         refreshData();
     }, 300000); // 5 min = 300000 ms
+    
+     $('#view_assigned').on('change', function () {
+       change_staff();
+    });
 });
 
 </script>

@@ -11,10 +11,13 @@ $neet_status = get_neet_status();
 $states = get_states();
 $board_dropdown = get_board_dropdown();
 $ev_partner = get_ev_partner();
+$courseName = get_client_courseName()??[];
 $scholarshipsData = scholarshipsData($admissionpreferences->primary_university??'');
-
-$ev_type = [array("id"=>1,"name"=>"Agent","singleUniversityStatus"=>1),array("id"=>2,"name"=>"Referal","singleUniversityStatus"=>0)];
+$important_dates = get_client_important_dates($client_id);
+$ev_type = [array("id"=>1,"name"=>"Agent","singleUniversityStatus"=>1,"ReferralDropdown"=>0),array("id"=>2,"name"=>"Referral","singleUniversityStatus"=>0,"ReferralDropdown"=>1)];
 $staff_list              = $this->leads_model->get_staff_list();
+
+$referralCounsollor = $this->leads_model->get_staff_list(["active"=>1,"referralCounsollor"=>1]);
 $staff_list = array_column($staff_list, null, "staffid");
 if (!empty($board_dropdown)) {
 	array_unshift($board_dropdown, array("id" => "", "name" => "Select Board"));
@@ -326,8 +329,9 @@ $neetResultStatus = [];
 
 $neetResultStatus[]["name"] = "Awaited";
 $neetResultStatus[]["name"] = "Declared";
-$neetResultStatus[]["name"] = "Not Appeared";
-$neetResultStatus[]["name"] = "Fail";
+// $neetResultStatus[]["name"] = "Not Appeared";
+// $neetResultStatus[]["name"] = "Fail";
+$neetResultStatus[]["name"] = "Without Neet";
 array_unshift($neetResultStatus, array(""));
 
 
@@ -561,6 +565,9 @@ if ($lead_type_status == 2) {
                     <li role="presentation" type="1" section="Fees data updated" >
                         <a href="#fees_details" aria-controls="fees_details"  role="tab" data-toggle="tab">Fees Details</a>
                     </li>
+                    <!-- <li role="presentation" type="1" section="Important Dates" >-->
+                    <!--    <a href="#imp_date" aria-controls="imp_date"  role="tab" data-toggle="tab">Important Dates</a>-->
+                    <!--</li>-->
 
 					<?php hooks()->do_action('after_customer_billing_and_shipping_tab', isset($client) ? $client : false); ?>
 					<?php if (empty($client->submission_status) && $client->submission_status == 0) { ?>
@@ -583,7 +590,18 @@ if ($lead_type_status == 2) {
         Your applicant fee and scholarship details have been cleared because the Primary Country or University was changed. Please review and complete the fee and scholarship details again before proceeding.
         </div>
         </div>
-         <?php } ?>
+         <?php } if(!empty($admissionpreferences->primary_country) && strtolower($admissionpreferences->primary_country)=="russia" && (empty($academicdetails->school_name) || empty($academicdetails->school_address)) ) { ?>
+         
+          <div class="alert alert-warning d-flex align-items-start warning-message-fees" role="alert">
+        <div>
+        <strong> <i class="fa fa-exclamation-triangle"></i> &nbsp; Attention!</strong><br>
+        **School Name or School Address is mandatory for applicants whose primary country is Russia. Please enter the required information in the Academic Details section before proceeding.**
+
+        </div>
+        </div>
+         <?php 
+             
+         }?>
          
 		<div class="tab-content mtop15">
 			<div role="tabpanel" class="tab-pane student-data-div active" id="student_details">
@@ -622,12 +640,13 @@ $selected_partner[] = !empty($client->partner_type) ? $client->partner_type : ''
 $attributes = [];
 
 // Old records (before May 2026) => not mandatory
-if (!empty($client->datecreated) && strtotime($client->datecreated) < strtotime('2026-05-01')) {
+if (!empty($client->datecreated) && strtotime($client->datecreated) < strtotime('2026-01-01') ) {
     $attributes = [];
 } else {
     $attributes = [
         "required" => "required",
-        "required-check" => "required-check"
+        "required-check" => "required-check",
+         "onchange"       => "partnerTypeChange(this)"
     ];
 }
 
@@ -646,6 +665,33 @@ echo render_select(
 );
 ?>
 </div>
+										</div>
+										
+										<div class="col-lg-3 <?=!empty($client->partner_type) && $client->partner_type==1 ? 'hide' : ''?>" id="referralCounsollorDiv">
+                                                    <div class="form-group">
+                                                    <?php 
+                                                    	array_unshift($referralCounsollor, array("id" => "", "value" => "", "name" => "Select Referral"));
+                                                    
+                                                    $attributes = [
+        "required" => "required",
+        "required-check" => "required-check",
+    ];
+    
+                                                    echo render_select(
+                                                    'referralCounsollor',
+                                                    $referralCounsollor??[],
+                                                    ['staffid', 'staff_name'],
+                                                    'Referral Counsollor',
+                                                    [$client->referralCounsollor??''],
+                                                    $attributes,
+                                                    [],
+                                                    "",
+                                                    "",
+                                                    "",
+                                                    "ReferralDropdown"
+                                                    );
+                                                    ?>
+                                                    </div>
 										</div>
 										
 										<div class="col-lg-3">
@@ -668,8 +714,8 @@ echo render_select(
 									    
 									    		<div class="col-lg-3">
 											<div class="form-group">
-												<label for="exampleInputEmail">Email Address <small class="text-danger"></small></label>
-												<input class="form-control " <?= $read_only ?> type="text" class="form-group" placeholder="Email Address" name="email" value='<?php echo (isset($basicdetails)) ? $basicdetails->email : $contact->email; ?>'>
+												<label for="exampleInputEmail">Student's email id <small class="text-danger"></small></label>
+												<input class="form-control " <?= $read_only ?> type="text" class="form-group" placeholder="Student's email id" name="email" value='<?php echo (isset($basicdetails)) ? $basicdetails->email : $contact->email; ?>'>
 											</div>
 										</div>
 										
@@ -688,7 +734,7 @@ echo render_select(
 										</div>
 
 
-									   <div class="col-lg-3">
+									   <div class="col-lg-2">
     <div class="form-group">
         <label>Gender <small class="text-danger">*</small></label>
 
@@ -727,6 +773,42 @@ echo render_select(
         ?>
     </div>
     </div>
+    
+
+                                        <div class="col-lg-2">
+    <div class="form-group">
+        <label>Cource Name <small class="text-danger">*</small></label>
+
+       <?php
+
+array_unshift($courseName, [
+    'id'   => '',
+    'name' => 'Select Course'
+]);
+
+$selected_course = !empty($client->course_name)
+    ? [$client->course_name]
+    : [];
+
+echo render_select(
+    'course_name',
+    $courseName,
+    ['id', 'name'],
+    '',
+    $selected_course,
+    [
+        'required' => 'required',
+        'required-check' => 'required-check'
+    ],
+    [],
+    '',
+    '',
+    '',
+    'course_name'
+);
+?>
+    </div>
+</div>
   
 </div>
                                         
@@ -806,7 +888,7 @@ echo render_select(
     
     <?php
     $loan_type_list = [
-    ['id' => '3', 'name' => 'Not Required'],
+    // ['id' => '3', 'name' => 'Not Required'],
     ['id' => '1', 'name' => 'EV'],
     ['id' => '2', 'name' => 'Outside'],
     ];
@@ -935,7 +1017,7 @@ echo render_select(
 										}
 										?>
 									</div>
-									<div class="btn-save-fun">
+									<div class="btn-save-fun <?=(has_permission('customers', '', 'edit') || is_postSale() || $client->addedfrom == get_staff_user_id())?'':'hide' ?>">
 										<div class="col-md-12">
 											<button type="submit" onclick="save_basic_details(1)" class="btn btn-primary button-22 pull-right">Save changes</button>
 										</div>
@@ -1035,12 +1117,12 @@ echo render_select(
 										</div>
 
 
-										<div class="col-lg-3 passport-div-status <?= (in_array("exp_date", $show_fields))  ? '' : 'hide' ?>">
-											<div class="form-group">
-												<label for="exp_date">Expiry Date <small class="text-danger"></small></label>
-												<input class="form-control passport-info" type="Date" class="form-group" placeholder="Enter Passport Number" name="exp_date" value="<?= (isset($passport_info) ? $passport_info->exp_date : '') ?>" required-check>
-											</div>
-										</div>
+										<!--<div class="col-lg-3 passport-div-status <?= (in_array("exp_date", $show_fields))  ? '' : 'hide' ?>">-->
+										<!--	<div class="form-group">-->
+										<!--		<label for="exp_date">Expiry Date <small class="text-danger"></small></label>-->
+										<!--		<input class="form-control passport-info" type="Date" class="form-group" placeholder="Enter Passport Number" name="exp_date" value="<?= (isset($passport_info) ? $passport_info->exp_date : '') ?>" required-check>-->
+										<!--	</div>-->
+										<!--</div>-->
 										<?php
 										foreach ($profile_section["passport"] as $s_stage) {
 											$doc_type = $s_stage["name"] ?? '';
@@ -1221,7 +1303,7 @@ echo render_select(
 
 
                                 </div>
-									<div class="btn-save-fun">
+									<div class="btn-save-fun <?=(has_permission('customers', '', 'edit') || is_postSale() || $client->addedfrom == get_staff_user_id())?'':'hide' ?>">
 										<div class="col-md-12">
 											<button type="submit" onclick="save_passport_details()" class="btn btn-primary button-22 pull-right">Save changes</button>
 										</div>
@@ -1353,7 +1435,7 @@ echo render_select(
                                     </div>
                                     
 									</div>
-									<div class="row btn-save-fun">
+									<div class="row btn-save-fun <?=(has_permission('customers', '', 'edit') || is_postSale() || $client->addedfrom == get_staff_user_id())?'':'hide' ?>">
 										<div class="col-md-12 text-right  btn-save-fun">
 											&nbsp; <button type="submit" onclick="save_admission_preferences()" class="btn btn-primary button-22">Save changes</button>
 											&nbsp;
@@ -1660,7 +1742,7 @@ echo render_select(
 
 										</div>
 
-										<div class="col-lg-3 border2 border1 hide_ " style="display: <?= ($academicdetails->entrance_result_status == 'Awaited' || $academicdetails->entrance_result_status == 'Not Appeared' || $academicdetails->entrance_result_status == 'Not Appeared') ? 'none' : '' ?>">
+										<div class="col-lg-3 border2 border1 hide_ " style="display: <?= ($academicdetails->entrance_result_status == 'Awaited' || $academicdetails->entrance_result_status == 'Not Appeared' || $academicdetails->entrance_result_status == 'Not Appeared' || $academicdetails->entrance_result_status == 'Without Neet') ? 'none' : '' ?>">
 											<div class="c1">
 												<p>Registration Number <?= $text_danger_mbbs ?></p>
 											</div>
@@ -1670,7 +1752,7 @@ echo render_select(
 											</div>
 
 										</div>
-										<div class="col-lg-3 border2 border1 hide_" style="display: <?= ($academicdetails->entrance_result_status == 'Awaited' || $academicdetails->entrance_result_status == 'Not Appeared' || $academicdetails->entrance_result_status == 'Not Appeared') ? 'none' : '' ?>">
+										<div class="col-lg-3 border2 border1 hide_" style="display: <?= ($academicdetails->entrance_result_status == 'Awaited' || $academicdetails->entrance_result_status == 'Not Appeared' || $academicdetails->entrance_result_status == 'Not Appeared' || $academicdetails->entrance_result_status == 'Without Neet') ? 'none' : '' ?>">
 											<div class="c1">
 												<p>Year <?= $text_danger_mbbs ?></p>
 											</div>
@@ -1682,13 +1764,13 @@ echo render_select(
 												<?php
 												$selected = [];
 												$selected[] = ($academicdetails->entrance_year) ? extractYear($academicdetails->entrance_year) : '';
-												echo render_select('entrance_year', $years_array_entrance, array('year', 'year'), "", $selected, ["required" => "required", "required-check" => "required-check", "readonly" => "<?= ($academicdetails->entrance_result_status == 'Not Appeared') ? 'true' : 'false'; ?>"], [], "", "", "", "entrance_year");
+												echo render_select('entrance_year', $years_array_entrance, array('year', 'year'), "", $selected, ["required" => "required", "required-check" => "required-check", "readonly" => "<?= ($academicdetails->entrance_result_status == 'Not Appeared' || $academicdetails->entrance_result_status == 'Without Neet') ? 'true' : 'false'; ?>"], [], "", "", "", "entrance_year");
 												?>
 											</div>
 
 										</div>
 
-										<div class="col-lg-3 border2 border1 hide_ " style="display: <?= ($academicdetails->entrance_result_status == 'Awaited' || $academicdetails->entrance_result_status == 'Not Appeared' || $academicdetails->entrance_result_status == 'Not Appeared') ? 'none' : '' ?>">
+										<div class="col-lg-3 border2 border1 hide_ " style="display: <?= ($academicdetails->entrance_result_status == 'Awaited' || $academicdetails->entrance_result_status == 'Not Appeared' || $academicdetails->entrance_result_status == 'Not Appeared' || $academicdetails->entrance_result_status == 'Without Neet') ? 'none' : '' ?>">
 											<div class="c1">
 												<p>Marks <?= $text_danger_mbbs ?></p>
 											</div>
@@ -1715,7 +1797,7 @@ echo render_select(
 
 										</div>
 
-										<div class="col-lg-3 border2 border1 hide_" style="display: <?= ($academicdetails->entrance_result_status == 'Awaited' || $academicdetails->entrance_result_status == 'Not Appeared' || $academicdetails->entrance_result_status == 'Not Appeared') ? 'none' : '' ?>">
+										<div class="col-lg-3 border2 border1 hide_" style="display: <?= ($academicdetails->entrance_result_status == 'Awaited' || $academicdetails->entrance_result_status == 'Not Appeared' || $academicdetails->entrance_result_status == 'Not Appeared' || $academicdetails->entrance_result_status == 'Without Neet') ? 'none' : '' ?>">
 											<div class="c1">
 												<p>Neet Status <?= $text_danger_mbbs ?></p>
 											</div>
@@ -1740,7 +1822,7 @@ echo render_select(
 												"",
 												$selected_neet_status,
 												$attributes,
-												[],
+												["onchange"=>"checkNeetStatus()"],
 												"",
 												"",
 												"",
@@ -1763,7 +1845,7 @@ echo render_select(
 											$required_attr = !empty($file_url) ? "" : $required_attr;
 										?>
 
-											<div class="col-lg-3 border2 border1 media-files hide_ " style="display: <?= ($academicdetails->entrance_result_status == 'Awaited' || $academicdetails->entrance_result_status == 'Not Appeared' || $academicdetails->entrance_result_status == 'Not Appeared') ? 'none' : '' ?>">
+											<div class="col-lg-3 border2 border1 media-files hide_ " style="display: <?= ($academicdetails->entrance_result_status == 'Awaited' || $academicdetails->entrance_result_status == 'Not Appeared' || $academicdetails->entrance_result_status == 'Not Appeared' || $academicdetails->entrance_result_status == 'Without Neet') ? 'none' : '' ?>">
 												<div class="form-group">
 													<label for="exampleInputMobileNumber"><?= $s_stage["name"] ?> <?= $mandatry_text  . "  (" . $s_stage["file_type"] . ")" ?> <?php if (!empty($info)) : ?>
 															&nbsp;<i class="fa fa-info-circle" title="<?= htmlspecialchars($info, ENT_QUOTES, 'UTF-8') ?>"></i>
@@ -1808,7 +1890,7 @@ echo render_select(
 								</div>
 							</div>
 						</div>
-						<div class="btn-save-fun">
+						<div class="btn-save-fun <?=(has_permission('customers', '', 'edit') || is_postSale() || $client->addedfrom == get_staff_user_id())?'':'hide' ?>">
 							<div class="col-md-12">
 								<button type="submit" onclick="save_admission_details()" class="btn btn-primary button-22 pull-right">Save changes</button>
 							</div>
@@ -1912,7 +1994,7 @@ echo render_select(
                                                         
                                                                                                                <?php
 // ---- Precompute state (readable, single source of truth) ----
-$is_privileged   = is_admin() || !empty($staff_list[get_staff_user_id()]["post_sales"]);
+$is_privileged   = is_admin() || has_permission('customers', '', 'applicant_doc_upload') ||  !empty($staff_list[get_staff_user_id()]["post_sales"]);
 $is_doc_disabled = !empty($doc_files['disabled']) && $doc_files['disabled'] == 1;
 $is_approved     = ($status === "Approved");
  
@@ -1974,9 +2056,9 @@ if ($is_privileged) {
 
 
 								</div>
-								<div class="row ">
+								<div class="row <?=(has_permission('customers', '', 'edit') || is_postSale() || $client->addedfrom == get_staff_user_id() || has_permission('customers', '', 'applicant_doc_upload') )?  '':'hide' ?>">
 									<div class="col-md-12">
-										<button type="submit" onclick="save_documents()" class="btn btn-primary button-22 pull-right hide-btn btn-save-funn">Save changes</button>
+										<button type="submit" onclick="save_documents()" class="btn btn-primary button-22 pull-right hide-btn ">Save changes</button>
 									</div>
 								</div>
 							</form>
@@ -2076,7 +2158,7 @@ if ($is_privileged) {
 											</div>
 										</div>
 									</div>
-									<div class="row btn-save-fun">
+									<div class="row btn-save-fun <?=(has_permission('customers', '', 'edit') || is_postSale() || $client->addedfrom == get_staff_user_id())?'':'hide' ?>">
 										<div class="col-md-12 ">
 											<button type="submit" onclick="save_welcome_info()" class="btn btn-primary button-22 pull-right">Save changes</button>
 										</div>
@@ -2144,7 +2226,7 @@ if ($is_privileged) {
 
 
                                                         </div>
-                                                        <input <?= $disabled ?> type="text" name="<?= $field_name ?>" <?= $required ?> class="form-control currency-amount fees_<?= $fees['id'] ?>  <?= $field_name ?>" placeholder="0.00" id="<?= $field_name ?>" value="<?= $fees["amount"] ?>" size="8" onkeypress="return acceptText(this,'number')">
+                                                        <input <?= $disabled ?> type="text" name="<?= $field_name ?>" <?= $required ?> class="form-control currency-amount fees_<?= $fees['id'] ?>  <?= $field_name ?>" placeholder="0.00" id="<?= $field_name ?>" value="<?= $fees["amount"] ?>" size="8" onkeyup="checkHostalCapacity(this.value,<?= $fees["show_hostel_capacity"] ?>)" onkeypress="return acceptText(this,'number')">
                                                         <div class="input-group-addon currency-addon">
 
                                                             <select <?= $disabled ?> name="<?= $field_name ?>_currency_type" id="<?= $field_name ?>" class="currency-selector <?= $disabled ?> currency-selector-<?= $id ?>  <?= $field_name ?>" onchange="updateSymbol(<?= $id ?>)">
@@ -2189,6 +2271,51 @@ if ($is_privileged) {
 												<?php
 												}
 												?>
+												<div class="col-lg-4 col-md-4 col-6 fees-block-8 room-capacity-secton <?= !empty($client->hostel_capacity) && $client->hostel_capacity > 0 ? '' : 'hide' ?>">
+												    <div class="form-group">
+											<?php
+$hostelRoom = [];
+
+$hostelRoom[] = [
+    "id"   => "",
+    "value" => "",
+    "name" => "Select Room Capacity"
+];
+
+for ($i = 2; $i <= 6; $i++) {
+    $hostelRoom[] = [
+        "id"    => $i,
+        "value" => $i,
+        "name"  => $i
+    ];
+}
+
+$selected_hostel = [
+    !empty($client->hostel_capacity)
+        ? $client->hostel_capacity
+        : ''
+];
+
+echo render_select(
+    'hostel_capacity',
+    $hostelRoom,
+    ['id', 'name'],
+    'Hostel Capacity',
+    $selected_hostel,
+    [
+        "required" => "required",
+        "required-check" => "required-check"
+    ],
+    [],
+    "",
+    "",
+    "",
+    "agent_id"
+);
+?>
+											</div>
+												</div>
+												
 												<div class="col-lg-4 col-md-4 col-6 fees-block-8">
 													<label>&nbsp;</label>
 
@@ -2309,7 +2436,7 @@ if ($is_privileged) {
                                 </div>
                             </div>
 								</div>
-								<div class="row btn-save-fun">
+								<div class="row btn-save-fun <?=(has_permission('customers', '', 'edit') || is_postSale() || $client->addedfrom == get_staff_user_id())?'':'hide' ?>">
 									<div class="col-md-12 ">
 										<button type="submit" onclick="fees_details()" class="btn btn-primary button-22 pull-right">Save changes</button>
 									</div>
@@ -2318,8 +2445,8 @@ if ($is_privileged) {
 						</div>
 					</div>
 				</div>
-
-
+				
+	
 				<?php if (isset($client)) { ?>
 					<div role="tabpanel" class="tab-pane hide" id="customer_admins">
 						<?php if (has_permission('customers', '', 'create') || has_permission('customers', '', 'edit') && (isset($final_sumbit) && $final_sumbit == 0)) { ?>
@@ -2475,6 +2602,7 @@ if ($is_privileged) {
         ? json_decode($admissionpreferences->university_priority, true)
         : []
 ); ?>;
+   var getClientsFees = <?= json_encode($get_clients_fees, JSON_UNESCAPED_UNICODE) ?>;
 
 	document.addEventListener("DOMContentLoaded", function() {
 		var documentAccessOnly = "<?= !empty($documentAccessOnly) ? $documentAccessOnly : 0 ?>";
@@ -2957,6 +3085,64 @@ if ($is_privileged) {
 
 //     $(".selectpicker").selectpicker("refresh");
 // }
+var neetStatus = <?= json_encode(!empty($neet_status) ? array_column($neet_status, null, 'id') : []) ?>;
+
+function checkNeetStatus() {
+    let selectedValue = $("#neet_status").val();
+ let fileValue = $('#entrance_exam_div [name="doc_url[]"]').val();
+    // Check if the selected value exists in neetStatus object
+    if (!neetStatus[selectedValue]) return;
+
+    // Determine if validation should be disabled (mandatory = 0) or enabled (mandatory = 1)
+    let enableValidation = parseInt(neetStatus[selectedValue].mandatry) === 1;
+
+    // Target all input and select elements (except the neet_status itself)
+    $("#entrance_exam_div .hide_")
+        .find("input, select")
+        .not("#neet_status")
+        .each(function () {
+            let $field = $(this);
+            let originalClasses = $field.data("validation") || "";
+            let wasRequired = $field.data("required") == 1;
+
+            if (!enableValidation) {
+                // Remove validation
+                $field.removeClass("required required-check");
+                $field.removeAttr("required-check");
+                // Optionally remove other validation attributes
+                $field.removeAttr("data-required");
+            } else {
+               
+                if ($(this).is('input[type="file"]') && fileValue !== "") {
+                    console.log("set validation");
+     $field.removeClass("required required-check");
+                $field.removeAttr("required-check");
+                // Optionally remove other validation attributes
+                $field.removeAttr("data-required");
+}
+else{
+                // Add validation
+                $field.addClass("required required-check");
+                
+                // Only add original classes if they exist
+                if (originalClasses) {
+                    $field.addClass(originalClasses);
+                }
+
+ $field.attr("required-check", true);
+                // Set required-check attribute based on original required state
+                
+            }
+            }
+        });
+
+    // Refresh select picker for all select elements (except neet_status)
+    $("#entrance_exam_div .hide_")
+        .find("select")
+        .not("#neet_status")
+        .selectpicker("refresh");
+}
+
 
    function checkFeesDisable()
 {
@@ -3039,6 +3225,48 @@ $(".selectpicker").selectpicker("refresh");
 }
 
 
+var ReferralDropdownSelection = <?=json_encode(array_column($ev_type,null,'id'),true)??[]?>;
+
+
+function partnerTypeChange(element) {
+    // Validate element
+    if (!element || typeof element.value === "undefined") {
+        console.error("Invalid element.");
+        return;
+    }
+
+    const selectedValue = parseInt(element.value, 10);
+
+    // Reset and hide the dropdown
+    $("#referralCounsollorDiv")
+        .addClass("hide").find("select")
+        .val("")
+        .selectpicker("refresh");
+
+    // Validate selected value
+    if (isNaN(selectedValue) || selectedValue <= 0) {
+        return;
+    }
+
+    // Validate ReferralDropdownSelection
+    if (
+        typeof ReferralDropdownSelection !== "object" ||
+        !ReferralDropdownSelection[selectedValue]
+    ) {
+        console.error("Invalid referral configuration.");
+        return;
+    }
+
+    const checkType = ReferralDropdownSelection[selectedValue];
+
+    // Show dropdown only if required
+    if (Number(checkType.ReferralDropdown) === 1) {
+        $("#referralCounsollorDiv")
+            .removeClass("hide")
+    }
+}
+
+
   function apply_new_passport() {
         const checkbox = document.getElementById('new_passport');
         $(".new-passport-info input").val('');
@@ -3095,6 +3323,7 @@ $(".selectpicker").selectpicker("refresh");
 
     document.addEventListener("DOMContentLoaded", function() {
         handleActivityChange();
+        checkNeetStatus();
     });
     
     
@@ -3106,6 +3335,7 @@ $(".selectpicker").selectpicker("refresh");
             $(".scholarship-case").find("input, select, textarea").val("");
         }
     }
+    
 
 
 </script>

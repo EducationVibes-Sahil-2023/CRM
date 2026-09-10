@@ -7987,6 +7987,64 @@ $filtered = array_filter($dataParam);
     }
     
     
+     if (!empty($params['connected_from_date']) && !empty($params['connected_to_date']))
+     {
+         $sql .= ' AND DATE(calls.adjusted_call_start) BETWEEN "' . $CI->db->escape_str($params['connected_from_date']) . '" AND "' . $CI->db->escape_str($params['connected_to_date']) . '" ';
+     } 
+     
+     
+     if (!empty($params['ghostStatus']) && $params['ghostStatus']== 1) {
+
+    $ghostCount = max(1, (int)($params['ghostCount'] ?? 5));
+
+    $sql .= "
+        AND l.update_count > {$ghostCount}
+        AND NOT EXISTS (
+            SELECT 1
+            FROM (
+                SELECT
+                    c2.call_status,
+                    c2.call_start
+                FROM tblcalls_activity_logs c2
+                WHERE c2.contact = l.thonenumber
+                  AND CHAR_LENGTH(l.thonenumber) = 10
+                   and c2.staffid = l.assigned
+
+                UNION ALL
+
+                SELECT
+                    c2.call_status,
+                    c2.call_start
+                FROM tblcalls_activity_logs c2
+                WHERE c2.contact = l.alternative_thonenumber
+                  AND CHAR_LENGTH(l.alternative_thonenumber) = 10
+                   and c2.staffid = l.assigned
+
+                ORDER BY call_start DESC
+                LIMIT {$ghostCount}
+            ) AS last_calls
+            WHERE last_calls.call_status = 'Answered'
+        )
+    ";
+}
+    
+    
+    
+    if (!empty($params['callDurationOperator']) && !empty($params['callDuration'])) {
+
+    $allowedOperators = ['<', '<=', '>', '>=', '='];
+
+    $operator = in_array($params['callDurationOperator'], $allowedOperators, true)
+        ? $params['callDurationOperator']
+        : '=';
+
+    $callDuration = (int)$params['callDuration'];
+
+    if ($callDuration >= 0) {
+        $sql .= " AND l.call_duration {$operator} {$callDuration}";
+    }
+}
+    
     
 
 
@@ -8021,10 +8079,10 @@ $filtered = array_filter($dataParam);
 
     // $sql .= " GROUP BY l.id " . $grup_by . " " . $having . $sql_add;
 
-    $alt =  str_replace("l.phonenumber", "l.alternative_phonenumber", $sql);
+    $alt =  str_replace("thonenumber", "phonenumber", str_replace("l.phonenumber", "l.alternative_phonenumber", $sql));
     $sql .= " UNION ALL ";
 
-    $sql = $sql . " " . $alt;
+    $sql =str_replace("thonenumber", "phonenumber", $sql) . " " . $alt;
     
    
         
@@ -8983,6 +9041,24 @@ if (isset($params['sub_status'])) {
     if (!empty($params['last_contact_date']))$conditions[] = 'DATE(' . $tblleads . '.lastconnect_date) <= "' . $CI->db->escape_str($params['last_contact_date']) . '"';
     if (!empty($params['last_update_date'])) $conditions[] = 'DATE(' . $tblleads . '.lastupdate_date) <= "' . $CI->db->escape_str($params['last_update_date']) . '"';
 
+    if (!empty($params['connected_from_date']) && !empty($params['connected_to_date'])) $conditions[] = 'DATE(' . db_prefix() . 'calls_activity_logs.adjusted_call_start) BETWEEN "' . $CI->db->escape_str($params['connected_from_date']) . '" AND "' . $CI->db->escape_str($params['connected_to_date']) . '"';
+    
+    
+   if (!empty($params['callDurationOperator']) && !empty($params['callDuration'])) {
+
+    $allowedOperators = ['<', '<=', '>', '>=', '='];
+
+    $operator = in_array($params['callDurationOperator'], $allowedOperators, true)
+        ? $params['callDurationOperator']
+        : '=';
+
+    $callDuration = (int)$params['callDuration'];
+
+    if ($callDuration >= 0) {
+        $conditions[] = "{$tblleads}.call_duration {$operator} {$callDuration}";
+    }
+}
+     
     $having_query = "";
     if (isset($params['update_count_min']) && $params['update_count_min'] != '') {
         $having_query = ' HAVING IFNULL(call_count, 0)  BETWEEN "' . $CI->db->escape_str($params['update_count_min']) . '" AND "' . $CI->db->escape_str($params['update_count_max']) . '" ';
@@ -8996,7 +9072,40 @@ if (isset($params['sub_status'])) {
     if (!empty($params['utm_form_name']))    $conditions[] = " " . $tblleads . ".utm_form_name IN ('" . implode("','", $CI->db->escape_str($params['utm_form_name'])) . "')";
     if (!empty($params['department']))       $conditions[] = " " . db_prefix() . "staff.department IN ('" . implode("','", $CI->db->escape_str($params['department'])) . "')";
     if (!empty($params['location']))         $conditions[] = " " . db_prefix() . "staff.office_location IN ('" . implode("','", $CI->db->escape_str($params['location'])) . "')";
+if (!empty($params['ghostStatus'])) {
 
+    $ghostCount = max(1, (int)($params['ghostCount'] ?? 5));
+
+    $conditions[] = "
+        {$tblleads}.update_count > {$ghostCount}
+        AND NOT EXISTS (
+            SELECT 1
+            FROM (
+                SELECT
+                    c2.call_status,
+                    c2.call_start
+                FROM tblcalls_activity_logs c2
+                WHERE c2.contact = {$tblleads}.thonenumber
+                  AND CHAR_LENGTH({$tblleads}.thonenumber) = 10
+                   and c2.staffid = {$tblleads}.assigned
+
+                UNION ALL
+
+                SELECT
+                    c2.call_status,
+                    c2.call_start
+                FROM tblcalls_activity_logs c2
+                WHERE c2.contact = {$tblleads}.alternative_thonenumber
+                  AND CHAR_LENGTH({$tblleads}.alternative_thonenumber) = 10
+                  and c2.staffid = {$tblleads}.assigned
+
+                ORDER BY call_start DESC
+                LIMIT {$ghostCount}
+            ) AS last_calls
+            WHERE last_calls.call_status = 'Answered'
+        )
+    ";
+}
     if (!empty($params['view_form'])) {
         $websites = $params['view_form'];
         $escaped_websites = array_map(function ($w) { return "'" . trim($w) . "'"; }, $websites);
@@ -9046,7 +9155,7 @@ if (isset($params['sub_status'])) {
     $sql .= 'GROUP BY ' . $tblleads . '.id  ';
 
     // UNION phone + alternative_phonenumber
-    $unionSql = " ( " . $sql . " ) UNION ALL ( " . str_replace('phonenumber', 'alternative_phonenumber', $sql) . " ) ";
+    $unionSql = " ( " .  str_replace('thonenumber', 'phonenumber',$sql) . " ) UNION ALL ( " . str_replace('thonenumber', 'phonenumber',str_replace('phonenumber', 'alternative_phonenumber', $sql)) . " ) ";
 
     // Dedupe by lead id in outer query (one row per lead)
     $finalSql = "
@@ -10781,6 +10890,9 @@ COUNT( ' . db_prefix() . 'visitor_request.lead_id) AS total
 
     // WHERE clause
     $conditions = [];
+    
+  
+
     if (!$has_permission_view) {
         $conditions[] = $whereNoViewPermission;
     }
@@ -10812,7 +10924,49 @@ COUNT( ' . db_prefix() . 'visitor_request.lead_id) AS total
     if (!empty($params['assigned'])) {
         $conditions[] = db_prefix() . 'visitor_request.created_by IN (' . implode(',', $CI->db->escape_str($params['assigned'])) . ')';
     }
+    
+    
+    if (!empty($params['last_update_date'])) {
+    $last_update_date =$params['last_update_date'];
+    array_push($conditions, '  ' . db_prefix() . 'leads.lastupdate_date <= "' . $CI->db->escape_str($last_update_date) . '"');
+}
 
+  if (!empty($params['last_contact_date'])) {
+        $last_contact_date = $params['last_contact_date'];
+        array_push($conditions, '  ' . db_prefix() . 'leads.lastconnect_date <= "' . $CI->db->escape_str($last_contact_date) . '" ');
+    }
+    
+$callDateFilter = '';
+if (!empty($params['connected_from_date']) && !empty($params['connected_to_date'])) {
+    // "connected" = ANSWERED call within the date range
+    $from = $CI->db->escape($params['connected_from_date'] . ' 00:00:00');
+    $to   = $CI->db->escape($params['connected_to_date']   . ' 23:59:59');
+    $callDateFilter = " AND c.call_status = 'Answered'"
+                    . " AND c.adjusted_call_start BETWEEN $from AND $to";
+} elseif (!empty($params['updated_from_date']) && !empty($params['updated_to_date'])) {
+    // "updated" = ANY call within the date range (answered or not)
+    $from = $CI->db->escape($params['updated_from_date'] . ' 00:00:00');
+    $to   = $CI->db->escape($params['updated_to_date']   . ' 23:59:59');
+    $callDateFilter = " AND c.adjusted_call_start BETWEEN $from AND $to";
+}
+
+if ($callDateFilter !== '') {
+    $conditions[] = '(
+        EXISTS (
+            SELECT 1 FROM ' . db_prefix() . 'calls_activity_logs c
+            WHERE c.contact = ' . db_prefix() . 'leads.phonenumber
+              AND LENGTH(c.contact) = 10' . $callDateFilter . '
+        )
+        OR (
+            ' . db_prefix() . 'leads.alternative_phonenumber <> ""
+            AND EXISTS (
+                SELECT 1 FROM ' . db_prefix() . 'calls_activity_logs c
+                WHERE c.contact = ' . db_prefix() . 'leads.alternative_phonenumber
+                  AND LENGTH(c.contact) = 10' . $callDateFilter . '
+            )
+        )
+    )';
+}
     if (!empty($params['category'])) {
         if ($params['category'] < 0) {
             $conditions[] = db_prefix() . 'visitor_request.date_of_visit < "' . $current_date_time . '" ';
@@ -10842,6 +10996,9 @@ COUNT( ' . db_prefix() . 'visitor_request.lead_id) AS total
     $group_by = 'GROUP BY ' . $tblleads . '.status ';
     $group_by .= 'ORDER BY ' . db_prefix() . 'leads_status.statusorder';
     // Execute query
+    
+    // echo $select . $sql . $group_by;
+    // die;
     $result = $CI->db->query($select . $sql . $group_by)->result();
 
 
@@ -12376,6 +12533,19 @@ WHERE staffid = '".get_staff_user_id()."'  AND (
   
 }
 
+function get_todayVisitorStatus()
+{
+
+        
+     $CI = &get_instance();
+     $current_date = date('Y-m-d');
+    $sql ="SELECT t.name typeName,count(r.id) count FROM `tblvisitor_request` r   join tblvisitor_type t on r.visitor_type = t.id where date(r.date_of_visit) = '{$current_date}' and r.status=2 and r.visitor_type in (3,5) and r.assigned = '".get_staff_user_id()."' GROUP by r.visitor_type";
+
+  
+  return $CI->db->query($sql)->result_array();
+  
+}
+
 /* Normalize Numbers */
 function normalizeNumber($number)
 {
@@ -12622,4 +12792,89 @@ function sendCallData(string $endpoint, string $apiKey, array $call, int $timeou
         'error'     => null,
         'raw'       => $data
     ];
+}
+
+function reporting_persons()
+{
+   $CI = &get_instance();
+
+$CI->db->select('rp.staffid AS staff_id, CONCAT(rp.firstname, " ", rp.lastname) AS staff_name');
+$CI->db->from(db_prefix() . 'staff AS emp');
+$CI->db->join(db_prefix() . 'staff AS rp', 'emp.reporting_person = rp.staffid', 'inner');
+$CI->db->where('rp.active', 1);
+$CI->db->group_by('rp.staffid');
+$CI->db->order_by('rp.firstname', 'ASC');
+
+return $CI->db->get()->result_array();
+}
+
+
+function lead_emails_trigger($data)
+{
+    $CI =& get_instance();
+
+    // Validate input
+    if (empty($data) || !is_array($data)) {
+        return [
+            'status'  => 0,
+            'message' => 'Invalid email trigger data.'
+        ];
+    }
+
+    // Required fields
+    if (empty($data['template_id'])) {
+        return [
+            'status'  => 0,
+            'message' => 'Email template is required.'
+        ];
+    }
+
+    if (empty($data['lead_id'])) {
+        return [
+            'status'  => 0,
+            'message' => 'Lead ID is required.'
+        ];
+    }
+
+    try {
+
+        $insertArray = [
+            'template_id' => $data['template_id'],
+            'type'        => $data['type'] ?? '',
+            'lead_id'     => $data['lead_id'],
+            'staff_id'    => $data['staff_id'] ?? 0,
+            'status'      => $data['status'] ?? 0,
+            'created_at'  => date('Y-m-d H:i:s')
+        ];
+
+        $insert = $CI->db->insert(
+            db_prefix() . 'lead_emails_trigger',
+            $insertArray
+        );
+
+        if (!$insert) {
+            return [
+                'status'  => 0,
+                'message' => 'Failed to create email trigger.'
+            ];
+        }
+
+        return [
+            'status'   => 1,
+            'message'  => 'Email trigger created successfully.',
+            'insert_id' => $CI->db->insert_id()
+        ];
+
+    } catch (Exception $e) {
+
+        log_message(
+            'error',
+            'lead_emails_trigger error: ' . $e->getMessage()
+        );
+
+        return [
+            'status'  => 0,
+            'message' => 'An error occurred while creating the email trigger.'
+        ];
+    }
 }

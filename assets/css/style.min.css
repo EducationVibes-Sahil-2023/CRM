@@ -19,6 +19,22 @@
 
 
         }
+        
+        
+        .bootstrap-select.show-tick .dropdown-menu .selected span.check-mark
+        {
+            position: unset !important;
+        }
+        
+        #side-menu li .nav-second-level li a {
+            padding: 7px 10px 7px 25px !important;
+}
+#side-menu li .nav-second-level li.active a
+{
+    margin: 8px 0 8px 15px !important;
+}
+        
+        
 .btn-default.active,
 .btn-default:active,
 .btn-default:focus,

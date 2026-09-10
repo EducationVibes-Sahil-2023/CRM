@@ -2864,12 +2864,20 @@ if(!empty($where))
             $isHoliday = in_array($today, $holidays);
 
             if ($dayOfWeek == 0 || $isHoliday) {
+                
+                 $yesterday = $this->getLastWorkingDay($today, $holidays);
+                 
+                  $sql .= " AND (
+    DATE(st.last_login) BETWEEN '$yesterday' AND '$today'
+    OR DATE(st.last_activity) BETWEEN '$yesterday' AND '$today'
+) ";
+
                 // Sunday or Holiday → check last login date
-                $sql .= " AND DATE(st.last_login) = (
-                    SELECT MAX(DATE(last_login))
-                    FROM tbluser_auto_login
-                    WHERE DATE(last_login) <= '$today'
-                 ) ";
+                // $sql .= " AND DATE(st.last_login) = (
+                //     SELECT MAX(DATE(last_login))
+                //     FROM tbluser_auto_login
+                //     WHERE DATE(last_login) <= '$today'
+                //  ) ";
             } else {
 
                 if ($currentTime >= '12:00') {
@@ -3152,9 +3160,13 @@ public function holiday_list()
         $this->db->delete(db_prefix() . 'notes');
     }
 
-    public function get_staff_list()
+    public function get_staff_list($where =[])
     {
         $this->db->select('firstname,lastname,staffid,concat(firstname," ",lastname) staff_name,post_sales');
+        if(!empty($where))
+        {
+            $this->db->where($where);
+        }
         return $staff = $this->db->get(db_prefix() . 'staff')->result_array();
     }
 

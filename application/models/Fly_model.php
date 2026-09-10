@@ -117,6 +117,7 @@ if(is_admin())
     // return ["status" => true, "message" => "Ticket creation check passed."];
 }
 
+// print_r($ticket);
             // Deny if another active ticket exists (status == 3), and we're not updating the same one
             if (
             !empty($ticket)
@@ -127,12 +128,12 @@ if(is_admin())
             )
             && $ticket->applicant_stage != SC
             ) {
-            $data = [
-            "status" => false,
-            "message" => "Cannot create ticket. Client " . get_client_name($client_id) . " already has an active ticket."
-            ];
-            return $data;
-            die;
+            // $data = [
+            // "status" => false,
+            // "message" => "Cannot create ticket. Client " . get_client_name($client_id) . " already has an active ticket."
+            // ];
+            // return $data;
+            // die;
             }
         }
 

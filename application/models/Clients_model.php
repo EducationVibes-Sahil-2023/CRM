@@ -2405,15 +2405,28 @@ public function entrance_exams($id)
         return $attachments_data;
     }
 
-    public function client_assign($client_id)
-    {
-        return $this->db->select("email")
-            ->from(db_prefix() . "clients c")
-            ->join(db_prefix() . "staff s", "c.addedfrom = s.staffid")
-            ->where("userid", $client_id)
+public function client_assign($client_id)
+{
+    $clientDetails = get_client($client_id);
+
+    if ($clientDetails->client_type == 2 && $clientDetails->partner_type == 2) {
+        $result = $this->db->select('s.email')
+            ->from(db_prefix() . 'clients c')
+            ->join(db_prefix() . 'staff s', 'c.referralCounsollor = s.staffid', 'left')
+            ->where('c.userid', $client_id)
             ->get()
-            ->row_array(); // Fetch a single row
+            ->row_array();
+
+        return $result ?: ['email' => 'aanchal.kamboj@educationvibes.in'];
     }
+
+    return $this->db->select('s.email')
+        ->from(db_prefix() . 'clients c')
+        ->join(db_prefix() . 'staff s', 'c.addedfrom = s.staffid', 'left')
+        ->where('c.userid', $client_id)
+        ->get()
+        ->row_array();
+}
 
     public function update_documents($data, $id)
     {

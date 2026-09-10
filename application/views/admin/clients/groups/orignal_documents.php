@@ -20,7 +20,64 @@ array_unshift($office_location, array());
 <?php
 if (!is_postSale() && !is_admin()) {
 ?>
-    <h2 class="text-center">Orignal Document - Accessible Only for Post-Sale & Admin</h2>
+    <!--<h2 class="text-center">Orignal Document - Accessible Only for Post-Sale & Admin</h2>-->
+    
+      <table class="table table-bordered table-striped">
+                        <thead class="thead-dark ">
+                            <tr class="">
+                                <th scope="col">S.No</th>
+                                <th scope="col">Document Name</th>
+                                <th scope="col">Received By</th>
+                                <th scope="col">Received Date</th>
+                                <th scope="col">Received Location</th>
+                                <th scope="col">Transit Location</th>
+                                <!--<th scope="col">Location</th>-->
+                            </tr>
+                        </thead>
+                        <tbody class="document_upload_div">
+
+                            <?php if (!empty($orignal_document)) : ?>
+                                <?php
+                                $index = 1;
+                                $document_received = 0;
+                                foreach ($orignal_document as $key => $doc) :
+                                    if ($document_received == 0) {
+                                        $document_received = !empty($doc['received_id']) ? 1 : 0;
+                                    }
+
+                                    if ($doc["l_status"] == 2) {
+                                        $return_document_status = 1;
+                                    }
+
+                                ?>
+                                    <tr>
+                                        <td class="d-flex align-items-center">
+                                            <div class="checkbox">
+                                                <input type="hidden" name="received_id" value="<?= !empty($doc['received_id']) ? $doc['received_id'] : '' ?>">
+                                                <input type="checkbox" name="doc_ids" <?= !empty($doc["disabled"]) && $doc["disabled"] == 1 ? 'disabled' : '' ?> data-name="<?= $doc["name"] ?>" value="<?= $doc["id"] ?>"><label> </label>
+
+
+                                            </div>
+                                        </td>
+                                        <td>
+                                            <?= $doc["name"] ?> <?= !empty($doc["info"]) ? '<i class="fa fa-info-circle" title="' . $doc["info"] . '"></i>' : '' ?></td>
+                                        <td><?= !empty($doc["received_by"]) ? $doc["received_by"] : '' ?></td>
+                                        <td><?= !empty($doc["received_date"]) ? $doc["received_date"] : '' ?></td>
+                                        <td><?= !empty($doc["received_location"]) ? $doc["received_location"] : '' ?></td>
+                                        <td><?= !empty($doc["in_transit"]) ? $doc["in_transit"] : '' ?></td>
+                                        
+                                    </tr>
+                                <?php $index++;
+                                endforeach; ?>
+                            <?php else : ?>
+                                <tr>
+                                    <td colspan="4" class="text-center">
+                                        <h5>No Documents Available</h5>
+                                    </td>
+                                </tr>
+                            <?php endif; ?>
+                        </tbody>
+                    </table>
 <?php
     die;
 }
@@ -94,7 +151,16 @@ if (!is_postSale() && !is_admin()) {
                                             </div>
                                         </td>
                                         <td>
-                                            <?= $doc["name"] ?> <?= !empty($doc["info"]) ? '<i class="fa fa-info-circle" title="' . $doc["info"] . '"></i>' : '' ?></td>
+                                            
+                                            <?= $doc["name"] ?> <?= !empty($doc["info"]) ? '<i class="fa fa-info-circle" title="' . $doc["info"] . '"></i>' : '' ?>
+                                            <div class="row-options">
+              <?php
+if ((has_permission('customers', '', 'orignal_document_delete') || is_admin()) && !empty($doc['received_date'])) {
+  echo   ' <a href="javascript:void(0)" onclick="delete_org_doc(' . (int)$doc['id'] . ')" class="text-danger">' . _l('delete') . '</a>';
+}
+?>
+</div>
+                                            </td>
                                         <td><?= !empty($doc["received_by"]) ? $doc["received_by"] : '' ?></td>
                                         <td><?= !empty($doc["received_date"]) ? $doc["received_date"] : '' ?></td>
                                         <td><?= !empty($doc["received_location"]) ? $doc["received_location"] : '' ?></td>
@@ -298,7 +364,77 @@ if (!is_postSale() && !is_admin()) {
         return false; // Prevent default form submission
     }
 
-    function orignal_document_received_notification(client_id, status = "") {
+ async function delete_org_doc(orignal_doc_id) {
+
+    if (!orignal_doc_id) {
+        return false;
+    }
+
+const confirmed = await showConfirmation(
+    "Deleting this Original document will permanently remove the document and its related information.\n\nAre you sure you want to continue?"
+);
+
+if (!confirmed) {
+    hide_loader(); // if loader is already shown
+    return false;
+}
+    let formData = new FormData();
+
+    formData.append("orignal_doc_id", orignal_doc_id);
+    formData.append("client_id", <?= $client_id ?>);
+
+    formData.append(
+        "<?= $this->security->get_csrf_token_name(); ?>",
+        "<?= $this->security->get_csrf_hash(); ?>"
+    );
+
+    show_loader();
+
+    $.ajax({
+        url: "<?= base_url('admin/clients/delete_org_doc') ?>",
+        type: "POST",
+        data: formData,
+        contentType: false,
+        processData: false,
+
+        success: function(response) {
+
+            hide_loader();
+
+            try {
+                response = JSON.parse(response);
+            } catch (e) {
+                alert_float("danger", "Invalid server response.");
+                return;
+            }
+
+            if (response.resp_code == "RCS") {
+
+                alert_float("success", response.resp_desc);
+
+                // Reload after successful deletion
+                location.reload();
+
+            } else {
+
+                alert_float("danger", response.resp_desc);
+            }
+        },
+
+        error: function(xhr, status, error) {
+
+            hide_loader();
+
+            alert_float(
+                "danger",
+                "Error deleting document."
+            );
+        }
+    });
+}
+
+
+   function orignal_document_received_notification(client_id, status = "") {
         let formData = new FormData(); // Create a FormData object
         formData.append("client_id", <?= $client_id ?>); // Append corresponding location
         formData.append("status", status); // Append corresponding location

@@ -239,7 +239,9 @@ $route['cron/fresh_notification'] = 'External_Apis/Login_Controller/fresh_notifi
 $route['cron/update_reminder_data'] = 'External_Apis/Login_Controller/update_reminder_data';
 $route['cron/visitor_seminar_whatsapp_notification'] = 'External_Apis/Login_Controller/visitor_seminar_whatsapp_notification';
 $route['cron/whatsapp_message_send_visitor_logs'] = 'External_Apis/Login_Controller/whatsapp_message_send_visitor_logs';
-
+$route['cron/email_autoTrigger_leg'] = 'External_Apis/Login_Controller/email_autoTrigger_leg';
+$route['cron/email_autoTrigger_inv'] = 'External_Apis/Login_Controller/email_autoTrigger_inv';
+$route['cron/convert-to-applicant'] = 'External_Apis/Login_Controller/applicant_create';
 
 if (file_exists(APPPATH . 'config/my_routes.php')) {
     include_once(APPPATH . 'config/my_routes.php');

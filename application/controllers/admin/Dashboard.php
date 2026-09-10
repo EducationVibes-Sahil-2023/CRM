@@ -14,6 +14,9 @@ class Dashboard extends AdminController
     /* This is admin dashboard view */
     public function index()
     {
+        
+        redirect(base_url('admin/leads/'));
+        die;
         close_setup_menu();
         $this->load->model('departments_model');
         $this->load->model('todo_model');

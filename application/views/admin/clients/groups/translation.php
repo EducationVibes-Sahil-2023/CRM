@@ -8,6 +8,7 @@ $translation_documents = get_orignal_document_list(0, 0, 0, 0, 0, 0, 0, ["transl
 $translation_vendors = get_vendor_list(4);
 $get_currencies = get_currencies();
 $get_currencies = array_column($get_currencies, null, 'id');
+$payment_mode = get_payment_mode();
 if (!is_array($translation_documents)) {
     $translation_documents = [];
 }
@@ -97,6 +98,12 @@ if (!is_postSale() && !is_admin()) {
                                                     data-target="#translation"
                                                     onclick='updateTranslationData(<?= $doc["id"] ?>, "<?= base64_encode(json_encode($doc)) ?>")'>
                                                     Edit
+                                                    
+                                                        <?php
+if ((has_permission('customers', '', 'apostile_delete') || is_admin()) && !empty($doc['id'])) {
+  echo   ' | <a href="javascript:void(0)" onclick="delete_tran_doc(' . (int)$doc['id'] . ',' . (int)$doc['doc_id'] . ')" class="text-danger">' . _l('delete') . '</a>';
+}
+?>
                                                 </a>
                                             <?php endif; ?>
                                         </td>
@@ -104,16 +111,16 @@ if (!is_postSale() && !is_admin()) {
                                         <td><?= !empty($doc["original_received"]) ? $doc["original_received"] : '' ?></td>
                                         <td><?= !empty($doc["translation_cost"]) ? $doc["translation_cost"] : '' ?></td>
                                         <td><?= !empty($doc["currency_text"]) ? $doc["currency_text"] : '' ?></td>
-                                                                               <td><?= (!empty($doc["exchange_rate"]) && !empty($doc["apostille_cost"])) ? $doc["exchange_rate"] : '' ?></td>
+                                                                               <td><?= (!empty($doc["exchange_rate"]) && !empty($doc["translation_cost"])) ? $doc["exchange_rate"] : '' ?></td>
 
 <td>
 <?php
-$cost = str_replace(',', '', $doc['apostille_cost']);
+$cost = str_replace(',', '', $doc['translation_cost']);
 $rate = !empty($doc['exchange_rate']) ? (float)$doc['exchange_rate'] : 1;
 
 echo is_numeric($cost)
     ? number_format($rate * (float)$cost, 2, '.', '')
-    : $doc['apostille_cost'];
+    : $doc['translation_cost'];
 ?>
 </td>
                                         <td><?= !empty($doc["translation_status"]) ? $doc["translation_status"] : '' ?></td>
@@ -248,6 +255,16 @@ echo is_numeric($cost)
 
                                     ], [], 'no-mbot', '', false, 'translation_document_vendor'); ?>
                                 </div>
+                                                 <div class="col-md-4">
+                        <label>Payment Mode</label>
+                        <?php
+                        array_unshift($payment_mode, array());
+                        echo render_select('translation_payment_mode', $payment_mode, ['id', 'name'], '', [], [
+                           'data-width' => '100%',
+                           'data-none-selected-text' => 'Payment Mode',
+                           'data-actions-box' => true,
+                        ], [], 'no-mbot', '', false, 'payment_mode'); ?>
+                     </div>
                                 <div class="col-md-4">
                                     <label>Courier Date</label>
                                     <?php echo render_input('translation_date', '', '', 'date'); ?>
@@ -260,6 +277,10 @@ echo is_numeric($cost)
                                 <div class="col-md-4">
                                     <label>Payment Date</label>
                                     <?php echo render_input('translation_payment_date', '', '', 'date'); ?>
+                                </div>
+                                  <div class="col-md-4">
+                                    <label>Exchange Rate</label>
+                                    <?php echo render_input('translation_exchange_rate', '', '', 'number'); ?>
                                 </div>
                                 <div class="clearfix"></div>
                                 <div class="doc-cost-section">
@@ -329,7 +350,8 @@ echo is_numeric($cost)
                 translation_received,
                 payment_date,
                 translation_cost,
-                currency_type
+                currency_type,
+                exchange_rate
             } = translationData;
 
             // Vendor dropdown
@@ -359,6 +381,7 @@ echo is_numeric($cost)
             $("#translation_date").val(courier_date || "");
             $("#translation_receiving_date").val(translation_received || "");
             $("#translation_payment_date").val(payment_date || "");
+             $("#translation_exchange_rate").val(exchange_rate || "");
 
             setTimeout(() => {
                 // Cost input
@@ -491,4 +514,59 @@ echo is_numeric($cost)
                 .always(() => $(event.target).prop('disabled', false));
         }, 50);
     }
+   async function delete_tran_doc(id, doc_id, type='translation') {
+    var allowed = ["apostile", "translation", "ext_apostile", "ext_visa"];
+    if (allowed.indexOf(type) === -1) {
+        alert_float("danger", "Invalid document type.");
+        return;
+    }
+    
+    const confirmed = await showConfirmation(
+    "Deleting this Translation document will permanently remove the document and its related information.\n\nAre you sure you want to continue?"
+);
+
+if (!confirmed) {
+    hide_loader(); // if loader is already shown
+    return false;
+}
+
+// Continue with Apostille document deletion
+ 
+    let formData = new FormData();
+    if (id) {
+        formData.append("id", id);
+    }
+    if (doc_id) {
+        formData.append("doc_id", doc_id);
+    }
+    formData.append("type", type);
+    formData.append("client_id", "<?= $client_id ?>");
+    formData.append(
+        "<?= $this->security->get_csrf_token_name(); ?>",
+        "<?= $this->security->get_csrf_hash(); ?>"
+    );
+ 
+    show_loader();
+    $.ajax({
+        url: "<?= base_url('admin/clients/delete_ap_doc') ?>",
+        type: "POST",
+        data: formData,
+        contentType: false,
+        processData: false,
+        dataType: "json",
+        success: function (response) {
+            hide_loader();
+            if (response && response.resp_code === "RCS") {
+                alert_float("success", response.resp_desc);
+                location.reload();
+            } else {
+                alert_float("danger", (response && response.resp_desc) || "Request failed.");
+            }
+        },
+        error: function (xhr, status, error) {
+            hide_loader();
+            alert_float("danger", "Error deleting document.");
+        }
+    });
+}
 </script>

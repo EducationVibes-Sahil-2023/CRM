@@ -430,6 +430,14 @@ function app_init_customer_profile_tabs()
         'position' => 95,
 
     ]);
+    
+     $CI->app_tabs->add_customer_profile_tab('important_dates', [
+            'name'     => "Important Dates",
+            'icon'     => 'fa fa-calendar menu-icon',
+            'view'     => 'admin/clients/groups/important_dates',
+            'position' => 95,
+            'leadType' => '2'
+        ]);
 
 
     $post_staff = array_column($CI->staff_model->post_sale_get(), "staffid");
@@ -448,6 +456,7 @@ function app_init_customer_profile_tabs()
             'view'     => 'admin/clients/groups/accommodation',
             'position' => 95,
         ]);
+        
 
         $CI->app_tabs->add_customer_profile_tab('activity_logs', [
             'name'     => "Activity Logs",
@@ -1659,7 +1668,7 @@ function check_country_rest($studyCountries)
     return $studyCountries;
 }
 
-function get_documents($lead_type = "", $selected_country = [], $show_all = 0, $stage = "", $where = [])
+function get_documents($lead_type = "", $selected_country = [], $show_all = 0, $stage = "", $where = [],$where_condition=[])
 {
     $CI = &get_instance();
 
@@ -1689,6 +1698,12 @@ function get_documents($lead_type = "", $selected_country = [], $show_all = 0, $
             $CI->db->where($where);
         }
 
+if (!empty($where_condition)) {
+    $CI->db->where_in(
+        $where_condition[0],
+        $where_condition[1]
+    );
+}
         $CI->db->order_by("sequence", "ASC");
         $document = $CI->db->group_by("document_upload_type.id")
             ->get()
@@ -1710,6 +1725,12 @@ function get_documents($lead_type = "", $selected_country = [], $show_all = 0, $
         if (!empty($where)) {
             $CI->db->where($where);
         }
+        if (!empty($where_condition)) {
+    $CI->db->where_in(
+        $where_condition[0],
+        $where_condition[1]
+    );
+}
 
         if (!empty($selected_country)) {
             $CI->db->group_start(); // Start AND group for country filtering
@@ -2001,7 +2022,8 @@ function get_orignal_document_list(
     $visa_georgia = 0,
     $visa_apostile = 0,
     $where = [],
-    $where_or = []
+    $where_or = [],
+    $where_in = []
 ) {
     $CI = &get_instance();
     $CI->db->select("*")
@@ -2048,6 +2070,15 @@ function get_orignal_document_list(
         $CI->db->group_start();
         $CI->db->or_where($where_or);
         $CI->db->group_end();
+    }
+    
+     // WHERE IN conditions
+    if (!empty($where_in) && is_array($where_in)) {
+        foreach ($where_in as $column => $values) {
+            if (!empty($values) && is_array($values)) {
+                $CI->db->where_in($column, $values);
+            }
+        }
     }
 
     return $CI->db->order_by("id", "asc")->get()->result_array();
@@ -2228,6 +2259,9 @@ function get_orignal_document_data_list_apostille($client_ids_array = [], $docum
                     $CI->db->where_in('r.doc_id', $valid_doc_ids);
                 }
 
+if (!empty($vendor_id)) {
+                    $CI->db->where_in('r.vendor_id', $vendor_id);
+                }
                 $check_Apostille_data = $CI->db->get()->result_array();
 
 
@@ -2349,6 +2383,10 @@ function get_orignal_document_data_list_apostille($client_ids_array = [], $docum
             $CI->db->where_in('r.doc_id', $valid_doc_ids);
         }
 
+if (!empty($vendor_id)) {
+                    $CI->db->where_in('r.vendor_id', $vendor_id);
+                }
+                
         $check_Apostille_data = $CI->db->get()->result_array();
 
 
@@ -2582,6 +2620,43 @@ function get_apostille_document_data($client_id, $visa_apostile = 0)
 }
 
 
+function get_apostille_document_data_external($client_id = null, $visa_apostile = 0)
+{
+   
+    $CI = &get_instance();
+
+    // NULL / '' / non-numeric all become 0 -> LEFT JOIN matches nothing,
+    // every document row comes back with r.* = NULL => 'Pending'
+    $client_id = (int) $client_id;
+
+    $CI->db->select("r.*, r.payment_mode as payment_mode_id, 
+        o.name, 
+        v.name AS vendor_name, 
+        CONCAT(s.firstname, ' ', s.lastname) AS created_by, 
+        CASE 
+            WHEN r.id IS NULL THEN 'Pending'  
+            WHEN r.received_status = 1 THEN 'Received'  
+            WHEN r.received_status = 0 THEN 'Sent'     
+            ELSE 'Pending'          
+        END AS apostille_status,
+        'No' AS original_received,
+        p.name payment_mode
+        ")
+        ->from(db_prefix() . 'orignal_documents o')
+        ->join(db_prefix() . 'external_client_apostille_data r', "o.id = r.doc_id AND r.id = {$client_id}", "LEFT")
+        ->join(db_prefix() . 'vendor_list v', "v.id = r.vendor_id", "LEFT")
+        ->join(db_prefix() . 'payment_mode p', "p.id = r.payment_mode", "LEFT")
+        ->join(db_prefix() . 'staff s', "s.staffid = r.created_by", "LEFT");
+
+    $CI->db->where("o.apostile_status", 1);
+    if (!empty($visa_apostile)) {
+        $CI->db->or_where("o.visa_apostile", 1);
+    }
+
+    return $CI->db->order_by("o.id", "asc")->get()->result_array();
+}
+
+
 function get_translation_document_data($client_id, $visa_apostile = 0)
 {
     $CI = &get_instance();
@@ -2594,7 +2669,7 @@ function get_translation_document_data($client_id, $visa_apostile = 0)
     WHEN r.received_status = 1 THEN 'Received'  
     WHEN r.received_status = 0 THEN 'Sent'     
     ELSE 'Pending'          
-        END AS apostille_status,
+        END AS translation_status,
         IF(ord.id IS NULL, 'No', 'Yes') AS original_received,
          p.name payment_mode
         ")
@@ -2619,6 +2694,17 @@ function activity_apostille_document($id)
     $CI->db->order_by('date', $sorting);
     return $CI->db->get(db_prefix() . 'apostille_document_activity')->result_array();
 }
+
+
+function activity_apostille_document_external($id)
+{
+    $CI = &get_instance();
+    $sorting = hooks()->apply_filters('lead_activity_log_default_sort', 'DESC');
+    $CI->db->where('apostile_id', $id);
+    $CI->db->order_by('date', $sorting);
+    return $CI->db->get(db_prefix() . 'apostille_document_activity')->result_array();
+}
+
 
 
 function activity_translation_document($id)
@@ -3627,94 +3713,205 @@ function offerletterStatus()
         ->result_array();
 }
 
+// function filter_country_university_array($leadType)
+// {
+//     $CI = &get_instance();
+
+//     $CI->db->select('s.country_name,ifNULL(s.university_name,ap.primary_university) as university_name, s.country_id, s.university_id,st.staffid,st.firstname,st.lastname,t.id source_id,t.name source_name,group_concat(c.userid) as client_ids,group_concat( DISTINCT ap.acadmic_year) as acadmic_year');
+//     $CI->db->from(db_prefix() . 'clients c');
+//     $CI->db->join(db_prefix() . 'leads l', 'c.leadid = l.id', "LEFT");
+//     $CI->db->join(db_prefix() . 'admission_preferences ap', 'ap.userid = c.userid', "LEFT");
+//     $CI->db->join(db_prefix() . 'client_university_shortlisting s', 'c.userid = s.client_id and s.status=1', "LEFT");
+//     $CI->db->join(db_prefix() . 'staff st', 'c.addedfrom = st.staffid', "LEFT");
+//     $CI->db->join(db_prefix() . 'leads_sources t', 'l.source = t.id', "LEFT");
+//     $CI->db->where('l.type', $leadType);
+//     if ($leadType == 2) {
+//         $CI->db->or_where('c.client_type ', 2);
+//     }
+
+//     $CI->db->where('ifNULL(s.university_name,ap.primary_university) != ', null);
+
+//     // $CI->db->group_by('s.country_name, s.university_name,c.addedfrom,t.id,ap.acadmic_year');
+    
+//     $CI->db->group_by('s.country_name, s.university_name');
+
+//     $query = $CI->db->get();
+//     $result = $query->result_array();
+//     // if (is_admin()) {
+//     //       echo  $CI->db->last_query();
+//     // }
+
+//     $countries = [];
+//     $universities = [];
+//     $counselor = [];
+//     $sources = [];
+//     $acadmic_year = [];
+
+//     $seenCountries = [];
+//     $seenUniversities = [];
+//     $seenCounselor = [];
+//     $seenSources = [];
+//     $seenAcadmic_year = [];
+
+
+//     foreach ($result as $row) {
+//         if (!empty($row['country_name']) && !isset($seenCountries[$row['country_name']])) {
+//             $countries[] = [
+//                 "id" => $row['country_id'],
+//                 "country_name" => $row['country_name']
+//             ];
+//             $seenCountries[$row['country_name']] = true;
+//         }
+
+//         if (!empty($row['university_name']) && !isset($seenUniversities[$row['university_name']])) {
+//             $universities[] = [
+//                 "id" => $row['university_id'],
+//                 "university_name" => $row['university_name']
+//             ];
+//             $seenUniversities[$row['university_name']] = true;
+//             $seenAcadmic_year[$row['university_name']] = array_unique(array_map(fn($year) => ['id' => $year, 'name' => $year], explode(",", $row['acadmic_year'])), SORT_REGULAR);
+//         }
+//         if (!empty($row['staffid']) && !isset($seenCounselor[$row['staffid']])) {
+//             $counselor[] = [
+//                 "staffid" => $row['staffid'],
+//                 "firstname" => $row['firstname'],
+//                 "lastname" => $row['lastname']
+//             ];
+//             $seenCounselor[$row['staffid']] = true;
+//         }
+//         if (!empty($row['source_id']) && !isset($seenSources[$row['source_id']])) {
+//             $sources[] = [
+//                 "id" => $row['source_id'],
+//                 "name" => $row['source_name']
+//             ];
+//             $seenSources[$row['source_id']] = true;
+//         }
+//     }
+
+//     // Optional: Sort alphabetically by name
+//     usort($countries, fn($a, $b) => strcmp($a['country_name'], $b['country_name']));
+//     usort($universities, fn($a, $b) => strcmp($a['university_name'], $b['university_name']));
+//     usort($counselor, fn($a, $b) => strcmp($a['staffid'], $b['staffid']));
+//     usort($sources, fn($a, $b) => strcmp($a['id'], $b['id']));
+//     usort($acadmic_year, fn($a, $b) => strcmp($a['id'], $b['id']));
+
+
+//     return [
+//         'countries' => $countries,
+//         'universities' => $universities,
+//         'counselor' => $counselor,
+//         'source' => $sources,
+//         'acadmic_year' => $seenAcadmic_year
+
+//     ];
+// }
+
+
 function filter_country_university_array($leadType)
 {
     $CI = &get_instance();
 
-    $CI->db->select('s.country_name,ifNULL(s.university_name,ap.primary_university) as university_name, s.country_id, s.university_id,st.staffid,st.firstname,st.lastname,t.id source_id,t.name source_name,group_concat(c.userid) as client_ids,group_concat(ap.acadmic_year) as acadmic_year');
+    $CI->db->select("
+        s.country_name,
+        IFNULL(s.university_name, ap.primary_university) AS university_name,
+        s.country_id,
+        s.university_id,
+        st.staffid, st.firstname, st.lastname,
+        t.id AS source_id, t.name AS source_name,
+        ap.acadmic_year,
+        c.userid
+    ", false);
     $CI->db->from(db_prefix() . 'clients c');
-    $CI->db->join(db_prefix() . 'leads l', 'c.leadid = l.id', "LEFT");
-    $CI->db->join(db_prefix() . 'admission_preferences ap', 'ap.userid = c.userid', "LEFT");
-    $CI->db->join(db_prefix() . 'client_university_shortlisting s', 'c.userid = s.client_id and s.status=1', "LEFT");
-    $CI->db->join(db_prefix() . 'staff st', 'c.addedfrom = st.staffid', "LEFT");
-    $CI->db->join(db_prefix() . 'leads_sources t', 'l.source = t.id', "LEFT");
-    $CI->db->where('l.type', $leadType);
+    $CI->db->join(db_prefix() . 'leads l', 'c.leadid = l.id', 'LEFT');
+    $CI->db->join(db_prefix() . 'admission_preferences ap', 'ap.userid = c.userid', 'LEFT');
+    $CI->db->join(db_prefix() . 'client_university_shortlisting s', 'c.userid = s.client_id AND s.status = 1', 'LEFT');
+    $CI->db->join(db_prefix() . 'staff st', 'c.addedfrom = st.staffid', 'LEFT');
+    $CI->db->join(db_prefix() . 'leads_sources t', 'l.source = t.id', 'LEFT');
+
+    // Lead type (grouped so the OR doesn't leak into the other conditions)
     if ($leadType == 2) {
-        $CI->db->or_where('c.client_type ', 2);
+        $CI->db->group_start()
+               ->where('l.type', $leadType)
+               ->or_where('c.client_type', 2)
+               ->group_end();
+    } else {
+        $CI->db->where('l.type', $leadType);
     }
 
-    $CI->db->where('ifNULL(s.university_name,ap.primary_university) != ', null);
+    // Must have a university (from shortlisting or primary preference)
+    $CI->db->where('IFNULL(s.university_name, ap.primary_university) IS NOT NULL', null, false);
 
-    $CI->db->group_by('s.country_name, s.university_name,c.addedfrom,t.id,ap.acadmic_year');
-
-    $query = $CI->db->get();
+    // No GROUP BY — we dedupe per dimension in PHP so ALL values are captured
+    $query  = $CI->db->get();
     $result = $query->result_array();
-    // if (is_admin()) {
-    //       echo  $CI->db->last_query();
-    // }
 
-    $countries = [];
+    $countries    = [];
     $universities = [];
-    $counselor = [];
-    $sources = [];
-    $acadmic_year = [];
+    $counselor    = [];
+    $sources      = [];
+    $acadmic_year = []; // keyed by university_name
 
-    $seenCountries = [];
-    $seenUniversities = [];
-    $seenCounselor = [];
-    $seenSources = [];
-    $seenAcadmic_year = [];
-
+    $seenCountries = $seenUniversities = $seenCounselor = $seenSources = $seenYearKey = [];
 
     foreach ($result as $row) {
+        $uni = $row['university_name'];
+
+        // Countries
         if (!empty($row['country_name']) && !isset($seenCountries[$row['country_name']])) {
-            $countries[] = [
-                "id" => $row['country_id'],
-                "country_name" => $row['country_name']
-            ];
+            $countries[] = ['id' => $row['country_id'], 'country_name' => $row['country_name']];
             $seenCountries[$row['country_name']] = true;
         }
 
-        if (!empty($row['university_name']) && !isset($seenUniversities[$row['university_name']])) {
-            $universities[] = [
-                "id" => $row['university_id'],
-                "university_name" => $row['university_name']
-            ];
-            $seenUniversities[$row['university_name']] = true;
-            $seenAcadmic_year[$row['university_name']] = array_unique(array_map(fn($year) => ['id' => $year, 'name' => $year], explode(",", $row['acadmic_year'])), SORT_REGULAR);
+        // Universities
+        if (!empty($uni) && !isset($seenUniversities[$uni])) {
+            $universities[] = ['id' => $row['university_id'], 'university_name' => $uni];
+            $seenUniversities[$uni] = true;
         }
+
+        // Academic years — accumulate ALL years per university (dedup)
+        if (!empty($uni) && !empty($row['acadmic_year'])) {
+            foreach (explode(',', $row['acadmic_year']) as $yr) {
+                $yr = trim($yr);
+                if ($yr === '') {
+                    continue;
+                }
+                $key = $uni . '|' . $yr;
+                if (!isset($seenYearKey[$key])) {
+                    $acadmic_year[$uni][] = ['id' => $yr, 'name' => $yr];
+                    $seenYearKey[$key] = true;
+                }
+            }
+        }
+
+        // Counselors — ALL, deduped by staffid
         if (!empty($row['staffid']) && !isset($seenCounselor[$row['staffid']])) {
             $counselor[] = [
-                "staffid" => $row['staffid'],
-                "firstname" => $row['firstname'],
-                "lastname" => $row['lastname']
+                'staffid'   => $row['staffid'],
+                'firstname' => $row['firstname'],
+                'lastname'  => $row['lastname'],
             ];
             $seenCounselor[$row['staffid']] = true;
         }
+
+        // Sources — ALL, deduped by source_id
         if (!empty($row['source_id']) && !isset($seenSources[$row['source_id']])) {
-            $sources[] = [
-                "id" => $row['source_id'],
-                "name" => $row['source_name']
-            ];
+            $sources[] = ['id' => $row['source_id'], 'name' => $row['source_name']];
             $seenSources[$row['source_id']] = true;
         }
     }
 
-    // Optional: Sort alphabetically by name
-    usort($countries, fn($a, $b) => strcmp($a['country_name'], $b['country_name']));
+    // Sort
+    usort($countries,    fn($a, $b) => strcmp($a['country_name'], $b['country_name']));
     usort($universities, fn($a, $b) => strcmp($a['university_name'], $b['university_name']));
-    usort($counselor, fn($a, $b) => strcmp($a['staffid'], $b['staffid']));
-    usort($sources, fn($a, $b) => strcmp($a['id'], $b['id']));
-    usort($acadmic_year, fn($a, $b) => strcmp($a['id'], $b['id']));
-
+    usort($counselor,    fn($a, $b) => strcmp($a['firstname'] . $a['lastname'], $b['firstname'] . $b['lastname']));
+    usort($sources,      fn($a, $b) => strcmp((string) $a['name'], (string) $b['name']));
 
     return [
-        'countries' => $countries,
+        'countries'    => $countries,
         'universities' => $universities,
-        'counselor' => $counselor,
-        'source' => $sources,
-        'acadmic_year' => $seenAcadmic_year
-
+        'counselor'    => $counselor,
+        'source'       => $sources,
+        'acadmic_year' => $acadmic_year,
     ];
 }
 
@@ -3941,8 +4138,8 @@ function clientsWhatsappAttachments($clientid, $stafid, $documentName,$documentU
     {
         return false;
     }
-
-if(get_client($clientid)->client_type != 1)
+$clientInformation = get_client($clientid);
+if($clientInformation->client_type != 1 && $clientInformation->partner_type!=2 )
 {
     return false;
 }
@@ -4064,339 +4261,623 @@ if(get_client($clientid)->client_type != 1)
     }
 }
 
+// function whatsaapAttachments_cron()
+// {
+//     $CI = &get_instance();
+
+//     $table = db_prefix() . "clients_whatsaap_attachments_logs";
+//     $now   = date("Y-m-d H:i:s");
+
+//     // try {
+
+//         /**
+//          * GET PENDING RECORDS
+//          */
+//         $sendData = $CI->db
+//             ->where('status', 1)
+//             ->where('datetime <=', $now)
+//             ->order_by('id', 'ASC')
+//             ->limit(50) // batch process
+//             ->get($table)
+//             ->result();
+
+
+
+//         if (empty($sendData)) {
+//             return true;
+//         }
+
+//         foreach ($sendData as $row) {
+
+//             try {
+
+//                 $clientid             = (int) $row->client_id;
+//                 $staff_id             = (int) $row->staff_id;
+//                 $document_name        = trim($row->document_name);
+//                 $whatsapp_template_id = (int) $row->whatsapp_template;
+
+//                 /**
+//                  * GET CLIENT
+//                  */
+//                 $clientInfo = get_client_name($clientid);
+
+//                 if (!$clientInfo) {
+//                     throw new Exception("Client not found");
+//                 }
+
+
+//                 /**
+//                  * GET STAFF
+//                  */
+//                 $staff_data = $CI->db
+//                     ->select("CONCAT(firstname,' ',lastname) as name,firstname,lastname,phonenumber,whatsapp_status")
+//                     ->where('staffid', $staff_id)
+//                     ->get(db_prefix() . 'staff')
+//                     ->row();
+
+//                 if (!$staff_data) {
+//                     throw new Exception("Staff not found");
+//                 }
+
+//                 // if ((int)$staff_data->whatsapp_status === 0) {
+//                 //     throw new Exception("WhatsApp disabled for staff");
+//                 // }
+//             if (empty($staff_data->phonenumber)) {
+
+//     $CI->db->where('id', $row->id);
+//     $CI->db->update($table, [
+//         "status" => 3,
+//         "error_log"=>"Phone number does not exist",
+//         "response" => json_encode([
+//             "details"   => "Failed 1 message(s)",
+//             "messages"  => "Phone number does not exist",
+//             "errorCode" => 1
+//         ])
+//     ]);
+
+//     continue;
+// }
+
+//                 /**
+//                  */
+//                 //  $staff_data->phonenumber ="9871159668";
+          
+//                 $contact_number =  "0091" . getLast10Digits($staff_data->phonenumber);
+//                 if (empty($contact_number)) {
+//                     throw new Exception("Staff mobile missing");
+//                 }
+
+//                 /**
+//                  * GET TEMPLATE
+//                  */
+//                 $whatsapp = $CI->db
+//                     ->where('status', 1)
+//                     ->where('id', $whatsapp_template_id)
+//                     ->get(db_prefix() . 'whatsapptemplates')
+//                     ->row();
+
+//                 if (!$whatsapp) {
+//                     throw new Exception("Template not found");
+//                 }
+
+//                 /**
+//                  * VARIABLES
+//                  */
+//                 $clientName = $clientInfo;
+
+//                 $variables = str_replace(
+//                     ["{applicant_name}","{university_name}","{document_name}"],
+//                     [
+//                         $clientName,
+//                         $row->university_name ?? '',
+//                         $document_name,
+//                     ],
+//                     $whatsapp->variables_name
+//                 );
+
+//               $parameters = [];
+
+// if (!empty($variables)) {
+//     $vars = explode(",", $variables);
+
+//     foreach ($vars as $val) {
+//         $val = trim($val);
+
+//         if ($val !== '') {
+//             $parameters[] = [
+//                 "type" => "text",
+//                 "text" => $val
+//             ];
+//         }
+//     }
+// }
+
+// /**
+//  * COMPONENTS
+//  */
+// $components = [];
+
+// /**
+//  * FIND MIME TYPE
+//  */
+// $mimeType = 'application/pdf';
+
+// if (!empty($row->documentURL)) {
+
+//     $filePath = FCPATH . ltrim($row->documentURL, '/');
+
+//     if (file_exists($filePath)) {
+
+//         if (function_exists('mime_content_type')) {
+//             $detectedMime = mime_content_type($filePath);
+
+//             if (!empty($detectedMime)) {
+//                 $mimeType = $detectedMime;
+//             }
+//         }
+
+//     } else {
+
+//         // fallback by extension
+//         $extension = strtolower(pathinfo($row->documentURL, PATHINFO_EXTENSION));
+
+//         $mimeList = [
+//             'pdf'  => 'application/pdf',
+//             'doc'  => 'application/msword',
+//             'docx' => 'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
+//             'xls'  => 'application/vnd.ms-excel',
+//             'xlsx' => 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
+//             'jpg'  => 'image/jpeg',
+//             'jpeg' => 'image/jpeg',
+//             'png'  => 'image/png',
+//             'txt'  => 'text/plain'
+//         ];
+
+//         if (isset($mimeList[$extension])) {
+//             $mimeType = $mimeList[$extension];
+//         }
+//     }
+
+//     // $components[] = [
+//     //     "type" => "header",
+//     //     "parameters" => [
+//     //             "type" => "document",
+//     //             "media" => [
+//     //                 "mediaName" => $document_name,
+//     //                 "mediaUri"  => base_url($row->documentURL),
+//     //                 "mimeType"  => $mimeType
+//     //             ]
+//     //     ]
+//     // ];
+    
+//     $components[] = [
+//     "type" => "header",
+//     "parameters" => [
+//         [
+//             "type" => "document",
+//             "media" => [
+//                 "mediaName" => $document_name,
+//                 "mediaUri"  => base_url($row->documentURL),
+//                 "mimeType"  => $mimeType
+//             ]
+//         ]
+//     ]
+// ];
+// }
+
+
+// if (!empty($parameters)) {
+//     $components[] = [
+//         "type" => "body",
+//         "parameters" => $parameters
+//     ];
+// }
+
+// /**
+//  * PAYLOAD
+//  */
+// $payload = [
+//     "messages" => [
+//         "authentication" => [
+//             "producttoken" => WHATSAAP_PRODUCT_KEY
+//         ],
+//         "msg" => [
+//             [
+//                 "from" => WHATSAAP_FROM_NUMBER,
+//                 "to" => [
+//                     [
+//                         "number" => $contact_number
+//                     ]
+//                 ],
+//                 "body" => [
+//                     "type" => "auto",
+//                     "content" => $whatsapp->template_name
+//                 ],
+//                 "allowedChannels" => ["WhatsApp"],
+//                 "richContent" => [
+//                     "conversation" => [
+//                         [
+//                             "template" => [
+//                                 "whatsapp" => [
+//                                     "namespace"    => WHATSAAP_NAMESPACE,
+//                                     "element_name" => $whatsapp->template_name,
+//                                     "language" => [
+//                                         "policy" => "deterministic",
+//                                         "code"   => $whatsapp->languageCode ?: 'en'
+//                                     ],
+//                                     "components" => $components
+//                                 ]
+//                             ]
+//                         ]
+//                     ]
+//                 ]
+//             ]
+//         ]
+//     ]
+// ];
+
+// // echo "<pre>";
+// // print_r($row);
+// // print_r($payload);
+// // die;
+  
+//                 /**
+//                  * CURL SEND
+//                  */
+//                 $curl = curl_init();
+
+//     curl_setopt_array($curl, [
+//         CURLOPT_URL => 'https://gw.messaging.cm.com/v1.0/message',
+//         CURLOPT_RETURNTRANSFER => true,
+//         CURLOPT_ENCODING => '',
+//         CURLOPT_MAXREDIRS => 10,
+//         CURLOPT_TIMEOUT => 10, // Set timeout to prevent hanging
+//         CURLOPT_FOLLOWLOCATION => true,
+//         CURLOPT_HTTP_VERSION => CURL_HTTP_VERSION_1_1,
+//         CURLOPT_CUSTOMREQUEST => 'POST',
+//         CURLOPT_POSTFIELDS => json_encode($payload),
+//         CURLOPT_HTTPHEADER => ['Content-Type: application/json'],
+//     ]);
+//                 $response = curl_exec($curl);
+                
+              
+//                 $error    = curl_error($curl);
+                
+
+//                 curl_close($curl);
+
+//                 if ($error) {
+//                     throw new Exception($error);
+//                 }
+
+//                 /**
+//                  * SUCCESS UPDATE
+//                  */
+//                 $CI->db->where('id', $row->id);
+//                 $CI->db->update($table, [
+//                     "status"      => 2, // sent
+//                      "sent"  => date("Y-m-d H:i:s"),
+//                     "response"    => $response
+//                 ]);
+
+//                 /**
+//                  * LOG ENTRY
+//                  */
+//                 $CI->db->insert(db_prefix() . 'whatsapp_email_logs', [
+//                     "type"        => "whatsapp",
+//                     "template_id" => $whatsapp_template_id,
+//                     "staff_id"    => $staff_id,
+//                     "datetime"    => date("Y-m-d H:i:s"),
+//                     "contact"     => $contact_number
+//                 ]);
+
+//             } catch (Exception $innerError) {
+
+//                 /**
+//                  * FAILED RECORD ONLY
+//                  */
+//                 $CI->db->where('id', $row->id);
+//                 $CI->db->update($table, [
+//                     "status"      => 3, // failed
+//                     "sent"  => date("Y-m-d H:i:s"),
+//                     "error_log"   => $innerError->getMessage()
+//                 ]);
+
+//                 log_message('error', 'WhatsApp Cron Row Error: ' . $innerError->getMessage());
+//             }
+//         }
+
+//         return true;
+
+//     // } catch (Exception $e) {
+
+//     //     log_message('error', 'WhatsApp Cron Main Error: ' . $e->getMessage());
+//     //     return false;
+//     // }
+// }
+
 function whatsaapAttachments_cron()
 {
-    $CI = &get_instance();
-
-    $table = db_prefix() . "clients_whatsaap_attachments_logs";
+    $CI    = &get_instance();
+    $table = db_prefix() . "clients_whatsaap_attachments_logs l";
     $now   = date("Y-m-d H:i:s");
 
-    // try {
-
-        /**
-         * GET PENDING RECORDS
-         */
+    // $sendData = $CI->db
+    //     ->where('status', 1)
+    //     ->where('datetime <=', $now)
+    //     ->order_by('id', 'ASC')
+    //     ->limit(50) // batch process
+    //     ->get($table)
+    //     ->result();
+        
         $sendData = $CI->db
-            ->where('status', 1)
-            ->where('datetime <=', $now)
-            ->order_by('id', 'ASC')
-            ->limit(50) // batch process
-            ->get($table)
-            ->result();
+    ->select('l.*,c.client_type,c.partner_type,c.referralCounsollor')
+    ->from($table)
+    ->join('tblclients c', 'c.userid = l.client_id', 'left')
+    ->where('l.status', 1)
+    ->where('l.datetime <=', $now)
+    ->order_by('l.id', 'ASC')
+    ->limit(50)
+    ->get()
+    ->result();
+ 
+  
+    if (empty($sendData)) {
+        return true;
+    }
+    
 
-
-
-        if (empty($sendData)) {
-            return true;
-        }
-
-        foreach ($sendData as $row) {
-
-            try {
-
-                $clientid             = (int) $row->client_id;
-                $staff_id             = (int) $row->staff_id;
+    foreach ($sendData as $row) {
+        try {
+                $clientid = (int) $row->client_id;
+                
+                $staff_id = ($row->client_type == 2 && $row->partner_type == 2)
+                ? (int) $row->referralCounsollor
+                : (int) $row->staff_id;
+                
                 $document_name        = trim($row->document_name);
                 $whatsapp_template_id = (int) $row->whatsapp_template;
-
-                /**
-                 * GET CLIENT
-                 */
-                $clientInfo = get_client_name($clientid);
-
-                if (!$clientInfo) {
-                    throw new Exception("Client not found");
-                }
-
-
-                /**
-                 * GET STAFF
-                 */
-                $staff_data = $CI->db
-                    ->select("CONCAT(firstname,' ',lastname) as name,firstname,lastname,phonenumber,whatsapp_status")
-                    ->where('staffid', $staff_id)
-                    ->get(db_prefix() . 'staff')
-                    ->row();
-
-                if (!$staff_data) {
-                    throw new Exception("Staff not found");
-                }
-
-                // if ((int)$staff_data->whatsapp_status === 0) {
-                //     throw new Exception("WhatsApp disabled for staff");
-                // }
-            if (empty($staff_data->phonenumber)) {
-
-    $CI->db->where('id', $row->id);
-    $CI->db->update($table, [
-        "status" => 3,
-        "error_log"=>"Phone number does not exist",
-        "response" => json_encode([
-            "details"   => "Failed 1 message(s)",
-            "messages"  => "Phone number does not exist",
-            "errorCode" => 1
-        ])
-    ]);
-
-    continue;
-}
-
-                /**
-                 */
-                //  $staff_data->phonenumber ="9871159668";
-          
-                $contact_number =  "0091" . getLast10Digits($staff_data->phonenumber);
-                if (empty($contact_number)) {
-                    throw new Exception("Staff mobile missing");
-                }
-
-                /**
-                 * GET TEMPLATE
-                 */
-                $whatsapp = $CI->db
-                    ->where('status', 1)
-                    ->where('id', $whatsapp_template_id)
-                    ->get(db_prefix() . 'whatsapptemplates')
-                    ->row();
-
-                if (!$whatsapp) {
-                    throw new Exception("Template not found");
-                }
-
-                /**
-                 * VARIABLES
-                 */
-                $clientName = $clientInfo;
-
-                $variables = str_replace(
-                    ["{applicant_name}","{university_name}","{document_name}"],
-                    [
-                        $clientName,
-                        $row->university_name ?? '',
-                        $document_name,
-                    ],
-                    $whatsapp->variables_name
-                );
-
-               $parameters = [];
-
-if (!empty($variables)) {
-    $vars = explode(",", $variables);
-
-    foreach ($vars as $val) {
-        $val = trim($val);
-
-        if ($val !== '') {
-            $parameters[] = [
-                "type" => "text",
-                "text" => $val
-            ];
-        }
-    }
-}
-
-/**
- * COMPONENTS
- */
-$components = [];
-
-/**
- * FIND MIME TYPE
- */
-$mimeType = 'application/pdf';
-
-if (!empty($row->documentURL)) {
-
-    $filePath = FCPATH . ltrim($row->documentURL, '/');
-
-    if (file_exists($filePath)) {
-
-        if (function_exists('mime_content_type')) {
-            $detectedMime = mime_content_type($filePath);
-
-            if (!empty($detectedMime)) {
-                $mimeType = $detectedMime;
-            }
-        }
-
-    } else {
-
-        // fallback by extension
-        $extension = strtolower(pathinfo($row->documentURL, PATHINFO_EXTENSION));
-
-        $mimeList = [
-            'pdf'  => 'application/pdf',
-            'doc'  => 'application/msword',
-            'docx' => 'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
-            'xls'  => 'application/vnd.ms-excel',
-            'xlsx' => 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
-            'jpg'  => 'image/jpeg',
-            'jpeg' => 'image/jpeg',
-            'png'  => 'image/png',
-            'txt'  => 'text/plain'
-        ];
-
-        if (isset($mimeList[$extension])) {
-            $mimeType = $mimeList[$extension];
-        }
-    }
-
-    // $components[] = [
-    //     "type" => "header",
-    //     "parameters" => [
-    //             "type" => "document",
-    //             "media" => [
-    //                 "mediaName" => $document_name,
-    //                 "mediaUri"  => base_url($row->documentURL),
-    //                 "mimeType"  => $mimeType
-    //             ]
-    //     ]
-    // ];
     
-    $components[] = [
-    "type" => "header",
-    "parameters" => [
-        [
-            "type" => "document",
-            "media" => [
-                "mediaName" => $document_name,
-                "mediaUri"  => base_url($row->documentURL),
-                "mimeType"  => $mimeType
-            ]
-        ]
-    ]
-];
-}
+                if (empty($staff_id)) {
+                continue;
+                }
+            // CLIENT
+            $clientInfo = get_client_name($clientid);
+            if (!$clientInfo) {
+                throw new Exception("Client not found");
+            }
 
+            // STAFF
+            $staff_data = $CI->db
+                ->select("CONCAT(firstname,' ',lastname) as name, firstname, lastname, phonenumber, whatsapp_status")
+                ->where('staffid', $staff_id)
+                ->get(db_prefix() . 'staff')
+                ->row();
+            if (!$staff_data) {
+                throw new Exception("Staff not found");
+            }
+//             if($clientid == 2365){
+// $staff_data->phonenumber = "8700736847";
+// }
+            // No phone -> mark failed and skip
+            if (empty($staff_data->phonenumber)) {
+                $CI->db->where('id', $row->id)->update($table, [
+                    "status"    => 3,
+                    "sent"      => $now,
+                    "error_log" => "Phone number does not exist",
+                    "response"  => json_encode([
+                        "details"   => "Failed 1 message(s)",
+                        "messages"  => "Phone number does not exist",
+                        "errorCode" => 1
+                    ])
+                ]);
+                continue;
+            }
 
-if (!empty($parameters)) {
-    $components[] = [
-        "type" => "body",
-        "parameters" => $parameters
-    ];
-}
+            $contact_number = "0091" . getLast10Digits($staff_data->phonenumber);
+            if (empty($contact_number)) {
+                throw new Exception("Staff mobile missing");
+            }
 
-/**
- * PAYLOAD
- */
-$payload = [
-    "messages" => [
-        "authentication" => [
-            "producttoken" => WHATSAAP_PRODUCT_KEY
-        ],
-        "msg" => [
-            [
-                "from" => WHATSAAP_FROM_NUMBER,
-                "to" => [
-                    [
-                        "number" => $contact_number
-                    ]
-                ],
-                "body" => [
-                    "type" => "auto",
-                    "content" => $whatsapp->template_name
-                ],
-                "allowedChannels" => ["WhatsApp"],
-                "richContent" => [
-                    "conversation" => [
+            // TEMPLATE
+            $whatsapp = $CI->db
+                ->where('status', 1)
+                ->where('id', $whatsapp_template_id)
+                ->get(db_prefix() . 'whatsapptemplates')
+                ->row();
+            if (!$whatsapp) {
+                throw new Exception("Template not found");
+            }
+
+            // VARIABLES
+            $clientName = $clientInfo;
+            $variables  = str_replace(
+                ["{applicant_name}", "{university_name}", "{document_name}"],
+                [$clientName, $row->university_name ?? '', $document_name],
+                $whatsapp->variables_name
+            );
+
+            // ---- Build payload ----
+            $productToken      = WHATSAAP_PRODUCT_KEY;
+            $fromNumber        = WHATSAAP_FROM_NUMBER;
+            $templateNamespace = WHATSAAP_NAMESPACE;
+            $templateName      = $whatsapp->template_name;
+            $documentURL       = $row->documentURL;
+            $languageCode      = !empty($whatsapp->languageCode) ? $whatsapp->languageCode : 'en';
+
+            // body parameters
+            $parameters = [];
+            if (!empty($variables)) {
+                $variables_array = array_map('trim', explode(",", $variables));
+                foreach ($variables_array as $val) {
+                    if ($val === '') {
+                        throw new Exception("Whatsapp parameter not found");
+                    }
+                    $val = str_replace("#@", ",", $val);
+                    $parameters[] = ["type" => "text", "text" => $val];
+                }
+            }
+
+            $data = [
+                "messages" => [
+                    "authentication" => ["producttoken" => $productToken],
+                    "msg" => [
                         [
-                            "template" => [
-                                "whatsapp" => [
-                                    "namespace"    => WHATSAAP_NAMESPACE,
-                                    "element_name" => $whatsapp->template_name,
-                                    "language" => [
-                                        "policy" => "deterministic",
-                                        "code"   => $whatsapp->languageCode ?: 'en'
-                                    ],
-                                    "components" => $components
+                            "from" => $fromNumber,
+                            "to"   => [["number" => $contact_number]],
+                            "body" => [
+                                "type"    => "auto",
+                                "content" => $templateName
+                            ],
+                            "allowedChannels" => ["WhatsApp"],
+                            "richContent" => [
+                                "conversation" => [
+                                    [
+                                        "template" => [
+                                            "whatsapp" => [
+                                                "namespace"    => $templateNamespace,
+                                                "element_name" => $templateName,
+                                                "language" => [
+                                                    "policy" => "deterministic",
+                                                    "code"   => $languageCode
+                                                ],
+                                                "components" => []
+                                            ]
+                                        ]
+                                    ]
                                 ]
                             ]
                         ]
                     ]
                 ]
-            ]
-        ]
-    ]
-];
+            ];
 
-// echo "<pre>";
-// print_r($row);
-// print_r($payload);
-// die;
-  
-                /**
-                 * CURL SEND
-                 */
-                $curl = curl_init();
+            // Document header (all of this INSIDE the if)
+            if (!empty($documentURL)) {
+                $mimeType = "application/pdf";
+                $filePath = FCPATH . ltrim($documentURL, '/');
 
-    curl_setopt_array($curl, [
-        CURLOPT_URL => 'https://gw.messaging.cm.com/v1.0/message',
-        CURLOPT_RETURNTRANSFER => true,
-        CURLOPT_ENCODING => '',
-        CURLOPT_MAXREDIRS => 10,
-        CURLOPT_TIMEOUT => 10, // Set timeout to prevent hanging
-        CURLOPT_FOLLOWLOCATION => true,
-        CURLOPT_HTTP_VERSION => CURL_HTTP_VERSION_1_1,
-        CURLOPT_CUSTOMREQUEST => 'POST',
-        CURLOPT_POSTFIELDS => json_encode($payload),
-        CURLOPT_HTTPHEADER => ['Content-Type: application/json'],
-    ]);
-                $response = curl_exec($curl);
-                
-              
-                $error    = curl_error($curl);
-                
-
-                curl_close($curl);
-
-                if ($error) {
-                    throw new Exception($error);
+                if (file_exists($filePath)) {
+                    if (function_exists('mime_content_type')) {
+                        $detectedMime = mime_content_type($filePath);
+                        if (!empty($detectedMime)) {
+                            $mimeType = $detectedMime;
+                        }
+                    }
+                } else {
+                    $extension = strtolower(pathinfo($documentURL, PATHINFO_EXTENSION));
+                    $mimeList  = [
+                        'pdf'  => 'application/pdf',
+                        'doc'  => 'application/msword',
+                        'docx' => 'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
+                        'xls'  => 'application/vnd.ms-excel',
+                        'xlsx' => 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
+                        'jpg'  => 'image/jpeg',
+                        'jpeg' => 'image/jpeg',
+                        'png'  => 'image/png',
+                        'txt'  => 'text/plain'
+                    ];
+                    if (isset($mimeList[$extension])) {
+                        $mimeType = $mimeList[$extension];
+                    }
                 }
 
-                /**
-                 * SUCCESS UPDATE
-                 */
-                $CI->db->where('id', $row->id);
-                $CI->db->update($table, [
-                    "status"      => 2, // sent
-                     "sent"  => date("Y-m-d H:i:s"),
-                    "response"    => $response
-                ]);
+                $mediaName = !empty($document_name) ? $document_name : basename($documentURL);
 
-                /**
-                 * LOG ENTRY
-                 */
-                $CI->db->insert(db_prefix() . 'whatsapp_email_logs', [
-                    "type"        => "whatsapp",
-                    "template_id" => $whatsapp_template_id,
-                    "staff_id"    => $staff_id,
-                    "datetime"    => date("Y-m-d H:i:s"),
-                    "contact"     => $contact_number
-                ]);
-
-            } catch (Exception $innerError) {
-
-                /**
-                 * FAILED RECORD ONLY
-                 */
-                $CI->db->where('id', $row->id);
-                $CI->db->update($table, [
-                    "status"      => 3, // failed
-                    "sent"  => date("Y-m-d H:i:s"),
-                    "error_log"   => $innerError->getMessage()
-                ]);
-
-                log_message('error', 'WhatsApp Cron Row Error: ' . $innerError->getMessage());
+                $data["messages"]["msg"][0]["richContent"]["conversation"][0]["template"]["whatsapp"]["components"][] = [
+                    "type" => "header",
+                    "parameters" => [
+                        [
+                            "type"  => "document",
+                            "media" => [
+                                "mediaName" => $mediaName,
+                                "mediaUri"  => rtrim(base_url(), '/') . '/' . ltrim($documentURL, '/'),
+                                "mimeType"  => $mimeType
+                            ]
+                        ]
+                    ]
+                ];
             }
+
+            // Body component
+            if (!empty($parameters)) {
+                $data["messages"]["msg"][0]["richContent"]["conversation"][0]["template"]["whatsapp"]["components"][] = [
+                    "type"       => "body",
+                    "parameters" => $parameters
+                ];
+            }
+
+            // Encode (UTF-8 safe)
+            $payload = json_encode($data, JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES | JSON_INVALID_UTF8_SUBSTITUTE);
+            if ($payload === false) {
+                throw new Exception("JSON encode failed: " . json_last_error_msg());
+            }
+
+            // Send
+            $curl = curl_init();
+            curl_setopt_array($curl, [
+                CURLOPT_URL            => 'https://gw.messaging.cm.com/v1.0/message',
+                CURLOPT_RETURNTRANSFER => true,
+                CURLOPT_ENCODING       => '',
+                CURLOPT_MAXREDIRS      => 10,
+                CURLOPT_CONNECTTIMEOUT => 10,
+                CURLOPT_TIMEOUT        => 20,
+                CURLOPT_FOLLOWLOCATION => true,
+                CURLOPT_HTTP_VERSION   => CURL_HTTP_VERSION_1_1,
+                CURLOPT_CUSTOMREQUEST  => 'POST',
+                CURLOPT_POSTFIELDS     => $payload,
+                CURLOPT_HTTPHEADER     => ['Content-Type: application/json'],
+            ]);
+            $response  = curl_exec($curl);
+            $curlError = curl_error($curl);
+            $httpCode  = curl_getinfo($curl, CURLINFO_HTTP_CODE);
+            curl_close($curl);
+
+            if ($curlError) {
+                throw new Exception("cURL error: " . $curlError);
+            }
+
+            $responseArray = json_decode($response, true);
+            $errorCode     = $responseArray['errorCode'] ?? null;
+
+            // API-level failure -> mark failed
+            if ($httpCode < 200 || $httpCode >= 300 || ($errorCode !== null && $errorCode !== 0) || isset($responseArray['error'])) {
+                $CI->db->where('id', $row->id)->update($table, [
+                    "status"    => 3,
+                    "sent"      => date("Y-m-d H:i:s"),
+                    "error_log" => "API error (HTTP {$httpCode})",
+                    "response"  => $response
+                ]);
+                log_message('error', "WhatsApp API response error (HTTP {$httpCode}): " . $response);
+                continue;
+            }
+
+            // SUCCESS
+            $CI->db->where('id', $row->id)->update($table, [
+                "status"   => 2,
+                "sent"     => date("Y-m-d H:i:s"),
+                "response" => $response
+            ]);
+
+            $CI->db->insert(db_prefix() . 'whatsapp_email_logs', [
+                "type"        => "whatsapp",
+                "template_id" => $whatsapp_template_id,
+                "staff_id"    => $staff_id,
+                "datetime"    => date("Y-m-d H:i:s"),
+                "contact"     => $contact_number
+            ]);
+
+        } catch (Exception $innerError) {
+            $CI->db->where('id', $row->id)->update($table, [
+                "status"    => 3,
+                "sent"      => date("Y-m-d H:i:s"),
+                "error_log" => $innerError->getMessage()
+            ]);
+            log_message('error', 'WhatsApp Cron Row Error: ' . $innerError->getMessage());
         }
+    }
 
-        return true;
-
-    // } catch (Exception $e) {
-
-    //     log_message('error', 'WhatsApp Cron Main Error: ' . $e->getMessage());
-    //     return false;
-    // }
+    return true;
 }
 
 function get_universityList()
@@ -4408,7 +4889,7 @@ function get_universityList()
 
 function ai_update_status()
 {
-    $sql = "select phonenumber,l.id,s.name,l.alternative_phonenumber,l.type from tblleads l join tblleads_status s on l.status = s.id WHERE ai_status = 1";
+    $sql = "select l.phonenumber,l.id,s.name,l.alternative_phonenumber,l.type,concat(ss.firstname,' ',ss.lastname) staffName from tblleads l join tblleads_status s on l.status = s.id  join tblstaff ss on ss.staffid = l.assigned WHERE ai_status = 1";
     $CI = &get_instance();
     return $CI->db->query($sql)->result_array();
     
@@ -4519,3 +5000,268 @@ function scholarshipsData($universityName)
         
     
 }
+
+function getApplicantsDocuments($leadType)
+{
+    $CI = &get_instance();
+    return $CI->db->select("id,name")
+        ->where('lead_type', $leadType)
+        ->where('status', 1)
+        ->get(db_prefix() . 'document_upload_type')
+        ->result_array();
+}
+
+function get_client_courseName()
+{
+    $CI = &get_instance();
+    return $CI->db->select("id,name")
+        ->where('status', 1)
+        ->get(db_prefix() . 'clients_course')
+        ->result_array();
+}
+
+if (!function_exists('get_client_important_dates')) {
+
+    function get_client_important_dates($client_id)
+    {
+        $CI =& get_instance();
+
+        $CI->db->select('
+            s.university_name,
+            c.datecreated,
+            c.date_of_payment,
+            c.submission_date,
+            c.refund_payment_date,
+            c.payment_3_received_date,
+            c.sample_collect_date,
+            s.offer_date,
+            s.application_date,
+            s.application_updated_date,
+            s.ministry_payment_date,
+            s.fees_deposite_date,
+            s.invitation_receiving_date,
+            s.entry_date,
+            s.leg_payment_date,
+            s.leg_applied_date,
+            s.tentative_date,
+            v.payment_date,
+            v.apply_date,
+            v.receiving_date,
+            t.payment_date as fly_date,
+            CONCAT("Priority - ",jp.priority) priority
+        ');
+
+        $CI->db->from(db_prefix() . 'clients c');
+
+        $CI->db->join(
+            db_prefix() . 'client_university_shortlisting s',
+            'c.userid = s.client_id',
+            'inner'
+        );
+        
+        $CI->db->join(
+    db_prefix() . 'admission_preferences ap',
+    'ap.userid = s.client_id',
+    'inner'
+);
+
+
+$CI->db->join(
+    'JSON_TABLE(
+        ap.university_priority,
+        "$[*]"
+        COLUMNS (
+            priority INT PATH "$.priority",
+            university VARCHAR(255) PATH "$.university"
+        )
+    ) jp',
+    'jp.university = s.university_name',
+    'inner',
+    false
+);
+
+        // Latest visa_details record only
+        $CI->db->join(
+            db_prefix() . 'visa_details v',
+            'v.userid = c.userid
+             AND v.id = (
+                 SELECT MAX(v2.id)
+                 FROM ' . db_prefix() . 'visa_details v2
+                 WHERE v2.userid = c.userid
+             )',
+            'left',
+            false
+        );
+        
+         // Latest ticket_data record
+        $CI->db->join(
+            db_prefix() . 'ticket_data t',
+            't.client_id = c.userid
+             AND t.id = (
+                 SELECT MAX(t2.id)
+                 FROM ' . db_prefix() . 'ticket_data t2
+                 WHERE t2.client_id = c.userid and t2.status = 1
+             )',
+            'left',
+            false
+        );
+
+        $CI->db->where('c.userid', $client_id);
+        $CI->db->where('s.status', 1);
+        $CI->db->order_by('jp.priority', 'ASC');
+
+
+        return $CI->db->get()->result();
+    }
+}
+
+
+if (!defined('BASEPATH')) {
+    exit('No direct script access allowed');
+}
+
+if (!function_exists('get_table_data')) {
+
+    function get_table_data(
+        $table,
+        $select = '*',
+        $where = [],
+        $where_in = [],
+        $limit = null,
+        $order_by = null
+    ) {
+        $CI =& get_instance();
+
+        $CI->db->select($select);
+        $CI->db->from($table);
+
+        // Normal WHERE
+        if (!empty($where)) {
+            $CI->db->where($where);
+        }
+
+        // WHERE IN
+        if (!empty($where_in)) {
+            foreach ($where_in as $column => $values) {
+                if (is_array($values) && !empty($values)) {
+                    $CI->db->where_in($column, $values);
+                }
+            }
+        }
+
+        // ORDER BY
+        if (!empty($order_by)) {
+            $CI->db->order_by(
+                $order_by[0],
+                $order_by[1] ?? 'ASC'
+            );
+        }
+
+        // LIMIT
+        if (!empty($limit)) {
+            $CI->db->limit($limit);
+        }
+
+        $query = $CI->db->get();
+
+        if (!$query) {
+            log_message(
+                'error',
+                'get_table_data SQL Error: ' .
+                json_encode($CI->db->error())
+            );
+
+            return [];
+        }
+
+        return $query->result_array();
+    }
+}
+
+function display_date($date, $format = 'Y-m-d')
+{
+    if (
+        empty($date) ||
+        $date === '0000-00-00' ||
+        $date === '0000-00-00 00:00:00'
+    ) {
+        return '-';
+    }
+
+    try {
+        return (new DateTime($date))->format($format);
+    } catch (Exception $e) {
+        return '-';
+    }
+}
+
+function update_passport_exp($client_id, $issueDate)
+{
+    $CI =& get_instance();
+
+    $clientsInfo = $CI->db
+        ->select('b.dob')
+        ->from(db_prefix() . 'basic_details b')
+        ->where('b.userid', $client_id)
+        ->get()
+        ->row_array();
+
+// print_r($clientsInfo);
+    // DOB not found
+   if (
+    empty($clientsInfo) ||
+    empty($clientsInfo['dob']) ||
+    $clientsInfo['dob'] === '0000-00-00'
+) {
+        return [
+            'status'  => 0,
+            'message' => 'Date of birth not found.'
+        ];
+    }
+
+    // Validate issue date
+    if (empty($issueDate) || !strtotime($issueDate)) {
+        return [
+            'status'  => 0,
+            'message' => 'Invalid passport issue date.'
+        ];
+    }
+
+    try {
+        $dob = new DateTime($clientsInfo['dob']);
+        $issueDateObj = new DateTime($issueDate);
+        $today = new DateTime();
+
+        // Calculate current age
+        $age = $dob->diff($today)->y;
+
+        if ($age < 18) {
+
+            // Expiry = 18th birthday - 1 day
+            $expiryDate = clone $dob;
+            $expiryDate->modify('+18 years');
+            $expiryDate->modify('-1 day');
+
+        } else {
+
+            // Adult: expiry = issue date + 10 years
+            $expiryDate = clone $issueDateObj;
+            $expiryDate->modify('+10 years');
+             $expiryDate->modify('-1 day');
+        }
+
+        return [
+            'status'  => 1,
+            'message' => 'Passport expiry date calculated successfully.',
+            'exp_date' => $expiryDate->format('Y-m-d')
+        ];
+
+    } catch (Exception $e) {
+
+        return [
+            'status'  => 0,
+            'message' => 'Unable to calculate passport expiry date.'
+        ];
+    }
+}
+

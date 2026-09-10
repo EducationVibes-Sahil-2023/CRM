@@ -1,4 +1,7 @@
 <?php defined('BASEPATH') or exit('No direct script access allowed'); ?>
+<link
+   rel="stylesheet"
+   href="https://cdnjs.cloudflare.com/ajax/libs/bootstrap-daterangepicker/3.1/daterangepicker.css" />
 <?php init_head();
 $role = $this->db->where('staffid', get_staff_user_id())->get(db_prefix() . 'staff')->row()->role;
 array_unshift($location, array());
@@ -8,6 +11,7 @@ $category[] = array("id" => "-1", "name" => "Previous");
 $category[] = array("id" => "1", "name" => "Today");
 $category[] = array("id" => "2", "name" => "Upcoming");
 ?>
+
 <style>
     a {
         cursor: pointer;
@@ -45,6 +49,46 @@ $category[] = array("id" => "2", "name" => "Upcoming");
     table .dropdown-menu-right {
         right: auto !important
     }
+    
+    
+    .date-picker-container {
+      display: flex;
+      flex-direction: column;
+      gap: 15px;
+      max-width: 400px;
+      margin: auto;
+   }
+
+   .date-label {
+      font-weight: 600;
+      margin-bottom: 5px;
+      color: #333;
+   }
+
+   .date-filter {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 5px 5px;
+      border: 1px solid #ddd;
+      background: #fff;
+      cursor: pointer;
+      transition: 0.3s;
+      width: 100%;
+   }
+
+   .pull-right>.dropdown-menu li {
+      padding: 5px 10px;
+   }
+   .margin-top
+   {
+           padding: 5px;
+   }
+   .col-md-2.leads-filter-column
+   {
+/*float: right;*/
+    /*display: inline-block;*/
+   }
 </style>
 <script>
     var role_type = "<?= !empty($role) ? $role : 0 ?>";
@@ -77,16 +121,12 @@ $category[] = array("id" => "2", "name" => "Upcoming");
                                     <div class="col-md-12">
                                         <p class="bold"><?php echo _l('filter_by'); ?></p>
                                     </div>
-
-
+                                 <div class="col-md-12 text-center leads-filter-column margin-top">
                                     <div class="col-md-2 leads-filter-column margin-top">
                                         <?php
                                         echo render_select('status[]', $visitor_status, array('id', 'name'), '', '', array('data-width' => '100%', 'data-none-selected-text' => _l('Visit Status'), 'multiple' => true, 'data-actions-box' => true), array(), 'no-mbot', '', false);
                                         ?>
                                     </div>
-
-
-
                                     <div class="col-md-2 leads-filter-column margin-top">
                                         <?php
                                         echo render_select('location[]', $location, array('id', 'name'), '', [], array('data-width' => '100%', 'multiple' => true, 'data-none-selected-text' => _l('Location'), 'data-actions-box' => true), array(), 'no-mbot', '', false,  'location');
@@ -102,53 +142,134 @@ $category[] = array("id" => "2", "name" => "Upcoming");
                                         echo render_select('attendee[]', $staff, array('staffid', array('firstname', 'lastname')), '', '', array('data-width' => '100%', 'data-none-selected-text' => _l('Attendee'), 'multiple' => true, 'data-actions-box' => true), array(), 'no-mbot', '', false);
                                         ?>
                                     </div>
-
                                     <div class="col-md-2 leads-filter-column margin-top">
                                         <?php
                                         echo render_select('view_status[]', $statuses, array('id', 'name'), '', [], array('data-width' => '100%', 'data-none-selected-text' => 'Lead status', 'multiple' => true, 'data-actions-box' => true), array(), 'no-mbot', '', false, '');
                                         ?>
                                     </div>
-
                                     <div class="col-md-2 leads-filter-column margin-top">
                                         <?php
                                         echo render_select('lead_type[]', $lead_type, array('id', 'name'), '', '', array('data-width' => '100%', 'data-none-selected-text' => _l('Lead Type'), 'multiple' => true, 'data-actions-box' => true), array(), 'no-mbot', '', false);
                                         ?>
                                     </div>
-
                                     <div class="col-md-2 leads-filter-column margin-top">
                                         <?php
                                         echo render_select('source_type[]', $sources, array('id', 'name'), '', '', array('data-width' => '100%', 'data-none-selected-text' => _l('Source Type'), 'multiple' => true, 'data-actions-box' => true), array(), 'no-mbot', '', false);
                                         ?>
                                     </div>
-
-
-
-
-                                    <div class="col-md-2 leads-filter-column margin-top">
+                                    <div class="col-md-2 leads-filter-column margin-top hide">
                                         <div class="form-group">
                                             <input type="text" class="form-control datepicker" name="from_date" id="from_date" placeholder="From Visitor Date" autocomplete="off">
                                         </div>
                                     </div>
-                                    <div class="col-md-2 leads-filter-column margin-top">
+                                    <div class="col-md-2 leads-filter-column margin-top hide">
                                         <div class="form-group">
                                             <input type="text" class="form-control datepicker" name="to_date" id="to_date" placeholder="To Visitor Date" autocomplete="off">
                                         </div>
                                     </div>
-                                    <div class="col-md-2 leads-filter-column margin-top mb-5">
+                                    <div class="col-md-2 leads-filter-column margin-top">
+                                       <div id="visitor_date" data-from="from_date" data-to="to_date" class="date-filter form-control">
+            <i class="fa fa-calendar"></i>
+            <span data-label="Visitor Date">Visitor Date</span>
+            <i class="fa fa-chevron-down"></i>
+         </div>
+         </div>
+                                    <div class="col-md-2 leads-filter-column margin-top">
                                         <?php echo render_select('assigned[]', $staff, array('staffid', array('firstname', 'lastname')), '', '', array('data-width' => '100%', 'data-none-selected-text' => _l('leads_dt_assigned'), 'multiple' => true, 'data-actions-box' => true), array(), 'no-mbot', '', false, 'assigned'); ?>
                                     </div>
-
-                                    <div class="col-md-2 leads-filter-column margin-top mb-5">
+                                    <div class="col-md-2 leads-filter-column margin-top">
                                         <?php echo render_select('category', $category, array('id', array('name')), '', '', array('data-width' => '100%', 'data-none-selected-text' => _l('Schedule'), 'data-actions-box' => true), array(), 'no-mbot', '', false, 'category'); ?>
                                     </div>
-
                                     <div class="col-md-2 leads-filter-column margin-top">
                                         <div class="form-group">
                                             <input type="text" class="form-control datepicker" name="last_update_date" id="last_update_date" placeholder="Last Update Date" autocomplete="off">
                                         </div>
                                     </div>
-
-
+                                    <div class="col-md-2 leads-filter-column margin-top">
+                                        <div class="form-group">
+                                            <input type="text" class="form-control datepicker" name="last_contact_date" id="last_contact_date" placeholder="Last Connected Date" autocomplete="off">
+                                        </div>
+                                    </div>
+                                    
+                                        <div class="col-md-2 leads-filter-column margin-top">
+                                    <div id="updated_date" data-from="updated_from_date" data-to="updated_to_date" class="date-filter form-control">
+                                    <i class="fa fa-calendar"></i>
+                                    <span data-label="Updated Date">Updated Date</span>
+                                    <i class="fa fa-chevron-down"></i>
+                                    </div>
+                                    </div>
+                                    
+                                      <div class="col-md-2 leads-filter-column margin-top">
+                                    <div id="connected_date" data-from="connected_from_date" data-to="connected_to_date" class="date-filter form-control">
+                                    <i class="fa fa-calendar"></i>
+                                    <span data-label="Connected Date">Connected Date</span>
+                                    <i class="fa fa-chevron-down"></i>
+                                    </div>
+                                    </div>
+                                    
+                                    <div class="col-md-2 leads-filter-column margin-top">
+                                    <div class="d-flex align-items-center gap-2">
+                                    
+                                    <select class="form-control" name="callDurationOperator" id="callDurationOperator" style="max-width:80px;">
+                                    <option value="<=">&le;</option>
+                                    <option value=">=">&ge;</option>
+                                    </select>
+                                    
+                                    <input
+                                    type="number"
+                                    class="form-control"
+                                    name="callDurationHour"
+                                    id="callDurationHour"
+                                    placeholder="HH"
+                                    min="0"
+                                    max="23"
+                                    autocomplete="off">
+                                    
+                                    <span>:</span>
+                                    
+                                    <input
+                                    type="number"
+                                    class="form-control"
+                                    name="callDurationMinute"
+                                    id="callDurationMinute"
+                                    placeholder="MM"
+                                    min="0"
+                                    max="59"
+                                    autocomplete="off">
+                                    
+                                    </div>
+                                    </div>
+                                    
+                                    <div class="col-md-2 leads-filter-column margin-top hide">
+                                    <div class="form-group">
+                                    <input type="text" class="form-control datepicker" name="connected_from_date" id="connected_from_date" placeholder="From Connected Date" autocomplete="off">
+                                    </div>
+                                    </div>
+                                    <div class="col-md-2 leads-filter-column margin-top hide">
+                                    <div class="form-group">
+                                    <input type="text" class="form-control datepicker" name="connected_to_date" id="connected_to_date" placeholder="To Connected Date" autocomplete="off">
+                                    </div>
+                                    </div>
+                                  
+                                    <div class="col-md-2 leads-filter-column margin-top hide">
+                                    <div class="form-group">
+                                    <input type="text" class="form-control datepicker" name="updated_from_date" id="updated_from_date" placeholder="From Connected Date" autocomplete="off">
+                                    </div>
+                                    </div>
+                                    
+                                    <div class="col-md-2 leads-filter-column margin-top hide">
+                                    <div class="form-group">
+                                    <input type="text" class="form-control datepicker" name="updated_to_date" id="updated_to_date" placeholder="To Connected Date" autocomplete="off">
+                                    </div>
+                                    </div>
+                                
+                                       
+                                </div>
+                                    
+                                    <div class="col-md-12 text-center leads-filter-column margin-top">
+                                        
+                                    </div>
+         
                                     <div class="col-md-12 text-center leads-filter-column margin-top">
                                         <div class="form-group pull-right">
                                             <?php if(is_admin()){ ?>
@@ -177,10 +298,10 @@ $category[] = array("id" => "2", "name" => "Upcoming");
 
                         <?php
                         if(!is_admin()){
-                               render_datatable(array("Status", _l('Date Of Visit'), _l('Student Name'), "Contact no.", "Update Count", "Duration", _l('Place of Visit'), _l('Visit Type'), _l('Attendee'), "Assignee", _l('Lead type'), "Lead Status", "Lead Source","Created Date", "Updated Date", "connected date"), 'lead-visitor-genrate-table');
+                               render_datatable(array("Status", _l('Date Of Visit'), _l('Student Name'), "Contact no.", "Update Count", "Duration", "Total Count", "Total Duration", _l('Place of Visit'), _l('Visit Type'), _l('Attendee'), "Assignee", _l('Lead type'), "Lead Status", "Lead Source","Created Date", "Updated Date", "connected date"), 'lead-visitor-genrate-table');
                         }
                         else{
-                               render_datatable(array("Status", _l('Date Of Visit'), _l('Student Name'), "Contact no.", "Update Count", "Duration", _l('Place of Visit'), _l('Visit Type'), _l('Attendee'), "Assignee", _l('Lead type'), "Lead Status", "Lead Source", "Fb Form Name","Campaign","Adsset","Ads","term", "Created Date", "Updated Date", "connected date"), 'lead-visitor-genrate-table');
+                               render_datatable(array("Status", _l('Date Of Visit'), _l('Student Name'), "Contact no.", "Update Count", "Duration", "Total Count", "Total Duration", _l('Place of Visit'), _l('Visit Type'), _l('Attendee'), "Assignee", _l('Lead type'), "Lead Status", "Lead Source", "Fb Form Name","Campaign","Adsset","Ads","term", "Created Date", "Updated Date", "connected date"), 'lead-visitor-genrate-table');
                         }
                      
                         ?>
@@ -189,7 +310,7 @@ $category[] = array("id" => "2", "name" => "Upcoming");
                             <hr>
 
                             <?php
-                            render_datatable(array("Status", _l('Date Of Visit'), _l('Student Name'), "Contact no.", "Update Count", "Duration", _l('Place of Visit'), _l('Visit Type'), _l('Attendee'), "Assignee", _l('Lead type'), "Lead Status", "Lead Source"), 'lead-visitor-request-table');
+                            render_datatable(array("Status", _l('Date Of Visit'), _l('Student Name'), "Contact no.", "Update Count", "Duration", "Total Count", "Total Duration", _l('Place of Visit'), _l('Visit Type'), _l('Attendee'), "Assignee", _l('Lead type'), "Lead Status", "Lead Source"), 'lead-visitor-request-table');
                             ?>
                         <?php } ?>
                     </div>
@@ -200,26 +321,33 @@ $category[] = array("id" => "2", "name" => "Upcoming");
 </div>
 <?php init_tail(); ?>
 
-
+<script src="https://cdnjs.cloudflare.com/ajax/libs/bootstrap-daterangepicker/3.1/daterangepicker.min.js"></script>
 <script>
 
  
  
     var r = {
-        status: "[name='status[]']",
-        location: "[name='location[]']",
-        type: "[name='type[]']",
-        attendee: "[name='attendee[]']",
-        lead_type: "[name='lead_type[]']",
-        source_type: "[name='source_type[]']",
-        lead_status: "[name='view_status[]']",
-        from_date: "[name='from_date']",
-        to_date: "[name='to_date']",
-        assigned: "[name='assigned[]']",
-        category: "[name='category']",
-        last_update_date: "[name='last_update_date']",
-       
-
+            status: "[name='status[]']",
+            location: "[name='location[]']",
+            type: "[name='type[]']",
+            attendee: "[name='attendee[]']",
+            lead_type: "[name='lead_type[]']",
+            source_type: "[name='source_type[]']",
+            lead_status: "[name='view_status[]']",
+            from_date: "[name='from_date']",
+            to_date: "[name='to_date']",
+            connected_from_date: "[name='connected_from_date']",
+            connected_to_date: "[name='connected_to_date']",
+            updated_from_date: "[name='updated_from_date']",
+            updated_to_date: "[name='updated_to_date']",
+            
+            assigned: "[name='assigned[]']",
+            category: "[name='category']",
+            last_update_date: "[name='last_update_date']",
+            last_contact_date:"[name='last_contact_date']",
+            callDurationOperator:"[name='callDurationOperator']",
+            callDurationHour:"[name='callDurationHour']",
+            callDurationMinute:"[name='callDurationMinute']"
     };
 
     function refresh_visitor_table() {
@@ -267,6 +395,104 @@ document.getElementById("exportBtn").addEventListener("click", async () => {
  
  const leadMap = <?php echo json_encode($lead_map); ?>;
 
+function initDatePicker(selector, extraRanges = {}, options = {}) {
+    const $el = $(selector);
+
+    const defaults = {
+        autoUpdateInput: false,
+        autoApply: false,
+        showDropdowns: true,
+        linkedCalendars: false,
+        alwaysShowCalendars: false,
+        startDate: moment(),
+        endDate: moment(),
+        minDate: moment("2022-01-01"),
+        maxDate: moment(),
+        opens: "left",
+        parentEl: "body",
+        locale: { cancelLabel: "Clear", format: "YYYY-MM-DD" }
+    };
+
+    // caller options override defaults (e.g. maxDate for future pickers)
+    const config = Object.assign({}, defaults, options);
+    config.ranges = Object.assign({
+        "Today":       [moment(), moment()],
+        "Yesterday":   [moment().subtract(1, "days"), moment().subtract(1, "days")],
+        "Last 7 Days": [moment().subtract(6, "days"), moment()],
+        "Last 30 Days":[moment().subtract(29, "days"), moment()],
+        "This Month":  [moment().startOf("month"), moment().endOf("month")],
+        "Last Month":  [moment().subtract(1, "month").startOf("month"),
+                        moment().subtract(1, "month").endOf("month")],
+                           "Clear": [null, null]
+    }, extraRanges, options.ranges || {});
+
+    $el.daterangepicker(config);
+
+    // SINGLE apply handler (handles Clear + reverse selection)
+    $el.on("apply.daterangepicker", function (ev, picker) {
+        if (picker.chosenLabel === "Clear") {
+            clearDateRange($el, picker);
+            return;
+        }
+        let start = picker.startDate, end = picker.endDate;
+        if (end.isBefore(start)) { const t = start; start = end; end = t; }
+        updateDateText($el, start, end);
+    });
+
+    // Cancel button (labelled "Clear")
+    $el.on("cancel.daterangepicker", function (ev, picker) {
+        clearDateRange($el, picker);
+    });
+
+    // Open on current month
+    $el.on("show.daterangepicker", function (ev, picker) {
+        picker.updateCalendars();
+    });
+}
+
+function clearDateRange($el, picker) {
+    const from = $el.data("from");
+    const to   = $el.data("to");
+    if (from) $("#" + from).val("");
+    if (to)   $("#" + to).val("");
+    if (picker) { picker.setStartDate(moment()); picker.setEndDate(moment()); }
+    const label = $el.find("span").data("label") || "Select Date Range";
+    $el.find("span").html(label);
+}
+
+function updateDateText(element, start, end) {
+    const from = element.data("from");
+    const to   = element.data("to");
+    if (start && end) {
+        $("#" + from).val(start.format("YYYY-MM-DD"));
+        $("#" + to).val(end.format("YYYY-MM-DD"));
+        element.find("span").html(start.format("YYYY-MM-DD") + " - " + end.format("YYYY-MM-DD"));
+    } else {
+        $("#" + from).val("");
+        $("#" + to).val("");
+        element.find("span").html(element.find("span").data("label") || "Select Date Range");
+    }
+}
+      
+initDatePicker("#connected_date");
+initDatePicker("#updated_date");
+// initDatePicker("#visitor_date");
+
+//  initDatePicker("#visitor_date", {
+//          "Tomorrow": [moment().add(1, 'days'), moment().add(1, 'days')],
+//          "Next 7 Days": [moment(), moment().add(6, 'days')],
+//          "Next 15 Days": [moment(), moment().add(14, 'days')],
+//          "Next 30 Days": [moment(), moment().add(30, 'days')]
+//       });
+      
+     initDatePicker("#visitor_date", {
+    "Tomorrow":     [moment().add(1, "days"), moment().add(1, "days")],
+    "Next 7 Days":  [moment(), moment().add(6, "days")],
+    "Next 15 Days": [moment(), moment().add(14, "days")],
+    "Next 30 Days": [moment(), moment().add(29, "days")]
+}, {
+    maxDate: moment().add(1, "year")   // allow future dates for visits
+});
 
 
 
@@ -290,8 +516,11 @@ function collectFormData() {
         excelStatus: 1,
         from_date: getValue("[name='from_date']"),
         to_date: getValue("[name='to_date']"),
+         connected_from_date: getValue("[name='connected_from_date']"),
+        connected_to_date: getValue("[name='connected_to_date']"),
         category: getValue("[name='category']"),
         last_update_date: getValue("[name='last_update_date']"),
+        last_contact_date:getValue("[name='last_contact_date']"),
         csrf_token_name: csrfData.hash,
       
     };
@@ -487,43 +716,43 @@ function secondsToHMS(s) {
     function set_search_cities() {
 
         // Bind event to search input ONLY inside #visitor_location selectpicker
-        // $('#location').parent().find('.bs-searchbox input').on('input', function() {
-        //     let searchQuery = $(this).val();
+        $('#location').parent().find('.bs-searchbox input').on('input', function() {
+            let searchQuery = $(this).val();
 
-        //     if (searchQuery.length > 2) { // Start AJAX after 3+ characters
-        //         let formData = new FormData(); // Correct FormData initialization
+            if (searchQuery.length > 2) { // Start AJAX after 3+ characters
+                let formData = new FormData(); // Correct FormData initialization
 
-        //         formData.append("csrf_token_name", csrfData.hash);
-        //         formData.append("value", searchQuery); // Corrected `.val()` issue
+                formData.append("csrf_token_name", csrfData.hash);
+                formData.append("value", searchQuery); // Corrected `.val()` issue
 
-        //         $.ajax({
-        //             url: "<?php echo base_url('admin/leads/search_cities'); ?>", // Replace with actual API URL
-        //             method: "POST", // FormData requires POST (not GET)
-        //             data: formData,
-        //             processData: false, // Prevent jQuery from transforming FormData
-        //             contentType: false, // Ensure correct Content-Type is set for FormData
-        //             dataType: "JSON",
-        //             success: function(response) { // 'data' is already parsed as JSON
+                $.ajax({
+                    url: "<?php echo base_url('admin/leads/search_cities'); ?>", // Replace with actual API URL
+                    method: "POST", // FormData requires POST (not GET)
+                    data: formData,
+                    processData: false, // Prevent jQuery from transforming FormData
+                    contentType: false, // Ensure correct Content-Type is set for FormData
+                    dataType: "JSON",
+                    success: function(response) { // 'data' is already parsed as JSON
 
-        //                 $('#location').empty(); // Clear old options
-        //                 let data = response.data;
-        //                 if (data.length > 0) {
-        //                     $.each(data, function(index, item) {
-        //                         $('#location').append(`<option value="${item.id}">${item.name}</option>`);
-        //                     });
-        //                 } else {
-        //                     $('#location').append('<option disabled>No results found</option>'); // Handle no results case
-        //                 }
+                        $('#location').empty(); // Clear old options
+                        let data = response.data;
+                        if (data.length > 0) {
+                            $.each(data, function(index, item) {
+                                $('#location').append(`<option value="${item.id}">${item.name}</option>`);
+                            });
+                        } else {
+                            $('#location').append('<option disabled>No results found</option>'); // Handle no results case
+                        }
 
-        //                 $('#location').selectpicker('refresh'); // Refresh selectpicker
-        //             },
-        //             error: function(xhr, status, error) {
-        //                 console.error("AJAX Error: ", error);
-        //             }
-        //         });
+                        $('#location').selectpicker('refresh'); // Refresh selectpicker
+                    },
+                    error: function(xhr, status, error) {
+                        console.error("AJAX Error: ", error);
+                    }
+                });
 
-        //     }
-        // });
+            }
+        });
 
     }
 

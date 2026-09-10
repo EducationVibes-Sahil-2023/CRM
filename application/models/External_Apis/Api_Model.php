@@ -371,25 +371,110 @@ class Api_Model extends CI_Model
     // }
 
 
+// public function insert_data_batch($table, $data)
+// {
+//     if (empty($data)) {
+//         return [
+//             "status" => 0,
+//             "message" => "No data provided"
+//         ];
+//     }
+
+//     $chunk_size = 50;
+
+//     try {
+
+//         foreach (array_chunk($data, $chunk_size) as $chunk) {
+
+//             $this->db->trans_begin();
+
+//             $fields = array_keys($chunk[0]);
+//             $field_list = '`' . implode('`,`', $fields) . '`';
+
+//             $values_sql = [];
+
+//             foreach ($chunk as $row) {
+
+//                 $escaped = [];
+
+//                 foreach ($fields as $field) {
+//                     $escaped[] = isset($row[$field])
+//                         ? $this->db->escape($row[$field])
+//                         : "NULL";
+//                 }
+
+//                 $values_sql[] = '(' . implode(',', $escaped) . ')';
+//             }
+
+//             $sql = "INSERT INTO {$table} ({$field_list}) VALUES "
+//                  . implode(',', $values_sql);
+
+//             $this->db->query($sql);
+
+//             if ($this->db->trans_status() === FALSE) {
+//                 $this->db->trans_rollback();
+
+//                 return [
+//                     "status" => 0,
+//                     "message" => "Chunk insert failed"
+//                 ];
+//             }
+
+//             $this->db->trans_commit();
+//         }
+
+//         return [
+//             "status" => 1,
+//             "message" => "Batch insert completed"
+//         ];
+
+//     } catch (Exception $e) {
+
+//         $this->db->trans_rollback();
+
+//         return [
+//             "status" => 0,
+//             "message" => $e->getMessage()
+//         ];
+//     }
+// }
+
 public function insert_data_batch($table, $data)
 {
-    if (empty($data)) {
-        return [
-            "status" => 0,
-            "message" => "No data provided"
-        ];
+    // ---- Validation ----
+    if (empty($data) || !is_array($data)) {
+        return ['status' => 0, 'message' => 'No data provided for insert.', 'inserted' => 0];
+    }
+
+    if (empty($table) || !preg_match('/^[A-Za-z0-9_]+$/', $table)) {
+        return ['status' => 0, 'message' => 'Invalid table name.', 'inserted' => 0];
+    }
+
+    $data   = array_values($data);
+    $fields = array_keys($data[0]);
+
+    if (empty($fields)) {
+        return ['status' => 0, 'message' => 'First row contains no columns.', 'inserted' => 0];
+    }
+
+    // Validate column consistency
+    foreach ($data as $i => $row) {
+        if (!is_array($row) || array_keys($row) !== $fields) {
+            return [
+                'status' => 0,
+                'message' => 'Row ' . $i . ' has different columns than row 0.',
+                'inserted' => 0
+            ];
+        }
     }
 
     $chunk_size = 50;
+    $inserted   = 0;
+    $field_list = '`' . implode('`,`', $fields) . '`';
 
     try {
 
-        foreach (array_chunk($data, $chunk_size) as $chunk) {
-
-            $this->db->trans_begin();
-
-            $fields = array_keys($chunk[0]);
-            $field_list = '`' . implode('`,`', $fields) . '`';
+        foreach (array_chunk($data, $chunk_size) as $chunk_no => $chunk) {
 
             $values_sql = [];
 
@@ -398,43 +483,74 @@ public function insert_data_batch($table, $data)
                 $escaped = [];
 
                 foreach ($fields as $field) {
-                    $escaped[] = isset($row[$field])
-                        ? $this->db->escape($row[$field])
-                        : "NULL";
+                    $escaped[] = array_key_exists($field, $row)
+                        ? ($row[$field] === null ? 'NULL' : $this->db->escape($row[$field]))
+                        : 'NULL';
                 }
 
                 $values_sql[] = '(' . implode(',', $escaped) . ')';
             }
 
-            $sql = "INSERT INTO {$table} ({$field_list}) VALUES "
-                 . implode(',', $values_sql);
+            $this->db->trans_begin();
+
+            $sql = "INSERT INTO `{$table}` ({$field_list}) VALUES " . implode(',', $values_sql);
 
             $this->db->query($sql);
 
             if ($this->db->trans_status() === FALSE) {
+
+                $db_error = $this->db->error();
+
                 $this->db->trans_rollback();
 
+                // Duplicate Entry
+                if ($db_error['code'] == 1062) {
+
+                    log_message('info', 'Duplicate entry: ' . $db_error['message']);
+
+                    return [
+                        'status' => 1,
+                        'message' => 'Duplicate entry already exists.',
+                        'inserted' => $inserted
+                    ];
+                }
+
+                log_message(
+                    'error',
+                    "insert_data_batch failed on {$table}. MySQL [{$db_error['code']}] {$db_error['message']}"
+                );
+
                 return [
-                    "status" => 0,
-                    "message" => "Chunk insert failed"
+                    'status' => 0,
+                    'message' => 'Insert failed. MySQL Error ' . $db_error['code'] . ': ' . $db_error['message'],
+                    'inserted' => $inserted,
+                    'failed_at_row' => $inserted + 1
                 ];
             }
 
             $this->db->trans_commit();
+
+            $inserted += count($chunk);
         }
 
         return [
-            "status" => 1,
-            "message" => "Batch insert completed"
+            'status' => 1,
+            'message' => 'Batch insert completed successfully.',
+            'inserted' => $inserted
         ];
 
-    } catch (Exception $e) {
+    } catch (Throwable $e) {
 
-        $this->db->trans_rollback();
+        if ($this->db->trans_status()) {
+            $this->db->trans_rollback();
+        }
+
+        log_message('error', $e->getMessage());
 
         return [
-            "status" => 0,
-            "message" => $e->getMessage()
+            'status' => 0,
+            'message' => $e->getMessage(),
+            'inserted' => $inserted
         ];
     }
 }
@@ -592,34 +708,77 @@ public function insert_data_batch($table, $data)
         return $response;
     }
 
-  public function update_call_data_bulk_temp_new($call_data)
-    {
-        $response = [];
-        try {
+//   public function update_call_data_bulk_temp_new($call_data)
+//     {
+//         $response = [];
+//         try {
 
-            // $call_activity_temp = $this->insert_data_batch(db_prefix() . 'calls_activity_temp_logs', $call_data);
-            //  $call_activity_temp = $this->insert_data_batch(db_prefix() . 'calls_activity_temp_logs', $call_data);
-            $call_activity_temp = $this->insert_data_batch(db_prefix() . 'calls_activity_logs', $call_data);
-            // $this->db->query("UPDATE " . db_prefix() . "calls_activity_temp_logs SET contact = RIGHT(TRIM(contact), 10) WHERE LENGTH(TRIM(contact)) > 10");
+//             // $call_activity_temp = $this->insert_data_batch(db_prefix() . 'calls_activity_temp_logs', $call_data);
+//             //  $call_activity_temp = $this->insert_data_batch(db_prefix() . 'calls_activity_temp_logs', $call_data);
+//             $call_activity_temp = $this->insert_data_batch(db_prefix() . 'calls_activity_logs', $call_data);
+//             // $this->db->query("UPDATE " . db_prefix() . "calls_activity_temp_logs SET contact = RIGHT(TRIM(contact), 10) WHERE LENGTH(TRIM(contact)) > 10");
 
-            if ($call_activity_temp["status"] == 1) {
+//             if ($call_activity_temp["status"] == 1) {
 
-                $response = array(
-                    "status" => 1,
-                    "message" => "Call data update successfully.",
-                );
-            } else {
-                $response = array(
-                    "status" => 1,
-                    "message" => "Call data update successfully.",
-                );
-            }
-        } catch (Exception $e) {
-            $response["status"] = 0;
-            $response["message"] = $e->getMessage();
+//                 $response = array(
+//                     "status" => 1,
+//                     "message" => "Call data update successfully.",
+//                 );
+//             } else {
+//                 $response = array(
+//                     "status" => 1,
+//                     "message" => "Call data update successfully.",
+//                 );
+//             }
+//         } catch (Exception $e) {
+//             $response["status"] = 0;
+//             $response["message"] = $e->getMessage();
+//         }
+//         return $response;
+//     }
+    
+    
+    public function update_call_data_bulk_temp_new($call_data)
+{
+    try {
+        if (empty($call_data) || !is_array($call_data)) {
+            return [
+                'status'  => 0,
+                'message' => 'No call data provided to insert.',
+            ];
         }
-        return $response;
+
+        $result = $this->insert_data_batch(db_prefix() . 'calls_activity_logs', $call_data);
+
+        if (!empty($result['status']) && $result['status'] == 1) {
+            return [
+                'status'   => 1,
+                'message'  => 'Call data saved successfully.',
+                'inserted' => !empty($result['inserted']) ? (int) $result['inserted'] : count($call_data),
+            ];
+        }
+
+        // Insert FAILED — report failure, not success
+        log_message('error', 'update_call_data_bulk_temp_new: batch insert failed. '
+            . 'DB error: ' . json_encode($this->db->error())
+            . ' | rows attempted: ' . count($call_data));
+
+        return [
+            'status'  => 0,
+            'message' => !empty($result['message'])
+                ? $result['message']
+                : 'Database batch insert failed.',
+            'attempted' => count($call_data),
+        ];
+
+    } catch (Throwable $e) {
+        log_message('error', 'update_call_data_bulk_temp_new exception: ' . $e->getMessage());
+        return [
+            'status'  => 0,
+            'message' => 'Database error: ' . $e->getMessage(),
+        ];
     }
+}
     public function update_call_activity()
     {
 

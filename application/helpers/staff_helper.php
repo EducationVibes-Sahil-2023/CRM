@@ -46,7 +46,7 @@ function get_available_staff_permissions($data = [])
         ],
         'customers' => [
             'name'         => _l('clients'),
-            'capabilities' => array_merge($withNotApplicableViewOwn, array("applicant_view" => "Global Applicant View Only", "delete_documents" => "Delete Documents", 'activity_logs' => "Activity Logs", "return_document" => "Orignal Document Return", "payment_action" => "Payment Action", "quotation_create" => "Quotation Create",  "quotation_delete" => "Quotation Delete", "applicant_view_document" => "Global Applicant Documents View Only", "appostile_edit" => "Edit Apostile")),
+            'capabilities' => array_merge($withNotApplicableViewOwn, array("applicant_view" => "Global Applicant View Only", "delete_documents" => "Delete Documents", 'activity_logs' => "Activity Logs", "doc_download"=>"Ma Doc Downloads","return_document" => "Orignal Document Return","orignal_document_delete" => "Orignal Document Delete", "apostile_delete"=>"Apostile Doc Delete","translation_delete"=>"Translation Doc Delete","payment_action" => "Payment Action", "quotation_create" => "Quotation Create",  "quotation_delete" => "Quotation Delete", "applicant_doc_upload"=>"Document uploads","applicant_view_document" => "Global Applicant Documents View Only", "appostile_edit" => "Edit Apostile","applicant_active_status"=>"Update Active Status")),
             'help'         => [
                 'view_own' => _l('permission_customers_based_on_admins'),
             ],
@@ -70,7 +70,12 @@ function get_available_staff_permissions($data = [])
             'name'         => "External Visa",
             'capabilities' => $allPermissionsArray,
         ],
-
+        
+         'external_apostile' => [
+            'name'         => "External Apostile",
+            'capabilities' => $allPermissionsArray,
+        ],
+        
         'fees_structure' => [
             'name'         => "Fees Structure",
             'capabilities' => [

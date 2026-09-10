@@ -13,6 +13,80 @@ class Forms extends ClientsController
         show_404();
     }
 
+
+function curlRequest($url, $method = 'GET', $data = null, $headers = [], $timeout = 30)
+{
+    $ch = curl_init();
+    $method = strtoupper($method);
+
+    // GET parameters
+    if ($method === 'GET' && !empty($data)) {
+        $url .= (strpos($url, '?') === false ? '?' : '&') . http_build_query($data);
+    }
+
+    curl_setopt_array($ch, [
+        CURLOPT_URL            => $url,
+        CURLOPT_RETURNTRANSFER => true,
+        CURLOPT_FOLLOWLOCATION => true,
+        CURLOPT_TIMEOUT        => $timeout,
+        CURLOPT_CONNECTTIMEOUT => 10,
+        CURLOPT_SSL_VERIFYPEER => false,
+        CURLOPT_SSL_VERIFYHOST => false,
+    ]);
+
+    // Handle methods
+    if ($method === 'POST') {
+        curl_setopt($ch, CURLOPT_POST, true);
+    } elseif ($method !== 'GET') {
+        curl_setopt($ch, CURLOPT_CUSTOMREQUEST, $method);
+    }
+
+    // Handle data
+    if ($method !== 'GET' && $data !== null) {
+        // Auto-detect if JSON
+        $isJson = false;
+        foreach ($headers as $header) {
+            if (stripos($header, 'application/json') !== false) {
+                $isJson = true;
+                break;
+            }
+        }
+
+        if (is_array($data) || is_object($data)) {
+            curl_setopt($ch, CURLOPT_POSTFIELDS, $isJson ? json_encode($data) : http_build_query($data));
+            
+            // Auto-add Content-Type
+            if (!$isJson && !array_filter($headers, function($h) { return stripos($h, 'Content-Type') !== false; })) {
+                $headers[] = 'Content-Type: application/x-www-form-urlencoded';
+            }
+        } else {
+            curl_setopt($ch, CURLOPT_POSTFIELDS, $data);
+        }
+    }
+
+$headers = [
+    'X-Api-Key: 51a30c49f37f1929b0132cfce2879de8977a0ff1953c2ee0'
+];
+    if (!empty($headers)) {
+        curl_setopt($ch, CURLOPT_HTTPHEADER, $headers);
+    }
+
+    $response = curl_exec($ch);
+    
+    
+    $result = [
+        'success'   => curl_errno($ch) == 0,
+        'http_code' => curl_getinfo($ch, CURLINFO_HTTP_CODE),
+        'response'  => $response,
+        'error'     => curl_error($ch),
+    ];
+    
+
+
+    curl_close($ch);
+    return $result;
+}
+
 public function checkWhatsappMessage()
 {
    
@@ -118,6 +192,7 @@ if (is_array($json_data)) {
     $_POST = array_merge($_POST, $json_data);
 }
 
+$_POST["from_form_id"] = $form->id??"";
 
 
 if(!empty($_POST["type_check"])){
@@ -134,6 +209,7 @@ if(!empty($typeCheck))
              $this->db->insert(db_prefix() . 'facebook_webhook_data', ['data' => json_encode($_POST, JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES),"form_id"=>"whatsapp"]);
         }
 
+$this->db->insert(db_prefix() . 'facebook_webhook_data', ['data' => json_encode($_POST, JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES)]);
         
           //  if($key == "c04d2a1fda6448b12c7fe55c5f2184f2"){
         //       $this->db->insert(db_prefix() . 'facebook_webhook_data', ['data' => json_encode($post_data, JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES),"form_id"=>"whatsapp"]);
@@ -141,6 +217,12 @@ if(!empty($typeCheck))
         if ($this->input->post('key')) {
             if ($this->input->post('key') == $key) {
                 $post_data = $this->input->post();
+                
+                
+                // if(!empty($form->crm_status) && $form->crm_status==1){
+                // $curlUrl = "https://client.educationvibes.in/api/public/forms/".$form->crm_key;
+                // $this->curlRequest($curlUrl,"POST",$post_data);
+                // }
 
                 $google_source =  !empty($form->lead_source) ? $form->lead_source : '';
                 
@@ -192,9 +274,15 @@ if(!empty($typeCheck))
                     $city_name = !empty($ipdetails->city) ? trim($ipdetails->city) : '';
                     $lead_type = !empty($post_data["type"]) ? trim($post_data["type"]) : '';
                     $fb_status_check = false;
-                    if (!empty($city_name) && !empty($lead_type)) {
+                    if (!empty($city_name) && empty($state_name) && !empty($lead_type)) {
                         $assign_staff_id = $this->leads_model->automatic_assign_staff_city($city_name, $lead_type);
                         if (!empty($assign_staff_id[0]["staffid"])) {
+                            
+                            if(empty($assign_staff_id[0]["staffid"]))
+                            {
+                                $assign_staff_id = $this->leads_model->automatic_assign_staff('', $lead_type, 1); 
+                            }
+                            
                             $form->responsible = $assign_staff_id[0]["staffid"];
                             $fb_status_check = true;
                         }
@@ -834,7 +922,7 @@ $updateStatus_dup['upcomming_count'] = ($duplicateLead->upcomming_count ?? 1) + 
                                 }
                             }
                             
-                            
+                            // first call response time issue  2 time assignation time change  response time should be 0 
                                 $updateStatus = [
                                 'status' => 33??$form->lead_status,
                                 // 'description' => 'Re Query',
@@ -920,7 +1008,7 @@ $updateStatus_dup['upcomming_count'] = ($duplicateLead->upcomming_count ?? 1) + 
 
                             // $updateStatus["assigned"] = 1;
 
-
+$alreadyNotificationSend = false;
                             if (!empty($form->assign_previous_lead_alert) && $form->assign_previous_lead_alert == 1) {
                                 if (!empty($updateStatus["assigned"]) && !empty($duplicateLead->assigned) && $duplicateLead->assigned != $updateStatus["assigned"]) {
                                     $notifiedUsers = [];
@@ -944,6 +1032,7 @@ $updateStatus_dup['upcomming_count'] = ($duplicateLead->upcomming_count ?? 1) + 
                                         // !empty($this->leads_model->get_source($duplicateLead->source)->name) ? $this->leads_model->get_source($duplicateLead->source)->name : '',
                                         get_staff_full_name($updateStatus["assigned"])
                                     ]));
+                                    $alreadyNotificationSend = true;
                                 }
                             }
                             
@@ -958,7 +1047,9 @@ $updateStatus_dup['upcomming_count'] = ($duplicateLead->upcomming_count ?? 1) + 
                             $this->db->where('id', $duplicateLead->id);
                             $this->db->update(db_prefix() . 'leads', $updateStatus);
 
-
+if($alreadyNotificationSend == false){
+    
+    $form->responsible = $duplicateLead->assigned??$form->responsible;
                             $notifiedUsers = [];
                             $notified = add_notification([
                                 'description'     => 'not_lead_imported_from_form',
@@ -978,6 +1069,8 @@ $updateStatus_dup['upcomming_count'] = ($duplicateLead->upcomming_count ?? 1) + 
                             $this->leads_model->log_lead_activity($duplicateLead->id, 'not_lead_imported_from_form', true, serialize([
                                 $form->name,
                             ]));
+                            
+}
                             hooks()->do_action('web_to_lead_form_submitted', [
                                 'lead_id' => $duplicateLead->id,
                                 'form_id' => $form->id,

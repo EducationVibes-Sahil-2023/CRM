@@ -10,6 +10,7 @@ if (!empty($user_lead_type->lead_type)) {
     $user_lead_type = 0;
 }
 
+$active_status = has_permission('customers', '', 'applicant_active_status');
 if(has_permission('customers', '', 'applicant_view_document') )
 {
     $user_lead_type = 2;
@@ -46,10 +47,10 @@ $where        = [];
 // Add blank where all filter can be stored
 $filter = [];
 
-if (!is_admin() && isset($user_lead_type) && $user_lead_type != $this->ci->db->escape_str($this->ci->input->post('lead_type'))[0]) {
+// if (!is_admin() && isset($user_lead_type) && $user_lead_type != $this->ci->db->escape_str($this->ci->input->post('lead_type'))[0]) {
 
-    $where[]        = " AND 1 = 2 ";
-}
+//     $where[]        = " AND 1 = 2 ";
+// }
 
 $aColumns = [];
 if (is_admin() || is_postSale()) {
@@ -331,44 +332,74 @@ if ($this->ci->input->post('source')) {
 }
 
 
-if ($this->ci->input->post('neet_status')) {
-    $neet_status_input = $this->ci->input->post('neet_status');
+// if ($this->ci->input->post('neet_status')) {
+//     $neet_status_input = $this->ci->input->post('neet_status');
 
-    // Ensure input is an array
-    if (!is_array($neet_status_input)) {
-        $neet_status_input = [$neet_status_input];
+//     // Ensure input is an array
+//     if (!is_array($neet_status_input)) {
+//         $neet_status_input = [$neet_status_input];
+//     }
+
+//     $neet_status_numeric = [];
+//     $neet_status_string = [];
+
+//     foreach ($neet_status_input as $status) {
+//         if (is_numeric($status)) {
+//             $neet_status_numeric[] = (int)$status;
+//         } else {
+//             $neet_status_string[] = $this->ci->db->escape_str(trim($status)); // Escape strings for safety
+//         }
+//     }
+
+
+//     $conditions = [];
+
+//     if (!empty($neet_status_numeric)) {
+//         $conditions[] = db_prefix() . "academic_details.neet_status IN (" . implode(',', $neet_status_numeric) . ")";
+//     }
+
+//     if (!empty($neet_status_string)) {
+//         $quoted_strings = array_map(function ($val) {
+//             return "'" . $val . "'";
+//         }, $neet_status_string);
+//         $conditions[] = db_prefix() . "academic_details.entrance_result_status IN (" . implode(',', $quoted_strings) . ") and  " . db_prefix() . "academic_details.neet_status = 0";
+//     }
+
+//     if (!empty($conditions)) {
+//         $where[] = "AND (" . implode(" OR ", $conditions) . ")";
+//     }
+// }
+
+
+// Integer NEET status
+if ($this->ci->input->post('neet_status_')) {
+
+    $neet_status = $this->ci->input->post('neet_status_');
+
+    if (!is_array($neet_status)) {
+        $neet_status = [$neet_status];
     }
 
-    $neet_status_numeric = [];
-    $neet_status_string = [];
+    $neet_status = array_map('intval', $neet_status);
 
-    foreach ($neet_status_input as $status) {
-        if (is_numeric($status)) {
-            $neet_status_numeric[] = (int)$status;
-        } else {
-            $neet_status_string[] = $this->ci->db->escape_str(trim($status)); // Escape strings for safety
-        }
-    }
-
-
-    $conditions = [];
-
-    if (!empty($neet_status_numeric)) {
-        $conditions[] = db_prefix() . "academic_details.neet_status IN (" . implode(',', $neet_status_numeric) . ")";
-    }
-
-    if (!empty($neet_status_string)) {
-        $quoted_strings = array_map(function ($val) {
-            return "'" . $val . "'";
-        }, $neet_status_string);
-        $conditions[] = db_prefix() . "academic_details.entrance_result_status IN (" . implode(',', $quoted_strings) . ") and  " . db_prefix() . "academic_details.neet_status = 0";
-    }
-
-    if (!empty($conditions)) {
-        $where[] = "AND (" . implode(" OR ", $conditions) . ")";
-    }
+    $where[] = "AND " . db_prefix() . "academic_details.neet_status IN (" . implode(',', $neet_status) . ")";
 }
 
+// String entrance result status
+if ($this->ci->input->post('neet_status')) {
+
+    $entrance_status = (array) $this->ci->input->post('neet_status');
+
+    $entrance_status = array_map(function ($value) {
+        return "'" . $this->ci->db->escape_str(trim($value)) . "'";
+    }, $entrance_status);
+
+    $where[] = "AND "
+        . db_prefix() . "academic_details.entrance_result_status IN ("
+        . implode(',', $entrance_status)
+        . ")";
+        
+}
 
 
 if ($this->ci->input->post('office_location_orignal_documents')) {
@@ -948,7 +979,7 @@ foreach ($rResult as $aRow) {
             if ((is_admin() || is_postSale()) && $statuses[$aRow["status_id"]]['refund'] != 1) {
                 $outputStatus .= '<ul class="dropdown-menu dropdown-menu-right" aria-labelledby="tableLeadsStatus-' . $aRow['id'] . '">';
 
-if(is_admin())
+if(is_admin() || $active_status)
 {
         foreach ($statuses as $leadChangeStatus) {
                     if ($aRow['status_id'] != $leadChangeStatus['id']) {

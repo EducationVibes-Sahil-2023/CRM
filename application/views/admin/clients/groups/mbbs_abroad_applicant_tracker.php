@@ -45,6 +45,16 @@ $payment_action = "disabled";
 if (has_permission('customers', '', 'payment_action')) {
     $payment_action = "";
 }
+
+$VisaPriority = [];
+
+for ($i = 1; $i <= VISA_PRIORITY; $i++) {
+    $VisaPriority[] = [
+        "id"   => (string)$i,
+        "name" => "P$i"
+    ];
+}
+array_unshift($VisaPriority, array());
 ?>
 <style>
     /*basic reset*/
@@ -697,7 +707,23 @@ if (empty($staff_list[get_staff_user_id()]["post_sales"]) && !is_admin()) {
         Your applicant fee and scholarship details have been cleared because the Primary Country or University was changed. Please review and complete the fee and scholarship details again before proceeding.
         </div>
         </div>
-         <?php } ?>
+         <?php } 
+         if(!empty($admissionpreferences->primary_country) && strtolower($admissionpreferences->primary_country)=="russia" && (empty($academicdetails->school_name) || empty($academicdetails->school_address)) ) { ?>
+         
+          <div class="alert alert-warning d-flex align-items-start warning-message-fees" role="alert">
+        <div>
+        <strong> <i class="fa fa-exclamation-triangle"></i> &nbsp; Attention!</strong><br>
+        **School Name or School Address is mandatory for applicants whose primary country is Russia. Please enter the required information in the Academic Details section before proceeding.**
+
+        </div>
+        </div>
+         <?php 
+             
+         }
+         
+         ?>
+         
+         
         <?php
 
 
@@ -901,12 +927,17 @@ if (empty($staff_list[get_staff_user_id()]["post_sales"]) && !is_admin()) {
                             <div class="document_approval_message_action">
                             </div>
                             <div class="row">
+                                <div class="col-md-12">
                                 <label>
                                     I want Name Affidavit for this Applicant
                                     <input type="checkbox" value="1"
                                         <?= !empty($client->name_aff_status) ? 'checked' : '' ?>
                                         onchange="nameAffUpdate(this.checked, '<?= !empty($client_id) ? $client_id : '' ?>')">
                                 </label>
+                                </div>
+                               
+                                
+                                
                             </div>
                         <?php
                         } else if ($track["show_div_name"] == "university_div") {
@@ -1250,8 +1281,8 @@ if (empty($staff_list[get_staff_user_id()]["post_sales"]) && !is_admin()) {
                                                 <?php if ((!empty($leg["leg_applied_date"]) && $leg["leg_applied_date"] != "0000-00-00" && $client_infomation->client_type == 1 && $admissionpreferences->session_intake >= SESSION_INTAKE && (!empty($staff_list[get_staff_user_id()]["post_sales"]) || is_admin())) ) {
                                                 if($leg['country_name'] == 'Georgia' ){
                                                 ?>
-                                                <?= getLastEmailWhatsappDate("email", LEGALIZATION_TEMPLATE_ID, $client_id) ?>
-                                                <button type="button" class="btn btn-primary btn-xs" onclick="email_send(<?= $client_id ?>,5)"><i class="fa fa-envelope hide-client-type"></i> </button>
+                                                <?php //echo getLastEmailWhatsappDate("email", LEGALIZATION_TEMPLATE_ID, $client_id) ?>
+                                                <button type="button" class="btn btn-primary btn-xs hide" onclick="email_send(<?= $client_id ?>,5)"><i class="fa fa-envelope hide-client-type"></i> </button>
                                                 <?php } 
                                                 } ?>
                                                 </span>
@@ -1438,8 +1469,8 @@ if (empty($staff_list[get_staff_user_id()]["post_sales"]) && !is_admin()) {
 
                                                             <button type="button" class="btn btn-primary btn-xs hide" onclick="email_send(<?= !empty($client_id) ? $client_id : '' ?>, 3,<?= $leg['invitation_letter'] ?>)"><i class="fa fa-envelope hide-client-type"></i></button>
 <?php if($leg['country_name'] == 'Georgia'){ ?>
-                                                            <?= getLastEmailWhatsappDate("email", BANK_STATEMENT_TEMPLATE_ID, $client_id) ?>
-                                                            <button type="button" class="btn btn-primary btn-xs" onclick="email_send(<?= $client_id ?>,6)"><i class="fa fa-envelope hide-client-type"></i> </button>
+                                                            <?php // echo getLastEmailWhatsappDate("email", BANK_STATEMENT_TEMPLATE_ID, $client_id) ?>
+                                                            <button type="button" class="btn btn-primary btn-xs hide" onclick="email_send(<?= $client_id ?>,6)"><i class="fa fa-envelope hide-client-type"></i> </button>
                                                             
                                                             <?php } ?>
 
@@ -1503,381 +1534,436 @@ if (empty($staff_list[get_staff_user_id()]["post_sales"]) && !is_admin()) {
                         } else if ($track["show_div_name"] == "visa_div") { ?>
                             <form id="visa-form" class="form-disabled" onsubmit="return false;">
 
-                                <div class="visa_div">
 
-                                    <div id="visa-details" class="visa-details row">
-                                        <?php if (!empty($visa_details)) {
-                                            foreach ($visa_details as $key => $visa) {
-                                                $visa_id = $visa["id"];
-                                                $file_url = !empty($visa["file"]) ? $visa["file"] : '';
-                                                $file_url_application_form = !empty($visa["application_form"]) ? $visa["application_form"] : '';
-                                                $file_url_tracking_receipt = !empty($visa["tracking_receipt"]) ? $visa["tracking_receipt"] : '';
 
-                                        ?>
-                                                <div class="col-md-12 visa_div_application <?= $visa['status'] == 4 ? 'visa-rejected-div' : '' ?>">
-                                                    <?php if (($key > 0 && is_admin())) { ?>
-                                                        <div class="text-right">
-                                                            <i class='fa fa-trash btn btn-danger' onclick="remove_visa_div(this,<?= $visa_id ?>)"></i>
-                                                        </div>
-                                                    <?php } ?>
-                                                    <?php echo render_input('id', '', $visa["id"], 'hidden'); ?>
+<div class="visa_div">
+    <div id="visa-details" class="visa-details row">
+        <?php if (!empty($visa_details)) {
+            foreach ($visa_details as $key => $visa) {
+                $visa_id = $visa["id"];
+                $file_url = !empty($visa["file"]) ? $visa["file"] : '';
+                $file_url_application_form = !empty($visa["application_form"]) ? $visa["application_form"] : '';
+                $file_url_tracking_receipt = !empty($visa["tracking_receipt"]) ? $visa["tracking_receipt"] : '';
+        ?>
+                <div class="col-md-12 visa_div_application <?= $visa['status'] == 4 ? 'visa-rejected-div' : '' ?>">
+                    <?php if (($key > 0 && is_admin())) { ?>
+                        <div class="text-right">
+                            <i class='fa fa-trash btn btn-danger' onclick="remove_visa_div(this,<?= $visa_id ?>)"></i>
+                        </div>
+                    <?php } ?>
+                    <?php echo render_input('id', '', $visa["id"], 'hidden'); ?>
+                    <div class="d-flex">
+                        <div class="col-md-4">
+                            <label>Visa Vendor <small class='text-danger'>*</small></label>
+                            <?php
+                            array_unshift($visa_vendors, array());
+                            echo render_select('visa_vendor_' . $visa_id, $visa_vendors, ['id', 'name'], '', [$visa["vendor_id"]], [
+                                'data-width' => '100%',
+                                'data-none-selected-text' => 'Vendor',
+                                'data-actions-box' => true,
+                                'required-check' => 'required-check',
+                                'required' => 'required',
+                            ], [], 'no-mbot', '', false, 'visa_vendor'); ?>
+                        </div>
+                        <div class="col-md-4">
+                            <label>Courier Date <small class='text-danger'>*</small></label>
+                            <?php echo render_input('visa_date_' . $visa_id, '', $visa["courier_date"], 'date', ['required-check' => 'required-check', 'required' => 'required']); ?>
+                        </div>
+                        <div class="col-md-2">
+                            <label>Courier Type <small class='text-danger'>*</small></label>
+                            <?php
+                            array_unshift($courier_type, array());
+                            echo render_select('visa_courier_type_' . $visa_id, $courier_type, ['id', 'name'], '', [$visa["courier_type"]], [
+                                'data-width' => '100%',
+                                'data-none-selected-text' => 'Courier Type',
+                                'data-actions-box' => true,
+                                'required-check' => 'required-check',
+                                'required' => 'required',
+                            ], [], 'no-mbot', '', false, 'visa_courier_type'); ?>
+                        </div>
+                                 <div class="col-md-2">
+                        <label>Visa Priority<small class='text-danger'>*</small></label>
+                        <?php
+                        array_unshift($courier_type, array());
+                        echo render_select('visa_priority', $VisaPriority, ['id', 'name'], '', [$visa["visa_priority"]], [
+                           'data-width' => '100%',
+                           'data-none-selected-text' => 'Visa Priority',
+                           'data-actions-box' => true,
+                        ], [], 'no-mbot', '', false, 'visa_priority'); ?>
+                     </div>
+                    </div>
+                    <div class="d-flex visa-payment-details">
+                        <div class="col-md-4">
+                            <label>Payment Date <small class='text-danger'>*</small></label>
+                            <?php echo render_input('visa_payment_date_' . $visa_id, '',  $visa["payment_date"], 'date', [
+                                'required-check' => 'required-check',
+                                'required' => 'required'
+                            ]); ?>
+                        </div>
+                        <div class="col-md-4">
+                            <label>Visa Cost <small class='text-danger'>*</small></label>
+                            <div class="input-group mb-2 mr-sm-2 mb-sm-0 col-3 form-group">
+                                <input type="number" class="form-control" name="visa_cost" value="<?= $visa["cost"] ?? 0 ?>" required-check required>
+                                <div class="input-group-addon currency-addon">
+                                    <select name="visa_cost_currency" id="visa_cost_currency" class="currency-selector currency-selector-<?= $id ?>">
+                                        <?php foreach ($get_currencies as $c) { ?>
+                                            <option
+                                                data-symbol="<?= $c['symbol'] ?>"
+                                                value="<?= $c['id'] ?>"
+                                                data-placeholder="0.00" <?= (!empty($visa["currency_type"]) && $visa["currency_type"] == $c['id']) ? "selected" : "" ?>>
+                                                <?= $c['name'] ?>
+                                            </option>
+                                        <?php } ?>
+                                    </select>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-md-4">
+                            <label>Payment Mode <small class='text-danger'>*</small></label>
+                            <?php
+                            array_unshift($payment_mode, array());
+                            echo render_select('visa_payment_mode_' . $visa_id, $payment_mode, ['id', 'name'], '', [$visa["payment_mode"]], [
+                                'data-width' => '100%',
+                                'data-none-selected-text' => 'Payment Mode',
+                                'data-actions-box' => true,
+                                'required-check' => 'required-check',
+                                'required' => 'required',
+                            ], [], 'no-mbot', '', false, 'visa_payment_mode'); ?>
+                        </div>
+                    </div>
+                    <div class="d-flex visa-apply-details">
+                        <div class="col-md-4">
+                            <label>Apply Date <small class='text-danger'>*</small></label>
+                            <?php echo render_input('visa_apply_date_' . $visa_id, '',  $visa["apply_date"], 'date', [
+                                'required-check' => 'required-check',
+                                'required' => 'required'
+                            ]); ?>
+                        </div>
+                        <?php if (strtolower($admissionpreferences->primary_country) == "georgia") {
+                            $disabled = empty($staff_list[get_staff_user_id()]["post_sales"]) ? ['disabled' => 'disabled'] : [];
+                        ?>
+                            <div class="col-md-4 hide">
+                                <label>Visa Application Form <small class='text-danger'>*</small></label>
+                                <?php
+                                $re = !empty($file_url_application_form) ? 'false' : 'true';
+                                echo render_input(
+                                    'visa_application_form_' . $visa_id,
+                                    '',
+                                    '',
+                                    'file',
+                                    array_merge(["data-file" => $file_url_application_form, "required" => $re], $disabled)
+                                ); ?>
+                                <?php if (!empty($file_url_application_form)) { ?>
+                                    <div class="margin-top">
+                                        <i class="fa fa-eye btn btn-xs btn-primary" onclick="show_media_files('<?= base_url($file_url_application_form) ?>');"></i>&nbsp;
+                                        <i class="fa fa-download btn btn-xs btn-primary" onclick="download_media_files('<?= base_url($file_url_application_form) ?>', '_blank');"></i>
+                                        <?php if ($delete_document_status) { ?>
+                                            <button type="button" class="btn-xs btn btn-danger" onclick="delete_documents(6,<?= $track['id'] ?>,<?= $visa['id'] ?>,'application_form')"><i class="fa fa-trash"></i></button>
+                                        <?php } ?>
+                                    </div>
+                                <?php } ?>
+                            </div>
+                            <div class="col-md-4">
+                                <label>Visa Tracking Receipt <small class='text-danger'>*</small></label>
+                         <?php
+$input_attrs = array_merge(
+    [
+        "data-file" => $file_url_tracking_receipt
+    ],
+    $disabled
+);
 
-                                                    <div class="d-flex">
-                                                        <div class="col-md-4">
-                                                            <label>Visa Vendor <small class='text-danger'>*</small></label>
-                                                            <?php
-                                                            array_unshift($visa_vendors, array());
-                                                            echo render_select('visa_vendor_' . $visa_id, $visa_vendors, ['id', 'name'], '', [$visa["vendor_id"]], [
-                                                                'data-width' => '100%',
-                                                                'data-none-selected-text' => 'Vendor',
-                                                                'data-actions-box' => true,
-                                                                'required-check' => 'required-check',
-                                                                'required' => 'required',
-                                                            ], [], 'no-mbot', '', false, 'visa_vendor'); ?>
-                                                        </div>
-                                                        <div class="col-md-4">
-                                                            <label>Courier Date <small class='text-danger'>*</small></label>
-                                                            <?php echo render_input('visa_date_' . $visa_id, '', $visa["courier_date"], 'date', ['required-check' => 'required-check', 'required' => 'required']); ?>
-                                                        </div>
-                                                        <div class="col-md-4">
-                                                            <label>Courier Type <small class='text-danger'>*</small></label>
-                                                            <?php
-                                                            array_unshift($courier_type, array());
-                                                            echo render_select('visa_courier_type_' . $visa_id, $courier_type, ['id', 'name'], '', [$visa["courier_type"]], [
-                                                                'data-width' => '100%',
-                                                                'data-none-selected-text' => 'Courier Type',
-                                                                'data-actions-box' => true,
-                                                                'required-check' => 'required-check',
-                                                                'required' => 'required',
-                                                            ], [], 'no-mbot', '', false, 'visa_courier_type'); ?>
-                                                        </div>
-                                                    </div>
-                                                    <div class="d-flex visa-payment-details">
-                                                        <div class="col-md-4">
-                                                            <label>Payment Date <small class='text-danger'>*</small></label>
-                                                            <?php echo render_input('visa_payment_date_' . $visa_id, '',  $visa["payment_date"], 'date', [
-                                                                'required-check' => 'required-check',
-                                                                'required' => 'required'
-                                                            ]); ?>
-                                                        </div>
-
-                                                        <div class="col-md-4">
-                                                            <label>Visa Cost <small class='text-danger'>*</small></label>
-                                                            <!-- <?php echo render_input('visa_cost', '', '', 'number', [
-                                                                        'required-check' => 'required-check',
-                                                                        'required' => 'required'
-                                                                    ]); ?> -->
-
-                                                            <div class="input-group mb-2 mr-sm-2 mb-sm-0 col-3 form-group">
-                                                                <input type="number" class="form-control" name="visa_cost" value="<?= $visa["cost"] ?? 0 ?>" required-check required>
-
-                                                                <div class="input-group-addon currency-addon">
-
-                                                                    <select name="visa_cost_currency" id="visa_cost_currency" class="currency-selector currency-selector-<?= $id ?>">
-                                                                        <?php foreach ($get_currencies as $c) {
-                                                                        ?>
-                                                                            <option
-                                                                                data-symbol="<?= $c['symbol'] ?>"
-                                                                                value="<?= $c['id'] ?>"
-                                                                                data-placeholder="0.00" <?= (!empty($visa["currency_type"]) && $visa["currency_type"] == $c['id']) ? "selected" : "" ?>>
-                                                                                <?= $c['name'] ?>
-
-                                                                            </option>
-                                                                        <?php
-                                                                        }
-                                                                        ?>
-                                                                    </select>
-                                                                </div>
-                                                            </div>
-                                                        </div>
-                                                        <div class="col-md-4">
-                                                            <label>Payment Mode <small class='text-danger'>*</small></label>
-                                                            <?php
-                                                            array_unshift($payment_mode, array());
-                                                            echo render_select('visa_payment_mode_' . $visa_id, $payment_mode, ['id', 'name'], '', [$visa["payment_mode"]], [
-                                                                'data-width' => '100%',
-                                                                'data-none-selected-text' => 'Payment Mode',
-                                                                'data-actions-box' => true,
-                                                                'required-check' => 'required-check',
-                                                                'required' => 'required',
-                                                            ], [], 'no-mbot', '', false, 'visa_payment_mode'); ?>
-                                                        </div>
-                                                    </div>
-                                                    <div class="d-flex visa-apply-details">
-
-                                                        <div class="col-md-4">
-                                                            <label>Apply Date <small class='text-danger'>*</small></label>
-                                                            <?php echo render_input('visa_apply_date_' . $visa_id, '',  $visa["apply_date"], 'date', [
-                                                                'required-check' => 'required-check',
-                                                                'required' => 'required'
-                                                            ]); ?>
-                                                        </div>
-
-                                                        <?php if (strtolower($admissionpreferences->primary_country) == "georgia") { ?>
-                                                            <div class="col-md-4 hide">
-                                                                <label>Visa Application Form <small class='text-danger'>*</small></label>
-                                                                <?php
-                                                                $re = !empty($file_url_application_form) ? 'false' : 'true';
-                                                             
- $disabled = empty($staff_list[get_staff_user_id()]["post_sales"]) ? ['disabled' => 'disabled'] : [];
+if (empty($file_url_tracking_receipt)) {
+    $input_attrs["required"] = "required";
+}
 
 echo render_input(
-    'visa_application_form_' . $visa_id,
+    'visa_tracking_receipt_' . $visa_id,
     '',
     '',
     'file',
-    array_merge(
-        ["data-file" => $file_url_application_form, "required" => $re],
-        $disabled
-    )
+    $input_attrs
 );
 ?>
-                                                                <?php
-                                                                if (!empty($file_url_application_form)) { ?>
-                                                                    <div class="margin-top">
-                                                                        <i class="fa fa-eye btn btn-xs btn-primary" onclick="show_media_files('<?= base_url($file_url_application_form) ?>');"></i>&nbsp;
-                                                                        <i class="fa fa-download btn btn-xs btn-primary" onclick="download_media_files('<?= base_url($file_url_application_form) ?>', '_blank');"></i>
-                                                                        <?php if ($delete_document_status) { ?>
-                                                                            <button type="button" class="btn-xs btn btn-danger" onclick="delete_documents(6,<?= $track['id'] ?>,<?= $visa['id'] ?>,'application_form')"><i class="fa fa-trash"></i></button>
-                                                                        <?php } ?>
-                                                                    </div>
-                                                                <?php } ?>
-                                                            </div>
-
-                                                            <div class="col-md-4">
-                                                                <label>Visa Tracking Receipt <small class='text-danger'>*</small></label>
-                                                                <?php
-                                                                $re = !empty($file_url_tracking_receipt) ? 'false' : 'true';
-                                                                $disabled = empty($staff_list[get_staff_user_id()]["post_sales"]) ? ['disabled' => 'disabled'] : [];
-
-                                                                echo render_input('visa_tracking_receipt_' . $visa_id, '', '', 'file',array_merge( ["data-file" => $file_url_tracking_receipt, "required" => $re],$disabled
-    )); ?>
-                                                                <?php
-                                                                if (!empty($file_url_tracking_receipt)) { ?>
-                                                                    <div class="margin-top">
-                                                                        <i class="fa fa-eye btn btn-xs btn-primary" onclick="show_media_files('<?= base_url($file_url_tracking_receipt) ?>');"></i>&nbsp;
-                                                                        <i class="fa fa-download btn btn-xs btn-primary" onclick="download_media_files('<?= base_url($file_url_tracking_receipt) ?>', '_blank');"></i>
-                                                                        <?php if ($delete_document_status) { ?>
-                                                                            <button type="button" class="btn-xs btn btn-danger" onclick="delete_documents(6,<?= $track['id'] ?>,<?= $visa['id'] ?>,'tracking_receipt')"><i class="fa fa-trash"></i></button>
-                                                                        <?php } ?>
-                                                                    </div>
-                                                                <?php } ?>
-                                                            </div>
-
-                                                        <?php } ?>
-                                                        
-                                                     <?php
-$is_required = ($client_infomation->client_type == 1 && $admissionpreferences->session_intake >= SESSION_INTAKE );
-
-$username_attrs = [
-    'placeholder' => 'Username',
-    'autocomplete' => 'off',
-];
-
-if ($is_required) {
-    $username_attrs['required-check'] = 'required-check';
-    $username_attrs['required'] = 'required';
-}
-?>
-
-<div class="col-md-4">
-    <label>
-        Visa Credentials
-        <?php if ($is_required) { ?>
-            <small class="text-danger">*</small>
-        <?php } ?>
-    </label>
-
-    <?php echo render_input(
-        'visa_username_' . $visa_id,
-        '',
-        $visa['visa_username'] ?? '',
-        'text',
-        $username_attrs
-    ); ?>
-
-    <div class="input-group">
-        <input
-            type="password"
-            name="visa_password_<?php echo $visa_id; ?>"
-            id="visa_password_<?php echo $visa_id; ?>"
-            value="<?php echo $visa['visa_password'] ?? ''; ?>"
-            class="form-control"
-            placeholder="Password"
-            autocomplete="new-password"
-            <?php echo $is_required ? 'required' : ''; ?>
-        >
-
-        <span
-            class="input-group-addon"
-            onclick="togglePassword('<?php echo $visa_id; ?>')"
-            style="cursor:pointer;"
-        >
-            <i class="fa fa-eye" id="eye_<?php echo $visa_id; ?>"></i>
-        </span>
-    </div>
-</div>
-                                                        
-                                                    </div>
-                                                    <div class="d-flex visa-receving-details">
-                                                        <div class="col-md-4">
-                                                            <label>Visa Received <small class='text-danger'>*</small></label>
-                                                            <?php echo render_input('visa_receiving_date_' . $visa_id, '',  $visa["receiving_date"], 'date', [
-                                                                'required-check' => 'required-check',
-                                                                'required' => 'required'
-                                                            ]); ?>
-                                                        </div>
-                                                        <div class="col-md-4">
-                                                            <label>Stamp Visa <small class='text-danger'>*</small></label>
-                                                            <?php
-                                                            $re = !empty($file_url) ? 'false' : 'true';
-                                                            echo render_input('visa_file_' . $visa_id, '', '', 'file', ["data-file" => $file_url, "required" => $re]); ?>
-                                                            <?php
-                                                            if (!empty($file_url)) { ?>
-                                                                <div class="margin-top">
-                                                                    <i class="fa fa-eye btn btn-xs btn-primary" onclick="show_media_files('<?= base_url($file_url) ?>');"></i>&nbsp;
-                                                                    <i class="fa fa-download btn btn-xs btn-primary" onclick="download_media_files('<?= base_url($file_url) ?>', '_blank');"></i>
-                                                                    <?php if ($delete_document_status) { ?>
-                                                                        <button type="button" class="btn-xs btn btn-danger" onclick="delete_documents(6,<?= $track['id'] ?>,<?= $visa['id'] ?>)"><i class="fa fa-trash"></i></button>
-                                                                    <?php } ?>
-                                                                </div>
-                                                            <?php } ?>
-                                                        </div>
-                                                        <div class="col-md-4">
-                                                            <label>Visa Entry Date <small class='text-danger'>*</small></label>
-                                                            <?php echo render_input('visa_entry_date_' . $visa_id, '',  $visa["entry_date"], 'date', [
-                                                                'required-check' => 'required-check',
-                                                                'required' => 'required'
-                                                            ]); ?>
-                                                        </div>
-                                                    </div>
-                                                    <div class="col-md-12 text-right">
-                                                        <label class="form-check-label">Visa Rejected
-
-                                                            <input type="checkbox" class="form-check-input"
-                                                                <?= ($visa["status"] && $visa["status"] == 4) ? 'checked' : '' ?>
-                                                                name="visa_rejected_<?= $visa_id ?>"
-                                                                id="visa_rejected_<?= $visa_id ?>">
-                                                        </label>
-                                                    </div>
-                                                </div>
-                                            <?php }
-                                        } else { ?>
-                                            <div class="col-md-12 visa_div_application">
-                                                <div class="d-flex">
-                                                    <div class="col-md-4">
-                                                        <label>Visa Vendor <small class='text-danger'>*</small></label>
-                                                        <?php
-                                                        array_unshift($visa_vendors, array());
-                                                        echo render_select('visa_vendor', $visa_vendors, ['id', 'name'], '', [], [
-                                                            'data-width' => '100%',
-                                                            'data-none-selected-text' => 'Vendor',
-                                                            'data-actions-box' => true,
-                                                            'required-check' => 'required-check',
-                                                            'required' => 'required',
-                                                        ], [], 'no-mbot', '', false, 'visa_vendor'); ?>
-                                                    </div>
-                                                    <div class="col-md-4">
-                                                        <label>Courier Date <small class='text-danger'>*</small></label>
-                                                        <?php echo render_input('visa_date', '', '', 'date', ['required-check' => 'required-check', 'required' => 'required']); ?>
-                                                    </div>
-                                                    <div class="col-md-4">
-                                                        <label>Courier Type <small class='text-danger'>*</small></label>
-                                                        <?php
-                                                        array_unshift($courier_type, array());
-                                                        echo render_select('visa_courier_type', $courier_type, ['id', 'name'], '', [], [
-                                                            'data-width' => '100%',
-                                                            'data-none-selected-text' => 'Courier Type',
-                                                            'data-actions-box' => true,
-                                                            'required-check' => 'required-check',
-                                                            'required' => 'required',
-                                                        ], [], 'no-mbot', '', false, 'visa_courier_type'); ?>
-                                                    </div>
-                                                </div>
-                                                <div class="d-flex visa-payment-details">
-                                                    <div class="col-md-4">
-                                                        <label>Payment Date <small class='text-danger'>*</small></label>
-                                                        <?php echo render_input('visa_payment_date', '', '', 'date', [
-                                                            'required-check' => 'required-check',
-                                                            'required' => 'required'
-                                                        ]); ?>
-                                                    </div>
-                                                    <div class="col-md-4">
-                                                        <label>Visa Cost <small class='text-danger'>*</small></label>
-                                                        <!-- <?php echo render_input('visa_cost', '', '', 'number', [
-                                                                    'required-check' => 'required-check',
-                                                                    'required' => 'required'
-                                                                ]); ?> -->
-
-                                                        <div class="input-group mb-2 mr-sm-2 mb-sm-0 col-3 form-group">
-                                                            <input type="number" class="form-control" name="visa_cost" value="" required-check required>
-                                                            <div class="input-group-addon currency-addon">
-
-                                                                <select name="visa_cost_currency" id="visa_cost_currency" class="currency-selector currency-selector-<?= $id ?>">
-                                                                    <?php foreach ($get_currencies as $c) {
-                                                                    ?>
-                                                                        <option
-                                                                            data-symbol="<?= $c['symbol'] ?>"
-                                                                            value="<?= $c['id'] ?>"
-                                                                            data-placeholder="0.00">
-                                                                            <?= $c['name'] ?>
-                                                                        </option>
-                                                                    <?php
-                                                                    }
-                                                                    ?>
-                                                                </select>
-                                                            </div>
-                                                        </div>
-                                                    </div>
-                                                    <div class="col-md-4">
-                                                        <label>Payment Mode <small class='text-danger'>*</small></label>
-                                                        <?php
-                                                        array_unshift($payment_mode, array());
-                                                        echo render_select('visa_payment_mode', $payment_mode, ['id', 'name'], '', [], [
-                                                            'data-width' => '100%',
-                                                            'data-none-selected-text' => 'Payment Mode',
-                                                            'data-actions-box' => true,
-                                                            'required-check' => 'required-check',
-                                                            'required' => 'required',
-                                                        ], [], 'no-mbot', '', false, 'visa_payment_mode'); ?>
-                                                    </div>
-                                                </div>
-                                                <div class="d-flex visa-receving-details">
-                                                    <div class="col-md-4">
-                                                        <label>Visa Received <small class='text-danger'>*</small></label>
-                                                        <?php echo render_input('visa_receiving_date', '', '', 'date', [
-                                                            'required-check' => 'required-check',
-                                                            'required' => 'required'
-                                                        ]); ?>
-                                                    </div>
-                                                    <div class="col-md-4">
-                                                        <label>Visa Document <small class='text-danger'>*</small></label>
-                                                        <?php echo render_input('visa_file', '', '', 'file', [
-                                                            'required-check' => 'required-check',
-                                                            'required' => 'required'
-                                                        ]); ?>
-                                                    </div>
-                                                    <div class="col-md-4">
-                                                        <label>Visa Entry Date <small class='text-danger'>*</small></label>
-                                                        <?php echo render_input('visa_entry_date', '', '', 'date', [
-                                                            'required-check' => 'required-check',
-                                                            'required' => 'required'
-                                                        ]); ?>
-                                                    </div>
-
-                                                </div>
-                                                <div class="col-md-12 text-right">
-                                                    <label class="form-check-label">Visa Rejected
-                                                        <input type="checkbox" class="form-check-input" name="visa_rejected" id="visa_rejected">
-                                                    </label>
-                                                </div>
-                                            </div>
+                                <?php if (!empty($file_url_tracking_receipt)) { ?>
+                                    <div class="margin-top">
+                                        <i class="fa fa-eye btn btn-xs btn-primary" onclick="show_media_files('<?= base_url($file_url_tracking_receipt) ?>');"></i>&nbsp;
+                                        <i class="fa fa-download btn btn-xs btn-primary" onclick="download_media_files('<?= base_url($file_url_tracking_receipt) ?>', '_blank');"></i>
+                                        <?php if ($delete_document_status) { ?>
+                                            <button type="button" class="btn-xs btn btn-danger" onclick="delete_documents(6,<?= $track['id'] ?>,<?= $visa['id'] ?>,'tracking_receipt')"><i class="fa fa-trash"></i></button>
                                         <?php } ?>
                                     </div>
-                                    <div id="visa-details-add" class="visa-details-add row">
-                                    </div>
+                                <?php } ?>
+                            </div>
+                        <?php } ?>
 
+                        <?php
+                        $is_required = ($client_infomation->client_type == 1 && $admissionpreferences->session_intake >= SESSION_INTAKE);
+                        $username_attrs = ['placeholder' => 'Username', 'autocomplete' => 'off'];
+                        if ($is_required) {
+                            $username_attrs['required-check'] = 'required-check';
+                            $username_attrs['required'] = 'required';
+                        }
+                        ?>
+                        <div class="col-md-4">
+                            <label>
+                                Visa Credentials
+                                <?php if ($is_required) { ?><small class="text-danger">*</small><?php } ?>
+                            </label>
+                            <?php echo render_input('visa_username_' . $visa_id, '', $visa['visa_username'] ?? '', 'text', $username_attrs); ?>
+                            <div class="input-group">
+                                <input
+                                    type="password"
+                                    name="visa_password_<?php echo $visa_id; ?>"
+                                    id="visa_password_<?php echo $visa_id; ?>"
+                                    value="<?php echo $visa['visa_password'] ?? ''; ?>"
+                                    class="form-control"
+                                    placeholder="Password"
+                                    autocomplete="new-password"
+                                    <?php echo $is_required ? 'required' : ''; ?>
+                                >
+                                <span class="input-group-addon" onclick="togglePassword('<?php echo $visa_id; ?>')" style="cursor:pointer;">
+                                    <i class="fa fa-eye" id="eye_<?php echo $visa_id; ?>"></i>
+                                </span>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="d-flex visa-receving-details">
+                        <div class="col-md-4">
+                            <label>Visa Received <small class='text-danger'>*</small></label>
+                            <?php echo render_input('visa_receiving_date_' . $visa_id, '',  $visa["receiving_date"], 'date', [
+                                'required-check' => 'required-check',
+                                'required' => 'required'
+                            ]); ?>
+                        </div>
+                        <div class="col-md-4">
+                            <label>Stamp Visa <small class='text-danger'>*</small></label>
+                            <?php
+                            $re = !empty($file_url) ? 'false' : 'true';
+                            echo render_input('visa_file_' . $visa_id, '', '', 'file', ["data-file" => $file_url, "required" => $re]); ?>
+                            <?php if (!empty($file_url)) { ?>
+                                <div class="margin-top">
+                                    <i class="fa fa-eye btn btn-xs btn-primary" onclick="show_media_files('<?= base_url($file_url) ?>');"></i>&nbsp;
+                                    <i class="fa fa-download btn btn-xs btn-primary" onclick="download_media_files('<?= base_url($file_url) ?>', '_blank');"></i>
+                                    <?php if ($delete_document_status) { ?>
+                                        <button type="button" class="btn-xs btn btn-danger" onclick="delete_documents(6,<?= $track['id'] ?>,<?= $visa['id'] ?>)"><i class="fa fa-trash"></i></button>
+                                    <?php } ?>
                                 </div>
+                            <?php } ?>
+                        </div>
+                        <div class="col-md-4">
+                            <label>Visa Entry Date <small class='text-danger'>*</small></label>
+                            <?php echo render_input('visa_entry_date_' . $visa_id, '',  $visa["entry_date"], 'date', [
+                                'required-check' => 'required-check',
+                                'required' => 'required'
+                            ]); ?>
+                        </div>
+                    </div>
+                    <div class="col-md-12 text-right">
+                        <label class="form-check-label">Visa Rejected
+                            <input type="checkbox" class="form-check-input"
+                                <?= ($visa["status"] && $visa["status"] == 4) ? 'checked' : '' ?>
+                                name="visa_rejected_<?= $visa_id ?>"
+                                id="visa_rejected_<?= $visa_id ?>">
+                        </label>
+                    </div>
+                </div>
+            <?php }
+        } else { ?>
+            <div class="col-md-12 visa_div_application">
+                <div class="d-flex">
+                    <div class="col-md-4">
+                        <label>Visa Vendor <small class='text-danger'>*</small></label>
+                        <?php
+                        array_unshift($visa_vendors, array());
+                        echo render_select('visa_vendor', $visa_vendors, ['id', 'name'], '', [], [
+                            'data-width' => '100%',
+                            'data-none-selected-text' => 'Vendor',
+                            'data-actions-box' => true,
+                            'required-check' => 'required-check',
+                            'required' => 'required',
+                        ], [], 'no-mbot', '', false, 'visa_vendor'); ?>
+                    </div>
+                    <div class="col-md-4">
+                        <label>Courier Date <small class='text-danger'>*</small></label>
+                        <?php echo render_input('visa_date', '', '', 'date', ['required-check' => 'required-check', 'required' => 'required']); ?>
+                    </div>
+                    <div class="col-md-2">
+                        <label>Courier Type <small class='text-danger'>*</small></label>
+                        <?php
+                        array_unshift($courier_type, array());
+                        echo render_select('visa_courier_type', $courier_type, ['id', 'name'], '', [], [
+                            'data-width' => '100%',
+                            'data-none-selected-text' => 'Courier Type',
+                            'data-actions-box' => true,
+                            'required-check' => 'required-check',
+                            'required' => 'required',
+                        ], [], 'no-mbot', '', false, 'visa_courier_type'); ?>
+                    </div>
+                             <div class="col-md-2">
+                        <label>Visa Priority<small class='text-danger'>*</small></label>
+                        <?php
+                        array_unshift($courier_type, array());
+                        echo render_select('visa_priority', $VisaPriority, ['id', 'name'], '', [$visa["visa_priority"]], [
+                           'data-width' => '100%',
+                           'data-none-selected-text' => 'Visa Priority',
+                           'data-actions-box' => true,
+                        ], [], 'no-mbot', '', false, 'visa_priority'); ?>
+                     </div>
+                </div>
+                <div class="d-flex visa-payment-details">
+                    <div class="col-md-4">
+                        <label>Payment Date <small class='text-danger'>*</small></label>
+                        <?php echo render_input('visa_payment_date', '', '', 'date', [
+                            'required-check' => 'required-check',
+                            'required' => 'required'
+                        ]); ?>
+                    </div>
+                    <div class="col-md-4">
+                        <label>Visa Cost <small class='text-danger'>*</small></label>
+                        <div class="input-group mb-2 mr-sm-2 mb-sm-0 col-3 form-group">
+                            <input type="number" class="form-control" name="visa_cost" value="" required-check required>
+                            <div class="input-group-addon currency-addon">
+                                <select name="visa_cost_currency" id="visa_cost_currency" class="currency-selector currency-selector-<?= $id ?>">
+                                    <?php foreach ($get_currencies as $c) { ?>
+                                        <option
+                                            data-symbol="<?= $c['symbol'] ?>"
+                                            value="<?= $c['id'] ?>"
+                                            data-placeholder="0.00">
+                                            <?= $c['name'] ?>
+                                        </option>
+                                    <?php } ?>
+                                </select>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-md-4">
+                        <label>Payment Mode <small class='text-danger'>*</small></label>
+                        <?php
+                        array_unshift($payment_mode, array());
+                        echo render_select('visa_payment_mode', $payment_mode, ['id', 'name'], '', [], [
+                            'data-width' => '100%',
+                            'data-none-selected-text' => 'Payment Mode',
+                            'data-actions-box' => true,
+                            'required-check' => 'required-check',
+                            'required' => 'required',
+                        ], [], 'no-mbot', '', false, 'visa_payment_mode'); ?>
+                    </div>
+                </div>
+                <div class="d-flex visa-apply-details">
+                    <div class="col-md-4">
+                        <label>Apply Date <small class='text-danger'>*</small></label>
+                        <?php echo render_input('visa_apply_date', '', '', 'date', [
+                            'required-check' => 'required-check',
+                            'required' => 'required'
+                        ]); ?>
+                    </div>
+                    <?php if (strtolower($admissionpreferences->primary_country) == "georgia") {
+                        $disabled = empty($staff_list[get_staff_user_id()]["post_sales"]) ? ['disabled' => 'disabled'] : [];
+                    ?>
+                        <div class="col-md-4 hide">
+                            <label>Visa Application Form <small class='text-danger'>*</small></label>
+                            <?php echo render_input(
+                                'visa_application_form',
+                                '',
+                                '',
+                                'file',
+                                array_merge(["data-file" => '', "required" => 'true'], $disabled)
+                            ); ?>
+                        </div>
+                        <div class="col-md-4">
+                            <label>Visa Tracking Receipt <small class='text-danger'>*</small></label>
+                            <?php echo render_input(
+                                'visa_tracking_receipt',
+                                '',
+                                '',
+                                'file',
+                                array_merge(["data-file" => '', "required" => 'true'], $disabled)
+                            ); ?>
+                        </div>
+                    <?php } ?>
+
+                    <?php
+                    $is_required = ($client_infomation->client_type == 1 && $admissionpreferences->session_intake >= SESSION_INTAKE);
+                    $username_attrs = ['placeholder' => 'Username', 'autocomplete' => 'off'];
+                    if ($is_required) {
+                        $username_attrs['required-check'] = 'required-check';
+                        $username_attrs['required'] = 'required';
+                    }
+                    ?>
+                    <div class="col-md-4">
+                        <label>
+                            Visa Credentials
+                            <?php if ($is_required) { ?><small class="text-danger">*</small><?php } ?>
+                        </label>
+                        <?php echo render_input('visa_username', '', '', 'text', $username_attrs); ?>
+                        <div class="input-group">
+                            <input
+                                type="password"
+                                name="visa_password"
+                                id="visa_password"
+                                value=""
+                                class="form-control"
+                                placeholder="Password"
+                                autocomplete="new-password"
+                                <?php echo $is_required ? 'required' : ''; ?>
+                            >
+                            <span class="input-group-addon" onclick="togglePassword('')" style="cursor:pointer;">
+                                <i class="fa fa-eye" id="eye_new"></i>
+                            </span>
+                        </div>
+                    </div>
+                </div>
+                <div class="d-flex visa-receving-details">
+                    <div class="col-md-4">
+                        <label>Visa Received <small class='text-danger'>*</small></label>
+                        <?php echo render_input('visa_receiving_date', '', '', 'date', [
+                            'required-check' => 'required-check',
+                            'required' => 'required'
+                        ]); ?>
+                    </div>
+                    <div class="col-md-4">
+                        <label>Visa Document <small class='text-danger'>*</small></label>
+                        <?php echo render_input('visa_file', '', '', 'file', [
+                            'required-check' => 'required-check',
+                            'required' => 'required'
+                        ]); ?>
+                    </div>
+                    <div class="col-md-4">
+                        <label>Visa Entry Date <small class='text-danger'>*</small></label>
+                        <?php echo render_input('visa_entry_date', '', '', 'date', [
+                            'required-check' => 'required-check',
+                            'required' => 'required'
+                        ]); ?>
+                    </div>
+                </div>
+                <div class="col-md-12 text-right">
+                    <label class="form-check-label">Visa Rejected
+                        <input type="checkbox" class="form-check-input" name="visa_rejected" id="visa_rejected">
+                    </label>
+                </div>
+            </div>
+        <?php } ?>
+        
+
+    </div>
+    <div id="visa-details-add" class="visa-details-add row">
+    </div>
+    
+            <div class="row">
+             <?php if(!empty($staff_list[get_staff_user_id()]["post_sales"]) || is_admin()) { ?>
+                                 <div class="col-md-12">
+                                 <label>
+                                    Visa Not Required
+                                    <input id="visa_not_required" onchange="visa_section_change(this)" type="checkbox" value="1"
+                                        <?= !empty($client->visa_not_required) ? 'checked' : '' ?>
+                                       >
+                                </label>
+                                </div>
+                                <?php } ?>
+        </div>
+    
+</div>
                             </form>
                             <?php } else if ($track["show_div_name"] == "sc_div") {
 
@@ -1935,6 +2021,18 @@ if ($is_required) {
                             <?php if ((!empty($track['skip']) && $track['skip'] == 1) || ($track['client_type_skip'] == $client_infomation->client_type) || (!empty($track['no_skip']) && $track['no_skip'] != $admissionpreferences->primary_country)) { ?>
                                 <input type="button" name="next" class=" btn-hide-complete text-center btn-warning action-button next-<?= $track ?>" onclick="next_step('<?= $track['id'] ?>',this,'<?= !empty($track['no_skip']) ||  ($track['client_type_skip'] == $client_infomation->client_type)  ? 1 : $track['skip'] ?>')" value="Skip" />
                             <?php } ?>
+                            
+                            <?php if ($track['id'] == 9) { ?>
+    <input
+        type="button"
+        name="next"
+        class="<?= (!empty($client->visa_not_required) && $client->visa_not_required === 1) ? '' : 'hide' ?> btn-hide-complete text-center btn-warning action-button next-<?= $track ?>"
+        id="visa_skip"
+        onclick="next_step('<?= $track['id'] ?>', this, 1)"
+        value="Visa Skip"
+    />
+<?php } ?>
+                            
                         <?php } else if (($k + 2) == count($applicant_tracker)) {  ?>
                             <input type="button" name="next" class="next btn-hide-complete  text-center action-button next-<?= $track['id'] ?>" onclick="next_step('<?= $track['id'] ?>',this)" value="Update" />
                         <?php } else {
@@ -2028,6 +2126,17 @@ if ($is_required) {
     var is_admin = <?= is_admin() ? 1 : 0 ?>;
    
    
+function visa_section_change(obj) {
+
+    if (obj.checked) {
+        $("#visa_skip").removeClass("hide");
+        console.log("Checkbox is checked");
+    } else {
+        $("#visa_skip").addClass("hide");
+        console.log("Checkbox is unchecked");
+    }
+}
+
    function togglePassword(id) {
     var passwordField = document.getElementById('visa_password_' + id);
     var eyeIcon = document.getElementById('eye_' + id);
@@ -2102,8 +2211,8 @@ if ($is_required) {
     var check_offer_letter = true;
     var fee_status = "<?= !empty($short_list["fee_status"]) ? $short_list["fee_status"] : 0 ?> ";
     // let client_type = <?= (int)$client_infomation->client_type ?>;
-    let lastEmailDateHtml_leg = `<?php echo addslashes(getLastEmailWhatsappDate("email", LEGALIZATION_TEMPLATE_ID, $client_id)) ?>`;
-    let lastEmailDateHtml_invitation = `<?php echo addslashes(getLastEmailWhatsappDate("email", BANK_STATEMENT_TEMPLATE_ID, $client_id)) ?>`;
+    let lastEmailDateHtml_leg = `<?php //echo addslashes(getLastEmailWhatsappDate("email", LEGALIZATION_TEMPLATE_ID, $client_id)) ?>`;
+    let lastEmailDateHtml_invitation = `<?php //echo addslashes(getLastEmailWhatsappDate("email", BANK_STATEMENT_TEMPLATE_ID, $client_id)) ?>`;
 function chechShortListing(){
 if ($("#progressbar li.active").index() == 1) {
 
@@ -2667,7 +2776,9 @@ if ($("#progressbar li.active").index() == 1) {
             }
 
             if (id == 9) {
-                if (skip == 1 || same_step == 1) {} else {
+                if (skip == 1 || same_step == 1) {
+                    upload_data.append("visa_not_required", 1);
+                } else {
                     await set_validation_visa();
                     let check_validation = await check_required_fields("visa-form");
                     if (!check_validation) {
@@ -2676,8 +2787,17 @@ if ($("#progressbar li.active").index() == 1) {
                     }
 
                 }
-                await check_visa_letter(upload_data);
+                
+                
+await check_visa_letter(upload_data);
+upload_data.append(
+    "visa_not_required",
+    $("#visa_not_required").is(":checked") ? 1 : 0
+);
+                
             }
+            
+            console.log("SDF,MD AFSJJF okkkkk");
 
             let secondary_university_remark = $('.secondary_university_remark').first().val();
             upload_data.append("secondary_university_remark", secondary_university_remark);
@@ -3082,8 +3202,8 @@ if (
 
         ${lastEmailDateHtml_leg}
 
-        <button type="button" class="btn btn-primary btn-xs" 
-            onclick="email_send(${client_id}, 5)">
+        <button type="button" class="btn btn-primary btn-xs hide" 
+            onclick="email_send(${client_id},5)">
             <i class="fa fa-envelope hide-client-type"></i>
         </button>
     `;
@@ -3323,7 +3443,7 @@ email_button += `</span>`;
                 console.log(client_type);
                 console.log(leg.country_name);
                 if (invitation_letter != '' && client_type == 1 && leg.country_name == 'Georgia') {
-                    email_button = `<div class="pull-right"><button type="button" class="btn btn-primary btn-xs hide" onclick="whatsapp_message_send(${client_id}, 4,'','${leg.id}')"><i class="fa fa-whatsapp hide-client-type"></i></button> <button type="button" class="btn btn-primary btn-xs hide" onclick="email_send(${client_id}, 3,${leg.id})"><i class="fa fa-envelope hide-client-type"></i></button> ${lastEmailDateHtml_invitation}<button type="button" class="btn btn-primary btn-xs" onclick="email_send(${client_id},6)"><i class="fa fa-envelope hide-client-type"></i> </button>
+                    email_button = `<div class="pull-right"><button type="button" class="btn btn-primary btn-xs hide" onclick="whatsapp_message_send(${client_id}, 4,'','${leg.id}')"><i class="fa fa-whatsapp hide-client-type"></i></button> <button type="button" class="btn btn-primary btn-xs hide" onclick="email_send(${client_id}, 3,${leg.id})"><i class="fa fa-envelope hide-client-type hide"></i></button> ${lastEmailDateHtml_invitation}<button type="button" class="btn btn-primary btn-xs" onclick="email_send(${client_id},6)"><i class="fa fa-envelope hide-client-type"></i> </button>
                                                         </div>`;
                 }
                 let card = `
@@ -3737,6 +3857,67 @@ console.log(response);
             let form_status = true;
             let additional_fields = {}; // Ensure additional_fields is defined
 
+if (id == 'visa-form') {
+    $("#" + id + " div.visa_div_application").each(function () {
+
+        form_status = true;
+
+        const $visaDiv = $(this);
+
+        // Check if any checkbox is checked
+        const hasCheckedCheckbox =
+            $visaDiv.find(".form-check-input[type='checkbox']:checked").length > 0;
+// console.log("checkbox"+hasCheckedCheckbox);
+        // Only validate fields if NO checkbox is checked
+        if (!hasCheckedCheckbox) {
+
+            $visaDiv.find("input:visible, select:visible, textarea:visible").each(function () {
+
+                const $f = $(this);
+                const isRequired = $f.attr("required-check") !== undefined;
+                const name = $f.attr("name");
+
+                if (!isRequired || !name) {
+                    $f.removeClass("error");
+                    return;
+                }
+
+                additional_fields[name] = "required";
+
+                let valid;
+
+                if ($f.is(":checkbox")) {
+
+                    valid = $visaDiv
+                        .find("input:checkbox[name='" + name + "']:checked")
+                        .length > 0;
+
+                } else if ($f.is(":radio")) {
+
+                    valid = $visaDiv
+                        .find("input:radio[name='" + name + "']:checked")
+                        .length > 0;
+
+                } else {
+
+                    valid = $.trim($f.val() || "") !== "";
+                }
+
+                if (valid) {
+                    $f.removeClass("error");
+                } else {
+                    form_status = false;
+                    $f.addClass("error");
+                }
+            });
+        }
+
+    });
+
+    // console.log(additional_fields);
+}
+else{
+
             // Validate visible input, select, and date fields
             $("#" + id + " input:visible, #" + id + " select:visible, #" + id + " date:visible").each(function() {
                 const value = $(this).val(); // Get the value of the field
@@ -3752,7 +3933,6 @@ console.log(response);
                     }
                 }
 
-
                 if (isRequired && name) {
                     additional_fields[name] = "required";
                     // console.log(additional_fields);
@@ -3764,7 +3944,9 @@ console.log(response);
                     }
                 }
             });
+}
 
+console.log(additional_fields);
             if (!form_status) {
                 appValidateForm($("#" + id), additional_fields);
                 $("#" + id).submit()
@@ -3969,6 +4151,7 @@ console.log(response);
     const visa_vendors = <?= json_encode($visa_vendors, true) ?>;
     const courier_type = <?= json_encode($courier_type, true) ?>;
     const payment_mode = <?= json_encode($payment_mode, true) ?>;
+    const visa_priority = <?= json_encode($VisaPriority, true) ?>;
     
     <?php
 $isMandatory = false;
@@ -3983,8 +4166,8 @@ if (
 ?>
 
 
-    function set_visa_section(visa_data = [], create = 0, tracker_id = "") {
-        
+    function set_visa_section(visa_data = [], create = 0, tracker_id = "9") {
+        console.log(tracker_id);
            let university_name = "<?= addslashes($admissionpreferences->primary_university) ?>";
         let primary_country = "<?= strtolower(addslashes($admissionpreferences->primary_country)) ?>";
         let container = document.getElementById('visa-details');
@@ -4060,7 +4243,7 @@ if (
 isGeotgia = `
     <div class="col-md-4">
             <label>
-                Stamp Visa
+                Visa Tracking Receipt
                 ${client_type == 1 ? '<small class="text-danger">*</small>' : ''}
             </label>
 
@@ -4135,10 +4318,16 @@ isGeotgia = `
                     <input type="date" id="visa_date_${visa_id}" name="visa_date_${visa_id}" value="${visa.courier_date ?? ''}" class="form-control" required />
                     </div>
                 </div>
-                <div class="col-md-4">
+                <div class="col-md-2">
                 <div class="form-group">
                     <label>Courier Type <small class='text-danger'>*</small></label>
                     ${createSelect('visa_courier_type', courier_type, true, visa.courier_type ?? '', visa_id)}
+                    </div>
+                </div>
+                 <div class="col-md-2">
+                <div class="form-group">
+                    <label>Visa Priority <small class='text-danger'>*</small></label>
+                    ${createSelect('visa_priority', visa_priority, true, visa.visa_priority ?? '', visa_id)}
                     </div>
                 </div>
             </div>
@@ -4451,6 +4640,7 @@ isGeotgia = `
         await set_validation_visa();
         let check_validation = await check_required_fields("visa-form");
         if (!check_validation) return false;
+        
         set_visa_section([], 1);
     }
 

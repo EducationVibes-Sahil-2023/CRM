@@ -197,7 +197,62 @@ if (
 
         $totalAmountRaw = $symbol . $totalAmount;
     }
+    
+       // Initialize original amount
+$orignal_amount[$feeId][$currencyId] = $totalAmount;
+$remaningDues[$feeId][$currencyId] = $totalAmount;
+
+
+// Get deductions safely
+$deductions = array_merge(
+    $deduction_amount[$feeId] ?? [],
+    $deduction_amount[7] ?? []
+);
+
+
+// Get refunds safely
+$refunds = array_merge(
+    $refund_amount[$feeId] ?? [],
+    $refund_amount[7] ?? []
+);
+
+
+// Calculate total deductions
+$totalDeductions = 0;
+
+foreach ($deductions as $key => $d_FeesRaw) {
+
+    $d_Fees = (float)str_replace(',', '', $d_FeesRaw);
+
+    $totalDeductions += $d_Fees;
+
+    if (!isset($orignal_amount[$feeId][$currencyId])) {
+        $orignal_amount[$feeId][$currencyId] = $totalAmount;
+    }
+
+    $orignal_amount[$feeId][$currencyId] -= $d_Fees;
+    $remaningDues[$feeId][$currencyId] -= $d_Fees;
 }
+
+
+// Calculate total refunds
+$totalRefund = 0;
+
+foreach ($refunds as $key => $r_FeesRaw) {
+
+    $r_Fees = (float)str_replace(',', '', $r_FeesRaw);
+
+    $totalRefund += $r_Fees;
+
+    if (!isset($orignal_amount[$feeId][$currencyId])) {
+        $orignal_amount[$feeId][$currencyId] = $totalAmount;
+    }
+
+    $orignal_amount[$feeId][$currencyId] += $r_Fees;
+    $remaningDues[$feeId][$currencyId] += $r_Fees;
+}
+}
+else{
             // Initialize original amount
             $orignal_amount[$feeId][$currencyId] = $totalAmount;
             $remaningDues[$feeId][$currencyId] = $totalAmount;
@@ -223,6 +278,8 @@ if (
                 $orignal_amount[$feeId][$key] += $r_Fees;
                 // $remaining[$feeId][$key] -= $d_Fees;
             }
+}
+
 
 
             ?>

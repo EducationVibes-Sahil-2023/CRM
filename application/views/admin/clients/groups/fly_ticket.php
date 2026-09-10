@@ -85,9 +85,9 @@ $table_data = array(
 
             <!-- Modal Body -->
             <div class="modal-body" id="ticketCreateBody">
-                <form class="row" id="ticket-form" onsubmit="return false;">
+                <form class="" id="ticket-form" onsubmit="return false;">
                     <?= render_input('ticket_id', '', '', 'hidden'); ?>
-                   
+                   <div class="row">
                         <div class="form-group col-md-4">
                         <?= render_select('old_batch_id', $batchData, ['old_batch_id', 'name'], 'Batch Name'); ?>
                     </div>
@@ -101,9 +101,10 @@ $table_data = array(
                         
                     </div>
                     <div class="form-group col-md-4">
-                        <?= render_input('ticket_cost', 'Ticket Cost', '', 'number'); ?>
+                        <?= render_input('ticket_cost', 'Ticket Cost', '', 'float'); ?>
                     </div>
-
+</div>
+ <div class="row">
                     <div class="form-group col-md-4">
                         <?= render_input('payment_date', 'Payment Date', '', 'date'); ?>
                     </div>
@@ -116,6 +117,8 @@ $table_data = array(
                         <?= render_input('fly_date', 'Fly Date', '', 'datetime-local'); ?>
                     </div>
 
+</div>
+ <div class="row">
                     <div class="form-group col-md-4">
                         <?= render_select('departure_location', $departure_location, ['id', 'name'], 'Departure Location', []); ?>
                     </div>
@@ -125,6 +128,7 @@ $table_data = array(
                     </div>
                     <div class="form-group col-md-4">
                         <?= render_select('airline', $airline, ['id', 'name'], 'Airline', []); ?>
+                    </div>
                     </div>
                 </form>
             </div>
@@ -322,35 +326,58 @@ if (fileInput && fileInput.files.length > 0) {
     }
 
 
-    function delete_ticket(id) {
-        let formData = new FormData();
+async function delete_ticket(id) {
 
-        formData.append("csrf_token_name", csrfData.hash);
-        formData.append("id", id);
+    const confirmed = await showConfirmation(
+        "Are you sure you want to delete this ticket?\n\nThis action cannot be undone."
+    );
 
-        $.ajax({
-            url: "<?= base_url('admin/fly_batch/delete_ticket'); ?>",
-            type: "POST",
-            data: formData,
-            processData: false,
-            contentType: false,
-            dataType: "JSON",
-            success: function(res) {
-                if (res.resp_code === "RCS") {
-                    alert_float("success", res.resp_desc);
-                    if (typeof tAPI !== "undefined") tAPI.ajax.reload();
-                    $("#ticketModal").modal("hide");
-                } else {
-                    alert_float("danger", res.resp_desc || "An unknown error occurred.");
-                }
-            },
-            error: function(xhr, status, error) {
-                console.error("Error: ", error);
-                alert_float("danger", "An error occurred while processing the request.");
-            },
-        });
+    if (!confirmed) {
+        hide_loader(); // if loader is already shown
+        return false;
     }
 
+    let formData = new FormData();
+
+    formData.append("csrf_token_name", csrfData.hash);
+    formData.append("id", id);
+
+    $.ajax({
+        url: "<?= base_url('admin/fly_batch/delete_ticket'); ?>",
+        type: "POST",
+        data: formData,
+        processData: false,
+        contentType: false,
+        dataType: "JSON",
+
+        success: function(res) {
+            if (res.resp_code === "RCS") {
+                alert_float("success", res.resp_desc);
+
+                if (typeof tAPI !== "undefined") {
+                    tAPI.ajax.reload();
+                }
+
+                $("#ticketModal").modal("hide");
+
+            } else {
+                alert_float(
+                    "danger",
+                    res.resp_desc || "An unknown error occurred."
+                );
+            }
+        },
+
+        error: function(xhr, status, error) {
+            console.error("Error: ", error);
+
+            alert_float(
+                "danger",
+                "An error occurred while processing the request."
+            );
+        }
+    });
+}
 
     function fly_mark_as(status, id) {
         let formData = new FormData();

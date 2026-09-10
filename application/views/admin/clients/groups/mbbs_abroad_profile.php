@@ -11,15 +11,14 @@ $neet_status = get_neet_status();
 $board_dropdown = get_board_dropdown();
 $staff_list              = $this->leads_model->get_staff_list();
 $staff_list = array_column($staff_list, null, "staffid");
-
+$courseName = get_client_courseName()??[];
 $scholarshipsData = scholarshipsData($admissionpreferences->primary_university??'');
-
+$important_dates = get_client_important_dates($client_id);
 if (!empty($board_dropdown)) {
     array_unshift($board_dropdown, array("id" => "", "name" => "Select Board"));
 }
 
 $documents_type =  get_documents($lead_type_status, !empty($admissionpreferences->primary_country) ? explode(",", $admissionpreferences->primary_country) : [], 1);
-
 
 $profile_section = [];
 foreach ($documents_type as $documents) {
@@ -346,8 +345,8 @@ $neetResultStatus = [];
 
 $neetResultStatus[]["name"] = "Awaited";
 $neetResultStatus[]["name"] = "Declared";
-$neetResultStatus[]["name"] = "Fail";
-$neetResultStatus[]["name"] = "Not Appeared";
+// $neetResultStatus[]["name"] = "Fail";
+// $neetResultStatus[]["name"] = "Not Appeared";
 $neetResultStatus[]["name"] = "Without Neet";
 array_unshift($neetResultStatus, array(""));
 
@@ -523,7 +522,7 @@ if ($lead_type_status == 2) {
 </style>
 
 <h4 class="customer-profile-group-heading"><?php echo _l('client_add_edit_profile'); ?>
-    <?php if (is_admin()) { ?>
+    <?php if (is_admin() || get_staff_user_id() == 311 ) { ?>
         <div class="col-md-3 pull-right" style="top: -10px;">
             <?php echo render_select('view_assigned[]', $staff_list, array('staffid', array('firstname', 'lastname')), '', [$client->addedfrom], array('data-width' => '100%', 'data-none-selected-text' => _l('leads_dt_assigned'), 'data-actions-box' => true, "onchange" => "ChangeAssignation(this)"), array(), 'no-mbot', '', false, 'view_assigned'); ?>
         </div>
@@ -560,6 +559,9 @@ if ($lead_type_status == 2) {
                     <li role="presentation" type="1" section="Fees data updated" >
                         <a href="#fees_details" aria-controls="fees_details"  role="tab" data-toggle="tab">Fees Details</a>
                     </li>
+                    <!--<li role="presentation" type="1" section="Important Dates" >-->
+                    <!--    <a href="#imp_date" aria-controls="imp_date"  role="tab" data-toggle="tab">Important Dates</a>-->
+                    <!--</li>-->
                     <?php hooks()->do_action('after_customer_billing_and_shipping_tab', isset($client) ? $client : false); ?>
                     <?php if (isset($client)) { ?>
                         <!--<li role="presentation">-->
@@ -588,7 +590,21 @@ if ($lead_type_status == 2) {
         Your applicant fee and scholarship details have been cleared because the Primary Country or University was changed. Please review and complete the fee and scholarship details again before proceeding.
         </div>
         </div>
-         <?php } ?>
+         <?php } 
+         
+         if(!empty($admissionpreferences->primary_country) && strtolower($admissionpreferences->primary_country)=="russia" && (empty($academicdetails->school_name) || empty($academicdetails->school_address)) ) { ?>
+         
+          <div class="alert alert-warning d-flex align-items-start warning-message-fees" role="alert">
+        <div>
+        <strong> <i class="fa fa-exclamation-triangle"></i> &nbsp; Attention!</strong><br>
+        **School Name or School Address is mandatory for applicants whose primary country is Russia. Please enter the required information in the Academic Details section before proceeding.**
+
+        </div>
+        </div>
+         <?php 
+             
+         }
+         ?>
         
         </div>
 
@@ -616,8 +632,8 @@ if ($lead_type_status == 2) {
                                         </div>
                                         <div class="col-lg-3">
                                             <div class="form-group">
-                                                <label for="exampleInputEmail">Email Address <small class="text-danger">*</small></label>
-                                                <input class="form-control " <?= $read_only ?> type="text" class="form-group" required-check required placeholder="Email Address" name="email" value='<?php echo (isset($basicdetails)) ? $basicdetails->email : $contact->email; ?>'>
+                                                <label for="exampleInputEmail">Student's email id <small class="text-danger">*</small></label>
+                                                <input class="form-control " <?= $read_only ?> type="text" class="form-group" required-check required placeholder="Student's email id" name="email" value='<?php echo (isset($basicdetails)) ? $basicdetails->email : $contact->email; ?>'>
                                             </div>
                                         </div>
                                         <div class="col-lg-3">
@@ -640,7 +656,7 @@ if ($lead_type_status == 2) {
 
 
 
-                                        <div class="col-lg-3">
+                                        <div class="col-lg-2">
     <div class="form-group">
         <label>Gender <small class="text-danger">*</small></label>
 
@@ -679,8 +695,45 @@ if ($lead_type_status == 2) {
         ?>
     </div>
 </div>
+
+
+                                        <div class="col-lg-2">
+    <div class="form-group">
+        <label>Cource Name <small class="text-danger">*</small></label>
+
+        <?php
+
+        array_unshift($courseName, [
+            'id' => '',
+            'name' => 'Select Course'
+        ]);
+
+        $selected_course = !empty($client->course_name)
+            ? [$client->course_name]
+            : [];
+
+        echo render_select(
+            'course_name',
+            $courseName,
+            ['name', 'name'],
+            '',
+            $selected_course,
+            [
+                'required' => 'required',
+                'required-check' => 'required-check'
+            ],
+            [],
+            '',
+            '',
+            '',
+            'course_name'
+        );
+        ?>
+    </div>
+</div>
+       
                                         
-                                          <div class="col-lg-3">
+                                          <div class="col-lg-2">
    <div class="form-group">
     
     <label>Loan Required <?php
@@ -739,7 +792,7 @@ if ($lead_type_status == 2) {
 
         <?php
         $loan_type_list = [
-            ['id' => '3', 'name' => 'Not Required'],
+            // ['id' => '3', 'name' => 'Not Required'],
             ['id' => '1', 'name' => 'EV'],
             ['id' => '2', 'name' => 'Outside'],
         ];
@@ -886,7 +939,7 @@ if ($lead_type_status == 2) {
                                         }
                                         ?>
                                     </div>
-                                    <div class="btn-save-fun margin-top">
+                                    <div class="btn-save-fun margin-top <?=(has_permission('customers', '', 'edit') || is_postSale() || $client->addedfrom == get_staff_user_id())?'':'hide' ?>">
                                         <div class="col-md-12">
                                             <button type="submit" onclick="save_basic_details()" class="btn btn-primary button-22 pull-right margin-top">Save changes</button>
                                         </div>
@@ -985,12 +1038,12 @@ if ($lead_type_status == 2) {
                                     </div>
 
 
-                                    <div class="col-lg-3 passport-div-status <?= (in_array("exp_date", $show_fields))  ? '' : 'hide' ?>">
-                                        <div class="form-group">
-                                            <label for="exp_date">Expiry Date <small class="text-danger">*</small></label>
-                                            <input class="form-control passport-info" type="Date" class="form-group" placeholder="Enter Passport Number" name="exp_date" value="<?= (isset($passport_info) ? $passport_info->exp_date : '') ?>" required-check>
-                                        </div>
-                                    </div>
+                                    <!--<div class="col-lg-3 passport-div-status <?= (in_array("exp_date", $show_fields))  ? '' : 'hide' ?>">-->
+                                    <!--    <div class="form-group">-->
+                                    <!--        <label for="exp_date">Expiry Date <small class="text-danger">*</small></label>-->
+                                    <!--        <input class="form-control passport-info" type="Date" class="form-group" placeholder="Enter Passport Number" name="exp_date" value="<?= (isset($passport_info) ? $passport_info->exp_date : '') ?>" required-check>-->
+                                    <!--    </div>-->
+                                    <!--</div>-->
                                     <?php
                                     foreach ($profile_section["passport"] as $s_stage) {
                                         $doc_type = $s_stage["name"] ?? '';
@@ -1171,7 +1224,7 @@ if ($lead_type_status == 2) {
 
 
                                 </div>
-                                <div class="btn-save-fun margin-top">
+                                <div class="btn-save-fun margin-top <?=(has_permission('customers', '', 'edit') || is_postSale() || $client->addedfrom == get_staff_user_id())?'':'hide' ?>">
                                     <div class="col-md-12">
                                         <button type="submit" onclick="save_passport_details()" class="btn btn-primary button-22 pull-right margin-top">Save changes</button>
                                     </div>
@@ -1308,7 +1361,7 @@ if ($lead_type_status == 2) {
                                     </div>
                                   
                                 </div>
-                                <div class="row btn-save-fun margin-top">
+                                <div class="row btn-save-fun margin-top <?=(has_permission('customers', '', 'edit') || is_postSale() || $client->addedfrom == get_staff_user_id())?'':'hide' ?>">
                                     <div class="col-md-12 text-right  btn-save-fun margin-top">
                                         &nbsp; <button type="submit" onclick="save_admission_preferences()" class="btn btn-primary button-22">Save changes</button>
                                         &nbsp;
@@ -1697,7 +1750,7 @@ if ($lead_type_status == 2) {
                                             "",
                                             $selected_neet_status,
                                             $attributes,
-                                            [],
+                                            ["onchange"=>"checkNeetStatus()"],
                                             "",
                                             "",
                                             "",
@@ -1765,7 +1818,7 @@ if ($lead_type_status == 2) {
                             </div>
                         </div>
                     </div>
-                    <div class="btn-save-fun margin-top">
+                    <div class="btn-save-fun margin-top <?=(has_permission('customers', '', 'edit') || is_postSale() || $client->addedfrom == get_staff_user_id())?'':'hide' ?>">
                         <div class="col-md-12">
                             <button type="submit" onclick="save_admission_details()" class="btn btn-primary button-22 pull-right margin-top">Save changes</button>
                         </div>
@@ -1874,7 +1927,7 @@ if ($lead_type_status == 2) {
                                                         
                                                                                                                <?php
 // ---- Precompute state (readable, single source of truth) ----
-$is_privileged   = is_admin() || !empty($staff_list[get_staff_user_id()]["post_sales"]);
+$is_privileged   = is_admin() || has_permission('customers', '', 'applicant_doc_upload') || !empty($staff_list[get_staff_user_id()]["post_sales"]);
 $is_doc_disabled = !empty($doc_files['disabled']) && $doc_files['disabled'] == 1;
 $is_approved     = ($status === "Approved");
  
@@ -1936,7 +1989,7 @@ if ($is_privileged) {
 
 
                             </div>
-                            <div class="row  margin-top">
+                            <div class="row  margin-top <?=(has_permission('customers', '', 'edit') || is_postSale() || $client->addedfrom == get_staff_user_id() || has_permission('customers', '', 'applicant_doc_upload'))?'':'hide' ?>">
                                 <div class="col-md-12">
                                     <button type="submit" onclick="save_documents()" class="btn btn-primary button-22 pull-right margin-top">Save changes</button>
                                 </div>
@@ -2052,7 +2105,7 @@ if ($is_privileged) {
                                         </div>
                                     </div>
                                 </div>
-                                <div class="row btn-save-fun">
+                                <div class="row btn-save-fun <?=(has_permission('customers', '', 'edit') || is_postSale() || $client->addedfrom == get_staff_user_id())?'':'hide' ?>">
                                     <div class="col-md-12 ">
                                         <button type="submit" onclick="save_welcome_info()" class="btn btn-primary button-22 pull-right margin-top">Save changes</button>
                                     </div>
@@ -2124,7 +2177,7 @@ if ($is_privileged) {
 
 
                                                         </div>
-                                                        <input <?= $disabled ?> type="text" name="<?= $field_name ?>" <?= $required ?> class="form-control currency-amount fees_<?= $fees['id'] ?>  <?= $field_name ?>" placeholder="0.00" id="<?= $field_name ?>" value="<?= $fees["amount"] ?>" size="8" onkeypress="return acceptText(this,'number')">
+                                                        <input <?= $disabled ?> type="text" name="<?= $field_name ?>" <?= $required ?> class="form-control currency-amount fees_<?= $fees['id'] ?>  <?= $field_name ?>" placeholder="0.00" id="<?= $field_name ?>" value="<?= $fees["amount"] ?>" size="8" onkeyup="checkHostalCapacity(this.value,<?= $fees["show_hostel_capacity"] ?>)"  onkeypress="return acceptText(this,'number')">
                                                         <div class="input-group-addon currency-addon">
 
                                                             <select <?= $disabled ?> name="<?= $field_name ?>_currency_type" id="<?= $field_name ?>" class="currency-selector <?= $disabled ?> currency-selector-<?= $id ?>  <?= $field_name ?>" onchange="updateSymbol(<?= $id ?>)">
@@ -2169,6 +2222,52 @@ if ($is_privileged) {
                                             <?php
                                             }
                                             ?>
+                                            
+                                            	<div class="col-lg-4 col-md-4 col-6 fees-block-8 room-capacity-secton <?= !empty($client->hostel_capacity) && $client->hostel_capacity > 0 ? '' : 'hide' ?>">
+												    <div class="form-group">
+											<?php
+$hostelRoom = [];
+
+$hostelRoom[] = [
+    "id"   => "",
+    "value" => "",
+    "name" => "Select Room Capacity"
+];
+
+for ($i = 2; $i <= 6; $i++) {
+    $hostelRoom[] = [
+        "id"    => $i,
+        "value" => $i,
+        "name"  => $i
+    ];
+}
+
+$selected_hostel = [
+    !empty($client->hostel_capacity)
+        ? $client->hostel_capacity
+        : ''
+];
+
+echo render_select(
+    'hostel_capacity',
+    $hostelRoom,
+    ['id', 'name'],
+    'Hostel Capacity',
+    $selected_hostel,
+    [
+        "required" => "required",
+        "required-check" => "required-check"
+    ],
+    [],
+    "",
+    "",
+    "",
+    "agent_id"
+);
+?>
+											</div>
+												</div>
+												
                                             <div class="col-lg-4 col-md-4 col-6 fees-block-8">
                                                 <label>&nbsp;</label>
 
@@ -2289,7 +2388,7 @@ if ($is_privileged) {
                             </div>
 
                     </div>
-                    <div class=" row btn-save-fun margin-top">
+                    <div class=" row btn-save-fun margin-top <?=(has_permission('customers', '', 'edit') || is_postSale() || $client->addedfrom == get_staff_user_id())?'':'hide' ?>">
                         <div class="col-md-12 ">
                             <button type="submit" onclick="fees_details()" class="btn btn-primary button-22 pull-right margin-top">Save changes</button>
                         </div>
@@ -2297,6 +2396,7 @@ if ($is_privileged) {
                     </form>
                 </div>
             </div>
+
 
             <div role="tabpanel" class="tab-pane" id="preview">
                 <div class="row">
@@ -2450,7 +2550,8 @@ var university_priority_array = <?= json_encode(
         : []
 ); ?>;
 
-    function handleActivityChange() {
+var neetStatus = <?= json_encode(!empty($neet_status) ? array_column($neet_status, null, 'id') : []) ?>;
+function handleActivityChange() {
         checkFeesDisable();
         console.log("start activity");
 
@@ -2510,6 +2611,7 @@ var university_priority_array = <?= json_encode(
 
     document.addEventListener("DOMContentLoaded", function() {
         handleActivityChange();
+         checkNeetStatus();
     });
     var primary_country = "<?= !empty($admissionpreferences->primary_country) ? $admissionpreferences->primary_country : 0 ?>";
     var primary_university = "<?= !empty($admissionpreferences->primary_university) ? $admissionpreferences->primary_university : 0 ?>";
@@ -2533,6 +2635,62 @@ var university_priority_array = <?= json_encode(
         }, 1500);
     }
 
+
+function checkNeetStatus() {
+    let selectedValue = $("#neet_status").val();
+ let fileValue = $('#entrance_exam_div [name="doc_url[]"]').val();
+    // Check if the selected value exists in neetStatus object
+    if (!neetStatus[selectedValue]) return;
+
+    // Determine if validation should be disabled (mandatory = 0) or enabled (mandatory = 1)
+    let enableValidation = parseInt(neetStatus[selectedValue].mandatry) === 1;
+
+    // Target all input and select elements (except the neet_status itself)
+    $("#entrance_exam_div .hide_")
+        .find("input, select")
+        .not("#neet_status")
+        .each(function () {
+            let $field = $(this);
+            let originalClasses = $field.data("validation") || "";
+            let wasRequired = $field.data("required") == 1;
+
+            if (!enableValidation) {
+                // Remove validation
+                $field.removeClass("required required-check");
+                $field.removeAttr("required-check");
+                // Optionally remove other validation attributes
+                $field.removeAttr("data-required");
+            } else {
+               
+                if ($(this).is('input[type="file"]') && fileValue !== "") {
+                    console.log("set validation");
+     $field.removeClass("required required-check");
+                $field.removeAttr("required-check");
+                // Optionally remove other validation attributes
+                $field.removeAttr("data-required");
+}
+else{
+                // Add validation
+                $field.addClass("required required-check");
+                
+                // Only add original classes if they exist
+                if (originalClasses) {
+                    $field.addClass(originalClasses);
+                }
+
+ $field.attr("required-check", true);
+                // Set required-check attribute based on original required state
+                
+            }
+            }
+        });
+
+    // Refresh select picker for all select elements (except neet_status)
+    $("#entrance_exam_div .hide_")
+        .find("select")
+        .not("#neet_status")
+        .selectpicker("refresh");
+}
 
     document.addEventListener("DOMContentLoaded", function() {
         var documentAccessOnly = "<?= !empty($documentAccessOnly) ? $documentAccessOnly : 0 ?>";

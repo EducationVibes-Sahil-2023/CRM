@@ -6,12 +6,12 @@ function app_init_admin_sidebar_menu_items()
 {
         $CI = &get_instance();
 
-        $CI->app_menu->add_sidebar_menu_item('dashboard', [
-                'name'     => _l('als_dashboard'),
-                'href'     => admin_url(),
-                'position' => 1,
-                'icon'     => 'fa fa-home',
-        ]);
+        // $CI->app_menu->add_sidebar_menu_item('dashboard', [
+        //         'name'     => _l('als_dashboard'),
+        //         'href'     => admin_url(),
+        //         'position' => 1,
+        //         'icon'     => 'fa fa-home',
+        // ]);
 
        
                 $CI->app_menu->add_sidebar_menu_item('dashboards', [
@@ -146,6 +146,17 @@ function app_init_admin_sidebar_menu_items()
                         'href'     => admin_url('clients/mbbs_abroad'),
                         'position' => 3,
                 ]);
+                
+               if (is_admin() || has_permission('customers', '', 'doc_download') ) {
+                
+                   $CI->app_menu->add_sidebar_children_item('customers', [
+                        'slug'     => 'ma_applicant_docs',
+                        'icon'     => 'fa fa-users',
+                        'name'     => "MA Docs Download",
+                        'href'     => admin_url('clients/ma_applicant_docs'),
+                        'position' => 3,
+                ]);
+                }
 
 
 
@@ -173,6 +184,16 @@ function app_init_admin_sidebar_menu_items()
                                 'icon'     => 'fa fa-ticket',
                                 'name'     => "Ext Ticket Data",
                                 'href'     => admin_url('clients/ticket_details'),
+                                'position' => 5,
+                        ]);
+                }
+                if (has_permission('external_apostile', '', 'view') || has_permission('external_apostile', '', 'view_own')) {
+
+                        $CI->app_menu->add_sidebar_children_item('customers', [
+                                'slug'     => 'external_apostile',
+                                'icon'     => 'fa fa-ticket',
+                                'name'     => "Ext Apostile Data",
+                                'href'     => admin_url('clients/external_apostile'),
                                 'position' => 5,
                         ]);
                 }

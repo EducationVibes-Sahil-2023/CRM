@@ -329,7 +329,7 @@
             <?php if (is_admin() || empty($lead->id)) { ?>
                <div class="form-group col-md-3" app-field-wrapper="phonenumber">
                   <label for="phonenumber" class="control-label"><small class="req text-danger">* </small>Phone</label>
-                  <input type="text" maxlength="10" pattern="\d{10}" id="phonenumber" name="phonenumber" class="form-control phonenumber-validation" <?php if ($value == '') {
+                  <input type="number" oninput="this.value = this.value.replace(/[^0-9]/g, '')" maxlength="10" pattern="\d{10}" id="phonenumber" name="phonenumber" class="form-control phonenumber-validation check-phonenumber" <?php if ($value == '') {
                                                                                                                                                          echo 'maxlength="10"';
                                                                                                                                                       } ?> pattern="[6-9][0-9]{9}" value="<?php echo $value; ?>" required>
                </div>
@@ -397,7 +397,7 @@
             <?php $value = (isset($lead) ? $lead->alternative_phonenumber : ''); ?>
             <div class="form-group col-md-3" app-field-wrapper="alternative_phonenumber">
                <label for="alternative_phonenumber" class="control-label"><?= _l('lead_add_edit_alternative_phonenumber'); ?></label>
-               <input type="text" maxlength="10" pattern="\d{10}" id="alternative_phonenumber" name="alternative_phonenumber" class="form-control phonenumber-validation" <?php if ($value == '') {
+               <input type="number" oninput="this.value = this.value.replace(/[^0-9]/g, '')"  maxlength="10" pattern="\d{10}" id="alternative_phonenumber" name="alternative_phonenumber" class="form-control phonenumber-validation check-phonenumber" <?php if ($value == '') {
                                                                                                                                                                               echo 'maxlength="10"';
                                                                                                                                                                            } ?> pattern="[6-9][0-9]{9}" value="<?php echo $value; ?>">
             </div>

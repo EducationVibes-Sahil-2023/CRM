@@ -1,5 +1,11 @@
 <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+<style>
 
+    .error-border {
+    border: 1px solid red !important;
+    outline: none;
+}
+</style>
 <script>
     // comman functions
 
@@ -27,6 +33,32 @@
     var complete_application = <?= !empty($client->sc_100) && $client->sc_100 == 1 ? 1 : 0 ?>;
     var client_type = <?= !empty($client->client_type)  ? $client->client_type : 0 ?>;
 
+function checkHostalCapacity(value,status = 0) {
+    if(status == 0)
+    {
+        return false;
+    }
+    console.log(value);
+    $(".room-capacity-secton select").val('').selectpicker("refresh");
+    try {
+        let primaryCountry = <?= json_encode($admissionpreferences->primary_country ?? '') ?>;
+
+        primaryCountry = String(primaryCountry).trim().toLowerCase();
+
+        if (primaryCountry === 'georgia' && status==1 && value>0) {
+            console.log('georgia');
+            console.log(status);
+             $(".room-capacity-secton").removeClass('hide');
+        }
+        else
+        {
+            $(".room-capacity-secton").addClass('hide');
+        }
+
+    } catch (error) {
+        console.error('checkHostalCapacity error:', error);
+    }
+}
     function get_media_docs(id, formData) {
         formData.doc_url = [];
         return new Promise((resolve) => {
@@ -69,7 +101,7 @@
         var additional_fields = {};
         var form_status = true;
 
-        $("#basic-information-form input, #basic-information-form select, #basic-information-form input[type='date']").each(function() {
+        $("#basic-information-form input:visible, #basic-information-form select:visible, #basic-information-form input[type='date']:visible").each(function() {
             const value = $(this).val()?.trim(); // Get trimmed value
             const isRequired = $(this).attr("required-check") !== undefined; // Check if 'required-check' exists
             const name = $(this).attr("name"); // Get name attribute
@@ -220,7 +252,7 @@
 
 
  $(".passport-div-status").hide();
-            $(".passport-div-status input").val('');
+           $(".passport-div-status").find("input").not("[type='hidden']").val('');
             $(".passport-div-status").addClass("hide");
             
             
@@ -627,9 +659,11 @@ const confirmed = await showConfirmation(
             } else {}
         });
 
-        // console.log(additional_fields);
+        // console.log(form_status);
 
         // console.log(additional_fields);
+        // return false;
+        // 
         if (!form_status) {
             appValidateForm($("#admission-details-form"), additional_fields);
             hide_loader();
@@ -936,7 +970,11 @@ $("#fees-details-form input:visible, #fees-details-form select:visible, #fees-de
         formData.append("clientid", $('input[name="clientid"]').val());
         formData.append("air_ticket_include", $('input[name="air_ticket_include"]').is(':checked') ? 1 : 0);
         $("#air_ticket_include").attr("disabled", false);
-
+        var roomCapacity = $('select[name="hostel_capacity"]').is(':visible')
+        ? $('select[name="hostel_capacity"]').val()
+        : '';
+        
+        formData.append("hostel_capacity", roomCapacity);
 
         // Function to process media files
 
@@ -1094,6 +1132,7 @@ $('.readonlyy').prop('disabled', true);
 
         var additional_fields = {};
         var form_status = true;
+        var validationCheckName = [];
         $("form").each(function() {
             let form = $(this); // Cache the form element
             let formId = form.attr("id");
@@ -1107,6 +1146,7 @@ $('.readonlyy').prop('disabled', true);
                 if (isRequired && name) {
                     additional_fields[name] = "required";
                     if (!value) {
+                        validationCheckName.push(name);
                         // console.log(name);
                         form_status = false;
                     }
@@ -1116,9 +1156,53 @@ $('.readonlyy').prop('disabled', true);
 
             // Validate the form if any required field is missing
             if (!form_status) {
-                alert("First fill all requried fields");
+                alert("First fill all requried fields "+validationCheckName[0]);
                 appValidateForm("#" + formId, additional_fields);
+                
+                // Validate the form if any required field is missing
 
+
+    // Remove all previous error classes
+    $(".error-border").removeClass("error-border");
+
+    let focused = false;
+
+    for (let i = 0; i < validationCheckName.length; i++) {
+
+        var $field = $("[name='" + validationCheckName[i] + "']");
+
+
+
+       if ($field.is("select") || $field.hasClass("selectpicker")) {
+//  console.log(validationCheckName[i]);
+            // Add error class to bootstrap-select wrapper
+            $field.parent(".bootstrap-select").addClass("error-border");
+
+            // Focus only the first invalid field
+            if (!focused) {
+                $field.parent(".bootstrap-select")
+                      .find(".dropdown-toggle")
+                      .focus();
+                focused = true;
+            }
+
+        } else {
+
+            // Normal input/textarea
+            $field.addClass("error-border");
+
+            // Focus only the first invalid field
+            if (!focused) {
+                $field.focus();
+                focused = true;
+            }
+        }
+    
+
+    return false;
+}
+
+          
                 return false;
             }
         });

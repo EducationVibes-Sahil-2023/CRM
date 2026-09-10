@@ -123,7 +123,7 @@
         $.post(admin_url + 'emails/sent_smtp_test_email', {
           test_email: email
         }).done(function(data) {
-          window.location.reload();
+        //   window.location.reload();
         });
       }
     });
