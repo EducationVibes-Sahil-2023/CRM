@@ -1,1 +1,0 @@
-{"result":{"text":"open curly brackets 9 close curly brackets"},"status":"ok"}

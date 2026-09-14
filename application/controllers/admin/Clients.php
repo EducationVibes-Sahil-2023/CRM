@@ -1847,6 +1847,10 @@ class Clients extends AdminController
             // Handle Mass Delete
             if ($this->input->post('mass_delete') == "true") {
 
+ if (!has_permission('customers', '', 'delete')) {
+                    ajax_access_denied();
+                }
+                
                 foreach ($ids as $id) {
                     if ($this->clients_model->delete($id)) {
                         $total_deleted++;

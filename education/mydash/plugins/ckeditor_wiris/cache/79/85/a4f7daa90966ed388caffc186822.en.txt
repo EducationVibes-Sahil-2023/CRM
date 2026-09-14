@@ -1,1 +1,0 @@
-{"result":{"text":"straight t subscript 2 straight g end subscript superscript 6 straight e subscript straight g superscript 2"},"status":"ok"}

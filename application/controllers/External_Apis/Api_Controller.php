@@ -3,7 +3,7 @@ defined('BASEPATH') or exit('No direct script access allowed');
 
 class Api_Controller extends CI_Controller
 {
-    public $secretKey = '1234567890';
+    public $secretKey = JWT_SECRET;
     public $staffId = '';
 
     public function __construct()
@@ -32,6 +32,12 @@ class Api_Controller extends CI_Controller
                     echo json_encode(array("status" => 0, "message" => $token_decode_data["message"]));
                     die;
                 }
+                
+                 if (empty($token_decode_data->exp) || $token_decode_data->exp < time()) {
+                echo json_encode(array("status" => 0, "message" => "Jwt token is expired"));
+                die;
+            }
+            
             // if (!empty($token_decode_data->expire_status) && $token_decode_data->expire_status == 1) {
             // } else {
             //     if (empty($token_decode_data->iat)) {

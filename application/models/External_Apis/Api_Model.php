@@ -869,7 +869,9 @@ public function insert_data_batch($table, $data)
         $response = [];
         try {
             $jwt = new JWT();
-            $response = $jwt->encode($data, $this->secretKey, "HS256");
+            // $response = $jwt->encode($data, $this->secretKey, "HS256");
+                        $response = $jwt->encode($data, JWT_SECRET, "HS256");
+
         } catch (Exception $e) {
             $response = array("status" => 0, "message" => "Not generate token.");
         }

@@ -3560,7 +3560,7 @@ function paymentDuesHostel()
 {
 
 
-    $country = !empty($_GET['country']) ? $_GET['country'] : '';
+    $country = (!empty($_GET['country']) && is_string($_GET['country'])) ? $_GET['country'] : '';
     $CI = &get_instance();
     $CI->db->query("SET SESSION group_concat_max_len = 10000000000");
     // fetch fees with lead_type as well
@@ -3767,8 +3767,8 @@ LEFT JOIN LATERAL (
 
 WHERE ho.status = 1";
 
-    if (!empty($country)) {
-        $sql .= " AND ho.hostel_type = '${country}' ";
+  if (!empty($country)) {
+        $sql .= " AND ho.hostel_type = " . $CI->db->escape($country) . " ";
     }
 
 

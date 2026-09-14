@@ -1,1 +1,0 @@
-{"result":{"text":"9 square root of 3 space to the power of 34 open parentheses 5 close parentheses end exponent end root open square brackets 5 close square brackets open square brackets table row w blank blank blank row blank f blank blank row blank blank blank blank row blank f blank blank end table close square brackets"},"status":"ok"}

@@ -1,1 +1,0 @@
-{"result":{"text":"straight x squared over straight a squared space plus space fraction numerator begin display style straight y squared end style over denominator begin display style straight b squared end style end fraction space"},"status":"ok"}

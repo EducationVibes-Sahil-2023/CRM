@@ -159,9 +159,51 @@ $length = (int)$this->ci->input->post('length');
 if ($length <= 0 || $length > 500) { $length = 10; }
 $searchVal   = $this->ci->input->post('search')['value'] ?? '';
 $whereSearch = '';
-if ($searchVal !== '') {
-    $like = $this->ci->db->escape_like_str($searchVal);
-    $whereSearch = " AND CONCAT(bd.first_name, ' ', bd.last_name) LIKE '%$like%' ";
+
+// if ($searchVal !== '') {
+//     $like = $this->ci->db->escape_like_str($searchVal);
+//     $whereSearch = " AND CONCAT(bd.first_name, ' ', bd.last_name) LIKE '%$like%' ";
+// }
+
+
+if (!empty($_POST["search"]["value"])) {
+
+    $search_value = trim($_POST["search"]["value"]);
+
+    if (strpos($search_value, ',') !== false) {
+
+        // Comma-separated values
+        $searchValues = array_filter(
+            array_map('trim', explode(',', $search_value))
+        );
+
+        $_POST["search"]["value"] = implode(",", $searchValues);
+
+        $conditions = [];
+
+        foreach ($searchValues as $value) {
+            $like = $this->ci->db->escape_like_str($value);
+
+            $conditions[] = "CONCAT(
+                bd.first_name,
+                ' ',
+                bd.last_name
+            ) LIKE '%$like%'";
+        }
+
+        $whereSearch = " AND (" . implode(" OR ", $conditions) . ") ";
+
+    } else {
+
+        // Single search value
+        $like = $this->ci->db->escape_like_str($search_value);
+
+        $whereSearch = " AND CONCAT(
+            bd.first_name,
+            ' ',
+            bd.last_name
+        ) LIKE '%$like%' ";
+    }
 }
 
 // ---------- Shared FROM/WHERE so counts and page rows CANNOT diverge ----------
