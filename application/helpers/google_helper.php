@@ -1421,8 +1421,11 @@ $group_by = $group_by_sql;
                 WHEN aps.received_status = 1 THEN 'Received'
                 ELSE 'Pending'
             END AS apostille_status,
-            aps.currency_text AS currency_text
+            aps.currency_text AS currency_text,
+             pm.name p_mode
         FROM " . db_prefix() . "client_apostille_data aps
+         LEFT JOIN " . db_prefix() . "payment_mode pm
+                        ON pm.id = aps.payment_mode
         JOIN " . db_prefix() . "orignal_documents tod
             ON aps.doc_id = tod.id
     ) AS apostille_summary
@@ -1455,10 +1458,13 @@ $group_by = $group_by_sql;
                 WHEN aps.received_status = 1 THEN 'Received'
                 ELSE 'Pending'
             END AS translation_status,
-            aps.currency_text AS currency_text
+            aps.currency_text AS currency_text,
+            pm.name p_mode
         FROM " . db_prefix() . "client_translation_data aps
         JOIN " . db_prefix() . "orignal_documents tod
             ON aps.doc_id = tod.id
+               LEFT JOIN " . db_prefix() . "payment_mode pm
+                        ON pm.id = aps.payment_mode
     ) AS translation_summary
     ON translation_summary.userid = c.userid";
      }
@@ -1487,8 +1493,12 @@ $group_by = $group_by_sql;
                 WHEN SUM(received_status = 0) > 0 THEN 'Sent'
                 WHEN SUM(received_status = 1) = COUNT(*) THEN 'Received'
                 ELSE 'Pending'
-            END AS apostille_status
+            END AS apostille_status,
+           ,
+            pm.name p_mode
         FROM " . db_prefix() . "client_apostille_data
+          LEFT JOIN " . db_prefix() . "payment_mode pm
+                        ON pm.id = " . db_prefix() . "client_apostille_data.payment_mode
         GROUP BY userid
     ) AS apostille_summary
     ON apostille_summary.userid = c.userid";
@@ -1520,10 +1530,13 @@ $group_by = $group_by_sql;
                 WHEN aps.received_status = 1 THEN 'Received'
                 ELSE 'Pending'
             END AS translation_status,
-            aps.currency_text AS currency_text
+            aps.currency_text AS currency_text,
+             pm.name p_mode
         FROM " . db_prefix() . "client_translation_data aps
         JOIN " . db_prefix() . "orignal_documents tod
             ON aps.doc_id = tod.id
+                      LEFT JOIN " . db_prefix() . "payment_mode pm
+                        ON pm.id = aps.payment_mode
     ) AS translation_summary
     ON translation_summary.userid = c.userid";
      }

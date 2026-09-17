@@ -150,7 +150,7 @@ $client_type = [
                               <button type="button" class="btn btn-primary" onclick="downloadSelectedDocs()" id="download">
                                  <i class="fa fa-file-archive-o"></i> 
                               </button>
-                              <button type="button" class="btn btn-primary" onclick="apply_filter()" id="apply_filter_">Refresh <i class="fa fa-refresh"></i> </button>
+                              <button type="button" class="btn btn-primary" onclick="apply_filter()" id="apply_filter_">Apply <i class="fa fa-refresh"></i> </button>
                               <button type="button" class="btn btn-default" onclick="window.location.reload();">Reset</button>
                            </div>
                         </div>

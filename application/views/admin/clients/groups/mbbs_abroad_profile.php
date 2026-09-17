@@ -39,35 +39,10 @@ $visasectionDetails = $this->db
     ->get()
     ->result_array();
 
-if (!empty($visasectionDetails)) {
 
-    foreach ($visasectionDetails as $k => $visaInfo) {
 
-        foreach ($visaInfo as $key => $value) {
-
-            if (!empty($value)) {   // skip empty columns
-
-                // Custom display name
-                if ($key == "file") {
-                    $display_name = "Visa Stamp";
-                } else {
-                    $display_name = ucfirst(str_replace("_", " ", $key));
-                }
-
-                $display_name .= " " . ($k + 1);
-
-                $documents_type[] = array(
-                    "id"        => "Visa Section",
-                    "disabled"  => 1,
-                    "disabledd" => 1,
-                    "stage"     => "Visa",
-                    "name"      => $display_name,
-                    "file_type" => ".pdf,image/*"
-                );
-            }
-        }
-    }
-}
+     
+                  
 
 
 $staff_id = array_column($customer_admins, "staff_id");
@@ -106,6 +81,52 @@ if (!empty($applicant_documents[0]["data"])) {
         }
     }
 
+
+if (!empty($visasectionDetails)) {
+
+    foreach ($visasectionDetails as $k => $visaInfo) {
+
+        foreach ($visaInfo as $key => $value) {
+
+
+            if (!empty($value)) {   // skip empty columns
+
+                // Custom display name
+                if ($key == "file") {
+                    $display_name = "Visa Stamp";
+                } else {
+                    $display_name = ucfirst(str_replace("_", " ", $key));
+                }
+
+                $display_name .= " " . ($k + 1);
+$display_name_id =preg_replace('/\s+/', '-', $display_name);
+                $documents_type[] = array(
+                    "id"        => $display_name_id,
+                    "disabled"  => 1,
+                    "disabledd" => 1,
+                    "stage"     => "Visa",
+                    "name"      => $display_name,
+                    "file_type" => ".pdf,image/*"
+                );
+                 if ($key == "file") {
+                 $applicant_documents[] = [
+            "id"            => $display_name_id,
+            "document_file" => $visaInfo['file']
+        ];
+                 }
+                 else {
+                
+                     
+                        $applicant_documents[] = [
+            "id"            => $display_name_id,
+            "document_file" => $visaInfo['tracking_receipt']
+        ];
+                 }
+                 
+            }
+        }
+    }
+}
 
 
 // foreach ($university_shortlisting as $shortlistingD) {
@@ -299,6 +320,13 @@ foreach ($university_shortlisting as $shortlistingD) {
 }
 
 
+//   if(is_admin())
+//                      {
+//                          echo "<pre>";
+//                          print_r($documents_type);
+//                          print_r($applicant_documents);
+//                          echo "</pre>";
+//                      }
 
 
 

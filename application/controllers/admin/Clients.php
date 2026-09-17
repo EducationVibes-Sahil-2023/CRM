@@ -1988,9 +1988,14 @@ class Clients extends AdminController
                 //     }
                 // }
 
-                if (!empty($_POST["apostile_id"])) {
-                    $check_status = 2;
-                }
+if (!empty($_POST['apostile_id'])) {
+    $check_status = 2; // Update apostille data
+} elseif (!empty($courier_date)) {
+    $check_status = 1; // Insert new apostille data
+} else {
+    $check_status = 2; // Update apostille data
+}
+
 
 
                 // else if (empty($courier_date) && empty($documents_id) && (!empty($receiving_date) || !empty($payment_date))) {
@@ -2009,16 +2014,21 @@ class Clients extends AdminController
                 }
                 
                 
-                if(empty($get_data_from_document))
-                {
+                // if(empty($get_data_from_document))
+                // {
                     
-                }
+                // }
+                
+                
+            
 
                 if ($check_status == 1) {
                     $insert_apostille_data = [];
                     $activity_data = [];
                     foreach ($ids as $applicant_id) {
                         foreach ($documents_id as $doc_id) {
+                            
+                            
                             // Validate document cost
                             if (!isset($document_cost[$doc_id]) || !is_numeric($document_cost[$doc_id])) {
                             }
@@ -2102,6 +2112,18 @@ class Clients extends AdminController
                     $activity_data = [];
                     foreach ($get_data_from_document as $rec_apostille) {
 
+  $docId = $rec_apostille['doc_id'];
+
+// if(is_admin())
+// {
+//     print_r($document_cost);
+//     print_r($get_data_from_document);
+// }
+    if (
+        !in_array($docId, $documents_id, true)
+    ) {
+        continue;
+    }
                         $row = [
                             "id" => $rec_apostille["id"],
                             "updated_at" => date('Y-m-d H:i:s'),
@@ -2113,7 +2135,7 @@ class Clients extends AdminController
                             $row["received_status"] = 1;
                         }
 
-                        if ($document_cost[$rec_apostille['doc_id']] != '') {
+                        if ($document_cost[$rec_apostille['doc_id']] != '' && in_array($rec_apostille['doc_id'],$documents_id)) {
                             $row["apostille_cost"] = $document_cost[$rec_apostille['doc_id']];
                             $row["currency_type"] = $currency_id_apostile;
                             $row["currency_text"] = $currency_text_apostile;
