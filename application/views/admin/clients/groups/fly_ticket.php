@@ -48,6 +48,13 @@ $table_data = array(
     "Action",
 );
 ?>
+
+<style>
+    .table-responsive
+    {
+        overflow-x: unset !important;
+    }
+</style>
 <div class="row">
     <div class="col-md-12">
         <div class="form-container">

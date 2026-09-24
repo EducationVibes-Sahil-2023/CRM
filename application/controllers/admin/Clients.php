@@ -6340,29 +6340,29 @@ public function passport_info()
 //     : '';
     
 // if (is_admin()) {
-    if (!empty($_POST['issue_date'])) {
+//     if (!empty($_POST['issue_date'])) {
 
-        $passportResult = update_passport_exp(
-            $client_id,
-            $_POST['issue_date']
-        );
+//         $passportResult = update_passport_exp(
+//             $client_id,
+//             $_POST['issue_date']
+//         );
 
-// print_r($passportResult);
-        if ($passportResult['status'] == 1) {
+// // print_r($passportResult);
+//         if ($passportResult['status'] == 1) {
 
-            $passpot_data['exp_date'] = $passportResult['exp_date'];
+//             $passpot_data['exp_date'] = $passportResult['exp_date'];
 
-        } else {
+//         } else {
 
-            $data['resp_code'] = 'ERR';
-            $data['resp_desc'] = $passportResult['message'];
+//             $data['resp_code'] = 'ERR';
+//             $data['resp_desc'] = $passportResult['message'];
 
-            set_alert('danger', $passportResult['message']);
+//             set_alert('danger', $passportResult['message']);
 
-            echo json_encode($data);
-            exit;
-        }
-    }
+//             echo json_encode($data);
+//             exit;
+//         }
+//     }
 // }
         /*
         |----------------------------------------------------------------------

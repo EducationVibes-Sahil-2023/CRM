@@ -8,6 +8,7 @@ foreach ($clientsDocuments as $doc) {
     if ($i++ >= 5) break;
     $preselectedDocs[] = is_array($doc) ? $doc['id'] : $doc->id;
 }
+$clientsDocuments[] =array("id"=>"invitation_letter","name"=>"Invitation Letter");
 
 $application_stage = get_applicant_stage_mbbs();
 $application_sub_stage_mbbs = $this->clients_model->get_application_sub_stage_mbbs();
@@ -145,10 +146,10 @@ $client_type = [
                                  ?>
                               </div>
                               
-                        <div class="col-md-2 margin-top">
+                        <div class="col-md-3 margin-top">
                            <div class="form-group">
                               <button type="button" class="btn btn-primary" onclick="downloadSelectedDocs()" id="download">
-                                 <i class="fa fa-file-archive-o"></i> 
+                                 <i class="fa fa-file-archive-o"> Download </i> 
                               </button>
                               <button type="button" class="btn btn-primary" onclick="apply_filter()" id="apply_filter_">Apply <i class="fa fa-refresh"></i> </button>
                               <button type="button" class="btn btn-default" onclick="window.location.reload();">Reset</button>

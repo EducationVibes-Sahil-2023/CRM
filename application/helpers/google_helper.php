@@ -1736,7 +1736,7 @@ $sql = "SELECT {$selectColumnName}
                 LEFT JOIN " . db_prefix() . "applicant_status s ON c.active = s.id
                 LEFT JOIN " . db_prefix() . "leads l ON l.id = c.leadid
                 LEFT JOIN " . db_prefix() . "staff st ON l.assigned = st.staffid
-                LEFT JOIN " . db_prefix() . "staff rc ON c.referralCounsollor = rc.staffid
+                LEFT JOIN " . db_prefix() . "staff rc ON (c.referralCounsollor = rc.staffid and c.partner_type=2)
                 LEFT JOIN " . db_prefix() . "applicant_stages tt ON tt.id = c.applicant_stage
                 LEFT JOIN " . db_prefix() . "application_sub_category_mbbs ts ON ts.id = c.applicant_sub_status
 
@@ -2067,14 +2067,54 @@ foreach ($baseRows as $r) {
                 $did  = (int) ($d['id'] ?? 0);
                 if ($did <= 0 || $name === '') { continue; }
                 $a = $alias('upl_', $name, $used);
+                // $items[] = [
+                //     'seq' => $updSeq[$did] ?? PHP_INT_MAX, 'ord' => 0, 'label' => $a,
+                //     'sql' => "CASE
+                //         WHEN JSON_EXTRACT(CAST(cd.data AS CHAR CHARACTER SET utf8), '$[*].id') IS NOT NULL
+                //          AND JSON_CONTAINS(JSON_EXTRACT(CAST(cd.data AS CHAR CHARACTER SET utf8), '$[*].id'), JSON_QUOTE('{$did}')) THEN 'YES'
+                //         WHEN JSON_EXTRACT(CAST(cd.data AS CHAR CHARACTER SET utf8), '$.\"{$did}\".id') IS NOT NULL THEN 'YES'
+                //         ELSE 'NO' END AS `{$a}`",
+                // ];
+                
+                
+                //       $items[] = [
+                //     'seq' => $updSeq[$did] ?? PHP_INT_MAX, 'ord' => 0, 'label' => $a,
+                //     'sql' => "CASE
+                //         WHEN JSON_EXTRACT(CAST(cd.data AS CHAR CHARACTER SET utf8), '$[*].id') IS NOT NULL
+                //          AND JSON_CONTAINS(JSON_EXTRACT(CAST(cd.data AS CHAR CHARACTER SET utf8), '$[*].id'), JSON_QUOTE('{$did}')) THEN 'YES'
+                //         WHEN JSON_EXTRACT(CAST(cd.data AS CHAR CHARACTER SET utf8), '$.\"{$did}\".id') IS NOT NULL THEN 'YES'
+                //         ELSE 'NO' END AS `{$a}`",
+                // ];
+                
+                
                 $items[] = [
-                    'seq' => $updSeq[$did] ?? PHP_INT_MAX, 'ord' => 0, 'label' => $a,
-                    'sql' => "CASE
-                        WHEN JSON_EXTRACT(CAST(cd.data AS CHAR CHARACTER SET utf8), '$[*].id') IS NOT NULL
-                         AND JSON_CONTAINS(JSON_EXTRACT(CAST(cd.data AS CHAR CHARACTER SET utf8), '$[*].id'), JSON_QUOTE('{$did}')) THEN 'YES'
-                        WHEN JSON_EXTRACT(CAST(cd.data AS CHAR CHARACTER SET utf8), '$.\"{$did}\".id') IS NOT NULL THEN 'YES'
-                        ELSE 'NO' END AS `{$a}`",
-                ];
+    'seq'   => $updSeq[$did] ?? PHP_INT_MAX,
+    'ord'   => 0,
+    'label' => $a,
+    'sql'   => "CASE
+        WHEN JSON_CONTAINS(
+            JSON_EXTRACT(
+                CAST(cd.data AS CHAR CHARACTER SET utf8),
+                '$[*].id'
+            ),
+            '{$did}'
+        )
+        OR JSON_CONTAINS(
+            JSON_EXTRACT(
+                CAST(cd.data AS CHAR CHARACTER SET utf8),
+                '$[*].id'
+            ),
+            JSON_QUOTE('{$did}')
+        )
+        OR JSON_EXTRACT(
+            CAST(cd.data AS CHAR CHARACTER SET utf8),
+            '$.\"{$did}\".id'
+        ) IS NOT NULL
+        THEN 'YES'
+        ELSE 'NO'
+    END AS `{$a}`",
+];
+                
             }
 
             // $items[] = ['seq' => PHP_INT_MAX, 'ord' => 1, 'label' => 'Invitation_letter',
@@ -2254,7 +2294,7 @@ foreach ($baseRows as $r) {
             LEFT JOIN " . db_prefix() . "applicant_status s ON c.active = s.id
             LEFT JOIN " . db_prefix() . "leads l ON l.id = c.leadid
             LEFT JOIN " . db_prefix() . "staff st ON l.assigned = st.staffid
-            LEFT JOIN " . db_prefix() . "staff rc ON c.referralCounsollor = rc.staffid
+            LEFT JOIN " . db_prefix() . "staff rc ON (c.referralCounsollor = rc.staffid and c.partner_type = 2)
             LEFT JOIN " . db_prefix() . "applicant_stages tt ON tt.id = c.applicant_stage
             LEFT JOIN " . db_prefix() . "application_sub_category_mbbs ts ON ts.id = c.applicant_sub_status
             LEFT JOIN " . db_prefix() . "admission_preferences p ON p.userid = c.userid
@@ -2312,8 +2352,6 @@ foreach ($baseRows as $r) {
         if ($limit > 0) {
             $sql .= " LIMIT {$offset}, {$limit}";
         }
-// print_r($_REQUEST);
-// die;
 
 // print_r($offset);
         $dataArray[] = [
@@ -3489,7 +3527,7 @@ function payment_quotations($id = '')
         LEFT JOIN " . db_prefix() . "office_location lo ON lo.id = pq.location_id  
         LEFT JOIN " . db_prefix() . "client_passport_details pd ON pd.client_id = c.userid 
         LEFT JOIN " . db_prefix() . "passport_stages ps ON ps.id = pd.passport_status 
-        LEFT JOIN " . db_prefix() . "staff rc ON c.referralCounsollor = rc.staffid
+        LEFT JOIN " . db_prefix() . "staff rc ON (c.referralCounsollor = rc.staffid and c.partner_type=2)
         
                 LEFT JOIN  " . db_prefix() . "admission_preferences p 
                 ON p.userid = pq.client_id 

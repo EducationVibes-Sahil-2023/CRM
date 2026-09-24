@@ -20,6 +20,8 @@
     }
     })
     
+    
+    
 //     if (
 //     $('#sample_collect_modal').length &&
 //     typeof $('#sample_collect_modal').modal === 'function'
@@ -33,6 +35,59 @@
     var complete_application = <?= !empty($client->sc_100) && $client->sc_100 == 1 ? 1 : 0 ?>;
     var client_type = <?= !empty($client->client_type)  ? $client->client_type : 0 ?>;
 
+
+
+    // function updateDate(obj, status,size) {
+
+    //     if (status == 1) {
+
+    //         if (!obj.files || obj.files.length === 0) {
+    //             // alert('Please select file first');
+    //             $('#sample_collect_date').val("");
+    //             return false;
+    //         }
+    //         $('#sample_collect_modal').modal('show');
+
+    //     }
+    // }
+    
+    
+    
+  function updateDate(obj, status, size = "") {
+
+    console.log("Allowed size:", size);
+
+    if (status == 1) {
+
+        if (!obj.files || obj.files.length === 0) {
+            $('#sample_collect_date').val("");
+            return false;
+        }
+
+        if (size !== null && size !== "" && Number(size) > 0) {
+
+            const file = obj.files[0];
+
+            // size is in MB
+            const maxSize = Number(size) * 1024 * 1024;
+
+            if (file.size > maxSize) {
+
+                alert_float(
+                    "danger",
+                    'File size must not be more than ' + Number(size) + ' MB.'
+                );
+
+                obj.value = '';
+                $('#sample_collect_date').val("");
+                return false;
+            }
+        }
+
+        $('#sample_collect_modal').modal('show');
+    }
+}
+    
 function checkHostalCapacity(value,status = 0) {
     if(status == 0)
     {

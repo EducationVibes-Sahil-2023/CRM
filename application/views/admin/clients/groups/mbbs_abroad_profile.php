@@ -1066,12 +1066,12 @@ if ($lead_type_status == 2) {
                                     </div>
 
 
-                                    <!--<div class="col-lg-3 passport-div-status <?= (in_array("exp_date", $show_fields))  ? '' : 'hide' ?>">-->
-                                    <!--    <div class="form-group">-->
-                                    <!--        <label for="exp_date">Expiry Date <small class="text-danger">*</small></label>-->
-                                    <!--        <input class="form-control passport-info" type="Date" class="form-group" placeholder="Enter Passport Number" name="exp_date" value="<?= (isset($passport_info) ? $passport_info->exp_date : '') ?>" required-check>-->
-                                    <!--    </div>-->
-                                    <!--</div>-->
+                                    <div class="col-lg-3 passport-div-status <?= (in_array("exp_date", $show_fields))  ? '' : 'hide' ?>">
+                                        <div class="form-group">
+                                            <label for="exp_date">Expiry Date <small class="text-danger">*</small></label>
+                                            <input class="form-control passport-info" type="Date" class="form-group" placeholder="Enter Passport Number" name="exp_date" value="<?= (isset($passport_info) ? $passport_info->exp_date : '') ?>" required-check>
+                                        </div>
+                                    </div>
                                     <?php
                                     foreach ($profile_section["passport"] as $s_stage) {
                                         $doc_type = $s_stage["name"] ?? '';
@@ -1517,7 +1517,7 @@ if ($lead_type_status == 2) {
                                                 <p>School Name</p>
                                             </div>
                                             <div class="c2">
-                                                <input class="form-control" type="text" placeholder="School Name" name="school_name" id="school_name" value="<?= $academicdetails->school_name; ?>">
+                                                <input class="form-control" type="text" required required-check placeholder="School Name" name="school_name" id="school_name" value="<?= $academicdetails->school_name; ?>">
                                             </div>
                                         </div>
                                         <div class="col-lg-3 border2 border1">
@@ -1525,7 +1525,7 @@ if ($lead_type_status == 2) {
                                                 <p>School Address</p>
                                             </div>
                                             <div class="c2">
-                                                <textarea class="form-control" placeholder="School Address" name="school_address" id="school_address"><?= $academicdetails->school_address; ?></textarea>
+                                                <textarea class="form-control"  required required-check placeholder="School Address" name="school_address" id="school_address"><?= $academicdetails->school_address; ?></textarea>
                                             </div>
                                         </div>
                                         <div class="col-lg-2 border2 border1">
@@ -1866,6 +1866,7 @@ if ($lead_type_status == 2) {
                                         <tr>
                                             <th scope="col">S.No</th>
                                             <th scope="col">Document Type</th>
+                                            <th>MAX File Size</th>
                                             <th scope="col">Stage</th>
                                             <th scope="col">Status</th>
                                             <th scope="col">Upload</th>
@@ -1928,6 +1929,9 @@ if ($lead_type_status == 2) {
                                                          <i class="fa fa-eye  btn btn-xs btn-primary" onclick="show_media_files('<?= $doc_files['sample_preview'] ?>');"></i>
                                                          <?php } ?>
                                                     </td>
+<td>
+                                                        <?= $doc_files["media_size"]?$doc_files["media_size"].' MB':'' ?>
+                                                    </td>
                                                     <td>
                                                         <?= $doc_files["stage"] ?>
                                                     </td>
@@ -1979,7 +1983,7 @@ if ($is_privileged) {
     name="files[<?= $doc_id ?>]"
     value="<?= $file_url ?>"
     class="form-control <?= $disabled_cls ?>"
-    onchange="updateDate(this, <?= $doc_files['upload_date'] ?>)"
+    onchange="updateDate(this, <?= $doc_files['upload_date'] ?>,<?= $doc_files["media_size"]?$doc_files["media_size"]:'' ?>)"
     accept="<?= htmlspecialchars($accept, ENT_QUOTES, 'UTF-8') ?>"
     <?= $disabled_attr ?>
     <?= $required_attr ?>>
@@ -2987,19 +2991,7 @@ else{
         }
     }
 
-    function updateDate(obj, status) {
 
-        if (status == 1) {
-
-            if (!obj.files || obj.files.length === 0) {
-                // alert('Please select file first');
-                $('#sample_collect_date').val("");
-                return false;
-            }
-            $('#sample_collect_modal').modal('show');
-
-        }
-    }
 
 
 

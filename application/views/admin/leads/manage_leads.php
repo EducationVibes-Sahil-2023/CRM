@@ -1246,7 +1246,8 @@ $reference_name = $this->db
                      'data-width' => '100%',
                      'data-none-selected-text' => _l('leads_source'),
                      'multiple' => true,
-                     'data-actions-box' => true
+                     'data-actions-box' => true,
+                      'onchange'=>"updateReferenceName()"
                   ),
                   array(),
                   'no-mbot',
@@ -1292,7 +1293,7 @@ $reference_name = $this->db
                   <?php
                   echo render_select(
                      'reference_name[]',
-                     $reference_name,
+                     [],
                      array('name', 'name'),
                      '',
                      '',
@@ -1300,7 +1301,8 @@ $reference_name = $this->db
                         'data-width' => '100%',
                         'data-none-selected-text' => "Reference Name",
                         'multiple' => true,
-                        'data-actions-box' => true
+                        'data-actions-box' => true,
+                       
                      ),
                      array(),
                      'no-mbot',
@@ -1500,6 +1502,50 @@ $reference_name = $this->db
 <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/chartjs-plugin-datalabels@2"></script>
 <script>
+
+
+var source_reference_name = <?= !empty($source_reference_name)
+    ? json_encode(array_column($source_reference_name, 'reference_names', 'source'))
+    : '{}' ?>;
+
+function updateReferenceName()
+{
+    sourceIds = $("#side-filter #view_source").val() || [];
+    console.log(sourceIds);
+    var $select = $("#side-filter #reference_name");
+
+    $select.empty();
+
+    // Handle single ID or multiple IDs
+    if (!Array.isArray(sourceIds)) {
+        sourceIds = [sourceIds];
+    }
+
+    var references = [];
+
+    sourceIds.forEach(function (sourceId) {
+        var sourceReferences = source_reference_name[sourceId] || [];
+
+        references = references.concat(sourceReferences);
+    });
+
+    // Remove duplicate reference names
+    references = [...new Set(references)];
+
+    console.log("Source IDs:", sourceIds);
+    console.log("References:", references);
+
+    references.forEach(function (name) {
+        $select.append(
+            $("<option>", {
+                value: name,
+                text: name
+            })
+        );
+    });
+
+    $select.selectpicker("refresh");
+}
 
 
 const BLUE='#378ADD', BLUE_LT='#B5D4F4';

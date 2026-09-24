@@ -231,6 +231,30 @@ $this->db->insert(db_prefix() . 'facebook_webhook_data', ['data' => json_encode(
                    $form->lead_source =69; 
                    
                 }
+//               // 1. Domain only
+$origin  = $_SERVER['HTTP_ORIGIN'] ?? '';
+$referer = $_SERVER['HTTP_REFERER'] ?? '';
+
+$domain_name = '';
+$domain_full_url = '';
+
+$url = !empty($referer) ? $referer : $origin;
+
+if (!empty($url)) {
+    $parsed = parse_url($url);
+
+    $domain_name = $parsed['host'] ?? '';
+
+    $domain_full_url = $domain_name;
+
+    if (!empty($parsed['path'])) {
+        $domain_full_url .= $parsed['path'];
+    }
+
+    if (!empty($parsed['query'])) {
+        $domain_full_url .= '?' . $parsed['query'];
+    }
+}
                 $post_data["phonenumber"] =  substr(preg_replace('/\D/', '', $post_data["phonenumber"]), -10);
                 $post_data["phonenumber"] = !empty($post_data["phonenumber"]) ? substr(trim($post_data["phonenumber"]), -10) : '';
                 $post_data["phonenumber"] = str_replace("+91", "", $post_data["phonenumber"]);
@@ -518,6 +542,8 @@ $this->db->insert(db_prefix() . 'facebook_webhook_data', ['data' => json_encode(
                 $success      = false;
                 $insert_to_db = true;
 
+$regular_fields["domain_name"] = $domain_name;
+$regular_fields["full_url"] = $domain_full_url;
 
                 // if (!empty($call_data)) {
                 //     $this->curl_function($call_data);
@@ -849,7 +875,10 @@ $this->db->insert(db_prefix() . 'facebook_webhook_data', ['data' => json_encode(
 
                                 if (!empty($source_data_get->fixed_source) && $source_data_get->fixed_source == 1) {
                                 } else {
-                                    $updateStatus['source'] = $form->lead_source;
+                                 $updateStatus['source'] = (
+    !empty($_POST['utm_source']) &&
+    strtolower($_POST['utm_source']) == 'chatgpt'
+) ? CHATGPT_SOURCE : $form->lead_source;
                                 }
 
                                 if (!empty($source_data_get_->lead_transfer_status) && $source_data_get_->lead_transfer_status == 1) {
@@ -923,14 +952,22 @@ $updateStatus_dup['upcomming_count'] = ($duplicateLead->upcomming_count ?? 1) + 
                             }
                             
                             // first call response time issue  2 time assignation time change  response time should be 0 
-                                $updateStatus = [
-                                'status' => 33??$form->lead_status,
-                                // 'description' => 'Re Query',
-                                // 'assigned' => $form->responsible,
-                                'last_status_change' => date("Y-m-d"),
-                                // 'lastcontact' => date("Y-m-d H:i:s"),
-                                // 'dateassigned' => date("Y-m-d H:i:s"),
-                                ];
+                              
+                                
+                            if (!check_opportunity_status($duplicateLead->status)) {
+// 
+    $newStatus = 33??$form->lead_status;
+
+    $updateStatus = [
+        'status' => $newStatus,
+        'last_status_change' => date("Y-m-d"),
+    ];
+
+    $statusChecker = $this->leads_model->update_lead_status([
+        'status' => $newStatus,
+        'leadid' => $duplicateLead->id
+    ]);
+}
                                 
                                 if(!empty($_POST['ai_status']) && $_POST['ai_status']== 1)
                                 {
@@ -939,7 +976,7 @@ $updateStatus_dup['upcomming_count'] = ($duplicateLead->upcomming_count ?? 1) + 
                                                         
 
     
-                            $statusChecker = $this->leads_model->update_lead_status(array("status"=>33,"leadid"=>$duplicateLead->id));
+                            
  
 
                             if (!empty($post_data["website"])) {
@@ -992,7 +1029,12 @@ $updateStatus_dup['upcomming_count'] = ($duplicateLead->upcomming_count ?? 1) + 
                                 $source_data_get = $this->leads_model->get_source($duplicateLead->source);
                                 if (!empty($source_data_get->fixed_source) && $source_data_get->fixed_source == 1) {
                                 } else {
-                                    $updateStatus['source'] = $form->lead_source;
+                                    
+                                     $updateStatus['source'] = (
+    !empty($_POST['utm_source']) &&
+    strtolower($_POST['utm_source']) == 'chatgpt'
+) ? CHATGPT_SOURCE : $form->lead_source;
+                                    // $updateStatus['source'] = $form->lead_source;
                                 }
                             }
 
@@ -1037,7 +1079,7 @@ $alreadyNotificationSend = false;
                             }
                             
                             
-                           $statusActivity =  $this->leads_model->update_lead_status(array("status"=>33,"leadid"=>$duplicateLead->id));
+                        //   $statusActivity =  $this->leads_model->update_lead_status(array("status"=>33,"leadid"=>$duplicateLead->id));
                            
              
                             
@@ -1197,7 +1239,12 @@ if($alreadyNotificationSend == false){
                     if (!empty($lead_type)) {
                         $regular_fields['type']  = $lead_type;
                     }
-                    $regular_fields['source']       = $form->lead_source;
+                    
+                                      $regular_fields['source'] = (
+    !empty($_POST['utm_source']) &&
+    strtolower($_POST['utm_source']) == 'chatgpt'
+) ? CHATGPT_SOURCE : $form->lead_source;
+                    // $regular_fields['source']       = $form->lead_source;
                     $regular_fields['addedfrom']    = 0;
                     $regular_fields['lastcontact']  = null;
                     $regular_fields['assigned']     = $form->responsible;

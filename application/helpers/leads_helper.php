@@ -12878,3 +12878,75 @@ function lead_emails_trigger($data)
         ];
     }
 }
+
+function check_opportunity_status($statusid)
+{
+    $CI =& get_instance();
+
+    try {
+        if (empty($statusid) || !is_numeric($statusid)) {
+            return false;
+        }
+
+        $row = $CI->db
+            ->where([
+                'opportunity_status' => 1,
+                'id' => (int) $statusid
+            ])
+            ->get(db_prefix() . 'leads_status')
+            ->row();
+
+        if (!$row) {
+            return false;
+        }
+
+        return true;
+
+    } catch (Throwable $e) {
+        log_message('error', 'check_opportunity_status error: ' . $e->getMessage());
+        return false;
+    }
+}
+
+
+function source_reference_name()
+{
+    $CI =& get_instance();
+
+    try {
+        $query = $CI->db->query("
+            SELECT
+                source,
+                JSON_ARRAYAGG(reference_name) AS reference_names
+            FROM (
+                SELECT DISTINCT
+                    source,
+                    reference_name
+                FROM " . db_prefix() . "leads
+                WHERE reference_name IS NOT NULL
+                  AND reference_name <> ''
+            ) AS t
+            GROUP BY source
+            ORDER BY source
+        ");
+
+        if (!$query) {
+            return [];
+        }
+
+        $result = [];
+
+        foreach ($query->result() as $row) {
+            $result[] = [
+                'source' => (int) $row->source,
+                'reference_names' => json_decode($row->reference_names, true) ?: []
+            ];
+        }
+
+        return $result;
+
+    } catch (Throwable $e) {
+        log_message('error', 'source_reference_name error: ' . $e->getMessage());
+        return [];
+    }
+}

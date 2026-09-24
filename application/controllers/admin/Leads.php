@@ -136,7 +136,7 @@ $data['lead_sub_status'] = $this->leads_model->lead_sub_status();
 
         $data['type']  = $this->leads_model->get_type();
         $data['view_form']  = $this->leads_model->view_form();
-
+ $data['source_reference_name']  =  source_reference_name();
 
         $data['title']    = _l('leads');
 
