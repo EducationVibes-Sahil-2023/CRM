@@ -13508,9 +13508,9 @@ private function buildExternalActivityMessage($action, $doc_name, $cost, $vendor
 
 public function delete_apostile_record($id = null)
 {
-    if (!has_permission('your_permission', '', 'delete')) {
-        return access_denied('your_permission'); // Stop execution immediately
-    }
+   if (!has_permission('external_apostile', '', 'delete')) {
+            return access_denied('external_apostile'); // Stop execution immediately
+        }
 
     // Get ID from parameter or POST
     $id = $id ? $id : $this->input->post('id');

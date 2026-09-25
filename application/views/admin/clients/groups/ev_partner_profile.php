@@ -353,11 +353,15 @@ if (!empty($visasectionDetails)) {
 
 				// Custom display name
 				if ($key == "file") {
-					$display_name = "Visa Stamp";
+				// 	$display_name = "Visa Stamp";
 				} else {
 					$display_name = ucfirst(str_replace("_", " ", $key));
 				}
 
+if(empty($display_name))
+{
+    continue;
+}
 				$display_name .= " " . ($k + 1);
 
 				$documents_type[] = array(
@@ -380,7 +384,7 @@ if (!empty($visasectionDetails)) {
      var isCounsollor = <?= (!is_admin() && empty($staff_list[get_staff_user_id()]['post_sales'])) ? 1 : 0 ?>;
 	var final_sumbit = <?= !empty($final_sumbit) ? $final_sumbit : 0 ?>;
 	var admin_status = <?= $admin_status ?>;
-	console.log("final_sumbit", final_sumbit);
+// 	console.log("final_sumbit", final_sumbit);
 	var admissionpreferences_freeze = "<?= !empty($admissionpreferences->freeze) ? 1 : 0 ?>";
 </script>
 <?php
@@ -2230,7 +2234,7 @@ if ($is_privileged) {
 
 
                                                         </div>
-                                                        <input <?= $disabled ?> type="text" name="<?= $field_name ?>" <?= $required ?> class="form-control currency-amount fees_<?= $fees['id'] ?>  <?= $field_name ?>" placeholder="0.00" id="<?= $field_name ?>" value="<?= $fees["amount"] ?>" size="8" onkeyup="checkHostalCapacity(this.value,<?= $fees["show_hostel_capacity"] ?>)" onkeypress="return acceptText(this,'number')">
+                                                        <input <?= $disabled ?> type="text" name="<?= $field_name ?>" <?= $required ?> class="form-control currency-amount fees_<?= $fees['id'] ?>  <?= $field_name ?>" placeholder="0.00" id="<?= $field_name ?>" value="<?= $fees["amount"] ?>" size="8" show-hostel-capacity = "<?= $fees["show_hostel_capacity"] ?>" onkeyup="checkHostalCapacity(this.value,<?= $fees["show_hostel_capacity"] ?>)" onkeypress="return acceptText(this,'number')">
                                                         <div class="input-group-addon currency-addon">
 
                                                             <select <?= $disabled ?> name="<?= $field_name ?>_currency_type" id="<?= $field_name ?>" class="currency-selector <?= $disabled ?> currency-selector-<?= $id ?>  <?= $field_name ?>" onchange="updateSymbol(<?= $id ?>)">
@@ -2610,7 +2614,7 @@ echo render_select(
 
 	document.addEventListener("DOMContentLoaded", function() {
 		var documentAccessOnly = "<?= !empty($documentAccessOnly) ? $documentAccessOnly : 0 ?>";
-		console.log(documentAccessOnly);
+// 		console.log(documentAccessOnly);
 
 		if (documentAccessOnly == "1") {
 			$('.nav-tabs-horizontal li').each(function() {
@@ -2628,6 +2632,13 @@ echo render_select(
 	});
 
 
+// function check_applicant_fees()
+// {
+//     $("#applicant_fees input.currency-amount").change();
+    
+// }
+
+// check_applicant_fees();
  function toggleLoanType() {
 
         if ($("#loan_required").val() == '1') {
@@ -2744,7 +2755,7 @@ echo render_select(
 				}
 
 				if (plainText === primary_university.trim()) {
-					console.log(plainText);
+				// 	console.log(plainText);
 					$(this).addClass('disabled');
 					$(this).find("a").hide();
 					$(this).css('pointer-events', 'none');
@@ -2817,7 +2828,7 @@ echo render_select(
 	?>
 
 	function formatPhoneNumber(input) {
-		console.log("phonenumber validation");
+// 		console.log("phonenumber validation");
 		// Remove all non-digit characters
 		const digits = input.replace(/\D/g, '');
 
@@ -3118,7 +3129,7 @@ function checkNeetStatus() {
             } else {
                
                 if ($(this).is('input[type="file"]') && fileValue !== "") {
-                    console.log("set validation");
+                    // console.log("set validation");
      $field.removeClass("required required-check");
                 $field.removeAttr("required-check");
                 // Optionally remove other validation attributes
@@ -3205,12 +3216,12 @@ else{
     );
 
     if (countryKey) {
-        console.log(infoData[countryKey]);
+        // console.log(infoData[countryKey]);
 
         // Loop through all fields for that country
         Object.keys(infoData[countryKey]).forEach(function (key) {
-            console.log(key);                    // e.g. university_package
-            console.log(infoData[countryKey][key]); // Description
+            // console.log(key);                    // e.g. university_package
+            // console.log(infoData[countryKey][key]); // Description
 
             // Example: add/update tooltip
             $('label[for="' + key + '"] .package-info').remove();
@@ -3292,7 +3303,7 @@ function partnerTypeChange(element) {
         // Safely get the active section
         var section = $(".profile-tabs li.active").attr("section") || "";
 
-        console.log("section:", section);
+        // console.log("section:", section);
 
         // Make sure activity_url exists
         if (typeof activity_url === "undefined") {
@@ -3328,6 +3339,7 @@ function partnerTypeChange(element) {
     document.addEventListener("DOMContentLoaded", function() {
         handleActivityChange();
         checkNeetStatus();
+        check_applicant_fees();
     });
     
     
@@ -3340,6 +3352,21 @@ function partnerTypeChange(element) {
         }
     }
     
+function check_applicant_fees() {
+
+   $('#applicant_fees input.currency-amount').each(function () {
+    checkHostalCapacity(
+        this.value,
+        $(this).attr('show-hostel-capacity')
+    );
+});
+}
+
+// check_applicant_fees();
+
+
+
+
 
 
 </script>

@@ -1,4 +1,7 @@
 <?php defined('BASEPATH') or exit('No direct script access allowed'); ?>
+<link
+   rel="stylesheet"
+   href="https://cdnjs.cloudflare.com/ajax/libs/bootstrap-daterangepicker/3.1/daterangepicker.css" />
 <?php
 init_head();
 $tbllead_performance_column = $this->leads_model->tblma_applicant_tracker();
@@ -117,7 +120,7 @@ for ($year = $startYear; $year <= $endYear; $year++) {
       }
 
       .margin-top {
-         margin-top: 20px;
+         margin-top: 10px;
       }
 
       .table>tbody>tr>td,
@@ -404,6 +407,7 @@ for ($year = $startYear; $year <= $endYear; $year++) {
                               <div class="col-md-12">
                                  <p class="bold"><?php echo _l('filter_by'); ?></p>
                               </div>
+                              
                               <div class="col-md-2  margin-top leads-filter-column filter_reset ">
                                  <?php echo render_select('table_view[]', $table_view, array('id', 'name'), '', [], array('data-width' => '100%', 'data-none-selected-text' => 'Table View'), array(), 'no-mbot', '', false, 'table_view'); ?>
                               </div>
@@ -642,6 +646,8 @@ for ($year = $startYear; $year <= $endYear; $year++) {
                                     </div>
                                  </div>
                               </div>
+                              
+                          
 
                               <div class="col-md-2  margin-top leads-filter-column filter-hide-default filter-fly-batch hide">
                                  <?php
@@ -667,37 +673,76 @@ for ($year = $startYear; $year <= $endYear; $year++) {
                                  ?>
                               </div>
                               <div class="col-md-2  margin-top leads-filter-column  filter-hide-default filter-fly-date hide">
-                                 <div class="form-group">
+                                 <div class="">
                                     <input type="text" class="form-control datepicker" name="fly_date" id="fly_date" placeholder="Fly Date" autocomplete="off">
                                  </div>
                               </div>
 
                               <div class="col-md-2  margin-top leads-filter-column hide">
-                                 <div class="form-group">
+                                 <div class="">
                                     <input type="text" class="form-control datepicker" name="last_from_date" id="last_from_date" placeholder="From Last Update Date" autocomplete="off">
                                  </div>
                               </div>
                               <div class="col-md-2  margin-top leads-filter-column hide">
-                                 <div class="form-group">
+                                 <div class="">
                                     <input type="text" class="form-control datepicker" name="last_to_date" id="last_to_date" placeholder="To Last Update Date" autocomplete="off">
                                  </div>
                               </div>
                               <div class="col-md-2  margin-top leads-filter-column  filter-hide-default filter-ap-status hide">
-                                 <div class="form-group">
+                                 <div class="">
                                     <input type="text" class="form-control datepicker" name="courier_date" id="courier_date" placeholder="APS Courier Date" autocomplete="off">
                                  </div>
                               </div>
 
                               <div class="col-md-2  margin-top leads-filter-column  filter-hide-default filter-ap-status hide">
-                                 <div class="form-group">
+                                 <div class="">
                                     <input type="text" class="form-control datepicker" name="apostille_received" id="apostille_received" placeholder="APS Receving Date" autocomplete="off">
                                  </div>
                               </div>
                               <div class="col-md-2  margin-top leads-filter-column  filter-hide-default filter-visa-courior hide">
-                                 <div class="form-group">
+                                 <div class="">
                                     <input type="text" class="form-control datepicker" name="visa_courier_date" id="visa_courier_date" placeholder="Visa Courier Date" autocomplete="off">
                                  </div>
                               </div>
+                              
+                              <!--     <div class="col-md-2  margin-top leads-filter-column">-->
+                              <!--   <div id="leads-filter-source">-->
+                              <!--      <div class="form-group no-mbot">-->
+                              <!--         <input type="text" class="form-control datepicker" name="onboarding_date" id="onboarding_date" placeholder="Onboarding Date" autocomplete="off">-->
+                              <!--      </div>-->
+                              <!--   </div>-->
+                              <!--</div>-->
+                              
+                              <!-- <div class="col-md-2  margin-top leads-filter-column pull-left">-->
+                              <!--   <div id="leads-filter-source">-->
+                              <!--      <div class="form-group no-mbot">-->
+                              <!--         <input type="text" class="form-control datepicker" name="created_date" id="created_date" placeholder="Created Date" autocomplete="off">-->
+                              <!--      </div>-->
+                              <!--   </div>-->
+                              <!--</div>-->
+                              
+                              <div class="col-md-2 margin-top leads-filter-column">
+    <div class="form-group no-mbot">
+        <input type="text"
+               class="form-control"
+               name="onboarding_date"
+               id="onboarding_date"
+               placeholder="Onboarding Date Range"
+               autocomplete="off">
+    </div>
+</div>
+
+<div class="col-md-2 margin-top leads-filter-column">
+    <div class="form-group no-mbot">
+        <input type="text"
+               class="form-control"
+               name="created_date"
+               id="created_date"
+               placeholder="Created Date Range"
+               autocomplete="off">
+    </div>
+</div>
+
                               <div class="col-md-2 margin-top ">
                                  <div class="form-group">
                                     <button type="button" class="btn btn-primary" id="apply_filter_">Apply Filter</button>
@@ -1091,7 +1136,9 @@ for ($year = $startYear; $year <= $endYear; $year++) {
 init_tail();
 ?>
 
+<!--<script src="https://cdnjs.cloudflare.com/ajax/libs/moment.js/2.30.1/moment.min.js"></script>-->
 
+<script src="https://cdnjs.cloudflare.com/ajax/libs/bootstrap-daterangepicker/3.1/daterangepicker.min.js"></script>
 
 
 <script>
@@ -1125,6 +1172,25 @@ init_tail();
    $(document).ready(function() {
 
 
+$('#onboarding_date, #created_date').daterangepicker({
+    autoUpdateInput: false,
+    locale: {
+        format: 'DD-MM-YYYY',
+        cancelLabel: 'Clear'
+    }
+});
+
+$('#onboarding_date, #created_date').on('apply.daterangepicker', function (ev, picker) {
+    $(this).val(
+        picker.startDate.format('DD-MM-YYYY') +
+        ' - ' +
+        picker.endDate.format('DD-MM-YYYY')
+    );
+});
+
+$('#onboarding_date, #created_date').on('cancel.daterangepicker', function () {
+    $(this).val('');
+});
 
       $(".filter-hide-default").find("select").val('').selectpicker("refresh");
       $(".filter-hide-default").removeClass('hide');
@@ -1510,6 +1576,8 @@ init_tail();
          'apostille_received': "[name='apostille_received']",
          'visa_courier_date': "[name='visa_courier_date']",
          'acadmic_year': "[name='acadmic_year']",
+         'onboarding_date': "[name='onboarding_date']",
+         'created_date': "[name='created_date']",
 
       });
 

@@ -1558,71 +1558,71 @@ check_warning_message();
 
             calculateInrValue();
 
-try {
+// try {
 
-    const country = String(
-        primaryCountry || ""
-    ).toLowerCase();
+//     const country = String(
+//         primaryCountry || ""
+//     ).toLowerCase();
 
-    const universityList =
-        Array.isArray(primaryUniversity)
-            ? primaryUniversity
-            : String(
-                  primaryUniversity || ""
-              )
-                  .split(",");
+//     const universityList =
+//         Array.isArray(primaryUniversity)
+//             ? primaryUniversity
+//             : String(
+//                   primaryUniversity || ""
+//               )
+//                   .split(",");
 
-    const university =
-        String(
-            enableUniversity || ""
-        ).toLowerCase();
+//     const university =
+//         String(
+//             enableUniversity || ""
+//         ).toLowerCase();
 
-    const isAllowedUniversity =
-        universityList
-            .map(item =>
-                String(item)
-                    .trim()
-                    .toLowerCase()
-            )
-            .includes(university);
+//     const isAllowedUniversity =
+//         universityList
+//             .map(item =>
+//                 String(item)
+//                     .trim()
+//                     .toLowerCase()
+//             )
+//             .includes(university);
 
-    const shouldDisable =
-        (
-            country === "russia" ||
-            country === "georgia"
-        ) &&
-        !isAllowedUniversity;
+//     const shouldDisable =
+//         (
+//             country === "russia" ||
+//             country === "georgia"
+//         ) &&
+//         !isAllowedUniversity;
 
-    $("select[name='type'] option[value='14']")
-        .prop(
-            "disabled",
-            shouldDisable
-        );
+//     $("select[name='type'] option[value='14']")
+//         .prop(
+//             "disabled",
+//             shouldDisable
+//         );
 
-    $("select[name='type']")
-        .selectpicker(
-            "refresh"
-        );
+//     $("select[name='type']")
+//         .selectpicker(
+//             "refresh"
+//         );
 
-} catch (error) {
+// } catch (error) {
 
-    console.error(
-        "Payment type validation error:",
-        error
-    );
+//     console.error(
+//         "Payment type validation error:",
+//         error
+//     );
 
-    // fallback: keep option enabled
-    $("select[name='type'] option[value='14']")
-        .prop(
-            "disabled",
-            false
-        );
+//     // fallback: keep option enabled
+//     $("select[name='type'] option[value='14']")
+//         .prop(
+//             "disabled",
+//             false
+//         );
 
-    $("select[name='type']")
-        .selectpicker(
-            "refresh"
-        );
-}
+//     $("select[name='type']")
+//         .selectpicker(
+//             "refresh"
+//         );
+// }
 
         }
 

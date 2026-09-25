@@ -640,6 +640,45 @@ if ($this->ci->input->post('visa_courier_date')) {
     $visa_courier_date = $this->ci->input->post('visa_courier_date');
     array_push($where, "AND DATE(" . db_prefix() . "visa_details.courier_date) = '{$visa_courier_date}'");
 }
+if ($this->ci->input->post('onboarding_date')) {
+    $onboarding_date = trim($this->ci->input->post('onboarding_date'));
+
+    $dates = explode(' - ', $onboarding_date);
+
+    if (count($dates) === 2) {
+        $from_date = date('Y-m-d', strtotime(trim($dates[0])));
+        $to_date   = date('Y-m-d', strtotime(trim($dates[1])));
+
+        array_push(
+            $where,
+            "AND DATE(
+                CASE
+                    WHEN " . db_prefix() . "clients.client_type = 1
+                        THEN " . db_prefix() . "clients.date_of_payment
+                    WHEN " . db_prefix() . "clients.client_type = 2
+                        THEN " . db_prefix() . "clients.datecreated
+                END
+            ) BETWEEN '{$from_date}' AND '{$to_date}'"
+        );
+    }
+}
+
+if ($this->ci->input->post('created_date')) {
+    $created_date = trim($this->ci->input->post('created_date'));
+
+    $dates = explode(' - ', $created_date);
+
+    if (count($dates) === 2) {
+        $from_date = date('Y-m-d', strtotime(trim($dates[0])));
+        $to_date   = date('Y-m-d', strtotime(trim($dates[1])));
+
+        array_push(
+            $where,
+            "AND DATE(" . db_prefix() . "clients.created_date)
+             BETWEEN '{$from_date}' AND '{$to_date}'"
+        );
+    }
+}
 
 if ($this->ci->input->post('apostille_received')) {
     $apostille_received = $this->ci->input->post('apostille_received');

@@ -93,11 +93,15 @@ if (!empty($visasectionDetails)) {
 
                 // Custom display name
                 if ($key == "file") {
-                    $display_name = "Visa Stamp";
+                    // $display_name = "Visa Stamp";
                 } else {
                     $display_name = ucfirst(str_replace("_", " ", $key));
                 }
 
+if(empty($display_name))
+{
+    continue;
+}
                 $display_name .= " " . ($k + 1);
 $display_name_id =preg_replace('/\s+/', '-', $display_name);
                 $documents_type[] = array(
@@ -2209,7 +2213,7 @@ if ($is_privileged) {
 
 
                                                         </div>
-                                                        <input <?= $disabled ?> type="text" name="<?= $field_name ?>" <?= $required ?> class="form-control currency-amount fees_<?= $fees['id'] ?>  <?= $field_name ?>" placeholder="0.00" id="<?= $field_name ?>" value="<?= $fees["amount"] ?>" size="8" onkeyup="checkHostalCapacity(this.value,<?= $fees["show_hostel_capacity"] ?>)"  onkeypress="return acceptText(this,'number')">
+                                                        <input <?= $disabled ?> type="text" name="<?= $field_name ?>" <?= $required ?> class="form-control currency-amount fees_<?= $fees['id'] ?>  <?= $field_name ?>" placeholder="0.00" id="<?= $field_name ?>" value="<?= $fees["amount"] ?>" size="8" show-hostel-capacity = "<?= $fees["show_hostel_capacity"] ?>"  onkeyup="checkHostalCapacity(this.value,<?= $fees["show_hostel_capacity"] ?>)"  onkeypress="return acceptText(this,'number')">
                                                         <div class="input-group-addon currency-addon">
 
                                                             <select <?= $disabled ?> name="<?= $field_name ?>_currency_type" id="<?= $field_name ?>" class="currency-selector <?= $disabled ?> currency-selector-<?= $id ?>  <?= $field_name ?>" onchange="updateSymbol(<?= $id ?>)">
@@ -2641,9 +2645,21 @@ function handleActivityChange() {
         });
     }
 
+function check_applicant_fees() {
+
+   $('#applicant_fees input.currency-amount').each(function () {
+    checkHostalCapacity(
+        this.value,
+        $(this).attr('show-hostel-capacity')
+    );
+});
+}
+
     document.addEventListener("DOMContentLoaded", function() {
         handleActivityChange();
          checkNeetStatus();
+                 check_applicant_fees();
+
     });
     var primary_country = "<?= !empty($admissionpreferences->primary_country) ? $admissionpreferences->primary_country : 0 ?>";
     var primary_university = "<?= !empty($admissionpreferences->primary_university) ? $admissionpreferences->primary_university : 0 ?>";
