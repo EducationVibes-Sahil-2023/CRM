@@ -52,7 +52,29 @@
        </div> -->
 
 
-      
+       <div class="col-md-3">
+           <?= render_select(
+                'company',
+                $hostel_company,
+                ['id', 'name'],
+                'Company',
+                $hostelData->company ?? '',
+                ['data-width' => '100%', 'data-none-selected-text' => 'No Selected', 'data-actions-box' => true]
+            );
+            ?>
+       </div>
+
+       <div class="col-md-3">
+           <?= render_select(
+                'hostel',
+                $hostel,
+                ['id', 'name'],
+                'Hostel',
+                $hostelData->hostel ?? '',
+                ['data-width' => '100%', 'data-none-selected-text' => 'No Selected', 'data-actions-box' => true]
+            );
+            ?>
+       </div>
 <!-- 
        <div class="col-lg-3">
            <div class="form-group">

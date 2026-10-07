@@ -15,7 +15,6 @@
             "Quotation Number",
             "Start Date",
             "End Date",
-            "Status",
             "Months",
             "Room Capacity",
             "Hostel Month Rent",
@@ -43,10 +42,13 @@
 
 <script>
     document.addEventListener("DOMContentLoaded", function() {
-        var tAPI = "";
+        var tAPI = ""
         $(function() {
-            tAPI = initDataTable('.table-quotation-table',
-                admin_url + 'hostel_management/quotation_table/georgia/' + <?= (int) $getId ?>);
+
+            // Ensure you get the client_id value dynamically
+
+            tAPI = initDataTable('.table-quotation-table', admin_url + 'hostel_management/quotation_table/georgia/' + <?= $getId ?>);
+
         });
     });
 </script>
@@ -54,33 +56,31 @@
 <?php
 
 $get_currencies = get_currencies();
+// $university_applicant_fees = university_applicant_fees("", 1, [
+//     "university_name" => $hostelData->vendor_update,
+//     "acadmic_year"    => $acadmic_year
+// ]);
 
 $university_applicant_fees = get_clients_fees_hostel(array("f.georgia_hostel" => 1));
-$selected_mod              = 0;
-$transaction_type          = transaction_type(array("hostel_status" => 1));
-
+$selected_mod = 0;
+$transaction_type  = transaction_type(array("hostel_status" => 1));
 $quotation_paymente_mode = $this->db
     ->select('*')
     ->from(db_prefix() . 'quotation_paymente_mode')
     ->get()
     ->result_array();
-
-$currency_lookup = array_column($get_currencies, null, 'id');
-$modes           = $this->quotation_model->payment_mod();
-$modes_vendor    = $this->quotation_model->payment_mode_vendors(1);
-
+$currency_lookup   = array_column($get_currencies, null, 'id');
+$modes =  $this->quotation_model->payment_mod();
+$modes_vendor =  $this->quotation_model->payment_mode_vendors(1);
 $fees_details_array = [
     ["label" => "Total Service Charge", "name" => "total_service_charge", "readonly" => true, "add_btn" => true],
 ];
-
-// company_id is needed so the Hostel dropdown can be filtered by Company on the client.
-$hostel         = getDataInformation('hostel', 'id, name, company_id', 'status = 1');
+$hostel = getDataInformation('hostel', 'id, name', 'status = 1');
 $hostel_company = getDataInformation('hostel_company', 'id, name', 'status = 1');
-
 array_unshift($modes, array("id" => "", "name" => "Select Mode"));
 
 $sql = "
-    SELECT
+    SELECT 
         aq.*,
         CONCAT('Q', ROW_NUMBER() OVER (PARTITION BY aq.university_name ORDER BY aq.id ASC)) AS quotation_label,
         CONCAT(aq.university_name, '-', aq.start_date,'-',aq.end_date,'-', aq.room_capacity, ' - ',
@@ -91,47 +91,27 @@ $sql = "
     ORDER BY aq.id DESC
 ";
 
+
 $hostel_quotations = $this->db->query($sql, [$getId])->result_array();
 array_unshift($hostel_quotations, array("id" => "", "name" => ""));
 
-$quotation_id          = !empty($_GET['quotation_id']) ? $_GET['quotation_id'] : '';
+
+$quotation_id = !empty($_GET['quotation_id']) ? $_GET['quotation_id'] : '';
 $hostel_quotation_data = [];
-$exchange_value_array  = [];
-$university_due_array  = [];
-$company_due_array     = [];
-$fees_data             = [];
-
+$exchange_value_array = [];
+$university_due_array = [];
+$company_due_array = [];
+$fees_data = [];
 if (!empty($_GET['quotation_id'])) {
-    $hostel_quotation_data = $this->Hostel_model->hostel_quotation_data($getId, $_GET['quotation_id']);
-    $exchange_value_array  = json_decode($hostel_quotation_data->exchange_value, true);
-    $university_due_array  = json_decode($hostel_quotation_data->hostel_due, true);
-    $company_due_array     = json_decode($hostel_quotation_data->company_due, true);
+    $hostel_quotation_data =  $this->Hostel_model->hostel_quotation_data($getId, $_GET['quotation_id']);
+    $exchange_value_array = json_decode($hostel_quotation_data->exchange_value, true);
+    $university_due_array = json_decode($hostel_quotation_data->hostel_due, true);
+    $company_due_array = json_decode($hostel_quotation_data->company_due, true);
 }
 
-$serviceList   = $this->Hostel_model->get_hostel_services();
-$hostelVendors = $this->db->select("*")->from(db_prefix() . "_hostel_vendors")->get()->result_array();
+$serviceList = $this->Hostel_model->get_hostel_services();
 
-/* ---------------------------------------------------------------------------
- | CASCADE STATE  (Company -> Hostel -> Room capacity -> Rent)
- |
- | Read the selection from the QUOTATION first, then fall back to the hostel
- | record. Using $hostelData only meant an existing quotation loaded the wrong
- | hostel's room list.
- * ------------------------------------------------------------------------ */
-$selected_company = $hostel_quotation_data->company       ?? $hostelData->company ?? '';
-$selected_hostel  = $hostel_quotation_data->hostel        ?? $hostelData->hostel  ?? '';
-$selected_room    = $hostel_quotation_data->room_capacity ?? '';
-
-// Room list for whichever hostel is selected right now.
-$roomCapacity = [];
-if (!empty($selected_hostel) && !empty($hostelRentelData[$selected_hostel]['rooms'])) {
-    $roomCapacity = json_decode($hostelRentelData[$selected_hostel]['rooms'], true) ?: [];
-}
-
-// Safe shortcut for the main pay row (avoids undefined-index notices everywhere).
-$mainPay       = $university_due_array["main"]['pay_info'][0] ?? [];
-$mainPayMode   = $mainPay['payMode']   ?? null;
-$mainPayVendor = $mainPay['payVendor'] ?? null;
+$hostelVendors = $this->db->select("*")->from(db_prefix()."_hostel_vendors")->get()->result_array();
 
 ?>
 <div class="row">
@@ -186,7 +166,7 @@ $mainPayVendor = $mainPay['payVendor'] ?? null;
                 <h4>Hostel Quotation</h4>
                 <hr class="hr-panel-heading" />
 
-                <!-- The form below must have id="hostel_quotation_form" for JS to work. Do not remove or change this ID. -->
+                <!-- The form below must have id="applicant-quotation-form" for JS to work. Do not remove or change this ID. -->
                 <?= form_open(admin_url('hostel_management/quotation'), ['id' => 'hostel_quotation_form', 'onsubmit' => 'return false;']); ?>
                 <input hidden name="hostal_info_id" value="<?= $getId ?>">
                 <!-- University Info -->
@@ -208,33 +188,36 @@ $mainPayVendor = $mainPay['payVendor'] ?? null;
                         <div class="col-md-2 hide ">
                             <label>Room Rent <span class="text-danger">*</span></label><br>
                             <div class="input-group mb-2 mr-sm-2 mb-sm-0 col-3 form-group">
-                                <input type="text" name="rent" <?= $required ?? '' ?> class="form-control currency-amount fees_rent" placeholder="0.00" id="rent" value="<?= $hostel_quotation_data->rent ?? '' ?>" size="8" onkeypress="return acceptText(this,'number')">
+                                <input type="text" name="rent" <?= $required ?> class="form-control currency-amount fees_rent" placeholder="0.00" id="rent" value="<?= $hostel_quotation_data->rent ?? '' ?>" size="8" onkeypress="return acceptText(this,'number')">
                                 <div class="input-group-addon currency-addon">
-                                    <select name="rent_currency_type" class="currency-selector currency-selector-rent" onchange="updateSymbol('rent')">
-                                        <?php foreach ($get_currencies as $c) { ?>
+                                    <select name="rent_currency_type" id="rent" class="currency-selector currency-selector-rent" onchange="updateSymbol('rent')">
+                                        <?php foreach ($get_currencies as $c) {
+                                        ?>
                                             <option
                                                 data-symbol="<?= $c['symbol'] ?>"
                                                 value="<?= $c['id'] ?>"
-                                                data-placeholder="0.00" <?= (($hostel_quotation_data->currency ?? '') == $c['id']) ? 'selected' : '' ?>>
+                                                data-placeholder="0.00" <?= $hostel_quotation_data->currency == $c['id'] ? 'selected' : '' ?>>
                                                 <?= $c['name'] ?>
                                             </option>
-                                        <?php } ?>
+                                        <?php
+                                        }
+                                        ?>
                                     </select>
 
                                 </div>
                             </div>
                         </div>
 
-                        <!-- ROOM CAPACITY: options are rebuilt by onHostelChange() -->
                         <div class="col-md-2">
                             <div class="form-group">
                                 <?php
+                                $roomCapacity = json_decode($hostelRentelData[$hostelData->hostel ?? '']["rooms"], true) ?? [];
                                 echo render_select(
                                     'room_capacity',
                                     $roomCapacity,
                                     ['room_capacity', 'room_capacity'],
                                     html_entity_decode('Room Capacity '),
-                                    $selected_room,
+                                    $hostel_quotation_data->room_capacity ?? '',
                                     [
                                         'data-width'              => '100%',
                                         'data-none-selected-text' => 'Select room capacity',
@@ -276,20 +259,22 @@ $mainPayVendor = $mainPay['payVendor'] ?? null;
                         <div class="col-md-3">
                             <?= render_input('room_No', 'Room No', $hostel_quotation_data->room_no ?? '', 'number', ["placeholder" => "Enter Room No"]); ?>
                         </div>
-
+                        
                         <div class="col-md-3 hide">
                             <div class="form-group">
                                 <label for="acadmic_year">Academic Year <small class="text-danger">*</small></label>
                                 <?php
                                 $currentYear = date("Y");
-                                $startYear   = 2023;
-                                $endYear     = $currentYear + 2;
+                                $startYear = 2023;               // Start from 2023
+                                $endYear = $currentYear + 2;     // End at current year + 2
 
+                                // Generate academic years from 2023 up to currentYear + 2
                                 $years = [];
                                 for ($year = $startYear; $year < $endYear; $year++) {
                                     $years[] = $year . " - " . ($year + 1);
                                 }
 
+                                // Use saved preference or default to current year range
                                 $selectedYear = !empty($hostelData->acadmic_year)
                                     ? $hostelData->acadmic_year
                                     : ($currentYear . " - " . ($currentYear + 1));
@@ -306,38 +291,26 @@ $mainPayVendor = $mainPay['payVendor'] ?? null;
                         </div>
 
 
-                        <!-- COMPANY: filters the Hostel dropdown in real time -->
                         <div class="col-md-3">
                             <?= render_select(
                                 'company',
                                 $hostel_company,
                                 ['id', 'name'],
                                 'Company',
-                                $selected_company,
-                                [
-                                    'data-width'              => '100%',
-                                    'data-none-selected-text' => 'No Selected',
-                                    'data-actions-box'        => true,
-                                    'onchange'                => 'onCompanyChange(this.value)'
-                                ]
+                                $hostel_quotation_data->company ?? $hostelData->company ?? '',
+                                ['data-width' => '100%', 'data-none-selected-text' => 'No Selected', 'data-actions-box' => true, "disabled" => true]
                             );
                             ?>
                         </div>
 
-                        <!-- HOSTEL: reloads room capacity + rent in real time -->
                         <div class="col-md-3">
                             <?= render_select(
                                 'hostel',
                                 $hostel,
                                 ['id', 'name'],
                                 'Hostel',
-                                $selected_hostel,
-                                [
-                                    'data-width'              => '100%',
-                                    'data-none-selected-text' => 'No Selected',
-                                    'data-actions-box'        => true,
-                                    'onchange'                => 'onHostelChange(this.value)'
-                                ]
+                                $hostel_quotation_data->hostel ?? $hostelData->hostel ?? '',
+                                ['data-width' => '100%', 'data-none-selected-text' => 'No Selected', 'data-actions-box' => true, "disabled" => true]
                             );
                             ?>
                         </div>
@@ -388,7 +361,7 @@ $mainPayVendor = $mainPay['payVendor'] ?? null;
                                             <td>
                                                 <input type="number" required step="0.01" class="form-control currency-amount"
                                                     oninput="calculateInrValue()" name="exchange_value[]"
-                                                    placeholder="0.00" value="<?= htmlspecialchars($exchange['exchange_value']) ?>">
+                                                    placeholder="0.00" required value="<?= htmlspecialchars($exchange['exchange_value']) ?>">
                                             </td>
                                             <td class="text-center">
                                                 <button type="button" class="btn btn-<?= $key == 0 ? 'success' : 'danger' ?> btn-sm <?= $key == 0 ? 'addRow' : 'removeRow' ?>">
@@ -402,7 +375,7 @@ $mainPayVendor = $mainPay['payVendor'] ?? null;
                                         <td>
                                             <select name="credit_currency[]" class="form-control" onchange="calculateInrValue()">
                                                 <?php foreach ($get_currencies as $c): ?>
-                                                    <option <?= $c['id'] == 1 ? 'selected' : '' ?> value="<?= $c['id'] ?>" data-symbol="<?= htmlspecialchars($c['symbol']) ?>">
+                                                    <option <?= $c['id'] == 1?'selected':''?> value="<?= $c['id'] ?>" data-symbol="<?= htmlspecialchars($c['symbol']) ?>">
                                                         <?= htmlspecialchars($c['name']) ?>
                                                     </option>
                                                 <?php endforeach; ?>
@@ -411,7 +384,7 @@ $mainPayVendor = $mainPay['payVendor'] ?? null;
                                         <td>
                                             <select name="document_currency[]" class="form-control" onchange="calculateInrValue()">
                                                 <?php foreach ($get_currencies as $c): ?>
-                                                    <option <?= $c['id'] == 1 ? 'selected' : '' ?> value="<?= $c['id'] ?>" data-symbol="<?= htmlspecialchars($c['symbol']) ?>">
+                                                    <option <?= $c['id'] == 1?'selected':''?> value="<?= $c['id'] ?>" data-symbol="<?= htmlspecialchars($c['symbol']) ?>">
                                                         <?= htmlspecialchars($c['name']) ?>
                                                     </option>
                                                 <?php endforeach; ?>
@@ -419,7 +392,7 @@ $mainPayVendor = $mainPay['payVendor'] ?? null;
                                         </td>
                                         <td>
                                             <input type="number" step="0.01" class="form-control currency-amount"
-                                                oninput="calculateInrValue()" required value="1" name="exchange_value[]" placeholder="0.00">
+                                                oninput="calculateInrValue()" required required value="1" name="exchange_value[]" placeholder="0.00">
                                         </td>
                                         <td class="text-center">
                                             <button type="button" class="btn btn-success btn-sm addRow">
@@ -444,7 +417,11 @@ $mainPayVendor = $mainPay['payVendor'] ?? null;
                                     <div class="col-md-6">
                                         <h4 class="mb-0">Food/Mess and Accommodation</h4>
                                     </div>
-                                    <div class="col-md-6 text-right"></div>
+                                    <div class="col-md-6 text-right">
+                                        <!--<button type="button" class="btn btn-primary" onclick="newUniversityDue()">-->
+                                        <!--    <i class="fa fa-plus"></i>-->
+                                        <!--</button>-->
+                                    </div>
                                 </div>
                                 <hr>
                                 <div class="main-university-due">
@@ -465,9 +442,7 @@ $mainPayVendor = $mainPay['payVendor'] ?? null;
                                                     $symbol     = $currency_lookup[$fees["credit_currency"]]["symbol"]
                                                         ?? $currency_lookup[$fees["university_quotation_currency"]]["symbol"]
                                                         ?? '$';
-                                                    if (($fees['quotation_name'] ?? '') === 'Hostel') {
-                                                        $fees['quotation_name'] = 'Month Rent';
-                                                    }
+                                                    $fees['quotation_name'] == 'Hostel'  ? $fees['quotation_name'] = 'Month Rent' : $fees['quotation_name'] = $fees['quotation_name'];
                                             ?>
                                                     <tr class="fee-row" data-id="<?= $id ?>">
                                                         <td>
@@ -494,7 +469,8 @@ $mainPayVendor = $mainPay['payVendor'] ?? null;
                                                                         <?php foreach ($get_currencies as $c): ?>
                                                                             <option data-symbol="<?= htmlspecialchars($c['symbol']) ?>"
                                                                                 value="<?= $c['id'] ?>"
-                                                                                <?= (1 == $c['id']) ? 'selected' : '' ?>>
+                                                                                <?= ((1 == $c['id']))
+                                                                                    ? 'selected' : '' ?>>
                                                                                 <?= htmlspecialchars($c['name']) ?>
                                                                             </option>
                                                                         <?php endforeach; ?>
@@ -510,14 +486,22 @@ $mainPayVendor = $mainPay['payVendor'] ?? null;
                                                         </td>
                                                         <td>
                                                             <label>Payment Option <small class="text-danger">*</small></label>
-                                                            <select <?= ($fees["disabled"] ?? 0) == 1 ? "disabled" : "" ?> <?= ($fees["payment_option_status"] ?? 0) == 1 ? "disabled" : "" ?> name="<?= $field_name ?>_payment_option" class="form-control" required>
+                                                            <select <?= $fees["disabled"] == 1 ? "disabled" : "" ?> <?= $fees["payment_option_status"] == 1 ? "disabled" : "" ?> name="<?= $field_name ?>_payment_option" class="form-control" required>
                                                                 <option value="">Select Payment Option</option>
                                                                 <?php foreach ($quotation_paymente_mode as $payment_mode) { ?>
-                                                                    <option value="<?= $payment_mode['id'] ?>" <?= ($fees["payment_option"] ?? '') == $payment_mode['id'] ? "selected" : "" ?>><?= $payment_mode['name'] ?></option>
+                                                                    <option value="<?= $payment_mode['id'] ?>" <?= $fees["payment_option"] == $payment_mode['id'] ? "selected" : "" ?>><?= $payment_mode['name'] ?></option>
                                                                 <?php } ?>
                                                             </select>
                                                         </td>
                                                         <td>
+                                                            <!-- <label>Value INR <small class="text-danger">*</small></label>
+                                                            <div class="input-group form-group">
+                                                                <div class="input-group-addon">₹</div>
+                                                                <input type="number" step="0.01" name="<?= $field_name ?>_inr_value"
+                                                                    required class="form-control currency-amount  fees-inr-value-<?= $id ?>" readonly
+                                                                    placeholder="0.00" value="<?= $fees["inr_value"] ?? '' ?>">
+                                                            </div> -->
+
                                                             <label>&nbsp;</label>
                                                             <div class="input-group form-group document-currency-change">
 
@@ -538,7 +522,8 @@ $mainPayVendor = $mainPay['payVendor'] ?? null;
                                                                         <?php foreach ($get_currencies as $c): ?>
                                                                             <option data-symbol="<?= htmlspecialchars($c['symbol']) ?>"
                                                                                 value="<?= $c['id'] ?>"
-                                                                                <?= (1 == $c['id']) ? 'selected' : '' ?>>
+                                                                                <?= ((1 == $c['id']))
+                                                                                    ? 'selected' : '' ?>>
                                                                                 <?= htmlspecialchars($c['name']) ?>
                                                                             </option>
                                                                         <?php endforeach; ?>
@@ -552,14 +537,13 @@ $mainPayVendor = $mainPay['payVendor'] ?? null;
                                             } else { ?>
                                                 <?php foreach ($university_applicant_fees as $fees):
                                                     $id         = $fees["id"];
+
                                                     $field_name = strtolower(str_replace(" ", "_", $fees["name"]));
                                                     $symbol     = $currency_lookup[$fees["currency_id"]]["symbol"]
                                                         ?? $currency_lookup[$fees["university_quotation_currency"]]["symbol"]
                                                         ?? '$';
-                                                    // georgia label (was overwriting the russia label by mistake)
-                                                    if (($fees['hostel_georgia_label'] ?? '') === 'Hostel') {
-                                                        $fees['hostel_georgia_label'] = 'Month Rent';
-                                                    }
+                                                    $fees['hostel_russia_label'] == 'Hostel'  ? $fees['hostel_russia_label'] = 'Month Rent' : $fees['hostel_russia_label'] = $fees['hostel_russia_label'];
+
                                                 ?>
                                                     <tr class="fee-row" data-id="<?= $id ?>">
                                                         <td>
@@ -583,16 +567,15 @@ $mainPayVendor = $mainPay['payVendor'] ?? null;
                                                                     <select name="<?= $field_name ?>_currency_type"
                                                                         class="currency-selector currency-selector-<?= $id ?>"
                                                                         onchange="calculateInrValue(); updateSymbol_(this,<?= $id ?>)">
-                                                                        <?php foreach ($get_currencies as $c):
-                                                                            $isSelected = ((!empty($fees['currency_id']) && $fees['currency_id'] == $c['id'])
-                                                                                || (empty($fees['currency_id']) && ($fees['university_quotation_currency'] ?? '') == $c['id'])
-                                                                                || (empty($fees['currency_id']) && empty($fees['university_quotation_currency']) && $c['id'] == 1));
-                                                                        ?>
-                                                                            <option data-symbol="<?= htmlspecialchars($c['symbol']) ?>"
+                                                                        <?php foreach ($get_currencies as $c):  $selectedCurrency = ($c['id'] == 1) ? 'selected' : '' ?>
+                                                                            <option data-symbol="<?= htmlspecialchars($c['symbol']) ?>" <?= $selectedCurrency ?>
                                                                                 value="<?= $c['id'] ?>"
-                                                                                <?= $isSelected ? 'selected' : '' ?>>
+                                                                                <?= ((!empty($fees['currency_id']) && $fees['currency_id'] == $c['id'])
+                                                                                    || (empty($fees['currency_id']) && ($fees['university_quotation_currency'] ?? '') == $c['id']))
+                                                                                    ? 'selected' : '' ?>>
                                                                                 <?= htmlspecialchars($c['name']) ?>
                                                                             </option>
+
                                                                         <?php endforeach; ?>
                                                                     </select>
                                                                 </div>
@@ -606,16 +589,25 @@ $mainPayVendor = $mainPay['payVendor'] ?? null;
                                                         </td>
                                                         <td>
                                                             <label>Payment Option <small class="text-danger">*</small></label>
-                                                            <select <?= ($fees["disabled"] ?? 0) == 1 ? "disabled" : "" ?> name="<?= $field_name ?>_payment_option" class="form-control" required>
+                                                            <select <?= $fees["disabled"] == 1 ? "disabled" : "" ?> name="<?= $field_name ?>_payment_option" class="form-control" required>
                                                                 <option value="">Select Payment Option</option>
                                                                 <?php foreach ($quotation_paymente_mode as $payment_mode) { ?>
-                                                                    <option value="<?= $payment_mode['id'] ?>" <?= ($fees["option_payment"] ?? '') == $payment_mode['id'] ? "selected" : "" ?>><?= $payment_mode['name'] ?></option>
+                                                                    <option value="<?= $payment_mode['id'] ?>" <?= $fees["option_payment"] == $payment_mode['id'] ? "selected" : "" ?>><?= $payment_mode['name'] ?></option>
                                                                 <?php } ?>
                                                             </select>
                                                         </td>
                                                         <td>
+                                                            <!-- <label>Value INR <small class="text-danger">*</small></label>
+                                                            <div class="input-group form-group">
+                                                                <div class="input-group-addon">₹</div>
+                                                                <input type="number" step="0.01" name="<?= $field_name ?>_inr_value"
+                                                                    required class="form-control currency-amount fees-inr-value-<?= $id ?>" readonly
+                                                                    placeholder="0.00" value="<?= $fees["value_inr"] ?? '' ?>">
+                                                            </div> -->
+
+
                                                             <label><?= htmlspecialchars($fees['hostel_georgia_label']) ?> <small class="text-danger">*</small></label>
-                                                            <div class="input-group form-group document-currency-change">
+                                                            <div disabled class="input-group form-group document-currency-change">
 
                                                                 <div class="input-group-addon currency-symbol-<?= $id ?>">
                                                                     <?= htmlspecialchars($symbol) ?>
@@ -634,7 +626,8 @@ $mainPayVendor = $mainPay['payVendor'] ?? null;
                                                                         <?php foreach ($get_currencies as $c): ?>
                                                                             <option data-symbol="<?= htmlspecialchars($c['symbol']) ?>"
                                                                                 value="<?= $c['id'] ?>"
-                                                                                <?= (1 == $c['id']) ? 'selected' : '' ?>>
+                                                                                <?= (1 == $c['id'])
+                                                                                    ? 'selected' : '' ?>>
                                                                                 <?= htmlspecialchars($c['name']) ?>
                                                                             </option>
                                                                         <?php endforeach; ?>
@@ -652,9 +645,9 @@ $mainPayVendor = $mainPay['payVendor'] ?? null;
                                         <tfoot id="main-university-due-pay">
 
                                             <tr>
-                                                <td class="d-flex">
+                                                <td colspan="" class="d-flex">
                                                     <div>Pay To <small class="text-danger">*</small></div>
-                                                    <div class="col-md-8 form-group trans-div" style="display:<?= ($mainPayMode == 1) ? '' : 'none' ?>;">
+                                                    <div class="col-md-8 form-group trans-div" style="display:<?= !empty($university_due_array["main"]['pay_info'][0]["payMode"]) && $university_due_array["main"]['pay_info'][0]["payMode"] == 1 ? '' : 'none' ?>;">
 
                                                         <select class="form-control selectpicker electpicker-new transaction_type"
                                                             data-live-search="true"
@@ -665,7 +658,7 @@ $mainPayVendor = $mainPay['payVendor'] ?? null;
                                                             required>
                                                             <?php foreach ($transaction_type as $t_type): ?>
                                                                 <option value="<?= $t_type['id'] ?>"
-                                                                    <?= (($mainPay['transaction_type'] ?? null) == $t_type['id']) ? 'selected' : '' ?>>
+                                                                    <?= ($university_due_array["main"]['pay_info'][0]["transaction_type"] == $t_type['id']) ? 'selected' : '' ?>>
                                                                     <?= htmlspecialchars($t_type['name']) ?>
                                                                 </option>
                                                             <?php endforeach; ?>
@@ -676,8 +669,9 @@ $mainPayVendor = $mainPay['payVendor'] ?? null;
                                                 </td>
                                                 <td>
                                                     <select class="form-control" required name="university_pay_mode" onchange="vendor_update(this,this.value);">
-                                                        <?php foreach ($modes as $m): ?>
-                                                            <option value="<?= $m['id'] ?>" <?= (!empty($mainPayMode) && $mainPayMode == $m["id"]) ? "selected" : "" ?>>
+                                                        <?php foreach ($modes as $m):
+                                                        ?>
+                                                            <option value="<?= $m['id'] ?>" <?= $university_due_array["main"]["pay_info"] ?> <?= !empty($university_due_array["main"]['pay_info'][0]["payMode"]) && $university_due_array["main"]['pay_info'][0]["payMode"] == $m["id"] ? "selected" : "" ?>>
                                                                 <?= htmlspecialchars($m['name']) ?>
                                                             </option>
                                                         <?php endforeach; ?>
@@ -685,40 +679,62 @@ $mainPayVendor = $mainPay['payVendor'] ?? null;
 
                                                 </td>
                                                 <td>
-                                                    <select class="form-control" style="display:<?= ($mainPayMode == 5) ? 'none' : 'block' ?>" required id="university_pay_vendor" name="university_pay_vendor">
-                                                        <?php if (!empty($mainPayMode) && $mainPayMode != 5) { ?>
+                                                    <select class="form-control" style="display:<?= (!empty($university_due_array["main"]['pay_info'][0]["payMode"]) && $university_due_array["main"]['pay_info'][0]["payMode"] == 5) ? 'none' : 'show' ?>" required id="university_pay_vendor" name="university_pay_vendor">
+                                                        <?php if (!empty($university_due_array["main"]['pay_info'][0]["payMode"]) && $university_due_array["main"]['pay_info'][0]["payMode"] != 5) { ?>
                                                             <option value="">Select Vendor</option>
                                                         <?php } ?>
                                                         <?php
-                                                        if (in_array($mainPayMode, [1, 4, 6])) {
+                                                        if (!empty($university_due_array["main"]['pay_info'][0]["payMode"]) && $university_due_array["main"]['pay_info'][0]["payMode"] == 1 || $university_due_array["main"]['pay_info'][0]["payMode"] == 4 || $university_due_array["main"]['pay_info'][0]["payMode"] == 6) {
                                                             foreach ($modes_vendor as $vendor) {
-                                                                if ($vendor["mode"] == $mainPayMode) { ?>
-                                                                    <option value="<?= $vendor["id"] ?>" <?= $vendor["id"] == $mainPayVendor ? "selected" : "" ?>><?= $vendor["name"] ?></option>
-                                                        <?php }
+                                                                if ($vendor["mode"] == $university_due_array["main"]['pay_info'][0]["payMode"]) {
+                                                        ?>
+                                                                    <option value="<?= $vendor["id"] ?>" <?= $vendor["id"] == $university_due_array["main"]['pay_info'][0]["payVendor"] ? "selected" : "" ?>><?= $vendor["name"] ?></option>
+
+                                                            <?php
+                                                                }
                                                             }
-                                                        } elseif ($mainPayMode == 2) { ?>
-                                                            <option value="<?= $mainPayVendor ?>" selected><?= $mainPayVendor ?></option>
-                                                        <?php } elseif ($mainPayMode == 3) {
-                                                            foreach ($hostelVendors as $vendor) { ?>
-                                                                <option value="<?= $vendor["id"] ?>" <?= $vendor["id"] == $mainPayVendor ? "selected" : "" ?>><?= $vendor["name"] ?></option>
-                                                        <?php }
-                                                        } elseif ($mainPayMode == 5) { ?>
-                                                            <option value="<?= $mainPayVendor ?>" selected><?= $mainPayVendor ?></option>
-                                                        <?php } ?>
+                                                        } else if (!empty($university_due_array["main"]['pay_info'][0]["payMode"]) && $university_due_array["main"]['pay_info'][0]["payMode"] == 2) {
+                                                            ?>
+                                                            <option value="<?= $university_due_array["main"]['pay_info'][0]["payVendor"] ?>" selected><?= $university_due_array["main"]['pay_info'][0]["payVendor"] ?></option>
+                                                        <?php
+
+                                                        } 
+                                                        else if (!empty($university_due_array["main"]['pay_info'][0]["payMode"]) && $university_due_array["main"]['pay_info'][0]["payMode"] == 3) {
+                                                            
+                                                                  foreach ($hostelVendors as $vendor) {
+                                                        ?>
+                                                                    <option value="<?= $vendor["id"] ?>" <?= $vendor["id"] == $university_due_array["main"]['pay_info'][0]["payVendor"] ? "selected" : "" ?>><?= $vendor["name"] ?></option>
+
+                                                            <?php
+                                                                
+                                                            }
+                                                        }
+                                                        else if (!empty($university_due_array["main"]['pay_info'][0]["payMode"]) && $university_due_array["main"]['pay_info'][0]["payMode"] == 5) {
+                                                        ?>
+                                                            <option value="<?= $university_due_array["main"]['pay_info'][0]["payVendor"] ?>" selected><?= $university_due_array["main"]['pay_info'][0]["payVendor"] ?></option>
+                                                        <?php
+                                                        }
+
+                                                        ?>
                                                     </select>
 
-                                                    <?php if ($mainPayMode == 5): ?>
+                                                    <?php
+                                                    $payInfo_new = $university_due_array["main"]['pay_info'][0] ?? null;
+
+                                                    if (!empty($payInfo_new) && isset($payInfo_new["payMode"]) && $payInfo_new["payMode"] == 5): ?>
                                                         <input
                                                             type="text"
                                                             name="manual_cash_vendor"
                                                             required
                                                             class="form-control manually-cash"
                                                             placeholder="Enter Vendor Name"
-                                                            value="<?= !empty($mainPayVendor) ? htmlspecialchars($mainPayVendor, ENT_QUOTES, 'UTF-8') : '' ?>">
+                                                            value="<?= !empty($payInfo_new["payVendor"]) ? htmlspecialchars($payInfo_new["payVendor"], ENT_QUOTES, 'UTF-8') : '' ?>">
                                                     <?php endif; ?>
 
                                                 </td>
-                                                <td></td>
+                                                <td>
+                                                    <!-- <input type="input" readonly name="totalINRValue" class="form-control" value="<?= !empty($university_due_array["main"]['pay_info'][0]["totalINRValue"]) ? $university_due_array["main"]['pay_info'][0]["totalINRValue"] : 0 ?>"> -->
+                                                </td>
                                             </tr>
                                         </tfoot>
                                     </table>
@@ -762,12 +778,13 @@ $mainPayVendor = $mainPay['payVendor'] ?? null;
                                     ? array_values(array_filter($company_due_array['main']["info"]))
                                     : [];
 
+                                // ✅ If data exists, render from DB, else fallback to fees_details_array
                                 $feesSource = !empty($mainInfo) ? $mainInfo : $fees_details_array;
 
                                 foreach ($feesSource as $index => $fee):
-                                    $labelName  = strtolower(str_replace(" ", "_", $fee['label_name'] ?? $fee['name'] ?? ''));
+                                    $labelName = strtolower(str_replace(" ", "_", $fee['label_name'] ?? $fee['name']));
                                     $isReadOnly = !empty($fee['readonly']) || $index === 0;
-                                    if ($labelName === "" && $index === 0) {
+                                    if ($labelName == "" && $index == 0) {
                                         $labelName = "total_service_charge";
                                     }
                                 ?>
@@ -777,7 +794,7 @@ $mainPayVendor = $mainPay['payVendor'] ?? null;
                                                 <input type="hidden" name="id" value="<?= htmlspecialchars($fee['id']) ?>">
                                             <?php endif; ?>
                                             <select name="name[]" onchange="calculateInrValue();Change_companyDue(this);" class="form-control name" <?= $index == 0 ? 'disabled' : '' ?>>
-                                                <?php foreach (($company_dues_fees_array ?? []) as $fees_data): ?>
+                                                <?php foreach ($company_dues_fees_array as $fees_data): ?>
                                                     <?php if ($fees_data["status"] == (!empty($index) ? 1 : 0)): ?>
                                                         <option
                                                             value="<?= htmlspecialchars($fees_data['id']) ?>"
@@ -835,9 +852,9 @@ $mainPayVendor = $mainPay['payVendor'] ?? null;
 
                             <tfoot>
                                 <?php
-                                $payInfo = $company_due_array["main"]["pay_info"] ?? [$mainPay];
+                                $payInfo = $company_due_array["main"]["pay_info"] ?? [$university_due_array["main"]["pay_info"][0] ?? []];
                                 foreach ($payInfo as $l_array):
-                                    $payMode   = $l_array["payMode"]   ?? null;
+                                    $payMode = $l_array["payMode"] ?? null;
                                     $payVendor = $l_array["payVendor"] ?? null;
                                     $payAmount = $l_array["payAmount"] ?? 0;
                                 ?>
@@ -853,7 +870,7 @@ $mainPayVendor = $mainPay['payVendor'] ?? null;
                                             </select>
                                         </td>
                                         <td>
-                                            <select class="form-control" style="display:<?= (!empty($payMode) && $payMode == 5) ? 'none' : 'block' ?>" required name="university_pay_vendor">
+                                            <select class="form-control" style="display:<?= (!empty($payMode) && $payMode == 5) ? 'none' : 'show' ?>" required name="university_pay_vendor" id="university_pay_vendor">
                                                 <?php if ($payMode != 5) { ?>
                                                     <option value="">Select Vendor</option>
                                                 <?php } ?>
@@ -875,7 +892,9 @@ $mainPayVendor = $mainPay['payVendor'] ?? null;
                                                 <?php endif; ?>
                                             </select>
 
-                                            <?php if (!empty($payMode) && $payMode == 5): ?>
+                                            <?php
+
+                                            if (!empty($payMode) && isset($payMode) && $payMode == 5): ?>
                                                 <input
                                                     type="text"
                                                     name="manual_cash_vendor"
@@ -915,7 +934,8 @@ $mainPayVendor = $mainPay['payVendor'] ?? null;
                             <?php if (!empty($company_due_array['addition'])): ?>
                                 <?php foreach ($company_due_array['addition'] as $addition): ?>
                                     <?php
-                                    $addition["info"]     = array_values(array_filter($addition["info"] ?? []));
+                                    // ✅ Clean arrays
+                                    $addition["info"] = array_values(array_filter($addition["info"] ?? []));
                                     $addition["pay_info"] = array_values(array_filter($addition["pay_info"] ?? []));
                                     ?>
 
@@ -944,11 +964,13 @@ $mainPayVendor = $mainPay['payVendor'] ?? null;
                                             </thead>
                                             <tbody>
                                                 <?php foreach ($addition["info"] as $index => $fee): ?>
-                                                    <?php $labelName = strtolower(str_replace(" ", "_", $fee['label_name'] ?? '')); ?>
+                                                    <?php
+                                                    $labelName = strtolower(str_replace(" ", "_", $fee['label_name'] ?? ''));
+                                                    ?>
                                                     <tr class="calculate">
                                                         <td>
                                                             <select name="name[]" onchange="calculateInrValue();Change_companyDue(this);" class="form-control name">
-                                                                <?php foreach (($company_dues_fees_array ?? []) as $fees_data): ?>
+                                                                <?php foreach ($company_dues_fees_array as $fees_data): ?>
                                                                     <?php if (!empty($fees_data["status"])): ?>
                                                                         <option value="<?= htmlspecialchars($fees_data['id']) ?>"
                                                                             data-add="<?= $fees_data["add_flag"] ?>"
@@ -998,43 +1020,45 @@ $mainPayVendor = $mainPay['payVendor'] ?? null;
                                             </tbody>
                                             <tfoot>
                                                 <?php foreach ($addition["pay_info"] as $l_array): ?>
-                                                    <?php $aPayMode = $l_array["payMode"] ?? null; ?>
                                                     <tr class="table-warning">
                                                         <td>
                                                             <select class="form-control" required name="university_pay_mode" onchange="vendor_update(this,this.value);">
                                                                 <?php foreach ($modes as $m): ?>
                                                                     <option value="<?= $m['id'] ?>"
-                                                                        <?= (!empty($aPayMode) && $aPayMode == $m["id"]) ? "selected" : "" ?>>
+                                                                        <?= (!empty($l_array["payMode"]) && $l_array["payMode"] == $m["id"]) ? "selected" : "" ?>>
                                                                         <?= htmlspecialchars($m['name']) ?>
                                                                     </option>
                                                                 <?php endforeach; ?>
                                                             </select>
                                                         </td>
                                                         <td>
-                                                            <select class="form-control" style="display:<?= ($aPayMode == 5) ? 'none' : 'block' ?>" required name="university_pay_vendor">
-                                                                <?php if ($aPayMode != 5) { ?>
+                                                            <select class="form-control" style="display:<?= (!empty($l_array["payMode"]) && $l_array["payMode"] == 5) ? 'none' : 'show' ?>" required name="university_pay_vendor">
+                                                                <?php if ($l_array["payMode"] != 5) { ?>
+
                                                                     <option value="">Select Vendor</option>
                                                                 <?php } ?>
 
-                                                                <?php if (in_array($aPayMode, [1, 4, 6])): ?>
+                                                                <?php if (!empty($l_array["payMode"]) && in_array($l_array["payMode"], [1, 4, 6])): ?>
                                                                     <?php foreach ($modes_vendor as $vendor): ?>
-                                                                        <?php if ($vendor["mode"] == $aPayMode): ?>
+                                                                        <?php if ($vendor["mode"] == $l_array["payMode"]): ?>
                                                                             <option value="<?= $vendor["id"] ?>" <?= (!empty($l_array["payVendor"]) && $vendor["id"] == $l_array["payVendor"]) ? "selected" : "" ?>>
                                                                                 <?= $vendor["name"] ?>
                                                                             </option>
                                                                         <?php endif; ?>
                                                                     <?php endforeach; ?>
 
-                                                                <?php elseif (in_array($aPayMode, [2, 3]) && !empty($l_array["payVendor"])): ?>
+                                                                <?php elseif (!empty($l_array["payMode"]) && in_array($l_array["payMode"], [2, 3]) && !empty($l_array["payVendor"])): ?>
                                                                     <option value="<?= $l_array["payVendor"] ?>" selected><?= $l_array["payVendor"] ?></option>
 
-                                                                <?php elseif ($aPayMode == 5 && !empty($l_array["payVendor"])): ?>
+                                                                <?php elseif (!empty($l_array["payMode"]) && $l_array["payMode"] == 5 && !empty($l_array["payVendor"])): ?>
                                                                     <option value="<?= $l_array["payVendor"] ?>" selected><?= $l_array["payVendor"] ?></option>
                                                                 <?php endif; ?>
                                                             </select>
 
 
-                                                            <?php if ($aPayMode == 5): ?>
+                                                            <?php
+
+                                                            if (!empty($l_array["payMode"]) && isset($l_array["payMode"]) && $l_array["payMode"] == 5): ?>
                                                                 <input
                                                                     type="text"
                                                                     name="manual_cash_vendor"
@@ -1087,114 +1111,53 @@ $mainPayVendor = $mainPay['payVendor'] ?? null;
 
 
 <script>
-    /* =====================================================================
-     * CASCADE:  Company  ->  Hostel  ->  Room capacity  ->  Rent / fees
-     * ===================================================================== */
+    var get_university_rentData = <?= json_encode($hostelRentelData) ?>;
+    var selectedUniversityRoomData = [];
+var hostel_vendors = <?= json_encode($hostelVendors) ?>;
+    function get_hostel_rentInfo(id) {
+        console.log(id);
+        console.log(get_university_rentData[id]);
+        if (get_university_rentData[id]) {
+            console.log(get_university_rentData[id]);
+            let rooms = get_university_rentData[id].rooms ? JSON.parse(get_university_rentData[id].rooms) : [];
+            console.log(rooms);
+            selectedUniversityRoomData = rooms;
 
-   var hostelRentData = <?= json_encode($hostelRentelData ?? []) ?>;   // keyed by hostel id
-var hostel_vendors = <?= json_encode($hostelVendors ?? []) ?>;
 
-var SELECTED_HOSTEL = "<?= $selected_hostel ?>";
-var SELECTED_ROOM   = "<?= $selected_room ?>";
-
-// Rooms of the hostel selected right now. selectRoomCapacity() reads this,
-// so onHostelChange() must refresh it.
-var selectedUniversityRoomData = [];
-
-function refreshPicker($el) {
-    if ($el.length && typeof $el.selectpicker === "function") {
-        $el.selectpicker('refresh');
-    }
-}
-
-function parseRooms(hostelId) {
-    var row = hostelRentData ? hostelRentData[hostelId] : null;
-    if (!row) return [];
-    var rooms = row.rooms;
-    if (typeof rooms === "string") {
-        try { rooms = JSON.parse(rooms); } catch (e) { rooms = []; }
-    }
-    return Array.isArray(rooms) ? rooms : [];
-}
-
-// COMPANY changed -> hostel list is left as PHP rendered it, just re-sync
-// the rooms/rent for whatever hostel is selected. Keeps the current room.
-function onCompanyChange(companyId) {
-    onHostelChange($('#hostel').val(), $('#room_capacity').val());
-}
-
-// HOSTEL changed -> rebuild the room list, keep the room if it still exists,
-// then fill the rent. Does NOT get called from selectRoomCapacity().
-function onHostelChange(hostelId, keepRoom) {
-    selectedUniversityRoomData = parseRooms(hostelId);
-
-    var $room = $('#room_capacity');
-    $room.empty().append($('<option>', { value: '', text: 'Select room capacity' }));
-
-    var stillValid = false;
-    selectedUniversityRoomData.forEach(function (room) {
-        if (room.room_capacity !== undefined && room.room_capacity !== '') {
-            $room.append($('<option>', {
-                value: room.room_capacity,
-                text: room.room_capacity
-            }));
-            if (String(room.room_capacity) === String(keepRoom || '')) stillValid = true;
         }
-    });
+    }
 
-    $room.val(stillValid ? keepRoom : '');
-    refreshPicker($room);
+    $(function() {
 
-    selectRoomCapacity($room.val());
-}
-
-// ROOM CAPACITY changed -> fill the rent only. No rebuild, no recursion.
-function selectRoomCapacity(id) {
-    var roomData = (id === '' || id === null || id === undefined)
-        ? null
-        : selectedUniversityRoomData.find(function (r) {
-            return String(r.room_capacity) === String(id);
+        // Initialize form validation
+        appValidateForm($('#hostel_quotation_form'), {
+            university_name: 'required',
+            // floor_No: 'required',
+            // room_No: 'required',
+            company: 'required',
+            hostel: 'required',
+            room_capacity: 'required',
+            start_date: 'required',
+            end_date: 'required',
+            services: 'required'
         });
 
-    if (roomData) {
-        $("input[name='rent']").val(roomData.rent);
-        $("select[name='rent_currency_type']").val(roomData.currency);
-        $(".fees_5").val(roomData.rent);
-        $(".currency-selector-5").val(roomData.currency);
-    } else {
-        $("input[name='rent']").val('');
-        $("select[name='rent_currency_type']").val('');
-        $(".fees_5").val(0);
-        $(".currency-selector-5").val('');
-    }
-    updateSymbol_($(".currency-selector-5"), 5);
-    calculateInrValue();
-}
+        get_hostel_rentInfo(<?= $hostelData->hostel ?>);
+        const applicantForm = document.getElementById("hostel_quotation_form");
+
+        if (applicantForm) {
+            console.log("check");
+            applicantForm.addEventListener("submit", function(event) {
+                event.preventDefault(); // prevent page reload
+                console.log("check okk");
+
+                handleFormSubmission(applicantForm, event);
+            });
+        }
 
 
-$(function() {
 
-    appValidateForm($('#hostel_quotation_form'), {
-        university_name: 'required',
-        company: 'required',
-        hostel: 'required',
-        room_capacity: 'required',
-        start_date: 'required',
-        end_date: 'required',
-        services: 'required'
     });
-
-    // Load the rooms + rent for the hostel/room already selected.
-    onHostelChange(SELECTED_HOSTEL || $('#hostel').val(), SELECTED_ROOM);
-
-    const applicantForm = document.getElementById("hostel_quotation_form");
-    if (applicantForm) {
-        applicantForm.addEventListener("submit", function(event) {
-            event.preventDefault();
-            handleFormSubmission(applicantForm, event);
-        });
-    }
-});
 
     let calculationTimeout;
 
@@ -1204,39 +1167,71 @@ $(function() {
     }
 
     document.addEventListener("input", function(event) {
+        // Check if the target matches any of the selectors
         if (
             event.target.matches("input[name='exchange_value[]']") ||
             event.target.matches(".currency-amount") ||
             event.target.matches("input[name='fee_value[]']")
         ) {
-            debounceCalculate();
+            debounceCalculate(); // Call your debounce function
         }
     });
 
+
+    function selectRoomCapacity(id) {
+        let roomData = selectedUniversityRoomData.find(r => r.room_capacity == id);
+        if (roomData) {
+            console.log("roomData", roomData);
+            $("input[name='rent']").val(roomData.rent);
+            $("select[name='rent_currency_type']").val(roomData.currency);
+            $(".fees_5").val(roomData.rent);
+            $(".currency-selector-5").val(roomData.currency);
+            updateSymbol_($(".currency-selector-5"), 5);
+        } else {
+            $(".fees_5").val(0);
+            updateSymbol_($(".currency-selector-5"), 5);
+            $(".currency-selector-5").val('');
+            $("input[name='rent']").val('');
+            $("select[name='rent_currency_type']").val('');
+        }
+        calculateInrValue();
+    }
+
     // --- Server-side data ---
-    const universityApplicantFeesArray = <?php echo json_encode($university_applicant_fees_array ?? []); ?>;
-    const getClientsFees = <?php echo json_encode($get_clients_fees ?? []); ?>;
+    const universityApplicantFeesArray = <?php echo json_encode($university_applicant_fees_array); ?>;
+    const getClientsFees = <?php echo json_encode($get_clients_fees); ?>;
     var exchangeRates = {};
     const TSC = 0;
-
+    // --- Utility functions ---
     const toInt = val => parseInt(val) || 0;
     const toFloat = val => parseFloat(val) || 0;
     const formatCurrency = (value, decimals = 2) => value.toFixed(decimals);
-
     var hostel_quotation_data = <?php echo json_encode($hostel_quotation_data); ?>;
     var payment_mod = <?php echo json_encode($modes); ?>;
     var payment_mode_vendors = <?php echo json_encode($modes_vendor); ?>;
 
     function vendor_update(obj, modeId) {
+        // 🔹 Find the vendor select in the same row as the changed mode
         let vendor_select = $(obj).closest("tr").find("select[name='university_pay_vendor']");
         vendor_select.empty();
-        vendor_select.selectpicker('refresh');
+         vendor_select.selectpicker('refresh');
         vendor_select.show();
+        $(obj).closest("tr").find("input.manually-cash").hide();
         $(obj).closest("tr").find("input.manually-cash").remove();
 
+        // $(obj).parents('.main-university-due,.aditional-university-due-table').find('.trans-div select').val('').selectpicker('refresh');
+        if (modeId != 1) {
+            // $(obj).parents('.main-university-due,.aditional-university-due-table').find('.trans-div').hide();
+        }
+
+        // 🔹 Filter vendors by mode
         let vendors = payment_mode_vendors.filter(v => v.mode == modeId);
 
         if (modeId == 1 || modeId == 4 || modeId == 6) {
+            if (modeId == 1) {
+                // $(obj).parents('.main-university-due,.aditional-university-due-table').find('.trans-div').show();
+
+            }
             if (vendors.length > 0) {
                 vendor_select.append('<option value="">-- Select Vendor --</option>');
                 vendors.forEach(v => {
@@ -1245,17 +1240,20 @@ $(function() {
             } else {
                 vendor_select.append('<option value="">No vendors available</option>');
             }
-            vendor_select.selectpicker('refresh');
+              vendor_select.selectpicker('refresh');
         } else if (modeId == 2) {
             vendor_select.append(
-                '<option value="<?= htmlspecialchars($hostelData->university_name ?? '', ENT_QUOTES) ?>" selected>' +
-                '<?= htmlspecialchars($hostelData->university_name ?? '', ENT_QUOTES) ?>' +
+                '<option value="<?= htmlspecialchars($hostelData->university_name) ?>" selected>' +
+                '<?= htmlspecialchars($hostelData->university_name) ?>' +
                 '</option>'
             );
+
+            // vendor_select.val("<?= htmlspecialchars($hostelData->university_name) ?>");
             vendor_select.selectpicker('refresh');
         } else if (modeId == 3) {
             vendor_select.empty();
-            if (hostel_vendors.length > 0) {
+
+             if (hostel_vendors.length > 0) {
                 vendor_select.append('<option value="">-- Select Vendor --</option>');
                 hostel_vendors.forEach(v => {
                     vendor_select.append(`<option value="${v.id}">${v.name}</option>`);
@@ -1263,21 +1261,30 @@ $(function() {
             } else {
                 vendor_select.append('<option value="">No vendors available</option>');
             }
-            vendor_select.selectpicker('refresh');
+              vendor_select.selectpicker('refresh');
         } else if (modeId == 5) {
+            // 🔹 Hide the select
             vendor_select.selectpicker('destroy');
-            vendor_select.hide();
+                vendor_select.hide();
+
+            // 🔹 Remove existing manually-input if already added
             $(obj).closest("tr").find("input.manually-cash").remove();
+
+            // 🔹 Add new input for manual cash entry
             $('<input type="text" name="manual_cash_vendor" required class="form-control manually-cash" placeholder="Enter Vendor Name">')
                 .appendTo($(obj).closest("td").next("td"));
+
+
         }
+        
+        
     }
 
 
     function check_quotations(quotationId) {
         const url = new URL(window.location.href);
-        url.searchParams.set("quotation_id", quotationId);
-        window.location.href = url.toString();
+        url.searchParams.set("quotation_id", quotationId); // add or replace
+        window.location.href = url.toString(); // reload with new param
     }
 
 
@@ -1285,47 +1292,70 @@ $(function() {
     function calculateInrValue() {
         let exchangeRates = {};
 
+        // Build exchange rate map
         document.querySelectorAll("#exchangeTableBody tr").forEach(row => {
             const credit_currency = row.querySelector("select[name='credit_currency[]']");
             const document_currency = row.querySelector("select[name='document_currency[]']");
             const amountInput = row.querySelector("input[name='exchange_value[]']");
 
             if (credit_currency && document_currency && amountInput) {
+                const credit_currencyId = credit_currency.value;
+                const document_currencyId = document_currency.value;
                 const rate = parseFloat(amountInput.value) || 0;
-                exchangeRates[credit_currency.value + "_" + document_currency.value] = rate;
+                exchangeRates[credit_currencyId + "_" + document_currencyId] = rate;
             }
         });
 
+        console.log(exchangeRates);
+
+        // 🔹 Update all fee rows inside each university table
         document.querySelectorAll(".university-feesTable .fee-row").forEach(feeRow => {
 
             const feeId = feeRow.dataset.id;
             const amountInput = feeRow.querySelector(`.credit-currency-change .fees_${feeId}`);
-            const creditEl = feeRow.querySelector(`.credit-currency-change .currency-selector-${feeId}`);
-            const documentEl = feeRow.querySelector(`.document-currency-change .currency-selector-${feeId}`);
+            const credit_currency = feeRow.querySelector(`.credit-currency-change .currency-selector-${feeId}`).value;
+            const document_currency = feeRow.querySelector(`.document-currency-change .currency-selector-${feeId}`).value;
             const inrInput = feeRow.querySelector(`.document-currency-change .fees_${feeId}`);
             const exchangeInput = feeRow.querySelector(`input[name$='_exchangeValue']`);
 
-            if (!amountInput || !creditEl || !documentEl || !inrInput) return;
+            console.log("amountInput", amountInput);
+            console.log("credit_currency", credit_currency);
+            console.log("document_currency", document_currency);
+            console.log("inrInput", inrInput);
 
-            const credit_currency = creditEl.value;
-            const document_currency = documentEl.value;
+            if (!amountInput || !credit_currency || !inrInput) return;
+
             const amount = toFloat(amountInput.value);
+            const currencyId = credit_currency;
             const exchangeRate = exchangeRates[credit_currency + "_" + document_currency] || 0;
+            console.log("exchangeRate", exchangeRate);
 
             if (exchangeInput) exchangeInput.value = exchangeRate;
 
             const safeRate = (exchangeRate && exchangeRate !== 0) ? exchangeRate : 1;
             let inrAmount = amount * safeRate;
 
+            // Save raw numeric value in a data attribute (for totals)
             inrInput.dataset.raw = inrAmount;
+
+            // Show formatted string for user
             inrInput.value = formatCurrency(inrAmount);
         });
 
+        // 🔹 Compute totals per university table
         $(".university-feesTable").each(function() {
             let totalValue = 0;
+
             $(this).find("input[name$='_inr_value']").each(function() {
-                totalValue += parseFloat($(this).val()) || 0;
+                let raw = $(this).val(); // safe numeric value
+                let val = parseFloat(raw) || 0;
+                totalValue += val;
             });
+
+            // Debug
+            // console.log("Table total:", totalValue);
+
+            // Set formatted total in the table’s totalINRValue input
             $(this).find("input[name='totalINRValue']").val(formatCurrency(totalValue));
         });
 
@@ -1336,19 +1366,26 @@ $(function() {
 
     // --- Update University Due / Pending (table by table) ---
     function updateUniversityDue() {
+        // Base service charge (global)
         let total_service_charge = toFloat(
             document.querySelector("input.total_service_charge_inr")?.value || 0
         );
         let final_total_service_charge = total_service_charge;
 
+
         let exchangeRates = {};
         document.querySelectorAll("#exchangeTableBody tr").forEach(row => {
             const currencySelect = row.querySelector("select[name='exchange_currency[]']");
             const amountInput = row.querySelector("input[name='exchange_value[]']");
+
             if (currencySelect && amountInput) {
-                exchangeRates[currencySelect.value] = parseFloat(amountInput.value) || 0;
+                const currencyId = currencySelect.value;
+                const rate = parseFloat(amountInput.value) || 0;
+                exchangeRates[currencyId] = rate;
             }
         });
+        // console.log(final_total_service_charge);
+        // Loop through each table
 
         var check_firstServiceCharge = 0;
 
@@ -1356,6 +1393,7 @@ $(function() {
             let totalValue = 0;
             let totalInr = 0;
 
+            // Loop rows inside this table
             table.querySelectorAll("tbody tr").forEach(row => {
                 const selectEl = row.querySelector("select[name='name[]']");
                 const selectedOption = selectEl ? selectEl.options[selectEl.selectedIndex] : null;
@@ -1368,14 +1406,18 @@ $(function() {
                 if (!valueInput || !currencySelect || !inrInput) return;
 
                 const value = toFloat(valueInput.value);
-                const exchangeRate = exchangeRates[currencySelect.value] || 1;
+                const currencyId = currencySelect.value;
+                const exchangeRate = exchangeRates[currencyId] || 1;
                 const inrValue = value * exchangeRate;
 
+                // Add raw value
                 totalValue += value;
-                totalInr += inrValue;
+                totalInr += inrValue; // ✅ always add to this table total
 
+                // Update INR field
                 inrInput.value = formatCurrency(inrValue);
 
+                // Adjust service charge based on data-add
                 if (!isNaN(addStatus)) {
                     if (addStatus === 1) {
                         if (!row.closest(".aditional_university_dues")) {
@@ -1383,24 +1425,34 @@ $(function() {
                         }
                     } else if (addStatus === 0) {
                         final_total_service_charge -= inrValue;
-                        if (index === 0) check_firstServiceCharge = 1;
+                        if (index === 0) {
+                            check_firstServiceCharge = 1;
+                        }
                     }
                 }
             });
 
+            // For the first (main) table, deduct base service charge if not adjusted
             if (index === 0 && check_firstServiceCharge === 0) {
                 totalInr = (totalInr - total_service_charge) < 0 ? 0 : totalInr - total_service_charge;
             }
 
+            // Update this table’s total pending input
             const pendingInput = table.querySelector("input[name='total_pending_amount']");
-            if (pendingInput) pendingInput.value = formatCurrency(totalInr);
+            if (pendingInput) {
+                pendingInput.value = formatCurrency(totalInr);
+            }
         });
 
+        // Update global pending (main table) if first service charge was adjusted
         if (check_firstServiceCharge === 1) {
             const mainPending = document.querySelector("#universityDue input[name='total_pending_amount']");
-            if (mainPending) mainPending.value = formatCurrency(final_total_service_charge);
+            if (mainPending) {
+                mainPending.value = formatCurrency(final_total_service_charge);
+            }
         }
         setNumberDecimal();
+
     }
 
 
@@ -1439,18 +1491,31 @@ $(function() {
     // --- Update currency symbol ---
     function updateSymbol_(obj, feeId) {
         try {
-            const $selector = $(obj);
-            if ($selector.length === 0) return;
+            const $selector = $(obj); // wrap in jQuery
+
+            if ($selector.length === 0) {
+                // console.warn("updateSymbol_: selector not found", obj, feeId);
+                return;
+            }
 
             const $selectedOption = $selector.find("option:selected");
-            if ($selectedOption.length === 0) return;
+            if ($selectedOption.length === 0) {
+                // console.warn("updateSymbol_: no selected option", obj, feeId);
+                return;
+            }
 
             const symbol = $selectedOption.data("symbol") || "";
 
+            // Try to find closest container (row or group)
             const $row = $selector.closest("tr, .form-group, .input-group");
             const $symbolEl = $row.find(`.currency-symbol-${feeId}`);
 
-            if ($symbolEl.length) $symbolEl.text(symbol);
+            if ($symbolEl.length) {
+                $symbolEl.text(symbol);
+            } else {
+                console.warn("updateSymbol_: symbol element not found", feeId);
+            }
+
         } catch (err) {
             console.error("updateSymbol_ error:", err, obj, feeId);
         }
@@ -1461,7 +1526,8 @@ $(function() {
     async function handleFormSubmission(form, event) {
         event.preventDefault();
         let missingFields = [];
-        let validationFailed = false;
+let validationFailed = false;
+
 
         $(form)
             .find("input[required]:not([type='hidden']):visible, select[required]:visible, textarea[required]:visible")
@@ -1471,24 +1537,36 @@ $(function() {
                 if (!value || String(value).trim() === "") {
                     $(this).addClass("is-invalid");
 
+                    // Try to get a readable label (check <label for=""> or placeholder or name)
                     let fieldLabel =
                         $("label[for='" + $(this).attr("id") + "']").text().trim() ||
                         $(this).attr("placeholder") ||
                         $(this).attr("name") ||
                         "Unnamed field";
 
+                    // Add field to list of missing fields
                     missingFields.push(fieldLabel);
+
+                    console.warn("Missing required:", fieldLabel);
                 } else {
                     $(this).removeClass("is-invalid");
                 }
             });
 
+        console.log(missingFields);
+        // After checking all fields
         if (missingFields.length > 0) {
+            // Scroll to first invalid field
             $('html, body').animate({
                 scrollTop: $(".is-invalid").first().offset().top - 100
             }, 400);
 
-            alert_float("danger", "Please fill the following required fields");
+            // Show alert (assuming alert_float is defined)
+            alert_float(
+                "danger",
+                "Please fill the following required fields"
+            );
+
             return false;
         }
 
@@ -1497,77 +1575,116 @@ $(function() {
         try {
             const formData = new FormData();
 
+            // 🔹 Currency Exchange (array)
             let currency_exchange = [];
             let seenCurrencies = new Set();
             let hasDuplicate = false;
-            let ex_rate = {};
 
-            $("#exchangeTable tbody tr").each(function() {
-                let credit_currency = $(this).find("select[name='credit_currency[]']").val() || null;
-                let document_currency = $(this).find("select[name='document_currency[]']").val() || null;
-                let exchangeValue = $(this).find("input[name='exchange_value[]']").val() || null;
+let ex_rate =  {};
+  $("#exchangeTable tbody tr").each(function () {
+    let credit_currency = $(this).find("select[name='credit_currency[]']").val() || null;
+    let document_currency = $(this).find("select[name='document_currency[]']").val() || null;
+    let exchangeValue = $(this).find("input[name='exchange_value[]']").val() || null;
 
-                if (credit_currency === document_currency && exchangeValue != 1) {
-                    hasDuplicate = true;
-                    $(this).find("select[name='credit_currency[]'], select[name='document_currency[]']").addClass("is-invalid");
-                    alert_float("danger", "When Credit Currency and Document Currency are the same, the exchange rate must be 1.");
-                    hide_loader();
-                    return false;
-                }
+    // Skip empty rows
+    // if (!credit_currency && !exchangeValue) return;
 
-                let pairKey = credit_currency + "_" + document_currency;
-                ex_rate[pairKey] = exchangeValue;
+    // === 1️⃣ CHECK CREDIT & DOCUMENT ARE NOT SAME ===
+    if (credit_currency === document_currency && exchangeValue!=1) {
+        hasDuplicate = true;
+        $(this)
+            .find("select[name='credit_currency[]'], select[name='document_currency[]']")
+            .addClass("is-invalid");
 
-                if (seenCurrencies.has(pairKey)) {
-                    hasDuplicate = true;
-                    $(this).find("select[name='credit_currency[]'], select[name='document_currency[]']").addClass("is-invalid");
-                    alert_float("danger", "Duplicate Currency Exchange Rate detected. Please select unique currency pairs.");
-                    hide_loader();
-                    return false;
-                }
+        alert_float("danger", "When Credit Currency and Document Currency are the same, the exchange rate must be 1.");
+        hide_loader();
+        return false;
+    }
 
-                seenCurrencies.add(pairKey);
+    // Unique key for checking duplicates
+    let pairKey = credit_currency + "_" + document_currency;
+ex_rate[pairKey] = exchangeValue;
 
-                currency_exchange.push({
-                    credit_currency: credit_currency,
-                    document_currency: document_currency,
-                    exchange_value: exchangeValue,
-                });
-            });
+    // === 2️⃣ CHECK DUPLICATE ENTRY ===
+    if (seenCurrencies.has(pairKey)) {
+        hasDuplicate = true;
+        $(this)
+            .find("select[name='credit_currency[]'], select[name='document_currency[]']")
+            .addClass("is-invalid");
 
-            if (hasDuplicate) return false;
+        alert_float("danger", "Duplicate Currency Exchange Rate detected. Please select unique currency pairs.");
+        hide_loader();
+        return false;
+    }
+
+    // Store unique pair
+    seenCurrencies.add(pairKey);
+
+    // Push row data
+    currency_exchange.push({
+        credit_currency: credit_currency,
+        document_currency: document_currency,
+        exchange_value: exchangeValue,
+    });
+});
+
+
+// Final stop if any error found
+if (hasDuplicate) {
+    return false;
+}
 
             let package_amount = 0;
+
             $(".fees-inr-value-<?= PACKAGE_FEES_ID ?>").each(function() {
-                package_amount += parseFloat($(this).val()) || 0;
+                let val = parseFloat($(this).val()) || 0; // convert to float, fallback to 0
+                package_amount += val;
             });
 
             if (Orignal_package_amount > package_amount) {
-                alert_float("danger",
-                    `Package amount should be greater than or equal to the original package amount (${Orignal_package_amount})`);
+                alert_float(
+                    "danger",
+                    `Package amount should be greater than or equal to the original package amount (${Orignal_package_amount})`
+                );
                 hide_loader();
-                return false;
+                return false; // stop further processing
             }
 
             if ($("#universityDue input[name='total_pending_amount']").val() < 0) {
-                alert_float("danger", `Company due value cannot be negative.`);
+                alert_float(
+                    "danger",
+                    `Company due value cannot be negative.`
+                );
                 hide_loader();
-                return false;
+                return false; // stop further processing  
             }
 
-            let university_dues = { main: { fees_info: [], pay_info: [] }, addition: [] };
-            let company_dues   = { main: { info: [], pay_info: [] }, addition: [] };
+            // 🔹 University dues structure
+            let university_dues = {
+                main: {
+                    fees_info: [],
+                    pay_info: []
+                },
+                addition: [] // must be array
+            };
 
+            // 🔹 Company dues structure
+            let company_dues = {
+                main: {
+                    info: [],
+                    pay_info: []
+                },
+                addition: []
+            };
+
+            // ✅ Collect main university fees info
             $(".main-university-due tbody tr").each(function() {
                 let paymentOptionSelect = $(this).find("select[name$='_payment_option']");
-                let creditCur   = $(this).find(".credit-currency-change select[name$='_currency_type']").val();
-                let documentCur = $(this).find(".document-currency-change select[name$='_currency_type']").val();
-
                 let rowData = {
                     name: $(this).find("input[name='applicant_fees[]']").val() || null,
                     id: $(this).find("input[name$='_id']").val() || null,
-                    credit_currency: creditCur || null,
-                    document_currency: documentCur || null,
+                    credit_currency: $(this).find(".credit-currency-change select[name$='_currency_type']").val() || null,
+                    document_currency: $(this).find(".document-currency-change select[name$='_currency_type']").val() || null,
                     exchange_value: $(this).find("input[name$='_exchangeValue']").val() || null,
                     payment_option: paymentOptionSelect.val() || null,
                     payment_option_status: paymentOptionSelect.is('[disabled]') ? 1 : 0,
@@ -1576,63 +1693,86 @@ $(function() {
                     quotation_name: $(this).find("input[name='quotation_name']").val() || null,
                 };
                 university_dues.main.fees_info.push(rowData);
-
-                if (!ex_rate[creditCur + "_" + documentCur] && creditCur != documentCur) {
-                    hide_loader();
-                    alert_float("danger",
-                        $(this).find(".credit-currency-change select[name$='_currency_type'] option:selected").text() +
-                        " - " +
-                        $(this).find(".document-currency-change select[name$='_currency_type'] option:selected").text() +
-                        ": Exchange rate for the selected currency pair does not exist. Please update the exchange rate or choose a different currency."
-                    );
-                    validationFailed = true;
-                    return false;
-                }
+                
+                       if (!ex_rate[$(this).find(".credit-currency-change select[name$='_currency_type']").val() + "_" + $(this).find(".document-currency-change select[name$='_currency_type']").val()] && $(this).find(".credit-currency-change select[name$='_currency_type']").val() != $(this).find(".document-currency-change select[name$='_currency_type']").val()) {
+    hide_loader();
+    alert_float(
+        "danger",
+       $(this).find(".credit-currency-change select[name$='_currency_type'] option:selected").text() +
+        " - " +
+       $(this).find(".document-currency-change select[name$='_currency_type'] option:selected").text() +
+        ": Exchange rate for the selected currency pair does not exist. Please update the exchange rate or choose a different currency."
+    );
+    validationFailed = true;
+    return false; // breaks current .each
+}
             });
 
-            if (validationFailed) return false;
 
+
+
+if(validationFailed)
+{
+    return false;
+}
+            // ✅ Collect main pay info
             $(".main-university-due tfoot tr").each(function() {
-                university_dues.main.pay_info.push({
+                let rowData = {
                     transaction_type: $(this).find("select[name='transaction_type']").val() || null,
                     payMode: $(this).find("select[name='university_pay_mode']").val() || null,
                     payVendor: $(this).find("select[name='university_pay_vendor']").val() || null,
                     payAmount: $(this).find("input[name='university_pay_amount']").val() || null,
                     totalINRValue: $(this).find("input[name='totalINRValue']").val() || null
-                });
+                };
+                university_dues.main.pay_info.push(rowData);
             });
-
             $("#formInformationGet input, #formInformationGet select, #formInformationGet textarea").each(function() {
                 let name = $(this).attr("name");
-                if (name) formData.append(name, $(this).val());
+                if (name) {
+                    formData.append(name, $(this).val());
+                }
             });
 
-            formData.append("hostel_info_id", <?= (int) $getId ?>);
+            formData.append("hostel_info_id", <?= $getId ?>);
+
+
+            // 🔹 Append to formData
             formData.append("currency_exchange", JSON.stringify(currency_exchange));
             formData.append("university_dues", JSON.stringify(university_dues));
             formData.append("company_dues", JSON.stringify(company_dues));
             formData.append("release_to_counsellor", $("#release_to_counsellor").prop("checked") ? 1 : 0);
 
+
+
+
             <?php if (!empty($quotation_id) && !empty($hostel_quotation_data)) { ?>
-                formData.append("quotation_id", <?= !empty($quotation_id) ? (int) $quotation_id : 0 ?>);
+                formData.append("quotation_id", <?= !empty($quotation_id) ? $quotation_id : 0 ?>);
             <?php } ?>
             formData.append(csrfData.token_name, csrfData.hash);
 
-            const response = await fetch(form.action, { method: "POST", body: formData });
+
+
+
+            const response = await fetch(form.action, {
+                method: "POST",
+                body: formData
+            });
             const data = await response.json();
             hide_loader();
-
             if (data.resp_code === "RCS") {
-                alert_float("success", data.resp_desc);
+                alert_float("success", data.resp_desc)
                 let url = new URL(window.location.href);
+
+                // Remove quotation_id param if exists
                 if (url.searchParams.has("quotation_id")) {
                     url.searchParams.delete("quotation_id");
-                    window.location.replace(url.toString());
+                    window.location.replace(url.toString()); // redirect to new URL
                 } else {
                     location.reload();
                 }
             } else {
-                alert_float("danger", data.resp_desc);
+                alert_float("danger", data.resp_desc)
+
             }
         } catch (error) {
             hide_loader();
@@ -1643,12 +1783,16 @@ $(function() {
 
 
 
-    // --- Initialize ---
+    // --- Initialize application ---
     document.addEventListener("DOMContentLoaded", function() {
-
+        // Initialize currency symbols
         $(".currency-selector").each(function() {
             const match = this.className.match(/currency-selector-(\d+)/);
-            if (match) updateSymbol_(this, match[1]);
+            if (match) {
+                updateSymbol_(this, match[1]);
+            } else {
+                console.warn("currency-selector: no feeId found in class", this);
+            }
         });
 
         $(document).on("keyup", ".manually-cash", function() {
@@ -1662,10 +1806,19 @@ $(function() {
             }
         });
 
+
+        // Setup event listeners
         const exchangeTableBody = document.getElementById("exchangeTableBody");
         if (exchangeTableBody) {
             exchangeTableBody.addEventListener("click", handleExchangeTableClick);
         }
+
+        // Global input/change listeners with debouncing
+
+
+
+        // Delegate input events to parent container for better performance
+
 
         document.addEventListener("change", function(event) {
             if (event.target.matches("select[name='exchange_currency[]'], .currency-selector, select[name='fee_currency[]']")) {
@@ -1673,56 +1826,100 @@ $(function() {
             }
         });
 
-        <?php if (empty($quotation_id)): ?>
+        // Form submission handlers
+
+
+
+
+        // Initial calculation
+        // calculateInrValue();
+
+        <?php if (!empty($quotation_id)): ?>
+            // update_package_amount();
+        <?php else: ?>
             <?php
+            // Ensure $acadmic_year is valid before exploding
             $acadmicYearParts = !empty($acadmic_year) ? explode("-", $acadmic_year) : [];
-            $acadmicYear      = $acadmicYearParts[0] ?? '';
+            $acadmicYear = $acadmicYearParts[0] ?? '';
             ?>
             let acadmicYear = "<?= trim($acadmicYear) ?>";
-            if (acadmicYear == <?= date("Y") ?>) {
+            if (acadmicYear == <?= Date("Y") ?>) {
                 $("#study_year").val(1).trigger("change");
             }
         <?php endif; ?>
 
         $("input[name='fee_value[]'],input[name='fee_value_inr[]'], .currency-amount").each(function() {
             let $this = $(this);
-            let val = $this.val();
-            if (val) $this.val(String(val).replace(/,/g, ""));
 
-            $this.attr({ type: "number", step: "0.0001", min: "0" });
-        });
+            // Remove commas from current value
+            let val = $this.val();
+            console.log(val);
+            if (val) {
+                $this.val(val.replace(/,/g, ""));
+                console.log(val.replace(/,/g, ""));
+            }
+
+            // Force numeric input with decimals
+            $this.attr({
+                type: "number",
+                step: "0.0001", // allow up to 4 decimals
+                min: "0"
+            });
+        })
+
+
+
     });
 
     function Change_companyDue(obj) {
-        let value = $(obj).val();
-        let $row = $(obj).closest("tr");
+        let value = $(obj).val(); // selected fee id
+        let $row = $(obj).closest("tr"); // current row
 
+        console.log("Selected fee ID:", value);
+
+        // Reset fields
         $row.find("input[name='fee_value[]']").val(0);
         $row.find("select[name='fee_currency[]']").val(3).trigger("change");
 
+        // Find fee in getClientsFees
         let fee = getClientsFees.find(f => String(f.id) === String(value));
 
         if (fee && fee.id == 3) {
-            $row.find("input[name='fee_value[]']").val(parseInt(String(fee.amount).replace(/,/g, ""), 10) || 0);
+            // Set fee value safely
+            $row.find("input[name='fee_value[]']").val(parseInt((fee.amount).replace(/,/g, ""), 10) ?? 0);
+
+            // ✅ Set currency correctly
             if (fee.currency_id) {
-                $row.find("select[name='fee_currency[]']").val(fee.currency_id).trigger("change");
+                $row.find("select[name='fee_currency[]']")
+                    .val(fee.currency_id)
+                    .trigger("change"); // trigger recalculation (e.g. INR value update)
             }
         }
 
         updateUniversityDue();
+        console.log("Row updated:", fee);
     }
 
 
 
     function GeneratePDF(hostel_info_id, quotation_id) {
         $.ajax({
-            url: "<?= admin_url('hostel_management/quotationGenerate') ?>",
+            url: "<?= admin_url('hostel_management/quotationGenerate') ?>", // your controller method
             type: "POST",
-            data: { hostel_info_id: hostel_info_id, quotation_id: quotation_id },
+            data: {
+                hostel_info_id: hostel_info_id,
+                quotation_id: quotation_id
+            },
+            beforeSend: function() {
+                // Optional: show loader
+                console.log("Generating PDF...");
+            },
             success: function(response) {
                 response = JSON.parse(response);
+
+                // If backend returns PDF file URL
                 if (response.pdf_url) {
-                    window.open(response.pdf_url, "_blank");
+                    window.open(response.pdf_url, "_blank"); // Open in new tab
                 } else {
                     alert("PDF generated successfully.");
                 }
@@ -1736,26 +1933,47 @@ $(function() {
 
     function setNumberDecimal() {
         $(document).on("focus", "input[name='fee_value[]'],input[name='fee_value_inr[]'], .currency-amount", function() {
-            $(this).attr({ type: "number", step: "0.0001", min: "0" });
+            // Force input type="number" with step for 4 decimals
+            $(this).attr({
+                type: "number",
+                step: "0.0001", // up to 4 decimals
+                min: "0" // optional: prevent negative values
+            });
         });
     }
 
     function DeleteQuotation(hostel_info_id, quotation_id) {
         $.ajax({
-            url: "<?= admin_url('hostel_management/quotationDelete') ?>",
+            url: "<?= admin_url('hostel_management/quotationDelete') ?>", // your controller method
             type: "POST",
-            data: { hostel_info_id: hostel_info_id, quotation_id: quotation_id },
-            beforeSend: function() { show_loader(); },
+            data: {
+                hostel_info_id: hostel_info_id,
+                quotation_id: quotation_id
+            },
+            beforeSend: function() {
+                show_loader();
+                // Optional: show loader
+                // console.log("Generating PDF...");
+            },
             success: function(response) {
                 hide_loader();
                 let data = JSON.parse(response);
-                if (data.resp_code === "RCS") {
+                // console.log(data);
+                if (data.resp_code || data.resp_code === "RCS") {
                     alert_float("success", data.resp_desc);
+                    // Get current URL
+                    // Get current URL
                     const url = new URL(window.location.href);
+
+                    // Remove the "quotation_id" parameter
                     url.searchParams.delete("quotation_id");
+
+                    // Reload the page with updated URL
                     window.location.href = url.toString();
+
                 } else {
-                    alert_float("danger", "Quotation not deleted successfully");
+                    alert_float("danger", "Quotation not delete sucessfully");
+
                 }
             },
             error: function(xhr, status, error) {

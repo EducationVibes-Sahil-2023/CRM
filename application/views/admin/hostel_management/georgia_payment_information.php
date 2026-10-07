@@ -3,7 +3,7 @@
 <?php
 $ci = &get_instance();
 
-$applicantPaymentData = $ci->Hostel_model->hostel_payment_data($hostel_info_id);
+$applicantPaymentData = $ci->Hostel_model->hostel_payment_data($hostel_info_id,1);
 $quotationDetails     = $applicantPaymentData["quotationDetails"] ?? [];
 
 

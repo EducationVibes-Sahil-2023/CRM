@@ -3616,7 +3616,7 @@ function paymentDuesHostel()
     $CI->db->query("SET SESSION group_concat_max_len = 10000000000");
     // fetch fees with lead_type as well
     $feesList = [];
-    $feesList["g"] = $CI->db->select("id, name")
+    $feesList["g"] = $CI->db->select("id,georgia_label_name name")
         ->from(db_prefix() . "applicant_fees")->where("georgia_hostel", 1)
         ->order_by("sequence", "ASC")
         ->get()
@@ -3792,7 +3792,7 @@ LEFT JOIN tblhostel h
 LEFT JOIN tblhostel_quotation hq 
     ON ho.id = hq.hostel_info_id AND hq.status > 0
     LEFT JOIN tblhostel_company hc 
-    ON hc.id = hq.company 
+    ON hc.id = ho.company 
 LEFT JOIN tblhostel_payments hp1 
     ON hp1.quotation_id = hq.id AND hp1.status > 0
 LEFT JOIN tbl_hostel_vendors hv 

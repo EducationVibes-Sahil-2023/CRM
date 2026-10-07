@@ -18,6 +18,11 @@
             //   console.log("start 2");
         checkFeesDisable();
     }
+    
+let hostelroomCapacity = "<?=$client->hostel_capacity??''?>";
+
+$("#hostel_capacity").val(hostelroomCapacity).selectpicker('refresh')
+
     })
     
     

@@ -630,12 +630,12 @@ $hostelVendors = $this->db->select("*")->from(db_prefix()."_hostel_vendors")->ge
                                                 data-name='payment_type'
                                                 required
                                                 onchange="split_data(this, this.value)">
-                                                <?php foreach ($university_applicant_fees_type as $fees): if (!in_array($fees['id'], [5, 6,7, 11, 16])) {
+                                                <?php foreach ($university_applicant_fees_type as $fees): if (!in_array($fees['id'], [5, 6, 11, 16])) {
                                                         continue;
                                                     } ?>
                                                     <option value="<?= $fees['id'] ?>"
                                                         <?= ($applicant_payment_data->payment_type == $fees['id']) ? 'selected' : '' ?>>
-                                                        <?= htmlspecialchars($fees['georgia_label_name']) ?>
+                                                        <?= htmlspecialchars($fees['name']) ?>
                                                     </option>
                                                 <?php endforeach; ?>
                                             </select>
@@ -661,12 +661,12 @@ $hostelVendors = $this->db->select("*")->from(db_prefix()."_hostel_vendors")->ge
                                                 data-name="type"
                                                 required
                                                 onchange="split_data(this)">
-                                                <?php foreach ($university_applicant_fees as $fees): if (!in_array($fees['id'], [5, 6,7, 11])) {
+                                                <?php foreach ($university_applicant_fees as $fees): if (!in_array($fees['id'], [5, 6, 11])) {
                                                         continue;
                                                     } ?>
                                                     <option value="<?= $fees['id'] ?>"
                                                         <?= (is_array($selectedType) && in_array($fees['id'], $selectedType)) ? 'selected' : '' ?>>
-                                                       <?= htmlspecialchars($fees['georgia_label_name']) ?>
+                                                        <?= htmlspecialchars($fees['name']) ?>
                                                     </option>
                                                 <?php endforeach; ?>
                                             </select>
@@ -796,7 +796,7 @@ $hostelVendors = $this->db->select("*")->from(db_prefix()."_hostel_vendors")->ge
                                                         <tr data-fee-id="<?= $split['fee_id'] ?>">
                                                             <td>
                                                                 <select class="form-control selectpicker" disabled>
-                                                                    <option selected value="<?= $split['fee_id'] ?>"><?= $university_applicant_fees_[$split['fee_id']]['georgia_label_name'] ?></option>
+                                                                    <option selected value="<?= $split['fee_id'] ?>"><?= $university_applicant_fees_[$split['fee_id']]['name'] ?></option>
                                                                 </select>
                                                                 <input type="hidden" name="selected_fees[]" value="<?= $split['fee_id'] ?>">
                                                             </td>
@@ -1167,7 +1167,7 @@ var hostel_vendors = <?= json_encode($hostelVendors) ?>;
                                                 onchange="split_data(this, this.value)">
                                                 <?php foreach ($university_applicant_fees_type as $fees): ?>
                                                     <option value="<?= $fees['id'] ?>" >
-                                                        <?= htmlspecialchars($fees['georgia_label_name']) ?>
+                                                        <?= htmlspecialchars($fees['name']) ?>
                                                     </option>
                                                 <?php endforeach; ?>
                                             </select>
@@ -1478,7 +1478,7 @@ var hostel_vendors = <?= json_encode($hostelVendors) ?>;
             <tr data-fee-id="${feeData.id}">
                 <td>
                     <select class="form-control selectpicker" disabled>
-                        <option selected value="${feeData.id}">${feeData.georgia_label_name}</option>
+                        <option selected value="${feeData.id}">${feeData.name}</option>
                     </select>
                     <input type="hidden" name="selected_fees[]" value="${feeData.id}">
                 </td>

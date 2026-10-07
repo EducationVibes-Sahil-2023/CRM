@@ -10,6 +10,11 @@ $aColumns = [
     "room_capacity AS room_capacity",
     "start_date AS start_date",
     "end_date AS end_date",
+    "CASE
+    WHEN end_date IS NULL OR end_date >= CURDATE()
+    THEN 'Active'
+    ELSE 'Inactive'
+END AS status",
     "pdf AS pdf",
 
 
@@ -142,6 +147,7 @@ foreach ($rResult as $aRow) {
 
     $row[] = $aRow['start_date'];
     $row[] = $aRow['end_date'];
+    $row[] = $aRow['status'];
     $row[] = $aRow['month_difference'];
     $row[] = $aRow['room_capacity'];
     $row[] = $aRow['hostel_amount'] . " " . $aRow['currency_name'] ?? 0 . " " . $aRow['currency_name'];

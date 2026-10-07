@@ -289,29 +289,7 @@ $table_data = array(
                     <!--</div>-->
 
 
-                    <div class="col-md-3">
-                        <?= render_select(
-                            'company',
-                            $hostel_company,
-                            ['id', 'name'],
-                            'Company',
-                            '',
-                            ['data-width' => '100%', 'data-none-selected-text' => 'No Selected', 'data-actions-box' => true]
-                        );
-                        ?>
-                    </div>
-
-                    <div class="col-md-3">
-                        <?= render_select(
-                            'hostel',
-                            $hostel,
-                            ['id', 'name'],
-                            'Hostel',
-                            '',
-                            ['data-width' => '100%', 'data-none-selected-text' => 'No Selected', 'data-actions-box' => true]
-                        );
-                        ?>
-                    </div>
+             
 
                     <div class="col-md-3 hide">
                         <?= render_select(

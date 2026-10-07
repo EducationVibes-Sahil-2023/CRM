@@ -116,7 +116,7 @@ class Hostel_model extends App_Model
             return [];
         }
     }
-    public function hostel_payment_data($hostel_info_id)
+    public function hostel_payment_data($hostel_info_id,$hostelType="")
     {
         // 🧩 Fetch quotations
         $allQuotations = $this->db
@@ -130,12 +130,15 @@ class Hostel_model extends App_Model
 
         // 🧾 Fetch fee master list
         $feesList = $this->db
-            ->select("id, name")
+            ->select("id, name,georgia_label_name")
             ->from(db_prefix() . "applicant_fees")
             ->get()
             ->result_array();
-
+if(!empty($hostelType) && $hostelType == 1){
+$feesDetails = array_column($feesList, 'georgia_label_name', 'id');
+}else{
         $feesDetails = array_column($feesList, 'name', 'id');
+}
 
         // 🧩 Fetch payments
         $allPayments = $this->db

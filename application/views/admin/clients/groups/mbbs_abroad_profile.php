@@ -2298,7 +2298,7 @@ echo render_select(
     "",
     "",
     "",
-    "agent_id"
+    "hostel_capacity"
 );
 ?>
 											</div>

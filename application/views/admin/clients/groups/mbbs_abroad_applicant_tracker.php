@@ -1674,7 +1674,9 @@ $input_attrs = array_merge(
 );
 
 if (empty($file_url_tracking_receipt)) {
+    if($client_infomation->client_type == 1){
     $input_attrs["required"] = "required";
+    }
 }
 
 echo render_input(

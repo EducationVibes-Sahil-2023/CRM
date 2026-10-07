@@ -144,7 +144,17 @@ class hostel_management extends AdminController
                 redirect(admin_url('hostel_management'));
             }
             $data["view_page"] = 'profile';
-        } else if ($_GET['tab'] == 'quotation') {
+        } 
+        else if ($_GET['tab'] == 'quotation_new') {
+             if (!has_permission('hostel_management', '', 'quotation_view') && !has_permission('hostel_management', '', 'quotation')) {
+                return access_denied('hostel_management'); // Stop execution immediately
+            }
+
+             $data["view_page"] = 'quotation_new';
+           
+            $data["quotation_id"] = $_GET["quotation_id"] ?? '';
+        }
+        else if ($_GET['tab'] == 'quotation') {
 
             if (!has_permission('hostel_management', '', 'quotation_view') && !has_permission('hostel_management', '', 'quotation')) {
                 return access_denied('hostel_management'); // Stop execution immediately
@@ -163,7 +173,8 @@ class hostel_management extends AdminController
         }
         $data["active_segment"] = "";
         if (!empty($segment)) {
-            $data["view_page"] = $segment . "_" . $data['active_tab'];
+             $data["view_page"] = $segment . "_" . $data['active_tab'];
+      
             $data["active_segment"] = $segment;
         }
         $this->load->view('admin/hostel_management/group', $data);
