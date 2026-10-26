@@ -617,7 +617,7 @@ if ($searchValue !== '') {
 $fromWhere = "
     FROM tblclients c
     LEFT JOIN tblleads l ON l.id = c.leadid
-    JOIN tblclient_university_shortlisting cus ON cus.client_id = c.userid
+    JOIN tblclient_university_shortlisting cus ON cus.client_id = c.userid and  cus.status=1
     JOIN tblbasic_details bd ON bd.userid = c.userid
     JOIN tbladmission_preferences p ON p.userid = c.userid
     JOIN tblapplicant_status ss ON ss.id = c.active

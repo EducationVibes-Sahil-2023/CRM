@@ -46,6 +46,13 @@ $read_only = "readonly";
 $admin_status = 0;
 $visa_details =  visa_details($client_id, 0, 1);
 
+$visasectionDetails = $this->db
+	->select("file,tracking_receipt,application_form")
+	->from(db_prefix() . "visa_details")
+	->where(array("userid" => $client_id))
+	->order_by("id", "ASC")
+	->get()
+	->result_array();
 if (is_admin() ||  !empty($staff_list[get_staff_user_id()]["post_sales"]) || has_permission('customers', '', 'create')) {
 	$final_sumbit = 0;
 	$read_only = "";
@@ -77,6 +84,7 @@ $last_index = array_key_last($visa_details);
 // 	$applicant_documents = [];
 // }
 
+
 $applicant_documents =  !empty($client_id)?get_clients_documents($client_id):[];
 if (!empty($applicant_documents[0]["data"])) {
     $applicant_documents = json_decode($applicant_documents[0]["data"], true);
@@ -94,6 +102,57 @@ if (!empty($applicant_documents[0]["data"])) {
         }
     }
 
+
+
+if (!empty($visasectionDetails)) {
+
+    foreach ($visasectionDetails as $k => $visaInfo) {
+
+        foreach ($visaInfo as $key => $value) {
+
+
+            if (!empty($value)) {   // skip empty columns
+
+                // Custom display name
+                if ($key == "file") {
+                    // $display_name = "Visa Stamp";
+                } else {
+                    $display_name = ucfirst(str_replace("_", " ", $key));
+                }
+
+if(empty($display_name))
+{
+    continue;
+}
+                $display_name .= " " . ($k + 1);
+$display_name_id =preg_replace('/\s+/', '-', $display_name);
+                $documents_type[] = array(
+                    "id"        => $display_name_id,
+                    "disabled"  => 1,
+                    "disabledd" => 1,
+                    "stage"     => "Visa",
+                    "name"      => $display_name,
+                    "file_type" => ".pdf,image/*"
+                );
+                 if ($key == "file") {
+                 $applicant_documents[] = [
+            "id"            => $display_name_id,
+            "document_file" => $visaInfo['file']
+        ];
+                 }
+                 else {
+                
+                     
+                        $applicant_documents[] = [
+            "id"            => $display_name_id,
+            "document_file" => $visaInfo['tracking_receipt']
+        ];
+                 }
+                 
+            }
+        }
+    }
+}
 
 
 // foreach ($university_shortlisting as $shortlistingD) {
@@ -335,47 +394,7 @@ $neetResultStatus[]["name"] = "Without Neet";
 array_unshift($neetResultStatus, array(""));
 
 
-$visasectionDetails = $this->db
-	->select("file,tracking_receipt,application_form")
-	->from(db_prefix() . "visa_details")
-	->where(array("userid" => $client_id))
-	->order_by("id", "ASC")
-	->get()
-	->result_array();
 
-if (!empty($visasectionDetails)) {
-
-	foreach ($visasectionDetails as $k => $visaInfo) {
-
-		foreach ($visaInfo as $key => $value) {
-
-			if (!empty($value)) {   // skip empty columns
-
-				// Custom display name
-				if ($key == "file") {
-				// 	$display_name = "Visa Stamp";
-				} else {
-					$display_name = ucfirst(str_replace("_", " ", $key));
-				}
-
-if(empty($display_name))
-{
-    continue;
-}
-				$display_name .= " " . ($k + 1);
-
-				$documents_type[] = array(
-					"id"        => "Visa Section",
-					"disabled"  => 1,
-					"disabledd" => 1,
-					"stage"     => "Visa",
-					"name"      => $display_name,
-					"file_type" => ".pdf,image/*"
-				);
-			}
-		}
-	}
-}
 
 
 ?>
@@ -2239,6 +2258,14 @@ if ($is_privileged) {
 
                                                             <select <?= $disabled ?> name="<?= $field_name ?>_currency_type" id="<?= $field_name ?>" class="currency-selector <?= $disabled ?> currency-selector-<?= $id ?>  <?= $field_name ?>" onchange="updateSymbol(<?= $id ?>)">
                                                                 <?php foreach ($get_currencies as $c) {
+                                                                    if (
+isset($fees['id'], $admissionpreferences->primary_country) &&
+$fees['id'] == 4 &&
+strtolower(trim($admissionpreferences->primary_country)) === 'nepal'
+) {
+$fees['default_currency'] = 0;
+}   
+
                                                                     if($fees["default_currency"] == $c["id"] ){
                                                                 ?>
                                                                     <option

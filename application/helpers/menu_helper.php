@@ -12,6 +12,17 @@ function app_init_admin_sidebar_menu_items()
         //         'position' => 1,
         //         'icon'     => 'fa fa-home',
         // ]);
+        
+        if(get_staff_user_id() == 209)
+        {
+            $CI->app_menu->add_sidebar_menu_item('reports', [
+                        'slug'     => 'leads-performance-reports',
+                        'name'     => 'Leads Performance',
+                        'href'     => admin_url('reports/performance_leads'),
+                        'position' => 21,
+                ]);
+                return true;
+        }
 
        
                 $CI->app_menu->add_sidebar_menu_item('dashboards', [

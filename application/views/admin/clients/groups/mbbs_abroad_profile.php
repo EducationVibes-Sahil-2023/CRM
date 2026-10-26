@@ -2188,6 +2188,14 @@ if ($is_privileged) {
                                                 // $disabled = (strtolower($admissionpreferences->primary_country) == 'georgia') && $id == 6 ? 'disabled' : '';
                                                 
                                                 $disabled = "";
+                                                
+                                                                                                                   if (
+    isset($c['id'], $admissionpreferences->primary_country) &&
+    $c['id'] == 4 &&
+    strtolower(trim($admissionpreferences->primary_country)) === 'nepal'
+) {
+    $fees['default_currency'] = 0;
+}
 
 
                                             ?>
@@ -2218,6 +2226,14 @@ if ($is_privileged) {
 
                                                             <select <?= $disabled ?> name="<?= $field_name ?>_currency_type" id="<?= $field_name ?>" class="currency-selector <?= $disabled ?> currency-selector-<?= $id ?>  <?= $field_name ?>" onchange="updateSymbol(<?= $id ?>)">
                                                                 <?php foreach ($get_currencies as $c) {
+if (
+isset($fees['id'], $admissionpreferences->primary_country) &&
+$fees['id'] == 4 &&
+strtolower(trim($admissionpreferences->primary_country)) === 'nepal'
+) {
+$fees['default_currency'] = 0;
+}   
+
                                                                     if($fees["default_currency"] == $c["id"] ){
                                                                 ?>
                                                                     <option

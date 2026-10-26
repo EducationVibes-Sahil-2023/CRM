@@ -16,9 +16,12 @@ class Leads extends AdminController
 
     {
 
+
         parent::__construct();
 
         $this->load->model('leads_model');
+        
+   
     }
 
 
@@ -79,6 +82,8 @@ public function test()
     public function index($id = '')
 
     {
+        
+        
 
         close_setup_menu();
 
@@ -86,11 +91,16 @@ public function test()
 
     //   if (!is_staff_member() || in_array(get_staff_user_id(), [202, 133, 243, 187])) {
 
-if (!is_staff_member() || in_array(get_staff_user_id(), [133,243,202])) {
+if (!is_staff_member() || in_array(get_staff_user_id(), [133,243,202,209])) {
             access_denied('Leads');
         }
 
-
+    if (
+    get_staff_user_id() == 209 &&
+    trim(parse_url(current_url(), PHP_URL_PATH), '/') !== 'admin/reports/performance_leads'
+) {
+    access_denied('Leads');
+}
 
         $data['switch_kanban'] = true;
 

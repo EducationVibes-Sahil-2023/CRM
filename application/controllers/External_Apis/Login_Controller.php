@@ -2590,6 +2590,8 @@ public function email_autoTrigger_leg()
         s.university_id,
         s.updated_by,
         s.created_by
+        c.applicant_stage,
+        c.applicant_sub_status
     ')
     ->from($table . ' s')
     ->join('tblclients c', 'c.userid = s.client_id', 'inner')
@@ -2652,7 +2654,19 @@ if($allReceived)
                      ]);
     return true;
 }
-       
+     
+             if (
+                ($row['applicant_stage'] >= 10 && $row['applicant_sub_status'] > 13) ||
+                in_array($row['applicant_sub_status'], [14, 15])
+                ) 
+                {
+                 $this->db->where('client_id', $client_id)
+                     ->where('leg_mail_status', 3)
+                     ->update($table, [
+                         'leg_mail_status'    => 1
+                     ]);
+    return true;
+                }  
 
         try {
             if ($client_id <= 0 || $university_name ='') {
@@ -2668,6 +2682,18 @@ if($allReceived)
                 log_message('error', "email_autoTrigger_leg: no email for client {$client_id}, skipped.");
                 continue;
             }
+    //             if (
+    //             ($row['applicant_stage'] >= 10 && $row['applicant_sub_status'] > 13) ||
+    //             in_array($row['applicant_sub_status'], [14, 15])
+    //             ) 
+    //             {
+    //              $this->db->where('client_id', $client_id)
+    //                  ->where('leg_mail_status', 3)
+    //                  ->update($table, [
+    //                      'leg_mail_status'    => 1
+    //                  ]);
+    // return true;
+    //             }
             if (filter_var($client->email, FILTER_VALIDATE_EMAIL) === false) {
                 throw new Exception("invalid email '{$client->email}' for client {$client_id}");
             }
@@ -2774,7 +2800,9 @@ $pendingEmails = $this->db
         s.university_id,
         s.updated_by,
         s.created_by,
-        s.country_name
+        s.country_name,
+        c.applicant_stage,
+        c.applicant_sub_status
     ')
     ->from($table . ' s')
     ->join('tblclients c', 'c.userid = s.client_id', 'inner')
@@ -2839,6 +2867,20 @@ if($allReceived)
                      ]);
     return true;
 }
+
+
+        if (
+                ($row['applicant_stage'] >= 10 && $row['applicant_sub_status'] > 13) ||
+                in_array($row['applicant_sub_status'], [14, 15])
+                ) 
+                {
+              $this->db->where('client_id', $client_id)
+                     ->where('inv_mail_status', 3)
+                     ->update($table, [
+                         'inv_mail_status'    => 1
+                     ]);
+    return true;
+                }
        
 
         try {

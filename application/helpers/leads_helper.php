@@ -12712,43 +12712,54 @@ return $CI->db->affected_rows();
 }
 
 
-function sendCallData(string $endpoint, string $apiKey, array $call, int $timeout = 15): array
-{
-    $fail = static function (int $status, string $error, $raw = null): array {
+function sendCallData(
+    string $endpoint,
+    string $apiKey,
+    array $call,
+    int $timeout = 3
+): array {
+    $fail = static function (
+        int $status,
+        string $error,
+        $raw = null
+    ): array {
         return [
-            'ok'        => false,
-            'status'    => $status,
-            'inserted'  => 0,
-            'skipped'   => 0,
-            'message'   => $error,
-            'error'     => $error,
-            'raw'       => $raw
+            'ok'       => false,
+            'status'   => $status,
+            'inserted' => 0,
+            'skipped'  => 0,
+            'message'  => $error,
+            'error'    => $error,
+            'raw'      => $raw
         ];
     };
 
-    if ($endpoint === '' || $apiKey === '') {
+    if (trim($endpoint) === '' || trim($apiKey) === '') {
         return $fail(0, 'Endpoint and API Key are required.');
     }
 
-    // Wrap the single call in the expected payload
-    $payload = json_encode([
-        'calls' => [$call]
-    ]);
+    $payload = json_encode(['calls' => [$call]]);
 
     if ($payload === false) {
-        return $fail(0, 'JSON Encode Error: ' . json_last_error_msg());
+        return $fail(
+            0,
+            'JSON Encode Error: ' . json_last_error_msg()
+        );
     }
 
-    log_message('info', 'Call API Request: ' . $payload);
-
     $ch = curl_init($endpoint);
+
+    if ($ch === false) {
+        return $fail(0, 'Unable to initialize cURL.');
+    }
 
     curl_setopt_array($ch, [
         CURLOPT_POST            => true,
         CURLOPT_POSTFIELDS      => $payload,
         CURLOPT_RETURNTRANSFER  => true,
-        CURLOPT_CONNECTTIMEOUT  => $timeout,
+        CURLOPT_CONNECTTIMEOUT  => min($timeout, 2),
         CURLOPT_TIMEOUT         => $timeout,
+        CURLOPT_NOSIGNAL        => true,
         CURLOPT_HTTPHEADER      => [
             'Content-Type: application/json',
             'Accept: application/json',
@@ -12757,42 +12768,141 @@ function sendCallData(string $endpoint, string $apiKey, array $call, int $timeou
     ]);
 
     $body   = curl_exec($ch);
-    $status = curl_getinfo($ch, CURLINFO_HTTP_CODE);
+    $status = (int) curl_getinfo($ch, CURLINFO_HTTP_CODE);
     $error  = curl_error($ch);
 
     curl_close($ch);
 
-    log_message('info', 'Call API Response (' . $status . '): ' . $body);
-
+    // Remote server is down, unreachable, or timed out.
     if ($body === false) {
-        return $fail(0, 'cURL Error: ' . $error);
+        log_message(
+            'error',
+            'Call API unavailable: ' . $error
+        );
+
+        return $fail(0, 'Remote API unavailable: ' . $error);
     }
 
     $data = json_decode($body, true);
 
+    // Handle HTTP 500, 502, 503, 504, 401, etc.
+    if ($status < 200 || $status >= 300) {
+        $msg = is_array($data)
+            ? (
+                $data['messages']['error']
+                ?? $data['message']
+                ?? 'Remote API returned HTTP ' . $status
+            )
+            : 'Remote API returned HTTP ' . $status;
+
+        log_message(
+            'error',
+            'Call API failed. HTTP ' . $status . ': ' . $msg
+        );
+
+        return $fail($status, $msg, $body);
+    }
+
+    // Successful HTTP status but unexpected response.
     if (!is_array($data)) {
+        log_message('error', 'Call API returned invalid JSON.');
+
         return $fail($status, 'Invalid JSON Response', $body);
     }
 
-    if ($status < 200 || $status >= 300) {
-
-        $msg = $data['messages']['error']
-            ?? $data['message']
-            ?? 'API Request Failed';
-
-        return $fail($status, $msg, $data);
-    }
-
     return [
-        'ok'        => true,
-        'status'    => $status,
-        'inserted'  => $data['inserted'] ?? 0,
-        'skipped'   => $data['skipped'] ?? 0,
-        'message'   => $data['message'] ?? 'Success',
-        'error'     => null,
-        'raw'       => $data
+        'ok'       => true,
+        'status'   => $status,
+        'inserted' => $data['inserted'] ?? 0,
+        'skipped'  => $data['skipped'] ?? 0,
+        'message'  => $data['message'] ?? 'Success',
+        'error'    => null,
+        'raw'      => $data
     ];
 }
+
+
+// function sendCallData(string $endpoint, string $apiKey, array $call, int $timeout = 15): array
+// {
+//     $fail = static function (int $status, string $error, $raw = null): array {
+//         return [
+//             'ok'        => false,
+//             'status'    => $status,
+//             'inserted'  => 0,
+//             'skipped'   => 0,
+//             'message'   => $error,
+//             'error'     => $error,
+//             'raw'       => $raw
+//         ];
+//     };
+
+//     if ($endpoint === '' || $apiKey === '') {
+//         return $fail(0, 'Endpoint and API Key are required.');
+//     }
+
+//     // Wrap the single call in the expected payload
+//     $payload = json_encode([
+//         'calls' => [$call]
+//     ]);
+
+//     if ($payload === false) {
+//         return $fail(0, 'JSON Encode Error: ' . json_last_error_msg());
+//     }
+
+//     log_message('info', 'Call API Request: ' . $payload);
+
+//     $ch = curl_init($endpoint);
+
+//     curl_setopt_array($ch, [
+//         CURLOPT_POST            => true,
+//         CURLOPT_POSTFIELDS      => $payload,
+//         CURLOPT_RETURNTRANSFER  => true,
+//         CURLOPT_CONNECTTIMEOUT  => $timeout,
+//         CURLOPT_TIMEOUT         => $timeout,
+//         CURLOPT_HTTPHEADER      => [
+//             'Content-Type: application/json',
+//             'Accept: application/json',
+//             'X-API-Key: ' . $apiKey
+//         ]
+//     ]);
+
+//     $body   = curl_exec($ch);
+//     $status = curl_getinfo($ch, CURLINFO_HTTP_CODE);
+//     $error  = curl_error($ch);
+
+//     curl_close($ch);
+
+//     log_message('info', 'Call API Response (' . $status . '): ' . $body);
+
+//     if ($body === false) {
+//         return $fail(0, 'cURL Error: ' . $error);
+//     }
+
+//     $data = json_decode($body, true);
+
+//     if (!is_array($data)) {
+//         return $fail($status, 'Invalid JSON Response', $body);
+//     }
+
+//     if ($status < 200 || $status >= 300) {
+
+//         $msg = $data['messages']['error']
+//             ?? $data['message']
+//             ?? 'API Request Failed';
+
+//         return $fail($status, $msg, $data);
+//     }
+
+//     return [
+//         'ok'        => true,
+//         'status'    => $status,
+//         'inserted'  => $data['inserted'] ?? 0,
+//         'skipped'   => $data['skipped'] ?? 0,
+//         'message'   => $data['message'] ?? 'Success',
+//         'error'     => null,
+//         'raw'       => $data
+//     ];
+// }
 
 function reporting_persons()
 {

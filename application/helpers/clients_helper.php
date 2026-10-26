@@ -4076,20 +4076,53 @@ function getDataInformation($table_name, $select = ["*"], $where = [])
     $query = $CI->db->get();
     return $result = $query->result_array();
 }
+// function check_neet_credentials($clientid, $select = 'id')
+// {
+//     $CI = &get_instance();
+
+//     $CI->db->select($select.",neet_status");
+//     $CI->db->from(db_prefix() . "academic_details");
+//     $CI->db->where("userid", $clientid);
+//     $CI->db->where("neet_user_id !=", "");
+//     $CI->db->where("neet_user_password !=", "");
+
+//     $query = $CI->db->get();
+
+//     return $query->row()->id ?? 0; // returns single row
+// }
+
+
 function check_neet_credentials($clientid, $select = 'id')
 {
     $CI = &get_instance();
 
-    $CI->db->select($select);
-    $CI->db->from(db_prefix() . "academic_details");
-    $CI->db->where("userid", $clientid);
-    $CI->db->where("neet_user_id !=", "");
-    $CI->db->where("neet_user_password !=", "");
+    $CI->db->select($select . ', entrance_result_status, neet_user_id, neet_user_password');
+    $CI->db->from(db_prefix() . 'academic_details');
+    $CI->db->where('userid', $clientid);
 
     $query = $CI->db->get();
+    $row = $query->row();
 
-    return $query->row()->id ?? 0; // returns single row
+    if (!$row) {
+        return 0;
+    }
+
+    // If NEET status is 4, return 1
+   if (strtolower($row->entrance_result_status) === 'without neet') {
+        return 1;
+    }
+
+    // Check credentials after checking NEET status
+    if (
+        !empty($row->neet_user_id) &&
+        !empty($row->neet_user_password)
+    ) {
+        return $row->id ?? 0;
+    }
+
+    return 0;
 }
+
 
 function clientsWhatsappAttachments_delete($clientid, $documentName)
 {

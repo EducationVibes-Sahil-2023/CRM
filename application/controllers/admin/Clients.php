@@ -10321,6 +10321,7 @@ else
             }
             //check neet 
             $admissionpreferences = $this->clients_model->getAdmissionPreferences($client_id);
+     
             if (strtolower($admissionpreferences->primary_country) == "georgia" && $admissionpreferences->session_intake > "2026-09") {
                 $checkNeet = check_neet_credentials($client_id);
                 if ($checkNeet == 0) {
