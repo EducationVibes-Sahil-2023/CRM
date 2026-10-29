@@ -3212,6 +3212,26 @@ public function holiday_list()
         return $column; // Return the resulting array.
 
     }
+    
+        public function tbldomains_lead_performance_column($ids = [])
+    {
+        // $this->db->select('*');
+        // $this->db->where('show_column', '1');
+        // $column = $this->db->get(db_prefix() . 'lead_performance_column')->result_array();
+
+        $this->db->select('*, columnid as tbl_column_name,if(sequence=0,999999,sequence) sequence'); // Select all columns (*) and alias 'columnid' as 'tbl_column_name'.
+        $this->db->where('show_column', '1'); // Add a condition where 'show_column' equals '1'.
+        if (!empty($ids)) { // Check if the $ids variable is not empty.
+            $this->db->where_in('id', $ids); // Add a condition to match multiple 'id' values in the $ids array.
+        }
+        $this->db->order_by('sequence', 'ASC'); // Order the results by 'sequence' in ascending order.
+        $column = $this->db->get(db_prefix() . 'domain_performance_columns')->result_array();
+        // Execute the query on the table prefixed with 'performance_columns' and get the results as an array.
+        return $column; // Return the resulting array.
+
+    }
+    
+
 
     public function performance_related_dropdown()
     {
@@ -5863,7 +5883,21 @@ function lead_sub_status()
     return $query->result_array();
 }
 
+function domainNames()
+{
+    $sql="SELECT domain_name, domain_name as id
+FROM `tblleads`
+WHERE domain_name IS NOT NULL
+  AND TRIM(domain_name) != ''
+  AND domain_name NOT IN (
+      'educationvibes.in',
+      'crm.educationvibes.in'
+  )";
+   $query = $this->db->query($sql);
 
+    return $query->result_array();
+  
+}
 
 
 }

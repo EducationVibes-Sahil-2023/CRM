@@ -471,6 +471,263 @@ $data['lead_sub_status'] = $this->leads_model->lead_sub_status();
         }
     }
 
+public function get_domain_counts($postData=[])
+{
+    
+    //  $statusHtml .= '<div><br><br><hr><div class="col-md-12 col-xs-12">
+    //             <h3 class="bold"><span style="color:#d81b60">Lead Status</span></h3></div>';
+                
+    //              $summary = get_leads_summary_filter_domains($_POST);
+    //              print_r();
+    //              die;
+                 
+                
+}
+
+
+public function domain_lead_summary_filter()
+{
+    $this->output->set_content_type('application/json');
+
+    try {
+        $showLeadStatus = isset($_POST['show_lead_status'])
+            ? (int) $_POST['show_lead_status']
+            : 0;
+$statusHtml='';
+        if ($showLeadStatus === 1) {
+             $summary = get_leads_summary_filter_domains($_POST);
+
+            $statuses = $summary['statuses'] ?? [];
+            $subStatuses = $summary['sub_statuses'] ?? [];
+             $domainData = $summary['domain_summary'] ?? [];
+            if (!is_array($domainData)) {
+    $domainData = [];
+}
+
+
+
+            
+            $statusHtml = '<div><br><br><hr><div class="col-md-12 col-xs-12">
+                <h3 class="bold"><span style="color:#d81b60">Domain Status</span></h3></div>';
+                
+            
+
+if (!empty($domainData)) {
+    foreach ($domainData as $domain) {
+        $domainName = html_escape($domain['domain_name'] ?? 'Unknown');
+        $total = (int) ($domain['total'] ?? $domain['total_leads'] ?? 0);
+
+        $statusHtml .= "
+            <div class='col-md-2 col-xs-6'>
+                <div class='border-card'>
+                    <h3 class='bold'>{$total}</h3>
+                    <span>{$domainName}</span>
+                </div>
+            </div>";
+    }
+} else {
+    $statusHtml .= '
+        <div class="col-md-12">
+            <p>No domain data found.</p>
+        </div>';
+}
+
+$statusHtml .= '</div>';
+
+            // $statusHtml = get_domain_counts($_POST);
+            $statusHtml .= '<div><br><br><hr><div class="col-md-12 col-xs-12">
+                <h3 class="bold"><span style="color:#d81b60">Lead Status</span></h3></div>';
+
+            $subStatusHtml = '<div><br><br><hr><div class="col-md-12 col-xs-12">
+                <h3 class="bold"><span style="color:#d81b60">Lead Sub Status</span></h3></div>';
+
+           
+
+            if (!is_array($statuses)) {
+                $statuses = [];
+            }
+
+            if (!is_array($subStatuses)) {
+                $subStatuses = [];
+            }
+
+
+
+
+
+
+
+
+            $marketingData = [];
+            $totalLeads = 0;
+
+            foreach ($statuses as $status) {
+                $total = (int) ($status['total'] ?? 0);
+                $name = html_escape($status['name'] ?? '');
+                $color = html_escape($status['color'] ?? '#000000');
+
+                if (
+                    !empty($status['conversion_type_name']) &&
+                    isset($_POST['show_marketing_status']) &&
+                    (int) $_POST['show_marketing_status'] === 1
+                ) {
+                    $type = $status['conversion_type'] ?? 'unknown';
+
+                    if (!isset($marketingData[$type])) {
+                        $marketingData[$type] = [
+                            'name' => $status['conversion_type_name'],
+                            'total' => 0,
+                            'color' => $color
+                        ];
+                    }
+
+                    $marketingData[$type]['total'] += $total;
+                    $totalLeads += $total;
+                }
+
+                $percent = isset($status['percent'])
+                    ? '<span data-toggle="tooltip" data-title="' . $total . '">' .
+                        html_escape($status['percent']) . '%</span>'
+                    : $total;
+
+                $statusHtml .= "
+                    <div class='col-md-2 col-xs-6'>
+                        <div class='border-card'>
+                            <h3 class='bold'>{$percent}</h3>
+                            <span style='color:{$color}'>{$name}</span>
+                        </div>
+                    </div>";
+            }
+
+            $statusHtml .= '</div>';
+
+            foreach ($subStatuses as $status) {
+                $total = (int) ($status['total'] ?? 0);
+                $name = html_escape($status['name'] ?? '');
+                $color = html_escape($status['color'] ?? '#000000');
+
+                $percent = isset($status['percent'])
+                    ? '<span data-toggle="tooltip" data-title="' . $total . '">' .
+                        html_escape($status['percent']) . '%</span>'
+                    : $total;
+
+                $subStatusHtml .= "
+                    <div class='col-md-2 col-xs-6'>
+                        <div class='border-card'>
+                            <h3 class='bold'>{$percent}</h3>
+                            <span style='color:{$color}'>{$name}</span>
+                        </div>
+                    </div>";
+            }
+
+            $subStatusHtml .= '</div>';
+            $statusHtml .= $subStatusHtml;
+
+            if (
+                isset($_POST['show_marketing_status']) &&
+                (int) $_POST['show_marketing_status'] === 1
+            ) {
+                // Add a separate total card instead of overwriting a conversion type.
+                $marketingData['__total__'] = [
+                    'name' => 'Total',
+                    'total' => $totalLeads,
+                    'color' => 'black'
+                ];
+
+                $statusHtml .= '<br><br><hr><div>
+                    <div class="col-md-12 col-xs-12">
+                        <h3 class="bold">
+                            <span style="color:#d81b60">Performance Marketing</span>
+                        </h3>
+                    </div>';
+
+                foreach ($marketingData as $marketing) {
+                    $marketingTotal = (int) $marketing['total'];
+
+                    $percentage = $totalLeads > 0
+                        ? number_format(($marketingTotal / $totalLeads) * 100, 2)
+                        : '0.00';
+
+                    $name = html_escape($marketing['name']);
+                    $color = html_escape($marketing['color']);
+
+                    $statusHtml .= "
+                        <div class='col-md-2 col-xs-6 marketing-type'>
+                            <div class='border-card'>
+                                <h3 class='bold'>
+                                    {$marketingTotal}
+                                    <span class='show-persentage'>{$percentage}%</span>
+                                </h3>
+                                <span style='color:{$color}'>{$name}</span>
+                            </div>
+                        </div>";
+                }
+
+                $statusHtml .= '</div>';
+            }
+
+            return $this->output->set_output(json_encode([
+                'status' => $domainHtml.$statusHtml
+            ]));
+        }
+
+        if ($showLeadStatus === 2) {
+
+            $callDuration = calculate_call_duration_new($_POST);
+
+            if (!is_array($callDuration)) {
+                $callDuration = [];
+            }
+
+            $totalDuration = 0;
+            $totalCalls = 0;
+            $answeredCall = 0;
+
+            foreach ($callDuration as $item) {
+                $totalDuration += (int) ($item['total_call_duration'] ?? 0);
+                $totalCalls += (int) ($item['total_calls'] ?? 0);
+                $answeredCall += (int) ($item['answered_count'] ?? 0);
+            }
+
+            $callGraphData = graphDataCalls($_POST);
+
+            return $this->output->set_output(json_encode([
+                'answeredCall' => $answeredCall,
+                'totalCalls' => $totalCalls,
+                'update_count' => count($callDuration),
+                'call_count' => $totalDuration > 0
+                    ? convertToHMS($totalDuration)
+                    : '0',
+                'graphData' => is_array($callGraphData)
+                    ? $callGraphData
+                    : [],
+                'totalDuration' => $totalDuration
+            ]));
+        }
+
+        return $this->output
+            ->set_status_header(400)
+            ->set_output(json_encode([
+                'error' => true,
+                'message' => 'Invalid show_lead_status value.'
+            ]));
+
+    } catch (\Throwable $e) {
+
+        log_message(
+            'error',
+            'domain_lead_summary_filter failed: ' . $e->getMessage()
+        );
+
+        return $this->output
+            ->set_status_header(500)
+            ->set_output(json_encode([
+                'error' => true,
+                'message' => 'Unable to generate lead summary.'
+            ]));
+    }
+}
+
     public function lead_summary_filter_neww()
     {
 
@@ -596,6 +853,18 @@ $data['lead_sub_status'] = $this->leads_model->lead_sub_status();
         }
 
         $this->app->get_table_data('leads_performance_table');
+    }
+    
+        public function domain_lead_performance_table()
+
+    {
+
+        if (!is_staff_member()) {
+
+            ajax_access_denied();
+        }
+
+        $this->app->get_table_data('domain_leads_performance_table');
     }
 
     public function table_new()

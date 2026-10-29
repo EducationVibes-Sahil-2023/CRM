@@ -566,6 +566,14 @@ function app_init_admin_sidebar_menu_items()
                         'href'     => admin_url('reports/performance_leads'),
                         'position' => 21,
                 ]);
+                
+                     $CI->app_menu->add_sidebar_children_item('reports', [
+                        'slug'     => 'leads-performance-reports-domains',
+                        'name'     => 'Leads Performance Domains',
+                        'href'     => admin_url('reports/performance_domain_leads'),
+                        'position' => 21,
+                ]);
+
 
 
                 if (is_admin()) {

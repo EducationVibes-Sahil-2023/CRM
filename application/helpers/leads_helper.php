@@ -8929,6 +8929,617 @@ GROUP BY lead_data.status
     return $statuses;
 }
 
+function get_leads_summary_filter_domains($params)
+{
+    $CI = &get_instance();
+
+    if (!class_exists('leads_model')) {
+        $CI->load->model('leads_model');
+    }
+
+    $statuses = $CI->leads_model->get_status();
+    $sub_statuses = $CI->db
+        ->select('id, name')
+        ->get(db_prefix() . 'sub_lead_status')
+        ->result_array();
+
+    $tblleads = db_prefix() . 'leads';
+    $callsTable = db_prefix() . 'calls_activity_logs';
+    $statusTable = db_prefix() . 'leads_status';
+    $customFieldsTable = db_prefix() . 'customfieldsvalues';
+    $remindersTable = db_prefix() . 'reminders';
+    $staffTable = db_prefix() . 'staff';
+    $departmentTable = db_prefix() . 'staff_department';
+
+    $staffId = (int) get_staff_user_id();
+    $hasPermissionView = has_permission('leads', '', 'view');
+
+    $conditions = [];
+
+    // Normalize call-count filters
+    foreach (['update_count_min', 'update_count_max'] as $key) {
+        $params[$key] = (
+            isset($params[$key]) &&
+            is_numeric($params[$key]) &&
+            $params[$key] !== 'NaN'
+        ) ? (int) $params[$key] : '';
+    }
+
+    // Staff role
+    $staff = $CI->db
+        ->select('role')
+        ->where('staffid', $staffId)
+        ->get($staffTable)
+        ->row();
+
+    $role = $staff ? (int) $staff->role : 0;
+
+    // Reporting team restriction
+    $teamCondition = '';
+
+    if ($role === 3) {
+        $teamRows = $CI->db
+            ->query('CALL GetReportingPersons(?)', [$staffId])
+            ->result_array();
+
+        // Clear stored procedure result sets before another query.
+        $CI->db->close();
+        $CI->db->initialize();
+
+        $teamIds = array_unique(array_filter(array_map(
+            'intval',
+            array_column($teamRows, 'staffid')
+        )));
+
+        $teamIds[] = $staffId;
+        $teamIds = array_unique($teamIds);
+
+        $teamCondition = 'assigned IN (' . implode(',', $teamIds) . ')';
+    }
+
+    // Base query
+    $sql = "
+        SELECT
+            {$tblleads}.id,
+            {$tblleads}.domain_name,
+            {$tblleads}.status,
+            {$tblleads}.sub_status,
+            COUNT(DISTINCT {$callsTable}.id) AS call_count
+        FROM {$tblleads}
+        LEFT JOIN {$statusTable}
+            ON {$tblleads}.status = {$statusTable}.id
+    ";
+
+    // Keep the original call-count filtering behavior.
+    $needsCallMatch = (
+        !empty($params['up_to_date']) ||
+        (
+            $params['update_count_min'] !== '' &&
+            $params['update_count_max'] !== ''
+        )
+    );
+
+    $callJoin = $needsCallMatch ? ' INNER JOIN ' : ' LEFT JOIN ';
+
+    $sql .= $callJoin . $callsTable . "
+        ON {$callsTable}.contact = {$tblleads}.phonenumber
+        AND {$callsTable}.staffid = {$tblleads}.assigned
+    ";
+
+    // Conditional joins
+    if (
+        !empty($params['course']) ||
+        !empty($params['degree']) ||
+        !empty($params['neet_score']) ||
+        !empty($params['google_source'])
+    ) {
+        $sql .= "
+            JOIN {$customFieldsTable}
+                ON {$tblleads}.id = {$customFieldsTable}.relid
+        ";
+    }
+
+    if (!empty($params['followup_to_date'])) {
+        $sql .= "
+            JOIN {$remindersTable}
+                ON {$remindersTable}.rel_id = {$tblleads}.id
+        ";
+    }
+
+    $needsStaff = (
+        !empty($params['location']) ||
+        !empty($params['department']) ||
+        (
+            isset($params['time_condition']) &&
+            $params['time_condition'] !== '' &&
+            isset($params['time_minutes']) &&
+            is_numeric($params['time_minutes']) &&
+            $params['time_minutes'] >= 0
+        )
+    );
+
+    if ($needsStaff) {
+        $sql .= "
+            JOIN {$staffTable}
+                ON {$staffTable}.staffid = {$tblleads}.assigned
+        ";
+    }
+
+    if (
+        isset($params['time_condition']) &&
+        $params['time_condition'] !== '' &&
+        isset($params['time_minutes']) &&
+        is_numeric($params['time_minutes']) &&
+        $params['time_minutes'] >= 0
+    ) {
+        $sql .= "
+            JOIN {$departmentTable}
+                ON {$departmentTable}.id = {$staffTable}.department
+        ";
+    }
+
+    // Domain filters
+    $conditions[] = "{$tblleads}.domain_name IS NOT NULL";
+    $conditions[] = "TRIM({$tblleads}.domain_name) != ''";
+    $conditions[] = "{$tblleads}.domain_name NOT IN (
+        'educationvibes.in',
+        'crm.educationvibes.in'
+    )";
+
+    if (!empty($params['domain_name'])) {
+        $domains = array_filter(
+            array_map('trim', (array) $params['domain_name']),
+            function ($domain) {
+                return $domain !== '';
+            }
+        );
+
+        if (!empty($domains)) {
+            $escapedDomains = array_map(
+                [$CI->db, 'escape'],
+                $domains
+            );
+
+            $conditions[] = "{$tblleads}.domain_name IN (" .
+                implode(',', $escapedDomains) . ")";
+        }
+    }
+
+    // Lead visibility
+    if (!$hasPermissionView) {
+        $conditions[] = "(
+            {$tblleads}.addedfrom = {$staffId}
+            OR {$tblleads}.assigned = {$staffId}
+            OR {$tblleads}.is_public = 1
+        )";
+    }
+
+    // Generic safe IN helper
+    $addInCondition = function ($column, $values) use (&$conditions, $CI) {
+        if (!is_array($values)) {
+            $values = [$values];
+        }
+
+        $values = array_values(array_filter(
+            $values,
+            function ($value) {
+                return $value !== '' && $value !== null;
+            }
+        ));
+
+        if (!$values) {
+            return;
+        }
+
+        $escaped = array_map(
+            [$CI->db, 'escape'],
+            $values
+        );
+
+        $conditions[] = $column . ' IN (' . implode(',', $escaped) . ')';
+    };
+
+    if (!empty($params['status'])) {
+        $addInCondition($statusTable . '.id', $params['status']);
+    }
+
+    if (!empty($params['assigned'])) {
+        $addInCondition($tblleads . '.assigned', $params['assigned']);
+    } elseif ($role === 3 && $teamCondition !== '') {
+        $conditions[] = $teamCondition;
+    }
+
+    if (!empty($params['source'])) {
+        $addInCondition($tblleads . '.source', $params['source']);
+    }
+
+    if (!empty($params['lead_type'])) {
+        $addInCondition($tblleads . '.type', $params['lead_type']);
+    }
+
+    // Sub-status filter
+    if (isset($params['sub_status'])) {
+        $subStatus = (array) $params['sub_status'];
+
+        if (count($subStatus) === 1 && $subStatus[0] === '') {
+            $conditions[] = "(
+                {$tblleads}.sub_status IS NULL
+                OR {$tblleads}.sub_status = ''
+            )";
+        } else {
+            $subStatus = array_values(array_filter(
+                $subStatus,
+                function ($value) {
+                    return $value !== '';
+                }
+            ));
+
+            if ($subStatus) {
+                $addInCondition(
+                    $tblleads . '.sub_status',
+                    $subStatus
+                );
+            }
+        }
+    }
+
+    // NEET score range
+    if (!empty($params['neet_score'])) {
+        $range = explode('-', $params['neet_score'], 2);
+
+        if (
+            count($range) === 2 &&
+            is_numeric(trim($range[0])) &&
+            is_numeric(trim($range[1]))
+        ) {
+            $conditions[] = "{$customFieldsTable}.fieldid = 8";
+            $conditions[] = "{$customFieldsTable}.value BETWEEN " .
+                (float) trim($range[0]) . ' AND ' .
+                (float) trim($range[1]);
+            $conditions[] = "{$customFieldsTable}.value != ''";
+        }
+    }
+
+    // Date filters
+    $dateFilters = [
+        'from_date' => [$tblleads . '.dateadded', 'to_date'],
+        'assign_from_date' => [$tblleads . '.dateassigned', 'assign_to_date'],
+        'followup_from_date' => [$remindersTable . '.date', 'followup_to_date'],
+        'connected_from_date' => [
+            $callsTable . '.adjusted_call_start',
+            'connected_to_date'
+        ],
+    ];
+
+    foreach ($dateFilters as $fromKey => $config) {
+        if (
+            !empty($params[$fromKey]) &&
+            !empty($params[$config[1]])
+        ) {
+            $conditions[] = $config[0] . ' BETWEEN ' .
+                $CI->db->escape($params[$fromKey]) . ' AND ' .
+                $CI->db->escape($params[$config[1]]);
+        }
+    }
+
+    if (!empty($params['last_contact_date'])) {
+        $conditions[] = "{$tblleads}.lastconnect_date <= " .
+            $CI->db->escape($params['last_contact_date']);
+    }
+
+    if (!empty($params['last_update_date'])) {
+        $conditions[] = "{$tblleads}.lastupdate_date <= " .
+            $CI->db->escape($params['last_update_date']);
+    }
+
+    // Call duration filter
+    if (
+        isset($params['callDurationOperator'], $params['callDuration']) &&
+        $params['callDuration'] !== '' &&
+        is_numeric($params['callDuration'])
+    ) {
+        $allowedOperators = ['<', '<=', '>', '>=', '='];
+
+        $operator = in_array(
+            $params['callDurationOperator'],
+            $allowedOperators,
+            true
+        ) ? $params['callDurationOperator'] : '=';
+
+        $duration = (int) $params['callDuration'];
+
+        if ($duration >= 0) {
+            $conditions[] = "{$tblleads}.call_duration {$operator} {$duration}";
+        }
+    }
+
+    // UTM filters
+    $utmFilters = [
+        'utm_campaign_name' => $tblleads . '.utm_campaign_name',
+        'utm_ads_set_name' => $tblleads . '.utm_ads_set_name',
+        'utm_ads_name' => $tblleads . '.utm_ads_name',
+        'utm_term' => $tblleads . '.utm_term',
+        'utm_form_name' => $tblleads . '.utm_form_name',
+        'department' => $staffTable . '.department',
+        'location' => $staffTable . '.office_location',
+    ];
+
+    foreach ($utmFilters as $key => $column) {
+        if (!empty($params[$key])) {
+            $addInCondition($column, $params[$key]);
+        }
+    }
+
+    // Website filter
+    if (!empty($params['view_form'])) {
+        $addInCondition($tblleads . '.website', $params['view_form']);
+    }
+
+    // Reference name filter
+    if (!empty($params['reference_name'])) {
+        $references = $params['reference_name'];
+
+        if (!is_array($references)) {
+            $references = explode(',', $references);
+        }
+
+        $addInCondition($tblleads . '.reference_name', $references);
+    }
+
+    // Call date range
+    if (!empty($params['up_to_date'])) {
+        $upFrom = $CI->db->escape($params['up_from_date'] ?? '');
+        $upTo = $CI->db->escape($params['up_to_date']);
+
+        $conditions[] = "{$callsTable}.adjusted_call_start BETWEEN {$upFrom} AND {$upTo}";
+    }
+
+    // Ghost-call filter
+    if (!empty($params['ghostStatus'])) {
+        $ghostCount = max(1, (int) ($params['ghostCount'] ?? 5));
+
+        $conditions[] = "
+            {$tblleads}.update_count > {$ghostCount}
+            AND NOT EXISTS (
+                SELECT 1
+                FROM (
+                    SELECT c2.call_status, c2.call_start
+                    FROM tblcalls_activity_logs c2
+                    WHERE c2.contact = {$tblleads}.phonenumber
+                      AND CHAR_LENGTH({$tblleads}.phonenumber) = 10
+                      AND c2.staffid = {$tblleads}.assigned
+
+                    UNION ALL
+
+                    SELECT c2.call_status, c2.call_start
+                    FROM tblcalls_activity_logs c2
+                    WHERE c2.contact = {$tblleads}.alternative_phonenumber
+                      AND CHAR_LENGTH({$tblleads}.alternative_phonenumber) = 10
+                      AND c2.staffid = {$tblleads}.assigned
+                ) AS last_calls
+                WHERE last_calls.call_status = 'Answered'
+                ORDER BY last_calls.call_start DESC
+                LIMIT {$ghostCount}
+            )
+        ";
+    }
+
+    // Time-to-first-call filter
+    if (
+        isset($params['time_condition']) &&
+        $params['time_condition'] !== '' &&
+        isset($params['time_minutes']) &&
+        is_numeric($params['time_minutes']) &&
+        $params['time_minutes'] >= 0
+    ) {
+        $operator = in_array(
+            $params['time_condition'],
+            ['>', '<', '=', '>=', '<='],
+            true
+        ) ? $params['time_condition'] : '>';
+
+        $minutes = (int) $params['time_minutes'];
+
+        $conditions[] = "(
+            TIMESTAMPDIFF(
+                SECOND,
+                CASE
+                    WHEN DAYNAME({$tblleads}.dateassigned) = 'Sunday'
+                    THEN CONCAT(
+                        DATE_ADD(DATE({$tblleads}.dateassigned), INTERVAL 1 DAY),
+                        ' ',
+                        COALESCE({$departmentTable}.office_start_time, '10:00:00')
+                    )
+                    WHEN TIME({$tblleads}.dateassigned) >
+                        COALESCE({$departmentTable}.office_end_time, '20:00:00')
+                    THEN CONCAT(
+                        DATE_ADD(DATE({$tblleads}.dateassigned), INTERVAL 1 DAY),
+                        ' ',
+                        COALESCE({$departmentTable}.office_start_time, '10:00:00')
+                    )
+                    WHEN TIME({$tblleads}.dateassigned) <
+                        COALESCE({$departmentTable}.office_start_time, '10:00:00')
+                    THEN CONCAT(
+                        DATE({$tblleads}.dateassigned),
+                        ' ',
+                        COALESCE({$departmentTable}.office_start_time, '10:00:00')
+                    )
+                    ELSE {$tblleads}.dateassigned
+                END,
+                FROM_UNIXTIME((
+                    SELECT MIN(c.call_start + 19800)
+                    FROM {$callsTable} c
+                    WHERE c.contact = {$tblleads}.phonenumber
+                      AND (c.call_start + 19800) >
+                          UNIX_TIMESTAMP({$tblleads}.dateassigned)
+                      AND c.staffid = {$tblleads}.assigned
+                ))
+            ) / 60
+        ) {$operator} {$minutes}";
+    }
+
+    if ($conditions) {
+        $sql .= ' WHERE ' . implode(' AND ', $conditions);
+    }
+
+    $sql .= " GROUP BY {$tblleads}.id ";
+
+    // Execute the filtered query.
+    $havingQuery = '';
+
+    if (
+        $params['update_count_min'] !== '' &&
+        $params['update_count_max'] !== ''
+    ) {
+        $havingQuery = ' HAVING call_count BETWEEN ' .
+            (int) $params['update_count_min'] . ' AND ' .
+            (int) $params['update_count_max'];
+    }
+
+    /*
+     * Keep both phone-number branches to preserve the original query
+     * behavior. Deduplicate by lead ID in the outer query.
+     */
+    $primarySql = str_replace(
+        'thonenumber',
+        'phonenumber',
+        $sql
+    );
+
+    $alternativeSql = str_replace(
+        'thonenumber',
+        'alternative_phonenumber',
+        $sql
+    );
+
+    $unionSql = "({$primarySql}) UNION ALL ({$alternativeSql})";
+
+    $finalSql = "
+        SELECT
+            combined.id,
+            combined.domain_name,
+            combined.status,
+            combined.sub_status,
+            SUM(combined.call_count) AS call_count
+        FROM ({$unionSql}) AS combined
+        GROUP BY
+            combined.id,
+            combined.domain_name,
+            combined.status,
+            combined.sub_status
+        {$havingQuery}
+    ";
+
+    $rows = $CI->db->query($finalSql)->result();
+
+    // Build sub-status lookup
+    $subById = [];
+    $subByName = [];
+
+    foreach ($sub_statuses as $sub) {
+        $subById[(string) $sub['id']] = $sub;
+        $subByName[strtolower(trim($sub['name']))] = $sub;
+    }
+
+    // Aggregate filtered leads in PHP
+    $statusTotals = [];
+    $subStatusTotals = [];
+    $domainTotals = [];
+
+    foreach ($rows as $row) {
+        $statusKey = (
+            !empty($row->status) && $row->status != 0
+        ) ? (string) $row->status : 'unknown';
+
+        $statusTotals[$statusKey] =
+            ($statusTotals[$statusKey] ?? 0) + 1;
+
+        $rawSub = trim((string) $row->sub_status);
+
+        if ($rawSub === '' || $rawSub === '0') {
+            $subKey = 'unknown';
+        } elseif (isset($subById[$rawSub])) {
+            $subKey = (string) $subById[$rawSub]['id'];
+        } elseif (isset($subByName[strtolower($rawSub)])) {
+            $subKey = (string) $subByName[strtolower($rawSub)]['id'];
+        } else {
+            $subKey = 'unknown';
+        }
+
+        $subStatusTotals[$subKey] =
+            ($subStatusTotals[$subKey] ?? 0) + 1;
+
+        $domain = trim((string) $row->domain_name);
+
+        if ($domain !== '') {
+            $domainTotals[$domain] =
+                ($domainTotals[$domain] ?? 0) + 1;
+        }
+    }
+
+    // Status summary
+    $statuses[] = [
+        'id' => 'unknown',
+        'name' => 'Unknown Status',
+    ];
+
+    $totalLeads = 0;
+
+    foreach ($statuses as $key => $status) {
+        $statuses[$key]['total'] =
+            $statusTotals[(string) $status['id']] ?? 0;
+
+        $totalLeads += $statuses[$key]['total'];
+    }
+
+    $statuses[] = [
+        'name' => 'Total Leads',
+        'color' => '#28B8DA',
+        'isdefault' => 0,
+        'total' => $totalLeads,
+    ];
+
+    // Sub-status summary
+    $sub_statuses[] = [
+        'id' => 'unknown',
+        'name' => 'Unknown Sub Status',
+    ];
+
+    $totalSubLeads = 0;
+
+    foreach ($sub_statuses as $key => $sub) {
+        $sub_statuses[$key]['total'] =
+            $subStatusTotals[(string) $sub['id']] ?? 0;
+
+        $totalSubLeads += $sub_statuses[$key]['total'];
+    }
+
+    $sub_statuses[] = [
+        'name' => 'Total Leads',
+        'color' => '#28B8DA',
+        'isdefault' => 0,
+        'total' => $totalSubLeads,
+    ];
+
+    // Domain summary sorted by lead count
+    arsort($domainTotals);
+
+    $domainSummary = [];
+
+    foreach ($domainTotals as $domain => $count) {
+        $domainSummary[] = [
+            'domain_name' => $domain,
+            'total_leads' => $count,
+        ];
+    }
+
+    return [
+        'statuses' => $statuses,
+        'sub_statuses' => $sub_statuses,
+        'domain_summary' => $domainSummary,
+    ];
+}
+
 function get_leads_summary_filter_neww_test($params)
 {
     $params['update_count_min'] = (isset($params['update_count_min']) && is_numeric($params['update_count_min']) && $params['update_count_min'] !== 'NaN')
@@ -9035,6 +9646,8 @@ if (isset($params['sub_status'])) {
         }
     }
 }
+
+
     if (!empty($params['from_date']) && !empty($params['to_date'])) $conditions[] = 'DATE(' . $tblleads . '.dateadded) BETWEEN "' . $CI->db->escape_str($params['from_date']) . '" AND "' . $CI->db->escape_str($params['to_date']) . '"';
     if (!empty($params['followup_to_date'])) $conditions[] = 'DATE(' . db_prefix() . 'reminders.date) BETWEEN "' . $CI->db->escape_str($params['followup_from_date']) . '" AND "' . $CI->db->escape_str($params['followup_to_date']) . '"';
     if (!empty($params['assign_from_date'])) $conditions[] = 'DATE(' . $tblleads . '.dateassigned) BETWEEN "' . $CI->db->escape_str($params['assign_from_date']) . '" AND "' . $CI->db->escape_str($params['assign_to_date']) . '"';

@@ -72,6 +72,21 @@ class Reports extends AdminController
         $data['marketing_type']  = $this->leads_model->get_marketing_type();
         $this->load->view('admin/reports/lead_reports', $data);
     }
+    
+    
+      public function performance_domain_leads()
+    {
+        $this->load->model('leads_model');
+        $data['staff'] = $this->staff_model->get('', ['active' => 1]);
+        $data['status'] = $this->leads_model->get_status();
+        $data['department'] = $this->db->select("id,name")->where(array("status" => 1))->get(db_prefix() . "staff_department")->result_array();
+        $data['location'] = $this->db->select("id,name")->where(array("status" => 1))->get(db_prefix() . "office_location")->result_array();
+        $data['sources']  = $this->leads_model->get_source();
+        $data['type']  = $this->leads_model->get_type();
+        $data['conversion_type']  = $this->leads_model->get_conversion_type();
+        $data['marketing_type']  = $this->leads_model->get_marketing_type();
+        $this->load->view('admin/reports/domain_lead_reports', $data);
+    }
 
 
     public function performance_leads()
